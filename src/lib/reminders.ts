@@ -1,5 +1,7 @@
-import { supabaseAdmin } from './db'
+import { getSupabaseAdmin } from './db'
 import { sendWhatsApp } from './whatsapp'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 export async function enqueueDefaultReminders(apptId: string) {
   const { data: a } = await supabaseAdmin

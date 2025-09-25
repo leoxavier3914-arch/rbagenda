@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/db'
+import { getSupabaseAdmin } from '@/lib/db'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)

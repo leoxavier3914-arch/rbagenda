@@ -69,6 +69,12 @@ export default function BookingFlow(){
     }
   },[serviceId,date])
 
+  useEffect(()=>{
+    if(slots.length>0 && !slot){
+      setSlot(slots[0])
+    }
+  },[slots,slot])
+
   async function ensureAuth(){
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.href='/login';
@@ -120,7 +126,7 @@ export default function BookingFlow(){
         </select>
       )}
       {!apptId ? (
-        <button disabled={!serviceId||!slot} onClick={createAppt} className="w-full bg-black text-white py-2 rounded disabled:opacity-50">Continuar</button>
+        <button disabled={!serviceId||!date||!slot} onClick={createAppt} className="w-full bg-black text-white py-2 rounded disabled:opacity-50">Continuar</button>
       ) : (
         <div className="space-y-2">
           <div className="p-3 border rounded">Agendamento criado! ID: {apptId}</div>

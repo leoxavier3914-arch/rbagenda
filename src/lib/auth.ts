@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
-import { supabaseAdmin } from './db'
+import { getSupabaseAdmin } from './db'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 export async function getUserFromRequest(req: NextRequest) {
   const hdr = req.headers.get('authorization') || ''

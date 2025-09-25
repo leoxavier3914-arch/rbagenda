@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/db'
+import { getSupabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 import { refundPayment } from '@/lib/payments'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 export async function POST(
   req: NextRequest,

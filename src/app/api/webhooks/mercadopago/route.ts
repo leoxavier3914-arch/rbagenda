@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/db'
+import { getSupabaseAdmin } from '@/lib/db'
 import { getPayment } from '@/lib/payments'
 import { enqueueDefaultReminders } from '@/lib/reminders'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.json().catch(() => ({}))

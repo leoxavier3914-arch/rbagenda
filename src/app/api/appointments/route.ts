@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/db'
+import { getSupabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 import { z } from 'zod'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 const Body = z.object({
   service_id: z.string(),

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BookingFlow from '@/components/BookingFlow'
 import { supabase } from '@/lib/db'
+import AuthHeader from '@/components/AuthHeader'
 
 export default function Home(){
   const router = useRouter()
@@ -58,10 +59,11 @@ export default function Home(){
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="mx-auto max-w-md py-8">
+    <div className="min-h-screen bg-white">
+      <AuthHeader />
+      <main className="mx-auto max-w-md py-8">
         <BookingFlow />
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }

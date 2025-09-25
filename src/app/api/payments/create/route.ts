@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/db'
+import { getSupabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 import { createPreference } from '@/lib/payments'
 import { z } from 'zod'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 const Body = z.object({
   appointment_id: z.string(),

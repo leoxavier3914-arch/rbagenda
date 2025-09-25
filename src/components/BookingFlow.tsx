@@ -69,12 +69,6 @@ export default function BookingFlow(){
     }
   },[serviceId,date])
 
-  useEffect(()=>{
-    if(slots.length>0 && !slot){
-      setSlot(slots[0])
-    }
-  },[slots,slot])
-
   async function ensureAuth(){
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.href='/login';
@@ -119,11 +113,30 @@ export default function BookingFlow(){
         {services.map(s=> <option key={s.id} value={s.id}>{s.name} — R$ {(s.price_cents/100).toFixed(2)} (sinal R$ {(s.deposit_cents/100).toFixed(2)})</option>)}
       </select>
       <input className="w-full border p-2 rounded" type="date" value={date} onChange={e=>setDate(e.target.value)} />
-      {slots.length>0 && (
-        <select className="w-full border p-2 rounded" value={slot} onChange={e=>setSlot(e.target.value)}>
-          <option value="">Escolha o horário…</option>
-          {slots.map(s=> <option key={s} value={s}>{new Date(s).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</option>)}
-        </select>
+      {slots.length>0 ? (
+        <div className="grid grid-cols-2 gap-2">
+          {slots.map((s) => {
+            const isSelected = slot === s
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSlot(s)}
+                className={`p-2 border rounded text-sm transition ${
+                  isSelected
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        serviceId && date && (
+          <div className="p-3 border rounded text-sm text-gray-600">Nenhum horário disponível para esta data.</div>
+        )
       )}
       {!apptId ? (
         <button disabled={!serviceId||!date||!slot} onClick={createAppt} className="w-full bg-black text-white py-2 rounded disabled:opacity-50">Continuar</button>

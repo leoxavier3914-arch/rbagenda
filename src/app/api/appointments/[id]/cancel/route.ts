@@ -3,11 +3,14 @@ import { supabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 import { refundPayment } from '@/lib/payments'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const user = await getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  const id = params.id
+  const { id } = await context.params
   const LIM_H = Number(process.env.DEFAULT_REMARCA_HOURS || 24)
 
   const { data: appt } = await supabaseAdmin

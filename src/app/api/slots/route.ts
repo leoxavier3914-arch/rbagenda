@@ -20,8 +20,14 @@ export async function GET(req: NextRequest) {
   const branchTimezone = branch.timezone || 'America/Sao_Paulo'
 
   const bufferMin = Number(process.env.DEFAULT_BUFFER_MIN || 15)
-  const ensureSeconds = (t: string) => (t.length === 5 ? `${t}:00` : t)
-  const parseT = (time: string) => fromZonedTime(`${dateStr}T${ensureSeconds(time)}`, branchTimezone)
+  const normalizeTime = (time: string) => {
+    const [rawHour = '0', rawMinute = '0', rawSecond] = time.split(':')
+    const hour = rawHour.padStart(2, '0')
+    const minute = rawMinute.padStart(2, '0')
+    const second = (rawSecond ?? '00').padStart(2, '0')
+    return `${hour}:${minute}:${second}`
+  }
+  const parseT = (time: string) => fromZonedTime(`${dateStr}T${normalizeTime(time)}`, branchTimezone)
 
   const dateUtc = parseT('00:00:00')
   const weekday = toZonedTime(dateUtc, branchTimezone).getDay() // 0..6

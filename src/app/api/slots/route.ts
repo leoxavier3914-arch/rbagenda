@@ -25,8 +25,24 @@ export async function GET(req: NextRequest) {
 
   let staffId = staff_id as string | null
   if (!staffId) {
-    const { data: s } = await supabaseAdmin.from('staff').select('id').eq('branch_id', service.branch_id).eq('active', true).limit(1)
-    staffId = s?.[0]?.id || null
+    const { data: activeStaff } = await supabaseAdmin
+      .from('staff')
+      .select('id')
+      .eq('branch_id', service.branch_id)
+      .eq('active', true)
+
+    const staffIds = activeStaff?.map((s) => s.id).filter(Boolean) as string[] | undefined
+
+    if (staffIds && staffIds.length > 0) {
+      const { data: availableStaff } = await supabaseAdmin
+        .from('staff_hours')
+        .select('staff_id')
+        .eq('weekday', weekday)
+        .in('staff_id', staffIds)
+        .limit(1)
+
+      staffId = availableStaff?.[0]?.staff_id || null
+    }
   }
   if (!staffId) return NextResponse.json({ slots: [] })
 

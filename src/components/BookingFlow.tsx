@@ -19,9 +19,31 @@ export default function BookingFlow(){
   const [apptId,setApptId]=useState('')
 
   useEffect(()=>{
-    fetch('/rest/v1/services?select=id,name,price_cents,deposit_cents&active=eq.true', {
-      headers:{ apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string }
-    }).then(r=>r.json() as Promise<Service[]>).then(setServices)
+    let isMounted = true
+
+    async function loadServices(){
+      const { data, error } = await supabase
+        .from('services')
+        .select('id,name,price_cents,deposit_cents')
+        .eq('active', true)
+        .order('name')
+
+      if (!isMounted) return
+
+      if (error) {
+        console.error('Erro ao carregar serviços', error)
+        setServices([])
+        return
+      }
+
+      setServices(data ?? [])
+    }
+
+    loadServices()
+
+    return () => {
+      isMounted = false
+    }
   },[])
 
   useEffect(()=>{

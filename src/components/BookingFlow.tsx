@@ -16,6 +16,7 @@ export default function BookingFlow(){
   const [date,setDate]=useState('')
   const [slots,setSlots]=useState<string[]>([])
   const [slot,setSlot]=useState('')
+  const [staffId,setStaffId]=useState<string|null>(null)
   const [apptId,setApptId]=useState('')
 
   useEffect(()=>{
@@ -48,8 +49,24 @@ export default function BookingFlow(){
 
   useEffect(()=>{
     if(serviceId && date){
-      fetch(`/api/slots?service_id=${serviceId}&date=${date}`).then(r=>r.json()).then(d=>setSlots(d.slots||[]))
-    } else setSlots([])
+      setSlots([])
+      setSlot('')
+      setStaffId(null)
+      fetch(`/api/slots?service_id=${serviceId}&date=${date}`)
+        .then(r=>r.json())
+        .then(d=>{
+          setStaffId(d.staff_id ?? null)
+          setSlots(d.slots||[])
+        })
+        .catch(()=>{
+          setStaffId(null)
+          setSlots([])
+        })
+    } else {
+      setSlots([])
+      setSlot('')
+      setStaffId(null)
+    }
   },[serviceId,date])
 
   async function ensureAuth(){
@@ -67,7 +84,7 @@ export default function BookingFlow(){
         'Content-Type':'application/json',
         Authorization:`Bearer ${token}`
       },
-      body: JSON.stringify({ service_id: serviceId, starts_at: slot })
+      body: JSON.stringify({ service_id: serviceId, staff_id: staffId ?? undefined, starts_at: slot })
     })
     const d = await res.json();
     if (d.appointment_id) setApptId(d.appointment_id)

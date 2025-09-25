@@ -81,7 +81,7 @@ export async function POST(
 
   await supabaseAdmin
     .from('appointments')
-    .update({ status: 'canceled' })
+    .update<Partial<AppointmentRecord>>({ status: 'canceled' })
     .eq('id', id)
 
   return NextResponse.json({ ok: true, refunded_cents: refund })

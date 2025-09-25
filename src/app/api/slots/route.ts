@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/db'
+import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 
 const supabaseAdmin = getSupabaseAdmin()
 
@@ -14,9 +15,16 @@ export async function GET(req: NextRequest) {
   const { data: service } = await supabaseAdmin.from('services').select('id, duration_min, branch_id').eq('id', service_id).single()
   if (!service) return NextResponse.json({ slots: [] })
 
+  const { data: branch } = await supabaseAdmin.from('branches').select('timezone').eq('id', service.branch_id).maybeSingle()
+  if (!branch) return NextResponse.json({ slots: [] })
+  const branchTimezone = branch.timezone || 'America/Sao_Paulo'
+
   const bufferMin = Number(process.env.DEFAULT_BUFFER_MIN || 15)
-  const date = new Date(dateStr + 'T00:00:00Z')
-  const weekday = date.getUTCDay() // 0..6
+  const ensureSeconds = (t: string) => (t.length === 5 ? `${t}:00` : t)
+  const parseT = (time: string) => fromZonedTime(`${dateStr}T${ensureSeconds(time)}`, branchTimezone)
+
+  const dateUtc = parseT('00:00:00')
+  const weekday = toZonedTime(dateUtc, branchTimezone).getDay() // 0..6
 
   const { data: bh } = await supabaseAdmin
     .from('business_hours').select('open_time, close_time')
@@ -50,13 +58,6 @@ export async function GET(req: NextRequest) {
     .from('staff_hours').select('start_time, end_time')
     .eq('staff_id', staffId).eq('weekday', weekday).maybeSingle()
   if (!sh) return NextResponse.json({ slots: [] })
-
-  const parseT = (t:string) => {
-    const [H,M,S] = t.split(':').map(Number);
-    const d=new Date(date);
-    d.setUTCHours(H,M,S||0,0);
-    return d
-  }
 
   const dayStart = new Date(Math.max(parseT(bh.open_time).getTime(), parseT(sh.start_time).getTime()))
   const dayEnd = new Date(Math.min(parseT(bh.close_time).getTime(), parseT(sh.end_time).getTime()))

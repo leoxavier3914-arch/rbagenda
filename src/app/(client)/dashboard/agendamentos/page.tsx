@@ -18,23 +18,24 @@ export default function MyAppointments() {
   useEffect(() => {
     ;(async () => {
       const { data: sess } = await supabase.auth.getSession()
-      const token = sess.session?.access_token
-      if (!token) {
+      const session = sess.session
+      if (!session) {
         window.location.href = '/login'
         return
       }
 
-      const ap = await fetch(
-        '/rest/v1/appointments?select=*,services(name)&customer_id=eq.' + sess.session?.user.id + '&order=starts_at.asc',
-        {
-          headers: {
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-            Authorization: `Bearer ${token}`
-          }
-        }
-      ).then(r => r.json() as Promise<Appointment[]>)
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('id, starts_at, status, services(name)')
+        .eq('customer_id', session.user.id)
+        .order('starts_at', { ascending: true })
 
-      setAppointments(ap)
+      if (error) {
+        console.error('Erro ao carregar agendamentos', error)
+        setAppointments([])
+      } else {
+        setAppointments(data ?? [])
+      }
       setLoading(false)
     })()
   }, [])

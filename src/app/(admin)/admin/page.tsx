@@ -50,19 +50,54 @@ export default function Admin(){
     })()
   },[])
 
-  if (!ok) return null
+  if (!ok) {
+    return (
+      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
+        <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
+          Verificando permissões…
+        </div>
+      </main>
+    )
+  }
 
   return (
-    <main className="max-w-2xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Admin — Agenda</h1>
-      {appts.map(a=> (
-        <div key={a.id} className="p-3 border rounded grid grid-cols-2 gap-2">
-          <div><b>Cliente:</b> {a.profiles?.full_name}</div>
-          <div><b>Serviço:</b> {a.services?.name}</div>
-          <div><b>Início:</b> {new Date(a.starts_at).toLocaleString()}</div>
-          <div><b>Status:</b> {a.status}</div>
+    <main className="mx-auto w-full max-w-5xl space-y-8 px-6">
+      <div className="card space-y-3">
+        <span className="badge">Administração</span>
+        <h1 className="text-3xl font-semibold text-[#1f2d28]">Agenda completa</h1>
+        <p className="muted-text max-w-3xl">
+          Visualize todos os agendamentos confirmados ou pendentes. Utilize esta visão para acompanhar pagamentos, ajustar horários e garantir a melhor experiência.
+        </p>
+      </div>
+      {appts.length === 0 ? (
+        <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.8)]">
+          Nenhum agendamento encontrado por aqui ainda.
         </div>
-      ))}
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {appts.map(a=> (
+            <div key={a.id} className="card space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-[#1f2d28]">
+                  {a.services?.name ?? 'Serviço'}
+                </h2>
+                <span className="rounded-full border border-[color:rgba(47,109,79,0.2)] bg-[color:rgba(47,109,79,0.1)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[#2f6d4f]">
+                  {a.status}
+                </span>
+              </div>
+              <div className="space-y-2 text-sm text-[#1f2d28]">
+                <div>
+                  <span className="font-medium text-[#1f2d28]">Cliente:</span> {a.profiles?.full_name ?? 'Sem nome informado'}
+                </div>
+                <div>
+                  <span className="font-medium text-[#1f2d28]">Início:</span> {new Date(a.starts_at).toLocaleString()}
+                </div>
+                <div className="text-xs text-[color:rgba(31,45,40,0.6)]">ID: {a.id}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </main>
   )
 }

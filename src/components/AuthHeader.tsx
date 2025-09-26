@@ -58,29 +58,32 @@ export default function AuthHeader() {
   }
 
   return (
-    <header className="border-b border-gray-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        <nav className="flex items-center gap-4 text-sm font-medium text-gray-700">
+    <header className="border-b border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.75)] backdrop-blur">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
+        <nav className="flex items-center gap-5 text-sm font-medium text-[#2f6d4f]">
           {role === "admin" ? (
             <>
-              <Link href="/admin" className="transition hover:text-black">
+              <Link
+                href="/admin"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
+              >
                 Admin
               </Link>
               <Link
                 href="/dashboard"
-                className="transition hover:text-black"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
               >
                 Meu perfil
               </Link>
               <Link
                 href="/dashboard/novo-agendamento"
-                className="transition hover:text-black"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
               >
                 Novo agendamento
               </Link>
               <Link
                 href="/dashboard/agendamentos"
-                className="transition hover:text-black"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
               >
                 Meus agendamentos
               </Link>
@@ -89,36 +92,36 @@ export default function AuthHeader() {
             <>
               <Link
                 href="/dashboard"
-                className="transition hover:text-black"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
               >
                 Meu perfil
               </Link>
               <Link
                 href="/dashboard/novo-agendamento"
-                className="transition hover:text-black"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
               >
                 Novo agendamento
               </Link>
               <Link
                 href="/dashboard/agendamentos"
-                className="transition hover:text-black"
+                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
               >
                 Meus agendamentos
               </Link>
             </>
           ) : null}
         </nav>
-        <div className="flex flex-col items-end text-right">
+        <div className="flex flex-col items-end gap-1 text-right">
           <button
             type="button"
             onClick={handleSignOut}
             disabled={signingOut}
-            className="rounded border border-black px-3 py-1 text-sm font-medium text-black transition hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-secondary px-4 py-2"
           >
             {signingOut ? "Saindo…" : "Sair"}
           </button>
           {error ? (
-            <span className="mt-1 text-xs text-red-600">{error}</span>
+            <span className="text-xs text-red-600">{error}</span>
           ) : null}
         </div>
       </div>

@@ -75,17 +75,30 @@ export default function Home(){
 
   if (access !== 'admin'){
     return (
-      <main className="min-h-screen bg-white flex items-center justify-center">
-        <span className="text-sm text-gray-500">Verificando acesso…</span>
+      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-10">
+        <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
+          Verificando acesso…
+        </div>
       </main>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative flex min-h-screen flex-1 flex-col">
       <AuthHeader />
-      <main className="mx-auto max-w-md py-8">
-        <BookingFlow />
+      <main className="relative mx-auto w-full max-w-5xl flex-1 px-6 py-12">
+        <div className="mx-auto max-w-3xl space-y-8 text-center">
+          <div className="space-y-3">
+            <span className="badge mx-auto">Painel administrativo</span>
+            <h1 className="text-3xl font-semibold text-[#1f2d28] sm:text-4xl">
+              Gerencie sua agenda com leveza
+            </h1>
+            <p className="mx-auto max-w-2xl text-base text-[color:rgba(31,45,40,0.7)]">
+              Visualize horários disponíveis, confirme agendamentos e ofereça uma experiência acolhedora para as suas clientes.
+            </p>
+          </div>
+          <BookingFlow />
+        </div>
       </main>
     </div>
   )

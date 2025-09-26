@@ -157,20 +157,26 @@ export default function Dashboard() {
   const role = profile?.role === 'admin' ? 'admin' : 'client'
 
   return (
-    <main className="max-w-md mx-auto space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Meu perfil</h1>
+    <main className="mx-auto grid w-full max-w-5xl gap-8 px-0 lg:grid-cols-[1.05fr_minmax(0,1fr)]">
+      <section className="card space-y-6">
+        <div className="space-y-2">
+          <span className="badge">Dados pessoais</span>
+          <h1 className="text-3xl font-semibold text-[#1f2d28]">Meu perfil</h1>
+          <p className="muted-text">
+            Atualize seus dados de contato e senha sempre que precisar. Suas informações nos ajudam a manter tudo organizado.
+          </p>
+        </div>
         {loading ? (
-          <p className="mt-3 text-sm text-gray-600">Carregando…</p>
+          <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.7)]">Carregando…</div>
         ) : (
-          <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700" htmlFor="fullName">
+              <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="fullName">
                 Nome completo
               </label>
               <input
                 id="fullName"
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                className="input-field"
                 value={fullName}
                 onChange={event => setFullName(event.target.value)}
                 disabled={saving}
@@ -178,13 +184,13 @@ export default function Dashboard() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700" htmlFor="email">
+              <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
                 E-mail
               </label>
               <input
                 id="email"
                 type="email"
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                className="input-field"
                 value={email}
                 onChange={event => setEmail(event.target.value)}
                 disabled={saving}
@@ -192,12 +198,12 @@ export default function Dashboard() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700" htmlFor="whatsapp">
+              <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="whatsapp">
                 WhatsApp
               </label>
               <input
                 id="whatsapp"
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                className="input-field"
                 value={whatsapp}
                 onChange={event => setWhatsapp(event.target.value)}
                 disabled={saving}
@@ -205,13 +211,13 @@ export default function Dashboard() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700" htmlFor="password">
+              <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
                 Nova senha
               </label>
               <input
                 id="password"
                 type="password"
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                className="input-field"
                 value={password}
                 onChange={event => setPassword(event.target.value)}
                 disabled={saving}
@@ -219,43 +225,56 @@ export default function Dashboard() {
                 minLength={6}
               />
             </div>
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            {success ? <p className="text-sm text-emerald-600">{success}</p> : null}
+            {error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
+            {success ? (
+              <div className="rounded-2xl border border-[color:rgba(47,109,79,0.3)] bg-[color:rgba(247,242,231,0.7)] px-4 py-3 text-sm text-[#2f6d4f]">
+                {success}
+              </div>
+            ) : null}
             <button
               type="submit"
-              className="w-full rounded border border-black px-4 py-2 text-sm font-medium text-black transition hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-primary w-full"
               disabled={saving}
             >
               {saving ? 'Salvando…' : 'Salvar alterações'}
             </button>
           </form>
         )}
-      </div>
+      </section>
 
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold">Agendamentos</h2>
-        {role === 'admin' ? (
-          <p className="text-sm text-gray-600">
-            Você continua tendo acesso ao painel administrativo, mas também pode gerenciar seus dados pessoais aqui.
-          </p>
-        ) : (
-          <p className="text-sm text-gray-600">
-            Gerencie seus agendamentos e marque novos horários quando precisar.
-          </p>
-        )}
-        <Link
-          href="/dashboard/novo-agendamento"
-          className="block rounded border border-black px-4 py-3 text-center text-sm font-medium text-black transition hover:bg-black hover:text-white"
-        >
-          Novo agendamento
-        </Link>
-        <Link
-          href="/dashboard/agendamentos"
-          className="block rounded border border-black px-4 py-3 text-center text-sm font-medium text-black transition hover:bg-black hover:text-white"
-        >
-          Meus agendamentos
-        </Link>
-      </div>
+      <aside className="card space-y-5">
+        <div className="space-y-2">
+          <span className="badge">Agenda</span>
+          <h2 className="text-2xl font-semibold text-[#1f2d28]">Agendamentos</h2>
+          {role === 'admin' ? (
+            <p className="muted-text">
+              Você continua com acesso ao painel administrativo e pode agendar como cliente pelo mesmo login.
+            </p>
+          ) : (
+            <p className="muted-text">
+              Gerencie seus horários e mantenha tudo sob controle com poucos cliques.
+            </p>
+          )}
+        </div>
+        <div className="space-y-3">
+          <Link
+            href="/dashboard/novo-agendamento"
+            className="btn-primary block w-full text-center"
+          >
+            Novo agendamento
+          </Link>
+          <Link
+            href="/dashboard/agendamentos"
+            className="btn-secondary block w-full text-center"
+          >
+            Meus agendamentos
+          </Link>
+        </div>
+      </aside>
     </main>
   )
 }

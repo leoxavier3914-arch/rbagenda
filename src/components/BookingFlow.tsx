@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
-import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
+import { stripePromise } from '@/lib/stripeClient'
 
 type Service = {
   id: string
@@ -12,9 +12,6 @@ type Service = {
   price_cents: number
   deposit_cents: number
 }
-
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null
 
 export default function BookingFlow(){
   const [services,setServices]=useState<Service[]>([])
@@ -24,9 +21,9 @@ export default function BookingFlow(){
   const [slot,setSlot]=useState('')
   const [staffId,setStaffId]=useState<string|null>(null)
   const [apptId,setApptId]=useState('')
-  const [clientSecret,setClientSecret]=useState<string|null>(null)
   const [error,setError]=useState<string|null>(null)
   const [isLoading,setIsLoading]=useState(false)
+  const router = useRouter()
 
   useEffect(()=>{
     let isMounted = true
@@ -124,7 +121,7 @@ export default function BookingFlow(){
       }
       const d = await res.json();
       if (d.client_secret) {
-        setClientSecret(d.client_secret)
+        router.push(`/checkout?client_secret=${encodeURIComponent(d.client_secret)}&appointment_id=${encodeURIComponent(apptId)}`)
       } else {
         setError('Resposta inválida do servidor ao iniciar o checkout.')
       }
@@ -138,140 +135,118 @@ export default function BookingFlow(){
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      {clientSecret && stripePromise ? (
-        <div className="card space-y-6">
-          <div className="space-y-1">
-            <span className="badge">Pagamento</span>
-            <h2 className="text-2xl font-semibold text-[#1f2d28]">Finalize o pagamento</h2>
-            <p className="muted-text">
-              Revise os dados do seu agendamento e conclua o pagamento com segurança.
-            </p>
-          </div>
-          {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-          <div className="overflow-hidden rounded-3xl border border-[color:rgba(230,217,195,0.6)] bg-white shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]">
-            <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
-          </div>
+      <div className="card space-y-6">
+        <div className="space-y-1">
+          <span className="badge">Novo agendamento</span>
+          <h1 className="text-2xl font-semibold text-[#1f2d28]">Agendar aplicação</h1>
+          <p className="muted-text">
+            Escolha o serviço, data e horário ideais para você. Você poderá pagar o sinal ou o valor completo na próxima etapa.
+          </p>
         </div>
-      ) : (
-        <div className="card space-y-6">
-          <div className="space-y-1">
-            <span className="badge">Novo agendamento</span>
-            <h1 className="text-2xl font-semibold text-[#1f2d28]">Agendar aplicação</h1>
-            <p className="muted-text">
-              Escolha o serviço, data e horário ideais para você. Você poderá pagar o sinal ou o valor completo na próxima etapa.
-            </p>
+        {error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+            {error}
           </div>
-          {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+        )}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="service">
+            Serviço desejado
+          </label>
+          <select
+            id="service"
+            className="input-field"
+            value={serviceId}
+            onChange={e=>setServiceId(e.target.value)}
+          >
+            <option value="">Escolha o serviço…</option>
+            {services.map(s=> (
+              <option key={s.id} value={s.id}>
+                {s.name} — R$ {(s.price_cents/100).toFixed(2)} (sinal R$ {(s.deposit_cents/100).toFixed(2)})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="date">
+            Data disponível
+          </label>
+          <input
+            id="date"
+            className="input-field"
+            type="date"
+            value={date}
+            onChange={e=>setDate(e.target.value)}
+          />
+        </div>
+        {slots.length>0 ? (
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="service">
-              Serviço desejado
-            </label>
-            <select
-              id="service"
-              className="input-field"
-              value={serviceId}
-              onChange={e=>setServiceId(e.target.value)}
-            >
-              <option value="">Escolha o serviço…</option>
-              {services.map(s=> (
-                <option key={s.id} value={s.id}>
-                  {s.name} — R$ {(s.price_cents/100).toFixed(2)} (sinal R$ {(s.deposit_cents/100).toFixed(2)})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="date">
-              Data disponível
-            </label>
-            <input
-              id="date"
-              className="input-field"
-              type="date"
-              value={date}
-              onChange={e=>setDate(e.target.value)}
-            />
-          </div>
-          {slots.length>0 ? (
-            <div className="space-y-3">
-              <span className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]">Horário</span>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {slots.map((s) => {
-                  const isSelected = slot === s
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSlot(s)}
-                      className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                        isSelected
-                          ? 'border-[color:#2f6d4f] bg-[#2f6d4f] text-[#f7f2e7] shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]'
-                          : 'border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.7)] text-[#1f2d28] hover:border-[#2f6d4f] hover:bg-[#f7f2e7]'
-                      }`}
-                    >
-                      {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </button>
-                  )
-                })}
-              </div>
+            <span className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]">Horário</span>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {slots.map((s) => {
+                const isSelected = slot === s
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSlot(s)}
+                    className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                      isSelected
+                        ? 'border-[color:#2f6d4f] bg-[#2f6d4f] text-[#f7f2e7] shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]'
+                        : 'border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.7)] text-[#1f2d28] hover:border-[#2f6d4f] hover:bg-[#f7f2e7]'
+                    }`}
+                  >
+                    {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </button>
+                )
+              })}
             </div>
-          ) : (
-            serviceId && date && (
-              <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.7)]">
-                Nenhum horário disponível para esta data. Escolha outra data para continuar.
-              </div>
-            )
-          )}
-          {!apptId ? (
-            <button
-              disabled={!serviceId||!date||!slot}
-              onClick={createAppt}
-              className="btn-primary w-full"
+          </div>
+        ) : (
+          serviceId && date && (
+            <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.7)]">
+              Nenhum horário disponível para esta data. Escolha outra data para continuar.
+            </div>
+          )
+        )}
+        {!apptId ? (
+          <button
+            disabled={!serviceId||!date||!slot}
+            onClick={createAppt}
+            className="btn-primary w-full"
+          >
+            Continuar
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <div className="surface-muted text-sm font-medium text-[#1f2d28]">
+              Agendamento criado com sucesso!<br />
+              <span className="muted-text">ID: {apptId}</span>
+            </div>
+            <Link
+              href="/dashboard/agendamentos"
+              className="btn-secondary block w-full text-center"
             >
-              Continuar
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <div className="surface-muted text-sm font-medium text-[#1f2d28]">
-                Agendamento criado com sucesso!<br />
-                <span className="muted-text">ID: {apptId}</span>
-              </div>
-              <Link
-                href="/dashboard/agendamentos"
-                className="btn-secondary block w-full text-center"
+              Ver meus agendamentos
+            </Link>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                disabled={isLoading}
+                onClick={()=>pay('deposit')}
+                className="btn-primary"
               >
-                Ver meus agendamentos
-              </Link>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button
-                  disabled={isLoading}
-                  onClick={()=>pay('deposit')}
-                  className="btn-primary"
-                >
-                  {isLoading?'Abrindo checkout…':'Pagar sinal'}
-                </button>
-                <button
-                  disabled={isLoading}
-                  onClick={()=>pay('full')}
-                  className="btn-secondary"
-                >
-                  {isLoading?'Abrindo checkout…':'Pagar tudo'}
-                </button>
-              </div>
+                {isLoading?'Abrindo checkout…':'Pagar sinal'}
+              </button>
+              <button
+                disabled={isLoading}
+                onClick={()=>pay('full')}
+                className="btn-secondary"
+              >
+                {isLoading?'Abrindo checkout…':'Pagar tudo'}
+              </button>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,4 @@
 'use client'
-
-import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
@@ -173,10 +171,8 @@ export default function Dashboard() {
     setSigningOut(false)
   }
 
-  const role = profile?.role === 'admin' ? 'admin' : 'client'
-
   return (
-    <main className="mx-auto grid w-full max-w-5xl gap-8 px-0 lg:grid-cols-[1.05fr_minmax(0,1fr)]">
+    <main className="mx-auto w-full max-w-3xl space-y-6">
       <section className="card space-y-6">
         <div className="space-y-2">
           <span className="badge">Dados pessoais</span>
@@ -283,36 +279,6 @@ export default function Dashboard() {
           ) : null}
         </div>
       </section>
-
-      <aside className="card space-y-5">
-        <div className="space-y-2">
-          <span className="badge">Agenda</span>
-          <h2 className="text-2xl font-semibold text-[#1f2d28]">Agendamentos</h2>
-          {role === 'admin' ? (
-            <p className="muted-text">
-              Você continua com acesso ao painel administrativo e pode agendar como cliente pelo mesmo login.
-            </p>
-          ) : (
-            <p className="muted-text">
-              Gerencie seus horários e mantenha tudo sob controle com poucos cliques.
-            </p>
-          )}
-        </div>
-        <div className="space-y-3">
-          <Link
-            href="/dashboard/novo-agendamento"
-            className="btn-primary block w-full text-center"
-          >
-            Novo agendamento
-          </Link>
-          <Link
-            href="/dashboard/agendamentos"
-            className="btn-secondary block w-full text-center"
-          >
-            Meus agendamentos
-          </Link>
-        </div>
-      </aside>
     </main>
   )
 }

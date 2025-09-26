@@ -1,6 +1,4 @@
 'use client'
-
-import Link from 'next/link'
 import { useEffect } from 'react'
 import BookingFlow from '@/components/BookingFlow'
 import { supabase } from '@/lib/db'
@@ -16,17 +14,12 @@ export default function NewAppointment() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-8">
-      <div className="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <span className="badge">Reserva</span>
-          <h1 className="text-3xl font-semibold text-[#1f2d28]">Novo agendamento</h1>
-          <p className="muted-text max-w-xl">
-            Escolha o melhor horário para você e confirme o sinal online em poucos minutos.
-          </p>
-        </div>
-        <Link className="btn-secondary" href="/dashboard">
-          Voltar ao perfil
-        </Link>
+      <div className="card space-y-1">
+        <span className="badge">Reserva</span>
+        <h1 className="text-3xl font-semibold text-[#1f2d28]">Novo agendamento</h1>
+        <p className="muted-text max-w-xl">
+          Escolha o melhor horário para você e confirme o sinal online em poucos minutos.
+        </p>
       </div>
       <BookingFlow />
     </main>

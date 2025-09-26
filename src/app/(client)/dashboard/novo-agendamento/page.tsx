@@ -15,10 +15,16 @@ export default function NewAppointment() {
   }, [])
 
   return (
-    <main className="max-w-md mx-auto space-y-4 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Novo agendamento</h1>
-        <Link className="text-sm underline" href="/dashboard">
+    <main className="mx-auto w-full max-w-4xl space-y-8">
+      <div className="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <span className="badge">Reserva</span>
+          <h1 className="text-3xl font-semibold text-[#1f2d28]">Novo agendamento</h1>
+          <p className="muted-text max-w-xl">
+            Escolha o melhor horário para você e confirme o sinal online em poucos minutos.
+          </p>
+        </div>
+        <Link className="btn-secondary" href="/dashboard">
           Voltar ao perfil
         </Link>
       </div>

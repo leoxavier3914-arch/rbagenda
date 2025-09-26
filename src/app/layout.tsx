@@ -25,9 +25,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col`}
       >
-        {children}
+        <div className="brand-texture-overlay pointer-events-none fixed inset-0 -z-10" aria-hidden />
+        <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
       </body>
     </html>
   );

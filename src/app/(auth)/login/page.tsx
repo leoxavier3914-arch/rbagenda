@@ -86,23 +86,62 @@ export default function Login(){
 
   if (checkingSession){
     return (
-      <main className="min-h-screen grid place-items-center p-6">
-        <span className="text-sm text-gray-500">Verificando sessão…</span>
+      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-10">
+      <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
+          Verificando sessão…
+        </div>
       </main>
     )
   }
 
   return (
-    <main className="max-w-md mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Entrar</h1>
-      <form className="space-y-3" onSubmit={submit}>
-        <input className="w-full border p-2 rounded" placeholder="E-mail" value={email} onChange={e=>setEmail(e.target.value)} disabled={loading} />
-        <input className="w-full border p-2 rounded" type="password" placeholder="Senha" value={password} onChange={e=>setPassword(e.target.value)} disabled={loading} />
-        <button className="w-full bg-black text-white py-2 rounded disabled:opacity-60 disabled:cursor-not-allowed" disabled={loading}>
-          {loading ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
-      {msg && <p className="text-sm text-red-600">{msg}</p>}
+    <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
+      <div className="card w-full max-w-md space-y-6">
+        <div className="space-y-2 text-center">
+          <span className="badge inline-flex">Bem-vinda de volta</span>
+          <h1 className="text-3xl font-semibold text-[#1f2d28]">Acessar conta</h1>
+          <p className="muted-text">
+            Entre para acompanhar seus agendamentos e garantir uma rotina mais tranquila.
+          </p>
+        </div>
+        <form className="space-y-4" onSubmit={submit}>
+          <div className="space-y-1 text-left">
+            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
+              E-mail
+            </label>
+            <input
+              id="email"
+              className="input-field"
+              placeholder="nome@email.com"
+              value={email}
+              onChange={e=>setEmail(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <div className="space-y-1 text-left">
+            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
+              Senha
+            </label>
+            <input
+              id="password"
+              className="input-field"
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={e=>setPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <button className="btn-primary w-full" disabled={loading}>
+            {loading ? 'Entrando…' : 'Entrar'}
+          </button>
+        </form>
+        {msg && (
+          <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+            {msg}
+          </div>
+        )}
+      </div>
     </main>
   )
 }

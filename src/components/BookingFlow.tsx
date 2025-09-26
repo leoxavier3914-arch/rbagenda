@@ -137,90 +137,137 @@ export default function BookingFlow(){
   }
 
   return (
-    <div className="max-w-md mx-auto p-4 space-y-4">
+    <div className="mx-auto w-full max-w-2xl">
       {clientSecret && stripePromise ? (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Finalize o pagamento</h2>
+        <div className="card space-y-6">
+          <div className="space-y-1">
+            <span className="badge">Pagamento</span>
+            <h2 className="text-2xl font-semibold text-[#1f2d28]">Finalize o pagamento</h2>
+            <p className="muted-text">
+              Revise os dados do seu agendamento e conclua o pagamento com segurança.
+            </p>
+          </div>
           {error && (
-            <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+            <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
           )}
-          <div className="border rounded overflow-hidden">
+          <div className="overflow-hidden rounded-3xl border border-[color:rgba(230,217,195,0.6)] bg-white shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]">
             <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <h1 className="text-2xl font-semibold">Agendar aplicação</h1>
+        <div className="card space-y-6">
+          <div className="space-y-1">
+            <span className="badge">Novo agendamento</span>
+            <h1 className="text-2xl font-semibold text-[#1f2d28]">Agendar aplicação</h1>
+            <p className="muted-text">
+              Escolha o serviço, data e horário ideais para você. Você poderá pagar o sinal ou o valor completo na próxima etapa.
+            </p>
+          </div>
           {error && (
-            <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+            <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
           )}
-          <select className="w-full border p-2 rounded" value={serviceId} onChange={e=>setServiceId(e.target.value)}>
-            <option value="">Escolha o serviço…</option>
-            {services.map(s=> (
-              <option key={s.id} value={s.id}>
-                {s.name} — R$ {(s.price_cents/100).toFixed(2)} (sinal R$ {(s.deposit_cents/100).toFixed(2)})
-              </option>
-            ))}
-          </select>
-          <input className="w-full border p-2 rounded" type="date" value={date} onChange={e=>setDate(e.target.value)} />
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="service">
+              Serviço desejado
+            </label>
+            <select
+              id="service"
+              className="input-field"
+              value={serviceId}
+              onChange={e=>setServiceId(e.target.value)}
+            >
+              <option value="">Escolha o serviço…</option>
+              {services.map(s=> (
+                <option key={s.id} value={s.id}>
+                  {s.name} — R$ {(s.price_cents/100).toFixed(2)} (sinal R$ {(s.deposit_cents/100).toFixed(2)})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="date">
+              Data disponível
+            </label>
+            <input
+              id="date"
+              className="input-field"
+              type="date"
+              value={date}
+              onChange={e=>setDate(e.target.value)}
+            />
+          </div>
           {slots.length>0 ? (
-            <div className="grid grid-cols-2 gap-2">
-              {slots.map((s) => {
-                const isSelected = slot === s
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSlot(s)}
-                    className={`p-2 border rounded text-sm transition ${
-                      isSelected
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </button>
-                )
-              })}
+            <div className="space-y-3">
+              <span className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]">Horário</span>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {slots.map((s) => {
+                  const isSelected = slot === s
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSlot(s)}
+                      className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                        isSelected
+                          ? 'border-[color:#2f6d4f] bg-[#2f6d4f] text-[#f7f2e7] shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]'
+                          : 'border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.7)] text-[#1f2d28] hover:border-[#2f6d4f] hover:bg-[#f7f2e7]'
+                      }`}
+                    >
+                      {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           ) : (
             serviceId && date && (
-              <div className="p-3 border rounded text-sm text-gray-600">Nenhum horário disponível para esta data.</div>
+              <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.7)]">
+                Nenhum horário disponível para esta data. Escolha outra data para continuar.
+              </div>
             )
           )}
           {!apptId ? (
             <button
               disabled={!serviceId||!date||!slot}
               onClick={createAppt}
-              className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
+              className="btn-primary w-full"
             >
               Continuar
             </button>
           ) : (
-            <div className="space-y-2">
-              <div className="p-3 border rounded">Agendamento criado! ID: {apptId}</div>
+            <div className="space-y-3">
+              <div className="surface-muted text-sm font-medium text-[#1f2d28]">
+                Agendamento criado com sucesso!<br />
+                <span className="muted-text">ID: {apptId}</span>
+              </div>
               <Link
                 href="/dashboard/agendamentos"
-                className="block w-full rounded border bg-white py-2 text-center text-sm font-medium hover:bg-gray-50"
+                className="btn-secondary block w-full text-center"
               >
                 Ver meus agendamentos
               </Link>
-              <button
-                disabled={isLoading}
-                onClick={()=>pay('deposit')}
-                className="w-full bg-green-600 text-white py-2 rounded disabled:opacity-50"
-              >
-                {isLoading?'Abrindo checkout…':'Pagar Sinal'}
-              </button>
-              <button
-                disabled={isLoading}
-                onClick={()=>pay('full')}
-                className="w-full border py-2 rounded disabled:opacity-50"
-              >
-                {isLoading?'Abrindo checkout…':'Pagar Tudo'}
-              </button>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  disabled={isLoading}
+                  onClick={()=>pay('deposit')}
+                  className="btn-primary"
+                >
+                  {isLoading?'Abrindo checkout…':'Pagar sinal'}
+                </button>
+                <button
+                  disabled={isLoading}
+                  onClick={()=>pay('full')}
+                  className="btn-secondary"
+                >
+                  {isLoading?'Abrindo checkout…':'Pagar tudo'}
+                </button>
+              </div>
             </div>
           )}
         </div>

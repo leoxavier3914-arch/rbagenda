@@ -84,6 +84,7 @@ export default function AuthHeader() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 pt-4 sm:px-6 sm:pt-8">
       <nav className="flex min-h-[3.25rem] flex-col items-stretch overflow-hidden rounded-[24px] border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.9)] shadow-[var(--shadow-soft)] backdrop-blur-sm sm:min-h-[3.75rem] sm:flex-row sm:rounded-full">
+
         {navigationLinks.map((link, index) => {
           const isActive = link.exact
             ? pathname === link.href

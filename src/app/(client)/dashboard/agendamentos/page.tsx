@@ -13,29 +13,44 @@ type Appointment = {
 
 export default function MyAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     ;(async () => {
-      const { data: sess } = await supabase.auth.getSession()
-      const token = sess.session?.access_token
-      if (!token) {
-        window.location.href = '/login'
-        return
-      }
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
-      const ap = await fetch(
-        '/rest/v1/appointments?select=*,services(name)&customer_id=eq.' + sess.session?.user.id + '&order=starts_at.asc',
-        {
-          headers: {
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-            Authorization: `Bearer ${token}`
-          }
+        if (sessionError) {
+          throw sessionError
         }
-      ).then(r => r.json() as Promise<Appointment[]>)
 
-      setAppointments(ap)
-      setLoading(false)
+        const session = sessionData.session
+
+        if (!session?.user?.id) {
+          window.location.href = '/login'
+          return
+        }
+
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('*,services(name)')
+          .eq('customer_id', session.user.id)
+          .order('starts_at', { ascending: true })
+
+        if (error) {
+          throw error
+        }
+
+        setAppointments(data ?? [])
+        setError(null)
+      } catch (err) {
+        console.error('Failed to load appointments', err)
+        setError('Não foi possível carregar os agendamentos. Tente novamente mais tarde.')
+        setAppointments([])
+      } finally {
+        setLoading(false)
+      }
     })()
   }, [])
 
@@ -50,6 +65,8 @@ export default function MyAppointments() {
 
       {loading ? (
         <p>Carregando…</p>
+      ) : error ? (
+        <p className="text-sm text-red-600">{error}</p>
       ) : appointments.length === 0 ? (
         <p>Você ainda não tem agendamentos.</p>
       ) : (

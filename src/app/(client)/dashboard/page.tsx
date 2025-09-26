@@ -173,7 +173,7 @@ export default function Dashboard() {
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-6">
-      <section className="card space-y-6">
+      <section className="card card--flush-top space-y-6">
         <div className="space-y-2">
           <span className="badge">Dados pessoais</span>
           <h1 className="text-3xl font-semibold text-[#1f2d28]">Meu perfil</h1>

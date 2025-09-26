@@ -9,7 +9,9 @@ export default function ClientLayout({
   return (
     <div className="relative flex min-h-screen flex-1 flex-col">
       <AuthHeader />
-      <div className="relative mx-auto w-full max-w-5xl flex-1 px-4 py-8 pb-14 sm:px-6 sm:py-10 sm:pb-16">
+
+      <div className="relative mx-auto w-full max-w-5xl flex-1 px-6 pb-16 pt-0">
+
         {children}
       </div>
     </div>

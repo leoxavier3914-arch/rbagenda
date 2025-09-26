@@ -226,26 +226,66 @@ $$;
 
 GRANT EXECUTE ON FUNCTION is_admin(uuid) TO PUBLIC;
 
-CREATE POLICY IF NOT EXISTS profiles_self ON profiles
-FOR SELECT
-USING (
-  auth.uid() = id OR is_admin(auth.uid())
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'profiles'
+      AND policyname = 'profiles_self'
+  ) THEN
+    CREATE POLICY profiles_self ON profiles
+    FOR SELECT
+    USING (
+      auth.uid() = id OR is_admin(auth.uid())
+    );
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS profiles_self_insert ON profiles
-FOR INSERT
-WITH CHECK (
-  auth.uid() = id OR is_admin(auth.uid())
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'profiles'
+      AND policyname = 'profiles_self_insert'
+  ) THEN
+    CREATE POLICY profiles_self_insert ON profiles
+    FOR INSERT
+    WITH CHECK (
+      auth.uid() = id OR is_admin(auth.uid())
+    );
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS appt_select ON appointments
-FOR SELECT
-USING (
-  customer_id = auth.uid() OR is_admin(auth.uid())
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'appointments'
+      AND policyname = 'appt_select'
+  ) THEN
+    CREATE POLICY appt_select ON appointments
+    FOR SELECT
+    USING (
+      customer_id = auth.uid() OR is_admin(auth.uid())
+    );
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS appt_insert ON appointments
-FOR INSERT
-WITH CHECK (
-  customer_id = auth.uid() OR is_admin(auth.uid())
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'appointments'
+      AND policyname = 'appt_insert'
+  ) THEN
+    CREATE POLICY appt_insert ON appointments
+    FOR INSERT
+    WITH CHECK (
+      customer_id = auth.uid() OR is_admin(auth.uid())
+    );
+  END IF;
+END $$;

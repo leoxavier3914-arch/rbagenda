@@ -169,14 +169,20 @@ alter table profiles enable row level security;
 alter table appointments enable row level security;
 create or replace function is_admin(uid uuid)
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
+declare
+  result boolean;
+begin
+  perform set_config('row_security', 'off', true);
   select exists(
     select 1 from profiles where id = uid and role = 'admin'
-  );
+  ) into result;
+  return result;
+end;
 $$;
 
 grant execute on function is_admin(uuid) to public;

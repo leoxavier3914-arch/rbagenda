@@ -28,6 +28,26 @@ export async function POST(req: NextRequest) {
     .single()
   if (!appt || appt.customer_id !== user.id) return NextResponse.json({ error: 'not found' }, { status: 404 })
 
+  const totalCentsRaw = appt.total_cents
+  const totalCents =
+    typeof totalCentsRaw === 'number'
+      ? totalCentsRaw
+      : totalCentsRaw
+      ? Number(totalCentsRaw)
+      : null
+
+  const depositCentsRaw = appt.deposit_cents
+  const depositCents =
+    typeof depositCentsRaw === 'number'
+      ? depositCentsRaw
+      : depositCentsRaw
+      ? Number(depositCentsRaw)
+      : null
+
+  if (totalCents === null || Number.isNaN(totalCents)) {
+    return NextResponse.json({ error: 'Total inválido para o agendamento' }, { status: 400 })
+  }
+
   const { data: profile } = await supabaseAdmin
     .from('profiles')
     .select('full_name, email, whatsapp')
@@ -39,21 +59,38 @@ export async function POST(req: NextRequest) {
     .select('paid_cents')
     .eq('appointment_id', appointment_id)
     .maybeSingle()
-  const paid = tot?.paid_cents || 0
+  const paidRaw = tot?.paid_cents
+  const paid =
+    typeof paidRaw === 'number'
+      ? paidRaw
+      : paidRaw
+      ? Number(paidRaw)
+      : 0
+
+  if (Number.isNaN(paid)) {
+    return NextResponse.json({ error: 'Total pago inválido' }, { status: 500 })
+  }
 
   let amount = 0
   let title = 'Pagamento'
   let coversDeposit = false
   if (mode === 'deposit') {
-    amount = appt.deposit_cents
+    if (depositCents === null || depositCents <= 0 || Number.isNaN(depositCents)) {
+      return NextResponse.json({ error: 'Sinal não configurado para este agendamento' }, { status: 400 })
+    }
+    amount = depositCents
     title = 'Sinal'
   } else if (mode === 'balance') {
-    amount = Math.max(appt.total_cents - paid, 0)
+    amount = Math.max(totalCents - paid, 0)
     title = 'Saldo'
   } else {
-    amount = appt.total_cents
+    amount = totalCents
     title = 'Integral'
     coversDeposit = true
+  }
+
+  if (!Number.isFinite(amount) || !Number.isInteger(amount)) {
+    return NextResponse.json({ error: 'Valor inválido calculado para o pagamento' }, { status: 400 })
   }
 
   if (amount <= 0) return NextResponse.json({ error: 'Nada a pagar' }, { status: 400 })

@@ -177,12 +177,12 @@ as $$
 declare
   result boolean;
 begin
-  perform set_config('row_security', 'off', true);
-  execute $$
-    select exists(
-      select 1 from public.profiles where id = $1 and role = 'admin'
-    )
-  $$ into result using uid;
+  execute 'select exists(' ||
+          'select 1 from public.profiles where id = $1 and role = ''admin'''
+          ')'
+    into result
+    using uid;
+
   return result;
 end;
 $$;

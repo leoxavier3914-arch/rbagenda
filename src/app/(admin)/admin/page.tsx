@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
+import AppHeader from '@/components/AppHeader'
 
 type AdminProfile = {
   role?: string
@@ -53,16 +54,19 @@ export default function Admin(){
   if (!ok) return null
 
   return (
-    <main className="max-w-2xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Admin — Agenda</h1>
-      {appts.map(a=> (
-        <div key={a.id} className="p-3 border rounded grid grid-cols-2 gap-2">
-          <div><b>Cliente:</b> {a.profiles?.full_name}</div>
-          <div><b>Serviço:</b> {a.services?.name}</div>
-          <div><b>Início:</b> {new Date(a.starts_at).toLocaleString()}</div>
-          <div><b>Status:</b> {a.status}</div>
-        </div>
-      ))}
-    </main>
+    <>
+      <AppHeader />
+      <main className="max-w-2xl mx-auto p-6 space-y-4">
+        <h1 className="text-2xl font-semibold">Admin — Agenda</h1>
+        {appts.map(a=> (
+          <div key={a.id} className="p-3 border rounded grid grid-cols-2 gap-2">
+            <div><b>Cliente:</b> {a.profiles?.full_name}</div>
+            <div><b>Serviço:</b> {a.services?.name}</div>
+            <div><b>Início:</b> {new Date(a.starts_at).toLocaleString()}</div>
+            <div><b>Status:</b> {a.status}</div>
+          </div>
+        ))}
+      </main>
+    </>
   )
 }

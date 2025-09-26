@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
+import AppHeader from '@/components/AppHeader'
 
 type Profile = {
   full_name?: string
@@ -36,6 +37,32 @@ export default function Dashboard() {
   }, [])
 
   return (
+
+    <>
+      <AppHeader />
+      <main className="max-w-md mx-auto p-6 space-y-4">
+        <h1 className="text-2xl font-semibold">Meu perfil</h1>
+        {profile && (
+          <div className="p-3 border rounded">
+            <div><b>Nome:</b> {profile.full_name}</div>
+            <div><b>WhatsApp:</b> {profile.whatsapp}</div>
+            <div><b>E-mail:</b> {profile.email}</div>
+          </div>
+        )}
+
+        <h2 className="text-xl font-semibold">Meus agendamentos</h2>
+        <div className="space-y-2">
+          {appts.map(a=> (
+            <div key={a.id} className="p-3 border rounded">
+              <div><b>Serviço:</b> {a.services?.name}</div>
+              <div><b>Data:</b> {new Date(a.starts_at).toLocaleString()}</div>
+              <div><b>Status:</b> {a.status}</div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </>
+
     <main className="max-w-md mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Meu perfil</h1>
@@ -74,5 +101,6 @@ export default function Dashboard() {
         </Link>
       </div>
     </main>
+
   )
 }

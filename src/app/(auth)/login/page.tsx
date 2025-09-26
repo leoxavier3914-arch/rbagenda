@@ -1,8 +1,9 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { useRouter } from 'next/navigation'
+import type { Session } from '@supabase/supabase-js'
 
 export default function Login(){
   const [email,setEmail]=useState('');
@@ -12,6 +13,23 @@ export default function Login(){
   const [checkingSession, setCheckingSession] = useState(true)
   const router=useRouter()
 
+  const redirectByRole = useCallback(async (session: Session | null) => {
+    if (!session?.user?.id) return
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      const role = profile?.role === 'admin' ? 'admin' : 'client'
+      router.replace(role === 'admin' ? '/admin' : '/dashboard/novo-agendamento')
+    } catch {
+      router.replace('/dashboard/novo-agendamento')
+    }
+  }, [router])
+
   useEffect(()=>{
     let active = true
 
@@ -20,7 +38,7 @@ export default function Login(){
       if (!active) return
 
       if (data.session){
-        router.replace('/dashboard')
+        redirectByRole(data.session)
         return
       }
 
@@ -30,7 +48,9 @@ export default function Login(){
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session)=>{
       if (!active) return
       if (session){
-        router.replace('/dashboard')
+        redirectByRole(session)
+      } else {
+        setCheckingSession(false)
       }
     })
 
@@ -40,7 +60,7 @@ export default function Login(){
       active = false
       subscription.subscription.unsubscribe()
     }
-  },[router])
+  },[redirectByRole])
 
   async function submit(e: FormEvent<HTMLFormElement>){
     e.preventDefault()
@@ -48,14 +68,19 @@ export default function Login(){
     setLoading(true)
     setMsg('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error){
       setMsg(error.message)
       setLoading(false)
       return
     }
 
-    router.replace('/dashboard')
+    if (data.session){
+      await redirectByRole(data.session)
+    } else {
+      setMsg('Sessão não disponível. Verifique seu acesso e tente novamente.')
+    }
+
     setLoading(false)
   }
 

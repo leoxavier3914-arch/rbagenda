@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     title,
     amount_cents: amount,
     reference: appointment_id,
-    notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/pagarme`,
+    notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/stripe`,
     mode,
     customer: {
       name: profile?.full_name ?? undefined,
@@ -72,18 +72,18 @@ export async function POST(req: NextRequest) {
   })
 
   if (!pref.checkout_url) {
-    return NextResponse.json({ error: 'Falha ao gerar checkout do Pagar.me' }, { status: 502 })
+    return NextResponse.json({ error: 'Falha ao gerar checkout do Stripe' }, { status: 502 })
   }
 
   await supabaseAdmin.from('payments').insert({
     appointment_id,
-    provider: 'pagarme',
+    provider: 'stripe',
     provider_payment_id: pref.id,
     kind: mode,
     covers_deposit: coversDeposit,
     status: 'pending',
     amount_cents: amount,
-    payload: pref.order,
+    payload: pref.session,
   })
 
   return NextResponse.json({ checkout_url: pref.checkout_url })

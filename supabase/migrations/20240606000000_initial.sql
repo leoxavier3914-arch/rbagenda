@@ -1,5 +1,5 @@
-create extension if not exists "uuid-ossp";
-create extension if not exists pgcrypto;
+create extension if not exists "uuid-ossp" with schema extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ensure custom enums exist
 DO $$

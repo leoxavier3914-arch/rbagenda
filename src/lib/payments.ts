@@ -18,7 +18,7 @@ export type PaymentPreference = {
   id: string
   checkout_url: string | null
   client_secret: string | null
-  session: Stripe.Checkout.Session
+  intent: Stripe.PaymentIntent
 }
 
 let stripeClient: Stripe | null = null
@@ -50,10 +50,6 @@ function buildMetadata({
   return metadata
 }
 
-function getSiteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-}
-
 export async function createPreference({
   title,
   amount_cents,
@@ -80,67 +76,45 @@ export async function createPreference({
   if (customer?.document) {
     metadata.customer_document = customer.document
   }
-  const siteUrl = getSiteUrl()
+  if (customer?.email) {
+    metadata.customer_email = customer.email
+  }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    ui_mode: 'embedded',
-    client_reference_id: reference,
+  const description = `${title} - ${reference}`
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount_cents,
+    currency: 'brl',
+    description,
     metadata,
-    return_url: `${siteUrl}/success?ref=${encodeURIComponent(reference)}&session_id={CHECKOUT_SESSION_ID}`,
-    invoice_creation: { enabled: false },
-    automatic_tax: { enabled: false },
-    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
-    phone_number_collection: customer?.phone ? { enabled: true } : undefined,
-    customer_email: customer?.email ?? undefined,
-    payment_intent_data: {
-      metadata,
-      receipt_email: customer?.email ?? undefined,
-    },
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: 'brl',
-          unit_amount: amount_cents,
-          product_data: {
-            name: title,
-            metadata,
-          },
-        },
-      },
-    ],
+    automatic_payment_methods: { enabled: true },
+    receipt_email: customer?.email ?? undefined,
   })
 
   return {
-    id: session.id,
-    checkout_url: session.url ?? null,
-    client_secret: session.client_secret ?? null,
-    session,
+    id: paymentIntent.id,
+    checkout_url: null,
+    client_secret: paymentIntent.client_secret ?? null,
+    intent: paymentIntent,
   }
 }
 
-export async function getPayment(sessionId: string): Promise<Stripe.Checkout.Session> {
+export async function getPayment(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
   const stripe = getStripeClient()
-  return stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ['payment_intent', 'payment_intent.charges'],
+  return stripe.paymentIntents.retrieve(paymentIntentId, {
+    expand: ['charges', 'latest_charge'],
   })
 }
 
-export async function refundPayment(sessionId: string, amount_cents?: number) {
+export async function refundPayment(paymentIntentId: string, amount_cents?: number) {
   const stripe = getStripeClient()
-  const session = await getPayment(sessionId)
-  const paymentIntent = session.payment_intent
+  const paymentIntent = await getPayment(paymentIntentId)
 
-  const paymentIntentId =
-    typeof paymentIntent === 'string' ? paymentIntent : paymentIntent?.id
-
-  if (!paymentIntentId) {
+  if (!paymentIntent || !paymentIntent.id) {
     throw new Error('Nenhum pagamento confirmado para estornar')
   }
 
   return stripe.refunds.create({
-    payment_intent: paymentIntentId,
+    payment_intent: paymentIntent.id,
     amount: typeof amount_cents === 'number' ? amount_cents : undefined,
   })
 }

@@ -24,6 +24,12 @@ export async function POST(req: NextRequest) {
   const { data: appt } = await supabaseAdmin.from('appointments').select('id, customer_id, total_cents, deposit_cents').eq('id', appointment_id).single()
   if (!appt || appt.customer_id !== user.id) return NextResponse.json({ error: 'not found' }, { status: 404 })
 
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('full_name, email, whatsapp')
+    .eq('id', user.id)
+    .maybeSingle()
+
   const { data: tot } = await supabaseAdmin.from('appointment_payment_totals').select('paid_cents').eq('appointment_id', appointment_id).maybeSingle()
   const paid = tot?.paid_cents || 0
 
@@ -38,19 +44,29 @@ export async function POST(req: NextRequest) {
     title,
     amount_cents: amount,
     reference: appointment_id,
-    notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/mercadopago`
+    notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/stripe`,
+    mode,
+    customer: {
+      name: profile?.full_name ?? undefined,
+      email: profile?.email ?? undefined,
+      phone: profile?.whatsapp?.replace(/\D/g, '') ?? undefined,
+    },
   })
+
+  if (!pref.checkout_url) {
+    return NextResponse.json({ error: 'Falha ao gerar checkout do Stripe' }, { status: 502 })
+  }
 
   await supabaseAdmin.from('payments').insert({
     appointment_id,
-    provider: 'mercadopago',
+    provider: 'stripe',
     provider_payment_id: pref.id,
     kind: mode,
     covers_deposit: coversDeposit,
     status: 'pending',
     amount_cents: amount,
-    payload: pref
+    payload: pref.session
   })
 
-  return NextResponse.json({ checkout_url: pref.init_point || pref.sandbox_init_point || pref.point_of_interaction?.transaction_data?.ticket_url })
+  return NextResponse.json({ checkout_url: pref.checkout_url })
 }

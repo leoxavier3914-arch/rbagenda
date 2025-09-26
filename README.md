@@ -1,6 +1,6 @@
 # rbagenda
 
-rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de agendamentos e integrações com Supabase e Mercado Pago.
+rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de agendamentos e integrações com Supabase e Stripe.
 
 ## Requisitos
 
@@ -14,12 +14,35 @@ rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de age
    npm install
    ```
 2. Configure as variáveis de ambiente em `.env.local`.
+   ```env
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   SUPABASE_URL=...
+   SUPABASE_SERVICE_ROLE_KEY=...
+   STRIPE_SECRET_KEY=sk_test_xxx
+   STRIPE_WEBHOOK_SECRET=whsec_xxx
+   # Opcional: altere a versão/endpoint se necessário
+   # STRIPE_API_VERSION=2024-06-20
+   # STRIPE_API_URL=https://api.stripe.com/v1
+   ```
+   > Garanta que as chaves do Stripe estejam configuradas também no provedor de hospedagem (ex.: Vercel) ao publicar a aplicação.
 3. Execute o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
 
 O aplicativo ficará disponível em [http://localhost:3000](http://localhost:3000).
+
+### Webhook do Stripe
+
+Cadastre no painel do Stripe um endpoint apontando para `https://SEU-DOMINIO/api/webhooks/stripe` e selecione ao menos os eventos:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_failed`
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `charge.refunded`
+
+Use o segredo (`whsec_...`) exibido pelo Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado.
 
 ## Scripts disponíveis
 

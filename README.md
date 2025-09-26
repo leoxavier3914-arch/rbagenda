@@ -1,6 +1,6 @@
 # rbagenda
 
-rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de agendamentos e integrações com Supabase e Pagar.me.
+rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de agendamentos e integrações com Supabase e Stripe.
 
 ## Requisitos
 
@@ -18,12 +18,10 @@ rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de age
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
    SUPABASE_URL=...
    SUPABASE_SERVICE_ROLE_KEY=...
-   PAGARME_API_KEY=sk_test_xxx
-   PAGARME_WEBHOOK_SECRET=uma_senha_bem_forte
-   # Opcional: sobrescreva a URL base da API se necessário
-   # PAGARME_API_URL=https://api.pagar.me/core/v5
+   STRIPE_SECRET_KEY=sk_test_xxx
+   STRIPE_WEBHOOK_SECRET=whsec_...
    ```
-   > Garanta que as chaves do Pagar.me estejam configuradas também no provedor de hospedagem (ex.: Vercel) ao publicar a aplicação.
+   > Garanta que as chaves do Stripe estejam configuradas também no provedor de hospedagem (ex.: Vercel) ao publicar a aplicação.
 
 3. Execute o servidor de desenvolvimento:
    ```bash
@@ -32,17 +30,16 @@ rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de age
 
 O aplicativo ficará disponível em [http://localhost:3000](http://localhost:3000).
 
-### Webhook do Pagar.me
+### Webhook do Stripe
 
-Cadastre no painel do Pagar.me um endpoint apontando para `https://SEU-DOMINIO/api/webhooks/pagarme` e selecione ao menos os eventos:
+Cadastre no painel do Stripe um endpoint apontando para `https://SEU-DOMINIO/api/webhooks/stripe` e selecione ao menos os eventos:
 
-- `order.paid`
-- `order.payment_failed`
-- `order.canceled`
+- `checkout.session.completed`
+- `checkout.session.async_payment_failed`
+- `checkout.session.expired`
 - `charge.refunded`
-- `charge.canceled`
 
-Use o segredo (HMAC) configurado no Pagar.me na variável `PAGARME_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado.
+Use o segredo configurado no Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado.
 
 ## Scripts disponíveis
 

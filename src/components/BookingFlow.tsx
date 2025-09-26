@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
 
@@ -143,6 +144,12 @@ export default function BookingFlow(){
       ) : (
         <div className="space-y-2">
           <div className="p-3 border rounded">Agendamento criado! ID: {apptId}</div>
+          <Link
+            href="/dashboard/agendamentos"
+            className="block w-full rounded border bg-white py-2 text-center text-sm font-medium hover:bg-gray-50"
+          >
+            Ver meus agendamentos
+          </Link>
           <button onClick={()=>pay('deposit')} className="w-full bg-green-600 text-white py-2 rounded">Pagar Sinal</button>
           <button onClick={()=>pay('full')} className="w-full border py-2 rounded">Pagar Tudo</button>
         </div>

@@ -21,7 +21,7 @@ export default function Success(){
   },[])
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
+    <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-14 sm:px-6 sm:py-16">
       <div className="card w-full max-w-md space-y-6 text-center">
         <div className="space-y-2">
           <span className="badge inline-flex">Pagamento</span>

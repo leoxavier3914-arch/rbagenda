@@ -74,11 +74,11 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
   }, [appearance, clientSecret])
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center gap-10 py-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center gap-8 px-4 py-6 sm:gap-10 sm:px-6">
       <div className="mx-auto w-full max-w-3xl">
         <div className="relative isolate overflow-hidden rounded-[32px] border border-[rgba(35,82,58,0.12)] bg-[#fdf9f0]/90 shadow-[0_25px_60px_-25px_rgba(35,82,58,0.35)] backdrop-blur">
           <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[rgba(47,109,79,0.12)] via-transparent to-[rgba(35,82,58,0.18)]" aria-hidden="true" />
-          <div className="flex flex-col gap-8 p-8 sm:p-10">
+          <div className="flex flex-col gap-6 p-6 sm:gap-8 sm:p-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-2">
                 <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(47,109,79,0.15)] bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-[#2f6d4f]">
@@ -96,17 +96,17 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
                   )}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col gap-2 sm:items-end">
                 <button
                   type="button"
                   onClick={()=>router.back()}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgba(47,109,79,0.2)] bg-white/80 px-4 py-2 text-sm font-medium text-[#2f6d4f] transition hover:border-[#2f6d4f] hover:bg-[#f7f2e7]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[rgba(47,109,79,0.2)] bg-white/80 px-4 py-2 text-sm font-medium text-[#2f6d4f] transition hover:border-[#2f6d4f] hover:bg-[#f7f2e7] sm:w-auto"
                 >
                   ← Voltar
                 </button>
                 <Link
                   href="/dashboard/agendamentos"
-                  className="text-xs font-medium text-[color:rgba(31,45,40,0.6)] underline-offset-4 hover:underline"
+                  className="text-center text-xs font-medium text-[color:rgba(31,45,40,0.6)] underline-offset-4 hover:underline sm:text-right"
                 >
                   Ver agendamentos
                 </Link>
@@ -255,7 +255,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[rgba(47,109,79,0.15)] bg-white/80 p-6 shadow-[0_20px_55px_-25px_rgba(35,82,58,0.25)]">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[rgba(47,109,79,0.15)] bg-white/80 p-5 shadow-[0_20px_55px_-25px_rgba(35,82,58,0.25)] sm:p-6">
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-[#1f2d28]">Dados de pagamento</h2>
           <p className="text-sm text-[color:rgba(31,45,40,0.68)]">
@@ -308,7 +308,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
           {isProcessing ? 'Processando…' : isSuccess ? 'Pagamento concluído' : 'Pagar agora'}
         </button>
       </form>
-      <div className="space-y-4 rounded-3xl border border-[rgba(47,109,79,0.15)] bg-white/70 p-6 shadow-[0_20px_55px_-25px_rgba(35,82,58,0.2)]">
+      <div className="space-y-4 rounded-3xl border border-[rgba(47,109,79,0.15)] bg-white/70 p-5 shadow-[0_20px_55px_-25px_rgba(35,82,58,0.2)] sm:p-6">
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-[#1f2d28]">Resumo</h3>
           <p className="text-sm text-[color:rgba(31,45,40,0.68)]">

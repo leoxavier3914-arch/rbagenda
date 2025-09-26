@@ -86,8 +86,8 @@ export default function Login(){
 
   if (checkingSession){
     return (
-      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-10">
-      <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
+      <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-10 sm:px-6">
+        <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
           Verificando sessão…
         </div>
       </main>
@@ -95,7 +95,7 @@ export default function Login(){
   }
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
+    <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-14 sm:px-6 sm:py-16">
       <div className="card w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <span className="badge inline-flex">Bem-vinda de volta</span>

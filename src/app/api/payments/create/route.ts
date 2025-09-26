@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  if (!pref.checkout_url) {
+  if (!pref.client_secret) {
     return NextResponse.json({ error: 'Falha ao gerar checkout do Stripe' }, { status: 502 })
   }
 
@@ -86,5 +86,5 @@ export async function POST(req: NextRequest) {
     payload: pref.session,
   })
 
-  return NextResponse.json({ checkout_url: pref.checkout_url })
+  return NextResponse.json({ client_secret: pref.client_secret, session_id: pref.id })
 }

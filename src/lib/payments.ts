@@ -17,6 +17,7 @@ export type CreatePreferenceInput = {
 export type PaymentPreference = {
   id: string
   checkout_url: string | null
+  client_secret: string | null
   session: Stripe.Checkout.Session
 }
 
@@ -83,10 +84,12 @@ export async function createPreference({
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
+    ui_mode: 'embedded',
     client_reference_id: reference,
     metadata,
     success_url: `${siteUrl}/success?ref=${encodeURIComponent(reference)}`,
     cancel_url: `${siteUrl}/appointments/${encodeURIComponent(reference)}`,
+    return_url: `${siteUrl}/success?ref=${encodeURIComponent(reference)}&session_id={CHECKOUT_SESSION_ID}`,
     invoice_creation: { enabled: false },
     automatic_tax: { enabled: false },
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
@@ -114,6 +117,7 @@ export async function createPreference({
   return {
     id: session.id,
     checkout_url: session.url ?? null,
+    client_secret: session.client_secret ?? null,
     session,
   }
 }

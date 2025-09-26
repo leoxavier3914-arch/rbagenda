@@ -6,8 +6,17 @@ export default function Success(){
   const [msg,setMsg]=useState('Processando…')
 
   useEffect(()=>{
-    const ref=new URLSearchParams(location.search).get('ref');
-    setMsg(ref?`Pagamento recebido/pendente para ${ref}.`:'Obrigado!')
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    const sessionId = params.get('session_id');
+
+    if (ref) {
+      setMsg(`Pagamento recebido/pendente para ${ref}.`);
+    } else if (sessionId) {
+      setMsg(`Pagamento recebido/pendente. Session ID: ${sessionId}.`);
+    } else {
+      setMsg('Obrigado!');
+    }
   },[])
 
   return (

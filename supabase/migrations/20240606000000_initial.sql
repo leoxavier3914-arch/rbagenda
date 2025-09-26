@@ -213,12 +213,14 @@ DECLARE
 BEGIN
   PERFORM set_config('row_security', 'off', true);
 
-  SELECT EXISTS(
-    SELECT 1
-    FROM profiles
-    WHERE id = uid
-      AND role = 'admin'
-  ) INTO result;
+  EXECUTE $$
+    SELECT EXISTS(
+      SELECT 1
+      FROM public.profiles
+      WHERE id = $1
+        AND role = 'admin'
+    )
+  $$ INTO result USING uid;
 
   RETURN result;
 END;

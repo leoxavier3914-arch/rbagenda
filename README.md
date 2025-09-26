@@ -16,6 +16,7 @@ rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de age
 2. Configure as variáveis de ambiente em `.env.local`.
    ```env
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
    SUPABASE_URL=...
    SUPABASE_SERVICE_ROLE_KEY=...
    STRIPE_SECRET_KEY=sk_test_xxx

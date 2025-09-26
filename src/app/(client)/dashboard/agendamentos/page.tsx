@@ -1,6 +1,4 @@
 'use client'
-
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
 
@@ -56,17 +54,12 @@ export default function MyAppointments() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-8">
-      <div className="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <span className="badge">Agenda</span>
-          <h1 className="text-3xl font-semibold text-[#1f2d28]">Meus agendamentos</h1>
-          <p className="muted-text max-w-xl">
-            Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
-          </p>
-        </div>
-        <Link className="btn-secondary" href="/dashboard">
-          Voltar ao perfil
-        </Link>
+      <div className="card space-y-1">
+        <span className="badge">Agenda</span>
+        <h1 className="text-3xl font-semibold text-[#1f2d28]">Meus agendamentos</h1>
+        <p className="muted-text max-w-xl">
+          Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
+        </p>
       </div>
 
       {loading ? (

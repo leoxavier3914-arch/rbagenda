@@ -24,9 +24,9 @@ export default function Login(){
         .maybeSingle()
 
       const role = profile?.role === 'admin' ? 'admin' : 'client'
-      router.replace(role === 'admin' ? '/admin' : '/dashboard/novo-agendamento')
+      router.replace(role === 'admin' ? '/admin' : '/dashboard')
     } catch {
-      router.replace('/dashboard/novo-agendamento')
+      router.replace('/dashboard')
     }
   }, [router])
 

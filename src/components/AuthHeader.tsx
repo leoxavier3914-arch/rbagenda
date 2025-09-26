@@ -67,6 +67,12 @@ export default function AuthHeader() {
                 Admin
               </Link>
               <Link
+                href="/dashboard"
+                className="transition hover:text-black"
+              >
+                Meu perfil
+              </Link>
+              <Link
                 href="/dashboard/novo-agendamento"
                 className="transition hover:text-black"
               >
@@ -81,6 +87,12 @@ export default function AuthHeader() {
             </>
           ) : role === "client" ? (
             <>
+              <Link
+                href="/dashboard"
+                className="transition hover:text-black"
+              >
+                Meu perfil
+              </Link>
               <Link
                 href="/dashboard/novo-agendamento"
                 className="transition hover:text-black"

@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     covers_deposit: coversDeposit,
     status: 'pending',
     amount_cents: amount,
-    payload: pref.session,
+    payload: pref.intent,
   })
 
   return NextResponse.json({ client_secret: pref.client_secret, session_id: pref.id })

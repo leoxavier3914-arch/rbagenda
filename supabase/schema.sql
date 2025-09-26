@@ -167,12 +167,26 @@ for each row execute function sync_paid_full();
 -- RLS básica (clientes veem só o que é deles; admin vê tudo)
 alter table profiles enable row level security;
 alter table appointments enable row level security;
+create or replace function is_admin(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists(
+    select 1 from profiles where id = uid and role = 'admin'
+  );
+$$;
+
+grant execute on function is_admin(uuid) to public;
+
 create policy if not exists profiles_self on profiles for select using (
-  auth.uid() = id or exists(select 1 from profiles p where p.id = auth.uid() and p.role='admin')
+  auth.uid() = id or is_admin(auth.uid())
 );
 create policy if not exists appt_select on appointments for select using (
-  customer_id = auth.uid() or exists(select 1 from profiles p where p.id = auth.uid() and p.role='admin')
+  customer_id = auth.uid() or is_admin(auth.uid())
 );
 create policy if not exists appt_insert on appointments for insert with check (
-  customer_id = auth.uid() or exists(select 1 from profiles p where p.id = auth.uid() and p.role='admin')
+  customer_id = auth.uid() or is_admin(auth.uid())
 );

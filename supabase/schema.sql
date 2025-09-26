@@ -190,6 +190,9 @@ grant execute on function is_admin(uuid) to public;
 create policy if not exists profiles_self on profiles for select using (
   auth.uid() = id or is_admin(auth.uid())
 );
+create policy if not exists profiles_self_insert on profiles for insert with check (
+  auth.uid() = id or is_admin(auth.uid())
+);
 create policy if not exists appt_select on appointments for select using (
   customer_id = auth.uid() or is_admin(auth.uid())
 );

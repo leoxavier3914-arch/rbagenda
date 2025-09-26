@@ -24,6 +24,8 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -154,6 +156,23 @@ export default function Dashboard() {
     setSaving(false)
   }
 
+  async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+    setSignOutError(null)
+
+    const { error: signOutError } = await supabase.auth.signOut()
+
+    if (signOutError) {
+      setSignOutError(signOutError.message || 'Não foi possível encerrar a sessão. Tente novamente.')
+      setSigningOut(false)
+      return
+    }
+
+    router.replace('/login')
+    setSigningOut(false)
+  }
+
   const role = profile?.role === 'admin' ? 'admin' : 'client'
 
   return (
@@ -244,6 +263,25 @@ export default function Dashboard() {
             </button>
           </form>
         )}
+        <div className="space-y-3 rounded-3xl border border-[color:rgba(47,109,79,0.12)] bg-[color:rgba(247,242,231,0.6)] px-4 py-5 text-sm text-[color:rgba(31,45,40,0.8)]">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-[#1f2d28]">Encerrar sessão</h2>
+            <p>
+              Finalize sua sessão com segurança quando terminar de atualizar seus dados ou revisar seus agendamentos.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="btn-secondary w-full justify-center"
+          >
+            {signingOut ? 'Saindo…' : 'Sair da conta'}
+          </button>
+          {signOutError ? (
+            <p className="text-xs text-red-600">{signOutError}</p>
+          ) : null}
+        </div>
       </section>
 
       <aside className="card space-y-5">

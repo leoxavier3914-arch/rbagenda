@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/db";
 
+type NavLink = {
+  href: string;
+  label: string;
+};
+
 export default function AuthHeader() {
-  const router = useRouter();
-  const [signingOut, setSigningOut] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [role, setRole] = useState<"loading" | "admin" | "client">("loading");
 
   useEffect(() => {
@@ -40,89 +41,45 @@ export default function AuthHeader() {
     };
   }, []);
 
-  async function handleSignOut() {
-    if (signingOut) return;
-    setSigningOut(true);
-    setError(null);
-
-    const { error: signOutError } = await supabase.auth.signOut();
-
-    if (signOutError) {
-      setError(signOutError.message);
-      setSigningOut(false);
-      return;
+  const navigationLinks = useMemo<NavLink[]>(() => {
+    if (role === "admin") {
+      return [
+        { href: "/admin", label: "Admin" },
+        { href: "/dashboard", label: "Meu perfil" },
+        { href: "/dashboard/novo-agendamento", label: "Novo agendamento" },
+        { href: "/dashboard/agendamentos", label: "Meus agendamentos" },
+      ];
     }
 
-    router.replace("/login");
-    setSigningOut(false);
-  }
+    if (role === "client") {
+      return [
+        { href: "/dashboard", label: "Meu perfil" },
+        { href: "/dashboard/novo-agendamento", label: "Novo agendamento" },
+        { href: "/dashboard/agendamentos", label: "Meus agendamentos" },
+      ];
+    }
+
+    return [];
+  }, [role]);
 
   return (
-    <header className="border-b border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.75)] backdrop-blur">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
-        <nav className="flex items-center gap-5 text-sm font-medium text-[#2f6d4f]">
-          {role === "admin" ? (
-            <>
+    <header className="border-b border-[color:rgba(230,217,195,0.6)] bg-gradient-to-r from-[rgba(255,255,255,0.92)] via-[rgba(250,245,232,0.88)] to-[rgba(255,255,255,0.92)] shadow-sm backdrop-blur">
+      <div className="mx-auto w-full max-w-6xl px-6 py-4">
+        <div className="flex flex-col items-center gap-4">
+          <span className="rounded-full border border-[color:rgba(47,109,79,0.15)] bg-white/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#2f6d4f]/70">
+            Agenda
+          </span>
+          <nav className="flex flex-wrap items-center justify-center gap-2 text-sm font-medium text-[#2f6d4f] sm:gap-4">
+            {navigationLinks.map(link => (
               <Link
-                href="/admin"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
+                key={link.href}
+                href={link.href}
+                className="rounded-full px-4 py-2 transition-all hover:bg-[#f7f2e7] hover:text-[#23523a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6d4f]"
               >
-                Admin
+                {link.label}
               </Link>
-              <Link
-                href="/dashboard"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
-              >
-                Meu perfil
-              </Link>
-              <Link
-                href="/dashboard/novo-agendamento"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
-              >
-                Novo agendamento
-              </Link>
-              <Link
-                href="/dashboard/agendamentos"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
-              >
-                Meus agendamentos
-              </Link>
-            </>
-          ) : role === "client" ? (
-            <>
-              <Link
-                href="/dashboard"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
-              >
-                Meu perfil
-              </Link>
-              <Link
-                href="/dashboard/novo-agendamento"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
-              >
-                Novo agendamento
-              </Link>
-              <Link
-                href="/dashboard/agendamentos"
-                className="rounded-full px-3 py-1 transition hover:bg-[#f7f2e7] hover:text-[#23523a]"
-              >
-                Meus agendamentos
-              </Link>
-            </>
-          ) : null}
-        </nav>
-        <div className="flex flex-col items-end gap-1 text-right">
-          <button
-            type="button"
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="btn-secondary px-4 py-2"
-          >
-            {signingOut ? "Saindo…" : "Sair"}
-          </button>
-          {error ? (
-            <span className="text-xs text-red-600">{error}</span>
-          ) : null}
+            ))}
+          </nav>
         </div>
       </div>
     </header>

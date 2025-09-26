@@ -55,6 +55,12 @@
     backdrop-filter: blur(14px);
   }
 
+  .card--flush-top {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: -1px;
+  }
+
   .surface-muted {
     border-radius: var(--radius-card);
     border: 1px solid rgba(230, 217, 195, 0.4);

@@ -54,7 +54,7 @@ export default function MyAppointments() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-8">
-      <div className="card space-y-1">
+      <div className="card card--flush-top space-y-1">
         <span className="badge">Agenda</span>
         <h1 className="text-3xl font-semibold text-[#1f2d28]">Meus agendamentos</h1>
         <p className="muted-text max-w-xl">

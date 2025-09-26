@@ -50,10 +50,9 @@
     border-radius: var(--radius-card);
     border: 1px solid rgba(230, 217, 195, 0.6);
     background-color: rgba(255, 255, 255, 0.82);
-    padding: clamp(1rem, 4vw, 1.5rem);
+    padding: 1.5rem;
     box-shadow: var(--shadow-soft);
     backdrop-filter: blur(14px);
-    overflow-wrap: anywhere;
   }
 
   .card--flush-top {
@@ -66,9 +65,8 @@
     border-radius: var(--radius-card);
     border: 1px solid rgba(230, 217, 195, 0.4);
     background-color: rgba(247, 242, 231, 0.75);
-    padding: clamp(1rem, 4vw, 1.5rem);
+    padding: 1.5rem;
     backdrop-filter: blur(14px);
-    overflow-wrap: anywhere;
   }
 
   .btn-primary {

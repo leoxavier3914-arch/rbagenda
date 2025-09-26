@@ -82,9 +82,8 @@ export default function AuthHeader() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 pt-4 sm:px-6 sm:pt-8">
-      <nav className="flex min-h-[3.25rem] flex-col items-stretch overflow-hidden rounded-[24px] border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.9)] shadow-[var(--shadow-soft)] backdrop-blur-sm sm:min-h-[3.75rem] sm:flex-row sm:rounded-full">
-
+    <div className="mx-auto w-full max-w-4xl px-0 sm:px-6">
+      <nav className="flex min-h-[3.75rem] items-stretch overflow-hidden rounded-none border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.82)] shadow-[var(--shadow-soft)] sm:rounded-full">
         {navigationLinks.map((link, index) => {
           const isActive = link.exact
             ? pathname === link.href
@@ -94,10 +93,8 @@ export default function AuthHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex flex-1 items-center justify-center px-4 py-3 text-center text-sm font-semibold transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.5)] sm:py-4 sm:text-base ${
-                index > 0
-                  ? "border-t border-[rgba(47,109,79,0.12)] sm:border-t-0 sm:border-l"
-                  : ""
+              className={`flex flex-1 items-center justify-center px-4 py-4 text-center text-base font-semibold transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.5)] ${
+                index > 0 ? "border-l border-[rgba(47,109,79,0.12)]" : ""
               } ${
                 isActive
                   ? "bg-[var(--brand-forest)] text-[var(--brand-cream)] shadow-inner"

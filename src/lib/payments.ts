@@ -1,60 +1,10 @@
-const STRIPE_BASE = process.env.STRIPE_API_URL ?? 'https://api.stripe.com/v1'
-const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY
+import crypto from 'crypto'
 
-if (!STRIPE_SECRET) {
-  throw new Error('Defina STRIPE_SECRET_KEY no ambiente')
-}
-
-function buildHeaders(init?: RequestInit) {
-  const headers = new Headers(init?.headers)
-  headers.set('Authorization', `Bearer ${STRIPE_SECRET}`)
-
-  if (init?.body instanceof URLSearchParams) {
-    headers.set('Content-Type', 'application/x-www-form-urlencoded')
-  } else if (!headers.has('Content-Type') && init?.body) {
-    headers.set('Content-Type', 'application/json')
-  }
-
-  headers.set('Stripe-Version', process.env.STRIPE_API_VERSION ?? '2024-06-20')
-
-  return headers
-}
-
-type StripeJson = Record<string, unknown>
-
-export type StripeCharge = StripeJson & {
-  amount_captured?: number
-  amount?: number
-  amount_refunded?: number
-}
-
-export type StripePaymentIntent = StripeJson & {
-  id?: string
-  status?: string
-  charges?: { data?: StripeCharge[] }
-}
-
-export type StripeCheckoutSession = StripeJson & {
-  id?: string
-  url?: string | null
-  metadata?: Record<string, unknown>
-  payment_status?: string
-  payment_intent?: string | StripePaymentIntent
-}
-
-async function stripeFetch(path: string, init?: RequestInit): Promise<StripeJson> {
-  const res = await fetch(`${STRIPE_BASE}${path}`, {
-    ...init,
-    headers: buildHeaders(init),
-    cache: 'no-store',
-  })
-
-  if (!res.ok) {
-    const message = await res.text().catch(() => res.statusText)
-    throw new Error(`Stripe ${res.status}: ${message}`)
-  }
-
-  return (await res.json()) as StripeJson
+type PagarmePhone = {
+  country_code: string
+  area_code: string
+  number: string
+  type: string
 }
 
 type CreatePreferenceInput = {
@@ -67,85 +17,185 @@ type CreatePreferenceInput = {
     name?: string | null
     email?: string | null
     phone?: string | null
+    document?: string | null
   }
+}
+
+type PagarmeCheckout = {
+  payment_url?: string | null
+  url?: string | null
+}
+
+export type PagarmeCharge = {
+  id?: string
+  status?: string
+  paid_amount?: number
+  amount?: number
+  [key: string]: unknown
+}
+
+export type PagarmeOrder = {
+  id?: string
+  code?: string | null
+  metadata?: Record<string, unknown> | null
+  charges?: PagarmeCharge[] | null
+  checkouts?: PagarmeCheckout[] | null
+  [key: string]: unknown
+}
+
+const PG_BASE = process.env.PAGARME_API_URL ?? 'https://api.pagar.me/core/v5'
+
+function getApiKey() {
+  const key = process.env.PAGARME_API_KEY
+  if (!key) {
+    throw new Error('Defina PAGARME_API_KEY no ambiente')
+  }
+  return key
+}
+
+function buildAuthHeader() {
+  const token = Buffer.from(`${getApiKey()}:`).toString('base64')
+  return `Basic ${token}`
+}
+
+async function pgFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${PG_BASE}${path}`, {
+    ...init,
+    headers: {
+      Authorization: buildAuthHeader(),
+      'Content-Type': 'application/json',
+      ...(init?.headers ?? {}),
+    },
+    cache: 'no-store',
+  })
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => res.statusText)
+    throw new Error(`Pagar.me ${res.status}: ${msg}`)
+  }
+
+  return (await res.json()) as T
+}
+
+function buildPhones(phone: string | undefined | null): PagarmePhone[] | undefined {
+  if (!phone) return undefined
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length < 10) return undefined
+  const area = digits.slice(0, 2)
+  const number = digits.slice(2)
+  return [
+    {
+      country_code: '55',
+      area_code: area,
+      number,
+      type: 'mobile',
+    },
+  ]
 }
 
 export async function createPreference({
   title,
   amount_cents,
   reference,
-  notification_url: _notificationUrl,
+  notification_url,
   mode,
   customer,
 }: CreatePreferenceInput) {
-  void _notificationUrl
-  const params = new URLSearchParams()
-  params.append('mode', 'payment')
-  params.append('success_url', `${process.env.NEXT_PUBLIC_SITE_URL}/success?ref=${encodeURIComponent(reference)}`)
-  params.append('cancel_url', `${process.env.NEXT_PUBLIC_SITE_URL}/appointments/${encodeURIComponent(reference)}`)
-  params.append('line_items[0][price_data][currency]', 'brl')
-  params.append('line_items[0][price_data][product_data][name]', title)
-  params.append('line_items[0][price_data][unit_amount]', amount_cents.toString())
-  params.append('line_items[0][quantity]', '1')
-  params.append('metadata[appointment_id]', reference)
-  if (mode) params.append('metadata[payment_mode]', mode)
+  const idempotencyKey = crypto.randomUUID()
 
-  params.append('payment_intent_data[metadata][appointment_id]', reference)
-  if (mode) params.append('payment_intent_data[metadata][payment_mode]', mode)
+  const metadata: Record<string, unknown> = {
+    appointment_id: reference,
+    payment_title: title,
+  }
+  if (mode) {
+    metadata.payment_mode = mode
+  }
 
-  if (customer?.email) params.append('customer_email', customer.email)
-  if (customer?.name) params.append('metadata[customer_name]', customer.name)
-  if (customer?.phone) params.append('metadata[customer_phone]', customer.phone)
+  const customerPayload: Record<string, unknown> = {
+    name: customer?.name ?? 'Cliente RB Agenda',
+  }
+  if (customer?.email) customerPayload.email = customer.email
+  if (customer?.document) customerPayload.document = customer.document
+  const phones = buildPhones(customer?.phone ?? undefined)
+  if (phones) customerPayload.phones = phones
 
-  const session = (await stripeFetch('/checkout/sessions', {
+  const body = {
+    code: reference,
+    items: [
+      {
+        amount: amount_cents,
+        quantity: 1,
+        description: title,
+      },
+    ],
+    metadata,
+    customer: customerPayload,
+    payments: [
+      {
+        payment_method: 'checkout',
+        amount: amount_cents,
+        checkout: {
+          customer_editable: true,
+          expires_in: 60 * 60,
+          default_payment_method: 'pix',
+          accepted_payment_methods: ['credit_card', 'pix', 'boleto'],
+          success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success?ref=${encodeURIComponent(reference)}`,
+          skip_checkout_success_page: true,
+          postback_url: notification_url,
+        },
+      },
+    ],
+  }
+
+  const order = await pgFetch<PagarmeOrder>('/orders', {
     method: 'POST',
-    body: params,
-  })) as StripeCheckoutSession
+    body: JSON.stringify(body),
+    headers: {
+      'Idempotency-Key': idempotencyKey,
+    },
+  })
+
+  if (typeof order.id !== 'string') {
+    throw new Error('Ordem do Pagar.me sem ID válido')
+  }
+
+  const checkoutList = Array.isArray(order.checkouts) ? order.checkouts : null
+  const checkout = checkoutList && checkoutList.length > 0 ? checkoutList[0] : null
+  const checkoutUrl =
+    checkout && typeof checkout.payment_url === 'string'
+      ? checkout.payment_url
+      : checkout && typeof checkout.url === 'string'
+        ? checkout.url
+        : null
 
   return {
-    id: session.id as string,
-    checkout_url: (session.url as string | null) ?? null,
-    session,
+    id: order.id,
+    checkout_url: checkoutUrl,
+    order,
   }
 }
 
-export async function getPayment(sessionId: string) {
-  const params = new URLSearchParams()
-  params.append('expand[]', 'payment_intent')
-  params.append('expand[]', 'payment_intent.charges')
-
-  return stripeFetch(`/checkout/sessions/${sessionId}?${params.toString()}`) as Promise<StripeCheckoutSession>
+export async function getPayment(orderId: string) {
+  return pgFetch<PagarmeOrder>(`/orders/${orderId}`)
 }
 
-export async function findSessionByPaymentIntent(paymentIntentId: string) {
-  const params = new URLSearchParams()
-  params.append('payment_intent', paymentIntentId)
-  params.append('limit', '1')
+export async function refundPayment(orderId: string, amount_cents?: number) {
+  const order = await getPayment(orderId)
+  const charges: PagarmeCharge[] = Array.isArray(order.charges) ? order.charges : []
 
-  const list = (await stripeFetch(`/checkout/sessions?${params.toString()}`)) as StripeJson & {
-    data?: StripeCheckoutSession[]
-  }
-  const data = Array.isArray(list.data) ? list.data : []
-  return data[0] ?? null
-}
+  const paidCharge = charges.find((charge) => charge.status === 'paid' || charge.status === 'partial_paid')
 
-export async function refundPayment(sessionId: string, amount_cents?: number) {
-  const session = await getPayment(sessionId)
-  const paymentIntent = session.payment_intent as StripePaymentIntent | string | undefined
-  const paymentIntentId = typeof paymentIntent === 'string' ? paymentIntent : paymentIntent?.id
-
-  if (!paymentIntentId) {
-    throw new Error('Pagamento Stripe sem payment_intent disponível')
+  if (!paidCharge || typeof paidCharge.id !== 'string') {
+    throw new Error('Nenhuma cobrança paga encontrada para estornar')
   }
 
-  const params = new URLSearchParams()
-  params.append('payment_intent', paymentIntentId)
+  const payload: Record<string, unknown> = {}
   if (typeof amount_cents === 'number') {
-    params.append('amount', Math.round(amount_cents).toString())
+    payload.amount = amount_cents
   }
 
-  return stripeFetch('/refunds', {
+  return pgFetch(`/charges/${paidCharge.id}/cancel`, {
     method: 'POST',
-    body: params,
+    body: JSON.stringify(payload),
   })
 }

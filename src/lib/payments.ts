@@ -87,7 +87,6 @@ export async function createPreference({
     ui_mode: 'embedded',
     client_reference_id: reference,
     metadata,
-    success_url: `${siteUrl}/success?ref=${encodeURIComponent(reference)}`,
     return_url: `${siteUrl}/success?ref=${encodeURIComponent(reference)}&session_id={CHECKOUT_SESSION_ID}`,
     invoice_creation: { enabled: false },
     automatic_tax: { enabled: false },

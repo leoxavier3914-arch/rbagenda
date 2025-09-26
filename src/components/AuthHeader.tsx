@@ -82,8 +82,8 @@ export default function AuthHeader() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 pt-8">
-      <nav className="flex overflow-hidden rounded-full border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.82)] shadow-[var(--shadow-soft)]">
+    <div className="mx-auto w-full max-w-4xl px-0 pt-6 sm:px-6 sm:pt-8">
+      <nav className="flex min-h-[3.75rem] items-stretch overflow-hidden rounded-none border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.82)] shadow-[var(--shadow-soft)] sm:rounded-full">
         {navigationLinks.map((link, index) => {
           const isActive = link.exact
             ? pathname === link.href
@@ -93,7 +93,7 @@ export default function AuthHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex-1 px-6 py-3 text-center text-sm font-semibold transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.5)] ${
+              className={`flex flex-1 items-center justify-center px-4 py-4 text-center text-base font-semibold transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.5)] ${
                 index > 0 ? "border-l border-[rgba(47,109,79,0.12)]" : ""
               } ${
                 isActive

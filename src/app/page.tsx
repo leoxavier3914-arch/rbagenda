@@ -1,15 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BookingFlow from '@/components/BookingFlow'
 import { supabase } from '@/lib/db'
 import AuthHeader from '@/components/AuthHeader'
+import type { Session } from '@supabase/supabase-js'
 
 export default function Home(){
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [checked, setChecked] = useState(false)
+  const [access, setAccess] = useState<'checking' | 'admin'>('checking')
+
+  const handleSession = useCallback(async (session: Session | null) => {
+    if (!session?.user?.id) {
+      setAccess('checking')
+      router.replace('/login')
+      return
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      const role = profile?.role === 'admin' ? 'admin' : 'client'
+      if (role === 'admin') {
+        setAccess('admin')
+      } else {
+        setAccess('checking')
+        router.replace('/dashboard/novo-agendamento')
+      }
+    } catch {
+      setAccess('checking')
+      router.replace('/dashboard/novo-agendamento')
+    }
+  }, [router])
 
   useEffect(()=>{
     let ignore = false
@@ -19,27 +46,23 @@ export default function Home(){
       if (ignore) return
 
       if (!data.session){
-        setIsAuthenticated(false)
-        setChecked(true)
+        setAccess('checking')
         router.replace('/login')
         return
       }
 
-      setIsAuthenticated(true)
-      setChecked(true)
+      handleSession(data.session)
     }
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session)=>{
       if (ignore) return
       if (!session){
-        setIsAuthenticated(false)
-        setChecked(true)
+        setAccess('checking')
         router.replace('/login')
         return
       }
 
-      setIsAuthenticated(true)
-      setChecked(true)
+      handleSession(session)
     })
 
     checkSession()
@@ -48,9 +71,9 @@ export default function Home(){
       ignore = true
       listener.subscription.unsubscribe()
     }
-  },[router])
+  },[handleSession, router])
 
-  if (!checked || !isAuthenticated){
+  if (access !== 'admin'){
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
         <span className="text-sm text-gray-500">Verificando acesso…</span>

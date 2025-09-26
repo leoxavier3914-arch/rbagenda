@@ -2,38 +2,56 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 
 type Profile = {
   full_name?: string
   whatsapp?: string
   email?: string
+  role?: 'admin' | 'client'
 }
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
+    let active = true
+
     ;(async () => {
       const { data: sess } = await supabase.auth.getSession()
-      const token = sess.session?.access_token
-      if (!token) {
-        window.location.href = '/login'
+      if (!active) return
+
+      const session = sess.session
+      if (!session) {
+        router.replace('/login')
         return
       }
 
-      const me = await fetch('/rest/v1/profiles?id=eq.' + sess.session?.user.id, {
-        headers: {
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-          Authorization: `Bearer ${token}`
-        }
-      }).then(r => r.json() as Promise<Profile[]>)
+      const { data: me } = await supabase
+        .from('profiles')
+        .select('full_name, whatsapp, email, role')
+        .eq('id', session.user.id)
+        .maybeSingle()
 
-      setProfile(me[0] ?? null)
+      if (!active) return
+
+      const role = me?.role === 'admin' ? 'admin' : 'client'
+      if (role !== 'admin') {
+        router.replace('/dashboard/novo-agendamento')
+        return
+      }
+
+      setProfile(me ?? null)
       setLoading(false)
     })()
-  }, [])
+
+    return () => {
+      active = false
+    }
+  }, [router])
 
   return (
     <main className="max-w-md mx-auto p-6 space-y-6">

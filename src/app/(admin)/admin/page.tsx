@@ -52,7 +52,7 @@ export default function Admin(){
 
   if (!ok) {
     return (
-      <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-12 sm:px-6 sm:py-16">
+      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
         <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
           Verificando permissões…
         </div>
@@ -61,7 +61,7 @@ export default function Admin(){
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-8 px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl space-y-8 px-6">
       <div className="card space-y-3">
         <span className="badge">Administração</span>
         <h1 className="text-3xl font-semibold text-[#1f2d28]">Agenda completa</h1>
@@ -92,7 +92,7 @@ export default function Admin(){
                 <div>
                   <span className="font-medium text-[#1f2d28]">Início:</span> {new Date(a.starts_at).toLocaleString()}
                 </div>
-                <div className="break-words text-xs text-[color:rgba(31,45,40,0.6)]">ID: {a.id}</div>
+                <div className="text-xs text-[color:rgba(31,45,40,0.6)]">ID: {a.id}</div>
               </div>
             </div>
           ))}

@@ -11,6 +11,14 @@ type Appointment = {
   services?: { name?: string }
 }
 
+const statusLabels: Record<string, string> = {
+  pending: 'Pendente',
+  reserved: 'Reservado',
+  confirmed: 'Confirmado',
+  canceled: 'Cancelado',
+  completed: 'Finalizado',
+}
+
 export default function MyAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -68,7 +76,7 @@ export default function MyAppointments() {
     return data.session.access_token ?? null
   }
 
-  async function startPayment(appointmentId: string, mode: 'deposit' | 'full') {
+  async function startDepositPayment(appointmentId: string) {
     setPayError(null)
 
     if (!stripePromise) {
@@ -88,7 +96,7 @@ export default function MyAppointments() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ appointment_id: appointmentId, mode }),
+        body: JSON.stringify({ appointment_id: appointmentId, mode: 'deposit' }),
       })
 
       if (!res.ok) {
@@ -151,7 +159,7 @@ export default function MyAppointments() {
                     {a.services?.name ?? 'Serviço'}
                   </h2>
                   <span className="rounded-full border border-[color:rgba(47,109,79,0.2)] bg-[color:rgba(47,109,79,0.1)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[#2f6d4f]">
-                    {a.status}
+                    {statusLabels[a.status] ?? a.status}
                   </span>
                 </div>
                 <div className="muted-text">
@@ -168,20 +176,13 @@ export default function MyAppointments() {
                       {payError}
                     </div>
                   )}
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-2">
                     <button
                       className="btn-primary"
                       disabled={payingApptId === a.id}
-                      onClick={() => startPayment(a.id, 'deposit')}
+                      onClick={() => startDepositPayment(a.id)}
                     >
                       {payingApptId === a.id ? 'Abrindo checkout…' : 'Pagar sinal'}
-                    </button>
-                    <button
-                      className="btn-secondary"
-                      disabled={payingApptId === a.id}
-                      onClick={() => startPayment(a.id, 'full')}
-                    >
-                      {payingApptId === a.id ? 'Abrindo checkout…' : 'Pagar total'}
                     </button>
                   </div>
                 </div>

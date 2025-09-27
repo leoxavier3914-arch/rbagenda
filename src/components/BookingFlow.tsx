@@ -96,7 +96,7 @@ export default function BookingFlow(){
     if (d.appointment_id) setApptId(d.appointment_id)
   }
 
-  async function pay(mode:'deposit'|'full'){
+  async function payDeposit(){
     setError(null)
     if(!stripePromise){
       setError('Checkout indisponível. Verifique a chave pública do Stripe.')
@@ -112,7 +112,7 @@ export default function BookingFlow(){
           'Content-Type':'application/json',
           Authorization:`Bearer ${token}`
         },
-        body: JSON.stringify({ appointment_id: apptId, mode })
+        body: JSON.stringify({ appointment_id: apptId, mode: 'deposit' })
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Falha na criação do pagamento' }))
@@ -140,7 +140,7 @@ export default function BookingFlow(){
           <span className="badge">Novo agendamento</span>
           <h1 className="text-2xl font-semibold text-[#1f2d28]">Agendar aplicação</h1>
           <p className="muted-text">
-            Escolha o serviço, data e horário ideais para você. Você poderá pagar o sinal ou o valor completo na próxima etapa.
+            Escolha o serviço, data e horário ideais para você. Você poderá garantir o horário pagando o sinal na próxima etapa.
           </p>
         </div>
         {error && (
@@ -228,20 +228,13 @@ export default function BookingFlow(){
             >
               Ver meus agendamentos
             </Link>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
               <button
                 disabled={isLoading}
-                onClick={()=>pay('deposit')}
+                onClick={payDeposit}
                 className="btn-primary"
               >
                 {isLoading?'Abrindo checkout…':'Pagar sinal'}
-              </button>
-              <button
-                disabled={isLoading}
-                onClick={()=>pay('full')}
-                className="btn-secondary"
-              >
-                {isLoading?'Abrindo checkout…':'Pagar tudo'}
               </button>
             </div>
           </div>

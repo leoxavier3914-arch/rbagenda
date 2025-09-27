@@ -4,7 +4,7 @@ create extension if not exists pgcrypto with schema extensions;
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'appointment_status') then
-    create type appointment_status as enum ('pending','confirmed','canceled','completed');
+    create type appointment_status as enum ('pending','reserved','confirmed','canceled','completed');
   end if;
   if not exists (select 1 from pg_type where typname = 'payment_status') then
     create type payment_status as enum ('pending','approved','failed','refunded','partially_refunded');

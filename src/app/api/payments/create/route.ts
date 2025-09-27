@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type Stripe from 'stripe'
 import { getSupabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
-import { createPreference } from '@/lib/payments'
+import { createPreference, getPayment } from '@/lib/payments'
 import { z } from 'zod'
 
 const supabaseAdmin = getSupabaseAdmin()
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
     }
     amount = depositCents
     title = 'Sinal'
+    coversDeposit = true
   } else if (mode === 'balance') {
     amount = Math.max(totalCents - paid, 0)
     title = 'Saldo'
@@ -94,6 +96,51 @@ export async function POST(req: NextRequest) {
   }
 
   if (amount <= 0) return NextResponse.json({ error: 'Nada a pagar' }, { status: 400 })
+
+  const nowIso = new Date().toISOString()
+
+  const { data: existingPayment } = await supabaseAdmin
+    .from('payments')
+    .select('id, provider_payment_id, amount_cents')
+    .eq('appointment_id', appointment_id)
+    .eq('provider', 'stripe')
+    .eq('kind', mode)
+    .order('created_at', { ascending: false })
+    .maybeSingle()
+
+  if (existingPayment?.provider_payment_id && existingPayment.amount_cents === amount) {
+    const intent = await getPayment(existingPayment.provider_payment_id).catch(() => null)
+
+    if (intent) {
+      if (intent.status === 'succeeded') {
+        return NextResponse.json(
+          { error: 'Este pagamento já foi concluído.' },
+          { status: 400 },
+        )
+      }
+
+      const reusableStatuses = new Set<
+        Stripe.PaymentIntent.Status
+      >(['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing'])
+
+      if (reusableStatuses.has(intent.status)) {
+        const clientSecret = intent.client_secret ?? null
+
+        if (clientSecret) {
+          await supabaseAdmin
+            .from('payments')
+            .update({ payload: intent, status: 'pending', updated_at: nowIso })
+            .eq('id', existingPayment.id)
+
+          return NextResponse.json({
+            client_secret: clientSecret,
+            session_id: existingPayment.provider_payment_id,
+            reused: true,
+          })
+        }
+      }
+    }
+  }
 
   const pref = await createPreference({
     title,
@@ -121,6 +168,7 @@ export async function POST(req: NextRequest) {
     status: 'pending',
     amount_cents: amount,
     payload: pref.intent,
+    updated_at: nowIso,
   })
 
   return NextResponse.json({ client_secret: pref.client_secret, session_id: pref.id })

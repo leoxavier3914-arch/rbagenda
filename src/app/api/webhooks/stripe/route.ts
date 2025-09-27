@@ -47,6 +47,13 @@ export async function POST(req: NextRequest) {
   let appointmentId: string | null = null
   let newStatus: PaymentStatus | null = null
   let payload: Stripe.PaymentIntent | Stripe.Charge | null = null
+  let paymentRecord:
+    | {
+        id: string
+        appointment_id: string
+        kind: 'deposit' | 'balance' | 'full'
+      }
+    | null = null
 
   switch (event.type) {
     case 'payment_intent.payment_failed':
@@ -116,7 +123,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, note: 'sem identificadores' })
   }
 
-  const updateQuery = supabaseAdmin.from('payments').update({ status: newStatus, payload })
+  if (paymentIntentId) {
+    const { data: record } = await supabaseAdmin
+      .from('payments')
+      .select('id, appointment_id, kind')
+      .eq('provider_payment_id', paymentIntentId)
+      .maybeSingle()
+    if (record) {
+      paymentRecord = record
+      if (!appointmentId) {
+        appointmentId = record.appointment_id
+      }
+    }
+  }
+
+  if (!paymentRecord && appointmentId) {
+    const { data: record } = await supabaseAdmin
+      .from('payments')
+      .select('id, appointment_id, kind')
+      .eq('appointment_id', appointmentId)
+      .eq('provider', 'stripe')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (record) {
+      paymentRecord = record
+    }
+  }
+
+  const updateQuery = supabaseAdmin
+    .from('payments')
+    .update({ status: newStatus, payload, updated_at: new Date().toISOString() })
   if (paymentIntentId && appointmentId) {
     updateQuery.or(`provider_payment_id.eq.${paymentIntentId},appointment_id.eq.${appointmentId}`)
   } else if (paymentIntentId) {
@@ -129,13 +166,32 @@ export async function POST(req: NextRequest) {
   if (appointmentId && newStatus === 'approved') {
     const { data: appt } = await supabaseAdmin
       .from('appointments')
-      .select('id, status')
+      .select('id, status, paid_in_full')
       .eq('id', appointmentId)
       .maybeSingle()
 
-    if (appt && appt.status === 'pending') {
-      await supabaseAdmin.from('appointments').update({ status: 'confirmed' }).eq('id', appt.id)
-      await enqueueDefaultReminders(appt.id)
+    if (appt) {
+      let nextStatus: 'reserved' | 'confirmed' | null = null
+      let shouldEnqueueReminders = false
+
+      if (appt.status === 'pending') {
+        if (paymentRecord?.kind === 'deposit') {
+          nextStatus = 'reserved'
+          shouldEnqueueReminders = true
+        } else if (appt.paid_in_full) {
+          nextStatus = 'confirmed'
+          shouldEnqueueReminders = true
+        }
+      } else if (appt.status === 'reserved' && appt.paid_in_full) {
+        nextStatus = 'confirmed'
+      }
+
+      if (nextStatus && nextStatus !== appt.status) {
+        await supabaseAdmin.from('appointments').update({ status: nextStatus }).eq('id', appt.id)
+        if (shouldEnqueueReminders) {
+          await enqueueDefaultReminders(appt.id)
+        }
+      }
     }
   }
 

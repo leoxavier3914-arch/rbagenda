@@ -1,98 +1,213 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
-
-type AdminProfile = {
-  role?: string
-}
 
 type AdminAppointment = {
   id: string
   starts_at: string
   status: string
-  profiles?: { full_name?: string }
-  services?: { name?: string }
+  profiles: { full_name: string | null } | null
+  services: { name: string | null } | null
 }
 
-export default function Admin(){
-  const [ok,setOk]=useState(false)
-  const [appts,setAppts]=useState<AdminAppointment[]>([])
+type LoadingState = 'idle' | 'loading' | 'ready'
 
-  useEffect(()=>{
-    (async()=>{
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token
-      if (!token) {
-        window.location.href='/login';
+const headerDescription =
+  'Visualize todos os agendamentos confirmados ou pendentes. Utilize esta visão para acompanhar pagamentos, ajustar horários e garantir a melhor experiência.'
+
+export default function Admin() {
+  const router = useRouter()
+  const [status, setStatus] = useState<LoadingState>('idle')
+  const [error, setError] = useState<string | null>(null)
+  const [appointments, setAppointments] = useState<AdminAppointment[]>([])
+  const [signingOut, setSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState<string | null>(null)
+
+  const fetchAppointments = useCallback(async () => {
+    try {
+      setStatus('loading')
+      setError(null)
+
+      const { data: sess, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError) {
+        throw new Error('Não foi possível validar sua sessão. Faça login novamente.')
+      }
+
+      const session = sess.session
+
+      if (!session?.user?.id) {
+        setStatus('idle')
+        router.replace('/login')
         return
       }
 
-      const me = await fetch('/rest/v1/profiles?id=eq.'+sess.session?.user.id, {
-        headers: {
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-          Authorization: `Bearer ${token}`
-        }
-      }).then(r=>r.json() as Promise<AdminProfile[]>)
-      if (me[0]?.role !== 'admin') {
-        window.location.href='/dashboard';
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        throw new Error('Não foi possível verificar suas permissões. Tente novamente.')
+      }
+
+      if (profile?.role !== 'admin') {
+        setStatus('idle')
+        router.replace('/dashboard')
         return
       }
-      setOk(true)
 
-      const ap = await fetch('/rest/v1/appointments?select=*,profiles!appointments_customer_id_fkey(full_name),services(name)&order=starts_at.desc', {
-        headers: {
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-          Authorization: `Bearer ${token}`
+      const { data: appts, error: appointmentsError } = await supabase
+        .from('appointments')
+        .select(
+          'id, starts_at, status, profiles:profiles!appointments_customer_id_fkey(full_name), services:services(name)'
+        )
+        .order('starts_at', { ascending: false })
+
+      if (appointmentsError) {
+        throw new Error('Não foi possível carregar os agendamentos. Tente novamente.')
+      }
+
+      setAppointments((appts ?? []) as AdminAppointment[])
+      setStatus('ready')
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Ocorreu um erro inesperado. Tente novamente.'
+      setError(message)
+      setStatus('idle')
+    }
+  }, [router])
+
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      if (!active) return
+      await fetchAppointments()
+    }
+
+    load()
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!active) return
+
+        if (!session) {
+          setAppointments([])
+          setStatus('idle')
+          setSigningOut(false)
+          router.replace('/login')
+          return
         }
-      }).then(r=>r.json() as Promise<AdminAppointment[]>)
-      setAppts(ap)
-    })()
-  },[])
 
-  if (!ok) {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          fetchAppointments()
+        }
+      }
+    )
+
+    return () => {
+      active = false
+      subscription?.subscription.unsubscribe()
+    }
+  }, [fetchAppointments, router])
+
+  const isLoading = status !== 'ready' && !error
+
+  const handleSignOut = useCallback(async () => {
+    if (signingOut) return
+
+    setSigningOut(true)
+    setSignOutError(null)
+
+    const { error: logoutError } = await supabase.auth.signOut()
+
+    if (logoutError) {
+      setSignOutError(
+        logoutError.message || 'Não foi possível encerrar a sessão. Tente novamente.'
+      )
+      setSigningOut(false)
+      return
+    }
+
+    router.replace('/login')
+    setSigningOut(false)
+  }, [router, signingOut])
+
+  if (isLoading) {
     return (
-      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
-        <div className="card text-center text-sm text-[color:rgba(31,45,40,0.8)]">
-          Verificando permissões…
-        </div>
+      <main
+        className="flex min-h-screen flex-1 items-center justify-center px-6 py-16"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <span className="sr-only">Carregando painel administrativo…</span>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-8 px-6">
-      <div className="card space-y-3">
-        <span className="badge">Administração</span>
-        <h1 className="text-3xl font-semibold text-[#1f2d28]">Agenda completa</h1>
-        <p className="muted-text max-w-3xl">
-          Visualize todos os agendamentos confirmados ou pendentes. Utilize esta visão para acompanhar pagamentos, ajustar horários e garantir a melhor experiência.
-        </p>
+    <main className="mx-auto w-full max-w-5xl space-y-8 px-6 py-10">
+      <div className="flex items-center justify-between gap-4">
+        <div className="card flex-1 space-y-3">
+          <span className="badge">Administração</span>
+          <h1 className="text-3xl font-semibold text-[#1f2d28]">Agenda completa</h1>
+          <p className="muted-text max-w-3xl">{headerDescription}</p>
+        </div>
+        <div className="card flex w-full max-w-[220px] flex-col gap-3 text-sm">
+          <button
+            className="btn-secondary w-full"
+            onClick={handleSignOut}
+            disabled={signingOut}
+          >
+            {signingOut ? 'Encerrando sessão…' : 'Sair'}
+          </button>
+          {signOutError && (
+            <p className="text-xs text-red-600">{signOutError}</p>
+          )}
+        </div>
       </div>
-      {appts.length === 0 ? (
+
+      {error ? (
+        <div className="surface-muted space-y-3 text-center text-sm text-[color:rgba(31,45,40,0.8)]">
+          <p>{error}</p>
+          <div className="flex justify-center">
+            <button className="btn-primary" onClick={fetchAppointments}>
+              Tentar novamente
+            </button>
+          </div>
+        </div>
+      ) : appointments.length === 0 ? (
         <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.8)]">
           Nenhum agendamento encontrado por aqui ainda.
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {appts.map(a=> (
-            <div key={a.id} className="card space-y-3">
+          {appointments.map((appointment) => (
+            <div key={appointment.id} className="card space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[#1f2d28]">
-                  {a.services?.name ?? 'Serviço'}
+                  {appointment.services?.name ?? 'Serviço'}
                 </h2>
                 <span className="rounded-full border border-[color:rgba(47,109,79,0.2)] bg-[color:rgba(47,109,79,0.1)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[#2f6d4f]">
-                  {a.status}
+                  {appointment.status}
                 </span>
               </div>
               <div className="space-y-2 text-sm text-[#1f2d28]">
                 <div>
-                  <span className="font-medium text-[#1f2d28]">Cliente:</span> {a.profiles?.full_name ?? 'Sem nome informado'}
+                  <span className="font-medium text-[#1f2d28]">Cliente:</span>{' '}
+                  {appointment.profiles?.full_name ?? 'Sem nome informado'}
                 </div>
                 <div>
-                  <span className="font-medium text-[#1f2d28]">Início:</span> {new Date(a.starts_at).toLocaleString()}
+                  <span className="font-medium text-[#1f2d28]">Início:</span>{' '}
+                  {new Date(appointment.starts_at).toLocaleString()}
                 </div>
-                <div className="text-xs text-[color:rgba(31,45,40,0.6)]">ID: {a.id}</div>
+                <div className="text-xs text-[color:rgba(31,45,40,0.6)]">ID: {appointment.id}</div>
               </div>
             </div>
           ))}

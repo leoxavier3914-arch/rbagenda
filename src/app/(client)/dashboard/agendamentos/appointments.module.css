@@ -1,0 +1,228 @@
+:root {
+  --appointments-bg: #f0f7f3;
+  --appointments-surface: #ffffff;
+  --appointments-ink: #0b3b2f;
+  --appointments-muted: #5b6b67;
+  --appointments-line: #e6ece9;
+  --appointments-emerald: #065f46;
+  --appointments-emerald-600: #047857;
+  --appointments-amber-100: #fde6bf;
+  --appointments-amber-800: #92400e;
+  --appointments-green-100: #cdeedc;
+  --appointments-green-800: #065f46;
+  --appointments-radius: 16px;
+  --appointments-shadow: 0 6px 20px rgba(10, 44, 32, 0.06);
+}
+
+.page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px 56px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3faf6 50%, var(--appointments-bg) 100%);
+}
+
+.container {
+  width: 100%;
+  max-width: 680px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  text-align: center;
+}
+
+.heading {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.15;
+  color: var(--appointments-ink);
+  font-weight: 800;
+}
+
+.subtitle {
+  margin: 8px auto 0;
+  max-width: 52ch;
+  color: var(--appointments-muted);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.stack {
+  display: grid;
+  gap: 16px;
+}
+
+.card {
+  background: var(--appointments-surface);
+  border: 1px solid var(--appointments-line);
+  border-radius: calc(var(--appointments-radius) + 6px);
+  box-shadow: var(--appointments-shadow);
+  padding: 20px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 28px rgba(10, 44, 32, 0.1);
+  transform: translateY(-1px);
+}
+
+.cardExpanded {
+  box-shadow: 0 12px 32px rgba(10, 44, 32, 0.12);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--appointments-ink);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.badgePending {
+  background: var(--appointments-amber-100);
+  color: var(--appointments-amber-800);
+}
+
+.badgeReserved {
+  background: var(--appointments-green-100);
+  color: var(--appointments-green-800);
+}
+
+.badgeConfirmed {
+  background: #e0f2e9;
+  color: #0b3b2f;
+}
+
+.badgeCanceled {
+  background: #fde2e7;
+  color: #9b2145;
+}
+
+.badgeCompleted {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.badgeDefault {
+  background: #e5ece8;
+  color: #1f2d28;
+}
+
+.rows {
+  color: #37423f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.label {
+  color: #22312c;
+  font-weight: 700;
+}
+
+.btn {
+  margin-top: 14px;
+  width: 100%;
+  background: var(--appointments-emerald);
+  color: #ffffff;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 6px 16px rgba(6, 95, 70, 0.18);
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.03);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.details {
+  margin-top: 16px;
+  border-radius: 18px;
+  border: 1px solid #d7e4df;
+  background: #f6fbf8;
+  padding: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.error {
+  margin-bottom: 12px;
+  border-radius: 18px;
+  border: 1px solid #fecdd3;
+  background: rgba(254, 226, 226, 0.8);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #9b2145;
+}
+
+.detailsBtn {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  background: var(--appointments-emerald-600);
+  color: #ffffff;
+  box-shadow: 0 10px 18px rgba(4, 120, 87, 0.25);
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.detailsBtn:hover {
+  filter: brightness(1.05);
+}
+
+.detailsBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.loading,
+.empty,
+.errorMessage {
+  text-align: center;
+  font-size: 14px;
+  color: rgba(31, 45, 40, 0.75);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 32px 18px 40px;
+  }
+
+  .heading {
+    font-size: 28px;
+  }
+}

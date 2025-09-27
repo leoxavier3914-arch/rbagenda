@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Inter } from 'next/font/google'
 
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
+import styles from './appointments.module.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+})
 
 type Appointment = {
   id: string
@@ -22,15 +29,15 @@ const statusLabels: Record<string, string> = {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  pending: 'bg-[#fde6bf] text-[#92400e]',
-  reserved: 'bg-[#cdeedc] text-[#065f46]',
-  confirmed: 'bg-[#e0f2e9] text-[#0b3b2f]',
-  canceled: 'bg-[#fde2e7] text-[#9b2145]',
-  completed: 'bg-[#dbeafe] text-[#1e3a8a]',
+  pending: styles.badgePending,
+  reserved: styles.badgeReserved,
+  confirmed: styles.badgeConfirmed,
+  canceled: styles.badgeCanceled,
+  completed: styles.badgeCompleted,
 }
 
 const getStatusBadgeClass = (status: string) =>
-  statusBadgeClasses[status] ?? 'bg-[#e5ece8] text-[#1f2d28]'
+  statusBadgeClasses[status] ?? styles.badgeDefault
 
 type AppointmentCardProps = {
   appointment: Appointment
@@ -64,52 +71,46 @@ function AppointmentCard({
   const statusLabel = (statusLabels[appointment.status] ?? appointment.status).toUpperCase()
 
   return (
-    <article
-      className={`rounded-[22px] border border-[#e6ece9] bg-white p-5 shadow-[0_6px_20px_rgba(10,44,32,0.06)] transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(10,44,32,0.10)] ${
-        isExpanded ? 'shadow-[0_12px_32px_rgba(10,44,32,0.12)]' : ''
-      }`}
-    >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="text-lg font-semibold text-[#0b3b2f]">
+    <article className={`${styles.card} ${isExpanded ? styles.cardExpanded : ''}`}>
+      <div className={styles.cardHead}>
+        <div className={styles.title}>
           {appointment.services?.name ?? 'Serviço'}
         </div>
-        <span
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold tracking-[0.08em] ${statusClass}`}
-        >
+        <span className={`${styles.badge} ${statusClass}`}>
           {statusLabel}
         </span>
       </div>
 
-      <div className="space-y-1 text-sm leading-relaxed text-[#37423f]">
+      <div className={styles.rows}>
         <div>
-          <span className="font-semibold text-[#22312c]">Data:</span> {formattedDate}
+          <span className={styles.label}>Data:</span> {formattedDate}
         </div>
         <div>
-          <span className="font-semibold text-[#22312c]">Horário:</span> {formattedTime}
+          <span className={styles.label}>Horário:</span> {formattedTime}
         </div>
-        <div className="break-all">
-          <span className="font-semibold text-[#22312c]">ID:</span> {appointment.id}
+        <div style={{ wordBreak: 'break-all' }}>
+          <span className={styles.label}>ID:</span> {appointment.id}
         </div>
       </div>
 
       <button
         type="button"
         onClick={() => onToggle(appointment.id)}
-        className="mt-4 w-full rounded-[14px] bg-[#065f46] px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_6px_16px_rgba(6,95,70,0.18)] transition duration-150 ease-in-out hover:brightness-105 active:translate-y-[1px]"
+        className={styles.btn}
       >
         {isExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}
       </button>
 
       {isExpanded && (
-        <div className="mt-4 rounded-[18px] border border-[#d7e4df] bg-[#f6fbf8] p-4 shadow-inner">
+        <div className={styles.details}>
           {payError && (
-            <div className="mb-3 rounded-[18px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+            <div className={styles.error}>
               {payError}
             </div>
           )}
 
           <button
-            className="w-full rounded-[14px] bg-[#047857] px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_10px_18px_rgba(4,120,87,0.25)] transition duration-150 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+            className={styles.detailsBtn}
             disabled={payingApptId === appointment.id}
             onClick={() => {
               void onStartDepositPayment(appointment.id)
@@ -232,26 +233,24 @@ export default function MyAppointments() {
   }
 
   return (
-    <main className="relative -mx-6 flex justify-center bg-gradient-to-b from-white via-[#f3faf6] to-[#f0f7f3] px-6 py-10 sm:-mx-8 lg:-mx-10">
-      <div className="w-full max-w-[680px]">
-        <section className="space-y-6">
-          <div className="text-center">
-            <h1 className="text-[32px] font-extrabold leading-tight text-[#0b3b2f]">Meus agendamentos</h1>
-            <p className="mt-2 text-base leading-relaxed text-[#5b6b67]">
+    <main className={`${inter.className} ${styles.page}`}>
+      <div className={styles.container}>
+        <section className={styles.section}>
+          <div className={styles.header}>
+            <h1 className={styles.heading}>Meus agendamentos</h1>
+            <p className={styles.subtitle}>
               Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
             </p>
           </div>
 
           {loading ? (
-            <div className="text-center text-sm text-[rgba(31,45,40,0.7)]">Carregando…</div>
+            <div className={styles.loading}>Carregando…</div>
           ) : error ? (
-            <div className="rounded-[22px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">{error}</div>
+            <div className={styles.errorMessage}>{error}</div>
           ) : appointments.length === 0 ? (
-            <div className="text-center text-sm text-[rgba(31,45,40,0.8)]">
-              Você ainda não tem agendamentos. Marque um horário para vê-lo aqui.
-            </div>
+            <div className={styles.empty}>Você ainda não tem agendamentos. Marque um horário para vê-lo aqui.</div>
           ) : (
-            <div className="grid gap-4">
+            <div className={styles.stack}>
               {appointments.map(appointment => (
                 <AppointmentCard
                   key={appointment.id}

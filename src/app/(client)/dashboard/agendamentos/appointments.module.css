@@ -59,9 +59,7 @@
   border-radius: calc(var(--appointments-radius) + 6px);
   box-shadow: var(--appointments-shadow);
   padding: 20px;
-  cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease,
-    background 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card:hover {
@@ -70,15 +68,7 @@
 }
 
 .cardExpanded {
-  border-color: rgba(6, 95, 70, 0.45);
-  background: linear-gradient(180deg, rgba(235, 248, 241, 0.9), #ffffff);
   box-shadow: 0 12px 32px rgba(10, 44, 32, 0.12);
-  transform: translateY(-2px);
-}
-
-.card:focus-visible {
-  outline: 3px solid rgba(6, 95, 70, 0.35);
-  outline-offset: 3px;
 }
 
 .cardHead {

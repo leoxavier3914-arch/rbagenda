@@ -23,7 +23,7 @@ type CheckoutPageProps = {
   appointmentId?: string
 }
 
-export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPageProps){
+export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPageProps) {
   const router = useRouter()
 
   const hasCheckout = Boolean(clientSecret) && Boolean(stripePromise)
@@ -44,18 +44,18 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
         fontFamily: 'Inter, system-ui, sans-serif',
         fontLineHeight: '1.5',
         borderRadius: '14px',
+        fontSizeBase: '16px', // <- garante tipografia como no design
       },
       rules: {
         '.Input': {
           borderRadius: '14px',
-          border: '1px solid rgba(44,138,110,0.2)',
+          border: '1px solid rgba(44,138,110,0.20)',
           padding: '14px 16px',
-          boxShadow: '0 12px 28px rgba(16, 32, 24, 0.08)',
+          boxShadow: '0 12px 28px rgba(16,32,24,0.08)',
           backgroundColor: '#ffffff',
         },
-        '.Input--invalid': {
-          borderColor: '#dc2626',
-        },
+        '.Input--invalid': { borderColor: '#dc2626' },
+
         '.Tab': {
           borderRadius: '14px',
           border: '2px solid #e3e3e3',
@@ -63,14 +63,16 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
           backgroundColor: '#ffffff',
           boxShadow: '0 8px 18px rgba(44,138,110,0.08)',
         },
-        '.Tab:hover': {
-          borderColor: '#2c8a6e',
-        },
+        '.Tab:hover': { borderColor: '#2c8a6e' },
         '.Tab--selected': {
           borderColor: '#2c8a6e',
           boxShadow: '0 8px 18px rgba(44,138,110,0.12)',
           backgroundImage: 'linear-gradient(135deg,#f7fdfb,#ffffff)',
+          color: '#1b5e4a',
         },
+
+        '.TabLabel': { fontSize: '15px', fontWeight: '600' }, // etiqueta das abas
+        '.Block': { padding: '0' },
       },
     }),
     []
@@ -78,58 +80,33 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
 
   const elementsOptions: StripeElementsOptions | undefined = useMemo(() => {
     if (!clientSecret) return undefined
-    return {
-      clientSecret,
-      appearance,
-    }
+    return { clientSecret, appearance }
   }, [appearance, clientSecret])
 
   return (
-    <div className="relative min-h-screen w-full bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#faf9f6_52%,_#f5f0e6_100%)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-white/90 via-white/40 to-transparent" aria-hidden="true" />
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="mx-auto w-full max-w-4xl overflow-hidden rounded-[32px] border border-[rgba(35,82,58,0.12)] bg-white/80 shadow-[0_30px_60px_rgba(16,32,24,0.14)] backdrop-blur">
-          <div className="bg-gradient-to-br from-[rgba(27,94,74,0.08)] via-transparent to-[rgba(27,94,74,0.14)] px-6 py-8 sm:px-10 sm:py-10">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(27,94,74,0.24)] bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#1b5e4a]">
-                  Pagamento seguro
-                </span>
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-semibold text-[#1b1b1b] sm:text-[34px]">Finalize seu checkout</h1>
-                  <p className="max-w-xl text-sm leading-relaxed text-[rgba(106,90,70,0.85)]">
-                    Confirme os dados do agendamento, selecione a forma de pagamento desejada e conclua a compra com total segurança.
-                  </p>
-                  {appointmentId && (
-                    <p className="text-xs font-medium uppercase tracking-wide text-[rgba(27,94,74,0.75)]">
-                      Agendamento <span className="font-semibold text-[#1b5e4a]">#{appointmentId}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-3 text-sm">
-                <button
-                  type="button"
-                  onClick={()=>router.back()}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgba(27,94,74,0.25)] bg-white/90 px-5 py-2 font-medium text-[#1b5e4a] transition hover:border-[#1b5e4a] hover:bg-[#f7f3ed]"
-                >
-                  ← Voltar
-                </button>
-                <Link
-                  href="/dashboard/agendamentos"
-                  className="font-medium text-[rgba(106,90,70,0.85)] underline-offset-4 hover:text-[#1b5e4a] hover:underline"
-                >
-                  Ver agendamentos
-                </Link>
-              </div>
-            </div>
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#faf9f6_45%,_#f5f0e6_100%)] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1050px]">
+        <div className="mb-6 flex items-center justify-between text-sm text-[#6a5a46]">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 rounded-full border border-[#d6e6df] bg-white px-4 py-2 font-medium text-[#1b5e4a] shadow-[0_10px_25px_rgba(16,32,24,0.08)] transition hover:border-[#1b5e4a] hover:text-[#1b5e4a]"
+          >
+            ← Voltar
+          </button>
+          <Link
+            href="/dashboard/agendamentos"
+            className="font-medium underline-offset-4 hover:text-[#1b5e4a] hover:underline"
+          >
+            Ver agendamentos
+          </Link>
+        </div>
+
+        {errorMessage && (
+          <div className="mb-6 rounded-[18px] border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700 shadow-[0_12px_28px_rgba(220,38,38,0.12)]">
+            {errorMessage}
           </div>
-          {errorMessage && (
-            <div className="border-t border-[rgba(27,94,74,0.12)] bg-red-50/90 px-6 py-4 text-sm text-red-700 sm:px-10">
-              {errorMessage}
-            </div>
-          )}
-        </header>
+        )}
 
         {hasCheckout && elementsOptions && stripePromise && (
           <Elements stripe={stripePromise} options={elementsOptions}>
@@ -150,7 +127,7 @@ type ClientPaymentIntent = PaymentIntent & {
   metadata?: Record<string, string | undefined>
 }
 
-function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormProps){
+function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
@@ -165,9 +142,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
   const [coupon, setCoupon] = useState('')
 
   const paymentElementOptions: StripePaymentElementOptions = useMemo(
-    () => ({
-      layout: 'tabs',
-    }),
+    () => ({ layout: 'tabs' }),
     []
   )
 
@@ -179,41 +154,26 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
       const paymentIntent = (result.paymentIntent as ClientPaymentIntent | null) ?? null
       setIntent(paymentIntent)
       if (paymentIntent) {
-        if (paymentIntent.receipt_email) {
-          setEmail((prev) => prev || paymentIntent.receipt_email || '')
-        }
-        if (paymentIntent.metadata?.customer_name) {
-          setFullName((prev) => prev || paymentIntent.metadata?.customer_name || '')
-        }
-        if (paymentIntent.metadata?.customer_phone) {
-          setPhone((prev) => prev || paymentIntent.metadata?.customer_phone || '')
-        }
+        if (paymentIntent.receipt_email) setEmail((prev) => prev || paymentIntent.receipt_email || '')
+        if (paymentIntent.metadata?.customer_name) setFullName((prev) => prev || paymentIntent.metadata?.customer_name || '')
+        if (paymentIntent.metadata?.customer_phone) setPhone((prev) => prev || paymentIntent.metadata?.customer_phone || '')
         setStatus(paymentIntent.status)
-        if (paymentIntent.status === 'succeeded') {
-          setMessage('Pagamento confirmado com sucesso!')
-        } else if (paymentIntent.status === 'requires_payment_method') {
-          setMessage('Informe um método de pagamento para continuar.')
-        } else if (paymentIntent.status === 'processing') {
-          setMessage('Estamos processando o seu pagamento. Aguarde alguns instantes.')
-        } else if (paymentIntent.status === 'requires_action') {
-          setMessage('Conclua a autenticação adicional para finalizar o pagamento.')
-        } else {
-          setMessage(null)
-        }
+        if (paymentIntent.status === 'succeeded') setMessage('Pagamento confirmado com sucesso!')
+        else if (paymentIntent.status === 'requires_payment_method') setMessage('Informe um método de pagamento para continuar.')
+        else if (paymentIntent.status === 'processing') setMessage('Estamos processando o seu pagamento. Aguarde alguns instantes.')
+        else if (paymentIntent.status === 'requires_action') setMessage('Conclua a autenticação adicional para finalizar o pagamento.')
+        else setMessage(null)
       }
     })
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [clientSecret, stripe])
 
   const formattedAmount = useMemo(() => {
     if (!intent?.amount || !intent.currency) return null
-    const formatter = new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: intent.currency.toUpperCase(),
-    })
-    return formatter.format(intent.amount / 100)
+    }).format(intent.amount / 100)
   }, [intent])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -227,9 +187,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/success?ref=${encodeURIComponent(appointmentId ?? '')}&session_id=${encodeURIComponent(
-          intent?.id ?? ''
-        )}`,
+        return_url: `${window.location.origin}/success?ref=${encodeURIComponent(appointmentId ?? '')}&session_id=${encodeURIComponent(intent?.id ?? '')}`,
         receipt_email: email || undefined,
         payment_method_data: {
           billing_details: {
@@ -254,9 +212,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
       setStatus(paymentIntent.status)
       if (paymentIntent.status === 'succeeded') {
         setMessage('Pagamento confirmado com sucesso! Você será redirecionado em instantes.')
-        setTimeout(() => {
-          router.push('/dashboard/agendamentos')
-        }, 2000)
+        setTimeout(() => router.push('/dashboard/agendamentos'), 2000)
       } else if (paymentIntent.status === 'processing') {
         setMessage('Estamos processando o seu pagamento. Assim que finalizar você receberá um e-mail.')
       } else if (paymentIntent.status === 'requires_action') {
@@ -273,10 +229,8 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
   const isProcessing = status === 'processing' || isSubmitting
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"
-    >
+    <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      {/* Coluna esquerda: dados do cliente */}
       <section className="space-y-6 rounded-[22px] border border-[rgba(44,138,110,0.16)] bg-white/95 p-6 shadow-[0_30px_60px_rgba(16,32,24,0.12)] sm:p-8">
         <header className="space-y-2">
           <h2 className="text-2xl font-semibold text-[#1b5e4a]">Seus dados</h2>
@@ -290,7 +244,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
             Nome completo
             <input
               value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
+              onChange={(e) => setFullName(e.target.value)}
               placeholder="Ex.: Agnes Romeike"
               type="text"
               className="rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
@@ -301,7 +255,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
             WhatsApp
             <input
               value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="(16) 9 9999-9999"
               type="tel"
               className="rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
@@ -312,13 +266,11 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
             E-mail
             <input
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="voce@exemplo.com"
               type="email"
               required
-              className={`rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20 ${
-                isSuccess ? 'pointer-events-none opacity-75' : ''
-              }`}
+              className={`rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20 ${isSuccess ? 'pointer-events-none opacity-75' : ''}`}
               disabled={isSuccess}
             />
           </label>
@@ -327,7 +279,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
             CPF (opcional)
             <input
               value={cpf}
-              onChange={(event) => setCpf(event.target.value)}
+              onChange={(e) => setCpf(e.target.value)}
               placeholder="000.000.000-00"
               type="text"
               className="rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
@@ -340,7 +292,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               value={coupon}
-              onChange={(event) => setCoupon(event.target.value)}
+              onChange={(e) => setCoupon(e.target.value)}
               placeholder="BELEZA10"
               type="text"
               className="flex-1 rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
@@ -353,18 +305,15 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
               Aplicar
             </button>
           </div>
-          <p className="text-xs text-[rgba(106,90,70,0.7)]">
-            Insira um cupom válido se possuir. A validação ocorrerá automaticamente após o pagamento.
-          </p>
+          <p className="text-xs text-[rgba(106,90,70,0.7)]">Insira um cupom válido se possuir. A validação ocorrerá automaticamente após o pagamento.</p>
         </div>
       </section>
 
+      {/* Coluna direita: resumo e pagamento */}
       <aside className="space-y-6 rounded-[22px] border border-[rgba(44,138,110,0.18)] bg-[#f7f3ed] p-6 shadow-[0_30px_60px_rgba(16,32,24,0.12)] sm:p-8">
         <header className="space-y-2">
           <h2 className="text-2xl font-semibold text-[#6a5a46]">Pagamento</h2>
-          <p className="text-sm text-[rgba(106,90,70,0.85)]">
-            Revise o pedido, selecione a forma de pagamento desejada e finalize com segurança.
-          </p>
+          <p className="text-sm text-[rgba(106,90,70,0.85)]">Revise o pedido, selecione a forma de pagamento desejada e finalize com segurança.</p>
         </header>
 
         <section className="rounded-[22px] bg-[#f7f3ed]/60 p-4">
@@ -414,12 +363,12 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
 
         {message && (
           <div
-            className={`rounded-[18px] px-4 py-3 text-sm font-medium ${
+            className={`rounded-[14px] px-4 py-3 text-sm font-medium ${
               isSuccess
-                ? 'border border-emerald-200 bg-emerald-50 text-[#1b5e4a]'
+                ? 'border border-[#b7e4d5] bg-[#e8f7f1] text-[#1b5e4a]'
                 : status === 'error'
                   ? 'border border-red-200 bg-red-50 text-red-700'
-                  : 'border border-amber-200 bg-amber-50 text-amber-700'
+                  : 'border border-[#f7e5b5] bg-[#fff8e1] text-[#7a5a1a]'
             }`}
           >
             {message}

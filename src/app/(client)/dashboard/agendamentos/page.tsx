@@ -1,6 +1,6 @@
 'use client'
 
-import { KeyboardEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Inter } from 'next/font/google'
 
@@ -70,26 +70,8 @@ function AppointmentCard({
   const statusClass = getStatusBadgeClass(appointment.status)
   const statusLabel = (statusLabels[appointment.status] ?? appointment.status).toUpperCase()
 
-  const handleCardToggle = () => {
-    onToggle(appointment.id)
-  }
-
-  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onToggle(appointment.id)
-    }
-  }
-
   return (
-    <article
-      className={`${styles.card} ${isExpanded ? styles.cardExpanded : ''}`}
-      onClick={handleCardToggle}
-      role="button"
-      tabIndex={0}
-      aria-expanded={isExpanded}
-      onKeyDown={handleCardKeyDown}
-    >
+    <article className={`${styles.card} ${isExpanded ? styles.cardExpanded : ''}`}>
       <div className={styles.cardHead}>
         <div className={styles.title}>
           {appointment.services?.name ?? 'Serviço'}
@@ -113,22 +95,14 @@ function AppointmentCard({
 
       <button
         type="button"
-        onClick={event => {
-          event.stopPropagation()
-          onToggle(appointment.id)
-        }}
+        onClick={() => onToggle(appointment.id)}
         className={styles.btn}
       >
         {isExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}
       </button>
 
       {isExpanded && (
-        <div
-          className={styles.details}
-          onClick={event => {
-            event.stopPropagation()
-          }}
-        >
+        <div className={styles.details}>
           {payError && (
             <div className={styles.error}>
               {payError}
@@ -138,8 +112,7 @@ function AppointmentCard({
           <button
             className={styles.detailsBtn}
             disabled={payingApptId === appointment.id}
-            onClick={event => {
-              event.stopPropagation()
+            onClick={() => {
               void onStartDepositPayment(appointment.id)
             }}
           >

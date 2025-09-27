@@ -8,6 +8,7 @@ type Profile = {
   full_name: string | null
   whatsapp: string | null
   email: string | null
+  birth_date: string | null
   role?: 'admin' | 'client'
 }
 
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [birthDate, setBirthDate] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -53,7 +55,7 @@ export default function Dashboard() {
 
       const { data: me, error: profileError } = await supabase
         .from('profiles')
-        .select('full_name, whatsapp, email, role')
+        .select('full_name, whatsapp, email, birth_date, role')
         .eq('id', currentSession.user.id)
         .maybeSingle()
 
@@ -70,6 +72,7 @@ export default function Dashboard() {
         full_name: me?.full_name ?? null,
         whatsapp: me?.whatsapp ?? null,
         email: me?.email ?? currentSession.user.email ?? null,
+        birth_date: me?.birth_date ?? null,
         role: me?.role ?? 'client'
       }
 
@@ -77,6 +80,7 @@ export default function Dashboard() {
       setFullName(resolvedProfile.full_name ?? '')
       setWhatsapp(resolvedProfile.whatsapp ?? '')
       setEmail(resolvedProfile.email ?? '')
+      setBirthDate(resolvedProfile.birth_date ?? '')
       setLoading(false)
     }
 
@@ -105,7 +109,8 @@ export default function Dashboard() {
     const updates = {
       full_name: fullName.trim() || null,
       whatsapp: whatsapp.trim() || null,
-      email: normalizedEmail || null
+      email: normalizedEmail || null,
+      birth_date: birthDate || null
     }
 
     const { error: profileError } = await supabase
@@ -145,6 +150,7 @@ export default function Dashboard() {
       full_name: updates.full_name,
       whatsapp: updates.whatsapp,
       email: updates.email,
+      birth_date: updates.birth_date,
       role: profile?.role ?? 'client'
     }
 
@@ -214,7 +220,7 @@ export default function Dashboard() {
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="whatsapp">
-                WhatsApp
+                Celular
               </label>
               <input
                 id="whatsapp"
@@ -223,6 +229,19 @@ export default function Dashboard() {
                 onChange={event => setWhatsapp(event.target.value)}
                 disabled={saving}
                 placeholder="(00) 00000-0000"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="birthDate">
+                Data de nascimento
+              </label>
+              <input
+                id="birthDate"
+                type="date"
+                className="input-field"
+                value={birthDate}
+                onChange={event => setBirthDate(event.target.value)}
+                disabled={saving}
               />
             </div>
             <div className="space-y-1">

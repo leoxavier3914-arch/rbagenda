@@ -21,6 +21,7 @@ create table if not exists profiles (
   full_name text,
   email text,
   whatsapp text,
+  birth_date date,
   created_at timestamptz not null default now()
 );
 create unique index if not exists profiles_email_idx on profiles(lower(email)) where email is not null;

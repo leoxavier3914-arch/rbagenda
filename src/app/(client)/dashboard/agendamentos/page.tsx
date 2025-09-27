@@ -1,6 +1,8 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
@@ -20,15 +22,106 @@ const statusLabels: Record<string, string> = {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  pending: 'bg-[rgba(255,224,178,0.3)] text-[#a66a3a] border-[rgba(255,224,178,0.7)]',
-  reserved: 'bg-[rgba(207,161,122,0.18)] text-[#82573e] border-[rgba(207,161,122,0.7)] shadow-[0_0_0_1px_rgba(207,161,122,0.25)]',
-  confirmed: 'bg-[rgba(149,181,155,0.18)] text-[#2f6d4f] border-[rgba(149,181,155,0.6)]',
-  canceled: 'bg-[rgba(244,143,177,0.18)] text-[#b94068] border-[rgba(244,143,177,0.5)]',
-  completed: 'bg-[rgba(187,222,251,0.18)] text-[#2f517a] border-[rgba(187,222,251,0.55)]',
+  pending: 'bg-[#fde6bf] text-[#92400e]',
+  reserved: 'bg-[#cdeedc] text-[#065f46]',
+  confirmed: 'bg-[#e0f2e9] text-[#0b3b2f]',
+  canceled: 'bg-[#fde2e7] text-[#9b2145]',
+  completed: 'bg-[#dbeafe] text-[#1e3a8a]',
 }
 
 const getStatusBadgeClass = (status: string) =>
-  statusBadgeClasses[status] ?? 'bg-[rgba(0,0,0,0.08)] text-[#1f2d28] border-transparent'
+  statusBadgeClasses[status] ?? 'bg-[#e5ece8] text-[#1f2d28]'
+
+type AppointmentCardProps = {
+  appointment: Appointment
+  isExpanded: boolean
+  onToggle: (appointmentId: string) => void
+  onStartDepositPayment: (appointmentId: string) => Promise<void>
+  payingApptId: string | null
+  payError: string | null
+}
+
+function AppointmentCard({
+  appointment,
+  isExpanded,
+  onToggle,
+  onStartDepositPayment,
+  payingApptId,
+  payError,
+}: AppointmentCardProps) {
+  const startsAt = new Date(appointment.starts_at)
+  const formattedDate = startsAt.toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+  const formattedTime = startsAt.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  const statusClass = getStatusBadgeClass(appointment.status)
+  const statusLabel = (statusLabels[appointment.status] ?? appointment.status).toUpperCase()
+
+  return (
+    <article
+      className={`rounded-[22px] border border-[#e6ece9] bg-white p-5 shadow-[0_6px_20px_rgba(10,44,32,0.06)] transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(10,44,32,0.10)] ${
+        isExpanded ? 'shadow-[0_12px_32px_rgba(10,44,32,0.12)]' : ''
+      }`}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-lg font-semibold text-[#0b3b2f]">
+          {appointment.services?.name ?? 'Serviço'}
+        </div>
+        <span
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold tracking-[0.08em] ${statusClass}`}
+        >
+          {statusLabel}
+        </span>
+      </div>
+
+      <div className="space-y-1 text-sm leading-relaxed text-[#37423f]">
+        <div>
+          <span className="font-semibold text-[#22312c]">Data:</span> {formattedDate}
+        </div>
+        <div>
+          <span className="font-semibold text-[#22312c]">Horário:</span> {formattedTime}
+        </div>
+        <div className="break-all">
+          <span className="font-semibold text-[#22312c]">ID:</span> {appointment.id}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onToggle(appointment.id)}
+        className="mt-4 w-full rounded-[14px] bg-[#065f46] px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_6px_16px_rgba(6,95,70,0.18)] transition duration-150 ease-in-out hover:brightness-105 active:translate-y-[1px]"
+      >
+        {isExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}
+      </button>
+
+      {isExpanded && (
+        <div className="mt-4 rounded-[18px] border border-[#d7e4df] bg-[#f6fbf8] p-4 shadow-inner">
+          {payError && (
+            <div className="mb-3 rounded-[18px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+              {payError}
+            </div>
+          )}
+
+          <button
+            className="w-full rounded-[14px] bg-[#047857] px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_10px_18px_rgba(4,120,87,0.25)] transition duration-150 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={payingApptId === appointment.id}
+            onClick={() => {
+              void onStartDepositPayment(appointment.id)
+            }}
+          >
+            {payingApptId === appointment.id ? 'Abrindo checkout…' : 'Pagar sinal'}
+          </button>
+        </div>
+      )}
+    </article>
+  )
+}
 
 export default function MyAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
@@ -139,107 +232,41 @@ export default function MyAppointments() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl">
-      <section className="card card--flush-top space-y-6">
-        <div className="space-y-3 text-center">
-          <h1 className="text-3xl font-semibold text-[#1f2d28]">Meus agendamentos</h1>
-          <p className="muted-text mx-auto max-w-2xl text-base">
-            Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.7)]">Carregando…</div>
-        ) : error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">{error}</div>
-        ) : appointments.length === 0 ? (
-          <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.8)]">
-            Você ainda não tem agendamentos. Marque um horário para vê-lo aqui.
+    <main className="relative -mx-6 flex justify-center bg-gradient-to-b from-white via-[#f3faf6] to-[#f0f7f3] px-6 py-10 sm:-mx-8 lg:-mx-10">
+      <div className="w-full max-w-[680px]">
+        <section className="space-y-6">
+          <div className="text-center">
+            <h1 className="text-[32px] font-extrabold leading-tight text-[#0b3b2f]">Meus agendamentos</h1>
+            <p className="mt-2 text-base leading-relaxed text-[#5b6b67]">
+              Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
+            </p>
           </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2">
-            {appointments.map(a => {
-              const isExpanded = expandedId === a.id
 
-              return (
-                <div
-                  key={a.id}
-                  className={`relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(47,109,79,0.12)] bg-white/95 p-5 shadow-[0_28px_45px_-32px_rgba(31,45,40,0.65)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_28px_55px_-20px_rgba(35,82,58,0.35)] ${
-                    isExpanded ? 'ring-2 ring-[#c7a27c]/80 shadow-[0_28px_55px_-18px_rgba(199,162,124,0.45)] scale-[1.01]' : ''
-                  }`}
-                >
-                  <span
-                    className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#95b59b] via-[#2f6d4f] to-[#c7a27c] transition-opacity duration-300 ${
-                      isExpanded ? 'opacity-100' : 'opacity-70'
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#dcefe0] via-[#95b59b] to-[#2f6d4f] text-base font-semibold text-white shadow-[0_10px_18px_-12px_rgba(47,109,79,0.55)]">
-                      {(a.services?.name ?? 'Serviço').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <h2 className="text-xl font-semibold text-[#1f2d28]">
-                        {a.services?.name ?? 'Serviço'}
-                      </h2>
-                      <p className="text-sm text-[color:rgba(31,45,40,0.6)]">
-                        {new Date(a.starts_at).toLocaleDateString(undefined, {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric',
-                        })}{' '}
-                        •{' '}
-                        {new Date(a.starts_at).toLocaleTimeString(undefined, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                    <span
-                      className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusBadgeClass(
-                        a.status,
-                      )}`}
-                    >
-                      {statusLabels[a.status] ?? a.status}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="rounded-full bg-[rgba(47,109,79,0.08)] px-3 py-1 text-xs font-medium text-[color:rgba(31,45,40,0.6)]">
-                      ID: {a.id}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => toggleCard(a.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-transparent bg-[#2f6d4f] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_18px_-14px_rgba(47,109,79,0.75)] transition hover:bg-[#275842]"
-                    >
-                      {isExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}
-                    </button>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="mt-5 space-y-4 rounded-2xl bg-gradient-to-br from-white via-white to-[#f9f2ec]/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ring-1 ring-[rgba(199,162,124,0.25)]">
-                      {payError && (
-                        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-                          {payError}
-                        </div>
-                      )}
-                      <div className="grid gap-3">
-                        <button
-                          className="btn-primary shadow-[0_14px_25px_-18px_rgba(47,109,79,0.65)]"
-                          disabled={payingApptId === a.id}
-                          onClick={() => startDepositPayment(a.id)}
-                        >
-                          {payingApptId === a.id ? 'Abrindo checkout…' : 'Pagar sinal'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  </div>
-                )
-              })}
-          </div>
-        )}
-      </section>
+          {loading ? (
+            <div className="text-center text-sm text-[rgba(31,45,40,0.7)]">Carregando…</div>
+          ) : error ? (
+            <div className="rounded-[22px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">{error}</div>
+          ) : appointments.length === 0 ? (
+            <div className="text-center text-sm text-[rgba(31,45,40,0.8)]">
+              Você ainda não tem agendamentos. Marque um horário para vê-lo aqui.
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {appointments.map(appointment => (
+                <AppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  isExpanded={expandedId === appointment.id}
+                  onToggle={toggleCard}
+                  onStartDepositPayment={startDepositPayment}
+                  payingApptId={payingApptId}
+                  payError={expandedId === appointment.id ? payError : null}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   )
 }

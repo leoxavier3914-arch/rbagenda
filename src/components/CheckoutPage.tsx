@@ -74,56 +74,57 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
   }, [appearance, clientSecret])
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center gap-10 py-6">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="relative isolate overflow-hidden rounded-[32px] border border-[rgba(35,82,58,0.12)] bg-[#fdf9f0]/90 shadow-[0_25px_60px_-25px_rgba(35,82,58,0.35)] backdrop-blur">
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[rgba(47,109,79,0.12)] via-transparent to-[rgba(35,82,58,0.18)]" aria-hidden="true" />
-          <div className="flex flex-col gap-8 p-8 sm:p-10">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-2">
-                <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(47,109,79,0.15)] bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-[#2f6d4f]">
+    <div className="relative min-h-screen w-full bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#faf9f6_52%,_#f5f0e6_100%)] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-white/90 via-white/40 to-transparent" aria-hidden="true" />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+        <header className="mx-auto w-full max-w-4xl overflow-hidden rounded-[32px] border border-[rgba(35,82,58,0.12)] bg-white/80 shadow-[0_30px_60px_rgba(16,32,24,0.14)] backdrop-blur">
+          <div className="bg-gradient-to-br from-[rgba(27,94,74,0.08)] via-transparent to-[rgba(27,94,74,0.14)] px-6 py-8 sm:px-10 sm:py-10">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(27,94,74,0.24)] bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#1b5e4a]">
                   Pagamento seguro
                 </span>
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-semibold text-[#1f2d28] sm:text-3xl">Conclua o seu pagamento</h1>
-                  <p className="text-sm text-[color:rgba(31,45,40,0.72)]">
-                    Revise os dados do agendamento e finalize o pagamento com a segurança da Stripe.
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold text-[#1b1b1b] sm:text-[34px]">Finalize seu checkout</h1>
+                  <p className="max-w-xl text-sm leading-relaxed text-[rgba(106,90,70,0.85)]">
+                    Confirme os dados do agendamento, selecione a forma de pagamento desejada e conclua a compra com total segurança.
                   </p>
                   {appointmentId && (
-                    <p className="text-xs uppercase tracking-wide text-[color:rgba(31,45,40,0.55)]">
-                      Agendamento <span className="font-semibold text-[#2f6d4f]">#{appointmentId}</span>
+                    <p className="text-xs font-medium uppercase tracking-wide text-[rgba(27,94,74,0.75)]">
+                      Agendamento <span className="font-semibold text-[#1b5e4a]">#{appointmentId}</span>
                     </p>
                   )}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-end gap-3 text-sm">
                 <button
                   type="button"
                   onClick={()=>router.back()}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgba(47,109,79,0.2)] bg-white/80 px-4 py-2 text-sm font-medium text-[#2f6d4f] transition hover:border-[#2f6d4f] hover:bg-[#f7f2e7]"
+                  className="inline-flex items-center gap-2 rounded-full border border-[rgba(27,94,74,0.25)] bg-white/90 px-5 py-2 font-medium text-[#1b5e4a] transition hover:border-[#1b5e4a] hover:bg-[#f7f3ed]"
                 >
                   ← Voltar
                 </button>
                 <Link
                   href="/dashboard/agendamentos"
-                  className="text-xs font-medium text-[color:rgba(31,45,40,0.6)] underline-offset-4 hover:underline"
+                  className="font-medium text-[rgba(106,90,70,0.85)] underline-offset-4 hover:text-[#1b5e4a] hover:underline"
                 >
                   Ver agendamentos
                 </Link>
               </div>
             </div>
-            {errorMessage && (
-              <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-                {errorMessage}
-              </div>
-            )}
-            {hasCheckout && elementsOptions && stripePromise && (
-              <Elements stripe={stripePromise} options={elementsOptions}>
-                <ManualCheckoutForm appointmentId={appointmentId} clientSecret={clientSecret} />
-              </Elements>
-            )}
           </div>
-        </div>
+          {errorMessage && (
+            <div className="border-t border-[rgba(27,94,74,0.12)] bg-red-50/90 px-6 py-4 text-sm text-red-700 sm:px-10">
+              {errorMessage}
+            </div>
+          )}
+        </header>
+
+        {hasCheckout && elementsOptions && stripePromise && (
+          <Elements stripe={stripePromise} options={elementsOptions}>
+            <ManualCheckoutForm appointmentId={appointmentId} clientSecret={clientSecret} />
+          </Elements>
+        )}
       </div>
     </div>
   )
@@ -255,43 +256,46 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[rgba(47,109,79,0.15)] bg-white/80 p-6 shadow-[0_20px_55px_-25px_rgba(35,82,58,0.25)]">
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-[#1f2d28]">Dados de pagamento</h2>
-          <p className="text-sm text-[color:rgba(31,45,40,0.68)]">
-            Utilize um cartão válido ou outra forma de pagamento disponível. Todo o processo é criptografado e seguro.
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-7 rounded-[22px] border border-[rgba(44,138,110,0.18)] bg-white/95 p-6 shadow-[0_30px_60px_rgba(16,32,24,0.12)] sm:p-8"
+      >
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-[#1b5e4a]">Seus dados</h2>
+          <p className="text-sm leading-relaxed text-[rgba(106,90,70,0.85)]">
+            Preencha com atenção para receber a confirmação da sua compra e notificações sobre o agendamento.
           </p>
         </div>
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-[#1f2d28]">
+
+        <div className="space-y-5">
+          <label className="block text-sm font-semibold text-[rgba(106,90,70,0.9)]">
             E-mail para confirmação
             <span
-              className={`relative mt-1 block rounded-2xl border border-[rgba(47,109,79,0.15)] bg-white/70 p-2 ${
-                isSuccess ? 'pointer-events-none opacity-70' : ''
+              className={`relative mt-2 block rounded-[18px] border border-[rgba(27,94,74,0.18)] bg-white/80 p-2 shadow-[0_12px_28px_rgba(16,32,24,0.08)] transition ${
+                isSuccess ? 'pointer-events-none opacity-75' : 'focus-within:border-[#2c8a6e] focus-within:ring-2 focus-within:ring-[#2c8a6e]/20'
               }`}
               aria-disabled={isSuccess}
             >
               <LinkAuthenticationElement options={linkOptions} onChange={handleLinkChange} />
               {isSuccess && (
-                <span
-                  className="pointer-events-none absolute inset-0 rounded-2xl bg-white/40"
-                  aria-hidden="true"
-                />
+                <span className="pointer-events-none absolute inset-0 rounded-[18px] bg-white/50" aria-hidden="true" />
               )}
             </span>
           </label>
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-[#1f2d28]">Forma de pagamento</span>
-            <div className="rounded-2xl border border-[rgba(47,109,79,0.15)] bg-white/70 p-2">
+
+          <div className="space-y-3">
+            <span className="text-sm font-semibold text-[rgba(106,90,70,0.9)]">Forma de pagamento</span>
+            <div className="rounded-[18px] border border-[rgba(27,94,74,0.18)] bg-white/80 p-3 shadow-[0_12px_28px_rgba(16,32,24,0.08)]">
               <PaymentElement options={paymentElementOptions} />
             </div>
           </div>
         </div>
+
         {message && (
           <div
-            className={`rounded-2xl px-4 py-3 text-sm ${
+            className={`rounded-[18px] px-4 py-3 text-sm font-medium ${
               isSuccess
-                ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                ? 'border border-emerald-200 bg-emerald-50 text-[#1b5e4a]'
                 : status === 'error'
                   ? 'border border-red-200 bg-red-50 text-red-700'
                   : 'border border-amber-200 bg-amber-50 text-amber-700'
@@ -300,50 +304,67 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
             {message}
           </div>
         )}
+
         <button
           type="submit"
           disabled={!stripe || !elements || isProcessing || isSuccess}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f6d4f] px-6 py-3 text-base font-semibold text-white shadow-[0_15px_30px_-15px_rgba(35,82,58,0.55)] transition hover:bg-[#285d43] disabled:cursor-not-allowed disabled:bg-[rgba(47,109,79,0.45)]"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[18px] bg-gradient-to-br from-[#2c8a6e] to-[#1b5e4a] px-6 py-3 text-base font-semibold text-white shadow-[0_20px_40px_rgba(27,94,74,0.28)] transition hover:from-[#267a63] hover:to-[#184f3f] disabled:cursor-not-allowed disabled:from-[#aacfc1] disabled:to-[#aacfc1]"
         >
           {isProcessing ? 'Processando…' : isSuccess ? 'Pagamento concluído' : 'Pagar agora'}
         </button>
       </form>
-      <div className="space-y-4 rounded-3xl border border-[rgba(47,109,79,0.15)] bg-white/70 p-6 shadow-[0_20px_55px_-25px_rgba(35,82,58,0.2)]">
+
+      <div className="space-y-5 rounded-[22px] border border-[rgba(44,138,110,0.18)] bg-[#f7f3ed]/90 p-6 shadow-[0_30px_60px_rgba(16,32,24,0.12)] sm:p-8">
         <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-[#1f2d28]">Resumo</h3>
-          <p className="text-sm text-[color:rgba(31,45,40,0.68)]">
-            A confirmação do pagamento será enviada para o seu e-mail assim que a Stripe finalizar o processamento.
+          <h3 className="text-lg font-semibold text-[#1b1b1b]">Resumo do pedido</h3>
+          <p className="text-sm text-[rgba(106,90,70,0.85)]">
+            Confira as informações antes de finalizar. O comprovante será enviado por e-mail.
           </p>
         </div>
-        <dl className="space-y-3 text-sm text-[#1f2d28]">
+
+        <dl className="space-y-4 text-sm text-[#1b1b1b]">
           {formattedAmount && (
-            <div className="flex items-center justify-between rounded-2xl border border-[rgba(47,109,79,0.12)] bg-[#f5f0e6]/80 px-4 py-3">
-              <dt className="font-medium text-[color:rgba(31,45,40,0.7)]">Valor a pagar</dt>
-              <dd className="text-base font-semibold text-[#2f6d4f]">{formattedAmount}</dd>
+            <div className="rounded-[18px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 shadow-[0_12px_24px_rgba(16,32,24,0.06)]">
+              <div className="flex items-center justify-between text-[rgba(106,90,70,0.85)]">
+                <dt>Subtotal</dt>
+                <dd className="font-semibold text-[#1b5e4a]">{formattedAmount}</dd>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-wide text-[rgba(106,90,70,0.7)]">
+                <span>Desconto</span>
+                <span>—</span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-base font-semibold text-[#1b5e4a]">
+                <span>Total a pagar</span>
+                <span>{formattedAmount}</span>
+              </div>
             </div>
           )}
+
           {intent?.metadata?.payment_title && (
-            <div className="flex items-start justify-between gap-3">
-              <dt className="text-[color:rgba(31,45,40,0.7)]">Descrição</dt>
-              <dd className="font-medium text-right text-[#1f2d28]">{intent.metadata.payment_title}</dd>
+            <div className="flex items-start justify-between gap-3 border-b border-dashed border-[rgba(106,90,70,0.24)] pb-3">
+              <dt className="text-[rgba(106,90,70,0.8)]">Descrição</dt>
+              <dd className="text-right font-medium text-[#1b1b1b]">{intent.metadata.payment_title}</dd>
             </div>
           )}
+
           {appointmentId && (
-            <div className="flex items-start justify-between gap-3">
-              <dt className="text-[color:rgba(31,45,40,0.7)]">Agendamento</dt>
-              <dd className="font-semibold text-[#2f6d4f]">#{appointmentId}</dd>
+            <div className="flex items-start justify-between gap-3 border-b border-dashed border-[rgba(106,90,70,0.24)] pb-3">
+              <dt className="text-[rgba(106,90,70,0.8)]">Agendamento</dt>
+              <dd className="font-semibold text-[#1b5e4a]">#{appointmentId}</dd>
             </div>
           )}
+
           {email && (
-            <div className="flex items-start justify-between gap-3">
-              <dt className="text-[color:rgba(31,45,40,0.7)]">E-mail de contato</dt>
-              <dd className="text-right text-[color:rgba(31,45,40,0.85)]">{email}</dd>
+            <div className="flex items-start justify-between gap-3 border-b border-dashed border-[rgba(106,90,70,0.24)] pb-3">
+              <dt className="text-[rgba(106,90,70,0.8)]">E-mail de contato</dt>
+              <dd className="text-right text-[rgba(27,94,74,0.8)]">{email}</dd>
             </div>
           )}
-          <div className="flex items-start gap-3 rounded-2xl border border-[rgba(47,109,79,0.12)] bg-white/70 px-4 py-3 text-[color:rgba(31,45,40,0.68)]">
+
+          <div className="flex items-start gap-3 rounded-[18px] border border-[rgba(27,94,74,0.16)] bg-white/80 px-4 py-3 text-[rgba(106,90,70,0.85)] shadow-[0_10px_22px_rgba(16,32,24,0.08)]">
             <span className="mt-0.5 text-lg">🔒</span>
             <p className="text-sm leading-relaxed">
-              Seus dados estão protegidos com criptografia de ponta a ponta. Em caso de dúvidas, fale com a nossa equipe pelo WhatsApp.
+              Pagamento processado com criptografia de ponta a ponta. Precisa de ajuda? Fale com a nossa equipe pelo WhatsApp.
             </p>
           </div>
         </dl>

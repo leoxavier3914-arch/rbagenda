@@ -235,36 +235,34 @@ export default function MyAppointments() {
   return (
     <main className={`${inter.className} ${styles.page}`}>
       <div className={styles.container}>
-        <section className={styles.section}>
-          <div className={styles.header}>
-            <h1 className={styles.heading}>Meus agendamentos</h1>
-            <p className={styles.subtitle}>
-              Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
-            </p>
-          </div>
+        <div className={styles.header}>
+          <h1 className={styles.heading}>Meus agendamentos</h1>
+          <p className={styles.subtitle}>
+            Acompanhe seus próximos atendimentos, confirme horários e veja o status de cada reserva.
+          </p>
+        </div>
 
-          {loading ? (
-            <div className={styles.loading}>Carregando…</div>
-          ) : error ? (
-            <div className={styles.errorMessage}>{error}</div>
-          ) : appointments.length === 0 ? (
-            <div className={styles.empty}>Você ainda não tem agendamentos. Marque um horário para vê-lo aqui.</div>
-          ) : (
-            <div className={styles.stack}>
-              {appointments.map(appointment => (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  isExpanded={expandedId === appointment.id}
-                  onToggle={toggleCard}
-                  onStartDepositPayment={startDepositPayment}
-                  payingApptId={payingApptId}
-                  payError={expandedId === appointment.id ? payError : null}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        {loading ? (
+          <div className={styles.loading}>Carregando…</div>
+        ) : error ? (
+          <div className={styles.errorMessage}>{error}</div>
+        ) : appointments.length === 0 ? (
+          <div className={styles.empty}>Você ainda não tem agendamentos. Marque um horário para vê-lo aqui.</div>
+        ) : (
+          <div className={styles.stack}>
+            {appointments.map(appointment => (
+              <AppointmentCard
+                key={appointment.id}
+                appointment={appointment}
+                isExpanded={expandedId === appointment.id}
+                onToggle={toggleCard}
+                onStartDepositPayment={startDepositPayment}
+                payingApptId={payingApptId}
+                payError={expandedId === appointment.id ? payError : null}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   )

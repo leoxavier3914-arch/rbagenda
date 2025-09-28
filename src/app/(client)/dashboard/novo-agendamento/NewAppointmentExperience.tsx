@@ -483,7 +483,7 @@ export default function NewAppointmentExperience() {
         total: 0,
         deposit: 0,
         durationMinutes: 0,
-        escolha: 'Selecione um serviço',
+        escolha: 'Selecione uma técnica e um tipo de serviço',
         quando: `Data: ${formatIsoDateToBR(selectedDate)} • Horário: ${selectedSlot ?? '—'}`,
       }
     }
@@ -496,7 +496,7 @@ export default function NewAppointmentExperience() {
       total,
       deposit,
       durationMinutes: selectedService.duration_min,
-      escolha: `Tipo: ${selectedType.name} • Técnica: ${selectedService.name}`,
+      escolha: `Tipo: ${selectedService.name} • Técnica: ${selectedType.name}`,
       quando: `Data: ${formatIsoDateToBR(selectedDate)} • Horário: ${selectedSlot ?? '—'}`,
     }
   }, [selectedDate, selectedService, selectedSlot, selectedType])
@@ -705,7 +705,7 @@ export default function NewAppointmentExperience() {
       <div className={styles.shell}>
         <h1 className={styles.title}>Novo agendamento</h1>
         <p className={styles.subtitle}>
-          Escolha o tipo, técnica, data e horário. O preço, tempo e sinal atualizam automaticamente.
+          Escolha a técnica e o tipo de serviço, além da data e horário. O preço, tempo e sinal atualizam automaticamente.
         </p>
 
         <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
@@ -741,7 +741,7 @@ export default function NewAppointmentExperience() {
             </>
           ) : catalogStatus === 'ready' ? (
             <div className={`${styles.meta} ${styles.labelCentered}`}>
-              Selecione uma técnica para ver os tipos disponíveis.
+              Selecione uma técnica para ver os serviços disponíveis.
             </div>
           ) : null}
         </section>

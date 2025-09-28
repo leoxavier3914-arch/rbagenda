@@ -1,0 +1,386 @@
+:global(:root) {
+  --bg-page: #fbfaf7;
+  --card-surface: #ffffff;
+  --ink: #1e1e1e;
+  --muted: #6b6b6b;
+  --brand: #1f8a70;
+  --brand-soft: #c3dac5;
+  --stroke: #ece7df;
+  --ok: #1ea97c;
+  --warn: #d1a13b;
+  --info: #2e6bd9;
+  --disabled: #c9c4ba;
+  --radius-xl: 18px;
+  --space: 14px;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+
+.shell {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+  margin: 8px 0 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+.card {
+  background: var(--card-surface);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+}
+
+.section:not(:first-child) {
+  margin-top: 18px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 1px solid var(--stroke);
+  background: #fff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+  user-select: none;
+}
+
+.pill:hover {
+  transform: translateY(-1px);
+}
+
+.pill[data-active='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(31, 138, 112, 0.25);
+}
+
+.optRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--brand-soft);
+}
+
+.optTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rules {
+  margin: 0 0 0 18px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.calHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.calTitle {
+  font-weight: 800;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--stroke);
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.dow {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.day {
+  position: relative;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.day[aria-disabled='true'],
+.day:disabled {
+  color: #8f8b83;
+  cursor: not-allowed;
+  background: #f3f0ea;
+}
+
+.day[data-state='available'] {
+  border-color: var(--brand-soft);
+}
+
+.day[data-state='booked'] {
+  background: rgba(209, 161, 59, 0.1);
+  border-color: #ead9a7;
+}
+
+.day[data-state='mine'] {
+  background: rgba(46, 107, 217, 0.1);
+  border-color: #bcd0ff;
+}
+
+.day[data-selected='true'] {
+  outline: 2px solid var(--brand);
+  box-shadow: 0 0 0 4px rgba(31, 138, 112, 0.18);
+}
+
+.legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.dotAvail {
+  background: var(--brand);
+}
+
+.dotBooked {
+  background: var(--warn);
+}
+
+.dotMine {
+  background: var(--info);
+}
+
+.dotDisabled {
+  background: var(--disabled);
+}
+
+.slots {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.slot {
+  padding: 10px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.slot[aria-disabled='true'],
+.slot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.slot[data-selected='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(31, 138, 112, 0.25);
+}
+
+.summary {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(251, 250, 247, 0.85);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--stroke);
+  margin-top: auto;
+}
+
+.summaryInner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.grow {
+  flex: 1;
+}
+
+.cta {
+  appearance: none;
+  border: 0;
+  background: var(--brand);
+  color: #fff;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 10px 20px rgba(31, 138, 112, 0.25);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.cta:disabled {
+  opacity: 0.6;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.col {
+  flex: 1 1 240px;
+}
+
+.spacer {
+  height: 10px;
+}
+
+.spacerSmall {
+  height: 12px;
+}
+
+.bottomSpacer {
+  height: 100px;
+}
+
+@media (max-width: 420px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .pills {
+    gap: 8px;
+  }
+
+  .pill {
+    padding: 10px 12px;
+  }
+
+  .day {
+    height: 38px;
+  }
+
+  .summaryInner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cta {
+    width: 100%;
+    text-align: center;
+  }
+}

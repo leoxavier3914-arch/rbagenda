@@ -13,7 +13,7 @@
 .page {
   min-height: 100vh;
   color: var(--text);
-  background: linear-gradient(180deg, #ffffff, var(--bg));
+  background: none;
 }
 
 .wrap {
@@ -101,6 +101,7 @@
   margin: 0;
   color: var(--beige-900);
   font-size: 1.75rem;
+  text-align: center;
 }
 
 .lead {
@@ -108,6 +109,11 @@
   font-size: 0.95rem;
   color: rgba(106, 90, 70, 0.85);
   line-height: 1.5;
+  text-align: center;
+}
+
+.card header {
+  text-align: center;
 }
 
 .row {

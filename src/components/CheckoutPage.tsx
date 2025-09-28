@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Elements,
@@ -87,15 +86,6 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
-        <div className={styles.actions}>
-          <button type="button" onClick={() => router.back()} className={styles.backButton}>
-            ← Voltar
-          </button>
-          <Link href="/dashboard/agendamentos" className={styles.link}>
-            Ver agendamentos
-          </Link>
-        </div>
-
         {errorMessage && <div className={styles.errorBanner}>{errorMessage}</div>}
 
         {hasCheckout && elementsOptions && stripePromise && (
@@ -103,6 +93,12 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
             <ManualCheckoutForm appointmentId={appointmentId} clientSecret={clientSecret} />
           </Elements>
         )}
+
+        <div className={styles.footerActions}>
+          <button type="button" onClick={() => router.back()} className={styles.backButton}>
+            ← Voltar
+          </button>
+        </div>
       </div>
     </div>
   )

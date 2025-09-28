@@ -1,6 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+import { supabase } from '@/lib/db'
 
 import styles from './newAppointment.module.css'
 
@@ -14,6 +17,14 @@ type ExampleData = {
   myDays: Set<string>
   daySlots: Record<string, string[]>
   bookedSlots: Record<string, string[]>
+}
+
+type LoadedAppointment = {
+  id: string
+  scheduled_at: string | null
+  starts_at: string
+  status: string
+  customer_id: string | null
 }
 
 const PRICES: Record<Tipo, Record<Tecnica, number>> = {
@@ -75,6 +86,10 @@ function toBRLCurrency(value: number) {
   })
 }
 
+function toCurrencyNumber(value: number) {
+  return Math.round(value * 100) / 100
+}
+
 function minutesToText(min: number) {
   const hours = Math.floor(min / 60)
   const minutes = min % 60
@@ -88,64 +103,106 @@ function formatIsoDateToBR(iso: string | null) {
   return iso.split('-').reverse().join('/')
 }
 
-function generateExampleData(): ExampleData {
+function makeSlots(start = '09:00', end = '18:00', stepMinutes = 30) {
+  const [startHour, startMinute] = start.split(':').map(Number)
+  const [endHour, endMinute] = end.split(':').map(Number)
+  const slots: string[] = []
+  let cursor = new Date(2000, 0, 1, startHour, startMinute, 0, 0)
+  const limit = new Date(2000, 0, 1, endHour, endMinute, 0, 0)
+
+  while (cursor <= limit) {
+    const hours = String(cursor.getHours()).padStart(2, '0')
+    const minutes = String(cursor.getMinutes()).padStart(2, '0')
+    slots.push(`${hours}:${minutes}`)
+    cursor = new Date(cursor.getTime() + stepMinutes * 60000)
+  }
+
+  return slots
+}
+
+const DEFAULT_SLOT_TEMPLATE = makeSlots('09:00', '18:00', 30)
+
+function buildAvailabilityData(
+  appointments: LoadedAppointment[],
+  userId: string | null,
+  days = 60,
+): ExampleData {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const format = (date: Date) => date.toISOString().slice(0, 10)
-  const addDays = (base: Date, amount: number) =>
-    new Date(base.getFullYear(), base.getMonth(), base.getDate() + amount)
-
-  const bookedDays = new Set([1, 7, 15, 21, 28].map((n) => format(addDays(today, n))))
-  const myDays = new Set([3, 18].map((n) => format(addDays(today, n))))
-  const availableDays = new Set<string>()
-
-  for (let i = 0; i < 60; i += 1) {
-    const date = format(addDays(today, i))
-    if (!bookedDays.has(date) && !myDays.has(date)) {
-      availableDays.add(date)
-    }
-  }
-
-  const makeSlots = (start = '09:00', end = '18:00', stepMinutes = 30) => {
-    const [startHour, startMinute] = start.split(':').map(Number)
-    const [endHour, endMinute] = end.split(':').map(Number)
-    const slots: string[] = []
-    let cursor = new Date(2000, 0, 1, startHour, startMinute, 0, 0)
-    const limit = new Date(2000, 0, 1, endHour, endMinute, 0, 0)
-
-    while (cursor <= limit) {
-      const hours = String(cursor.getHours()).padStart(2, '0')
-      const minutes = String(cursor.getMinutes()).padStart(2, '0')
-      slots.push(`${hours}:${minutes}`)
-      cursor = new Date(cursor.getTime() + stepMinutes * 60000)
-    }
-
-    return slots
-  }
-
   const daySlots: Record<string, string[]> = {}
-  const defaultSlots = makeSlots('09:00', '18:00', 30)
-  availableDays.forEach((date) => {
-    daySlots[date] = [...defaultSlots]
+  const bookedSlots: Record<string, string[]> = {}
+  const availableDays = new Set<string>()
+  const bookedDays = new Set<string>()
+  const myDays = new Set<string>()
+
+  const perDay = new Map<string, { times: Set<string>; myTimes: Set<string> }>()
+
+  appointments.forEach((appt) => {
+    const rawStart = appt.scheduled_at ?? appt.starts_at
+    if (!rawStart) return
+    const start = new Date(rawStart)
+    if (Number.isNaN(start.getTime())) return
+    const isoDay = start.toISOString().slice(0, 10)
+    const time = start.toISOString().slice(11, 16)
+
+    if (!perDay.has(isoDay)) {
+      perDay.set(isoDay, { times: new Set(), myTimes: new Set() })
+    }
+
+    const entry = perDay.get(isoDay)!
+    entry.times.add(time)
+    if (userId && appt.customer_id === userId) {
+      entry.myTimes.add(time)
+    }
   })
 
-  const bookedSlots: Record<string, string[]> = {
-    [format(addDays(today, 1))]: ['10:00', '10:30', '11:00'],
-    [format(addDays(today, 3))]: ['14:00', '14:30'],
-    [format(addDays(today, 18))]: ['09:00', '09:30', '10:00'],
+  for (let i = 0; i < days; i += 1) {
+    const date = new Date(today)
+    date.setDate(date.getDate() + i)
+    const iso = date.toISOString().slice(0, 10)
+    daySlots[iso] = [...DEFAULT_SLOT_TEMPLATE]
+
+    const entry = perDay.get(iso)
+    if (entry) {
+      const sortedTimes = Array.from(entry.times).sort()
+      if (sortedTimes.length > 0) {
+        bookedSlots[iso] = sortedTimes
+      }
+
+      if (entry.myTimes.size > 0) {
+        myDays.add(iso)
+      }
+
+      if (entry.myTimes.size === 0) {
+        const totalSlots = daySlots[iso]?.length ?? DEFAULT_SLOT_TEMPLATE.length
+        if (entry.times.size >= totalSlots) {
+          bookedDays.add(iso)
+        } else {
+          availableDays.add(iso)
+        }
+      }
+    } else {
+      availableDays.add(iso)
+    }
   }
 
-  return {
-    availableDays,
-    bookedDays,
-    myDays,
-    daySlots,
-    bookedSlots,
+  return { availableDays, bookedDays, myDays, daySlots, bookedSlots }
+}
+
+function combineDateAndTime(dateIso: string, time: string) {
+  const [year, month, day] = dateIso.split('-').map(Number)
+  const [hour, minute] = time.split(':').map(Number)
+
+  if ([year, month, day, hour, minute].some((value) => Number.isNaN(value))) {
+    return null
   }
+
+  return new Date(year, (month ?? 1) - 1, day ?? 1, hour ?? 0, minute ?? 0, 0, 0)
 }
 
 export default function NewAppointmentExperience() {
+  const router = useRouter()
   const [tipo, setTipo] = useState<Tipo>(DEFAULT_SELECTIONS.tipo)
   const [tecnica, setTecnica] = useState<Tecnica>(DEFAULT_SELECTIONS.tecnica)
   const [densidade, setDensidade] = useState<Densidade>(DEFAULT_SELECTIONS.densidade)
@@ -156,7 +213,78 @@ export default function NewAppointmentExperience() {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
 
-  const example = useMemo(() => generateExampleData(), [])
+  const [appointments, setAppointments] = useState<LoadedAppointment[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(true)
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadAvailability() {
+      setIsLoadingAvailability(true)
+      setAvailabilityError(null)
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+
+        const session = sessionData.session
+        if (!session?.user?.id) {
+          window.location.href = '/login'
+          return
+        }
+
+        if (!isMounted) return
+        setUserId(session.user.id)
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const limit = new Date(today)
+        limit.setDate(limit.getDate() + 60)
+
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('id, scheduled_at, starts_at, status, customer_id')
+          .gte('starts_at', today.toISOString())
+          .lte('starts_at', limit.toISOString())
+          .in('status', ['pending', 'reserved', 'confirmed'])
+          .order('starts_at', { ascending: true })
+
+        if (error) throw error
+        if (!isMounted) return
+
+        setAppointments(data ?? [])
+      } catch (err) {
+        console.error('Erro ao carregar disponibilidade', err)
+        if (isMounted) {
+          setAvailabilityError('Não foi possível carregar a disponibilidade. Tente novamente mais tarde.')
+          setAppointments([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingAvailability(false)
+        }
+      }
+    }
+
+    void loadAvailability()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const availability = useMemo(
+    () => buildAvailabilityData(appointments, userId),
+    [appointments, userId],
+  )
+
+  const canInteract = !isLoadingAvailability && !availabilityError
 
   const monthTitle = useMemo(() => {
     const localeTitle = new Date(year, month, 1).toLocaleDateString('pt-BR', {
@@ -199,12 +327,12 @@ export default function NewAppointmentExperience() {
       const iso = date.toISOString().slice(0, 10)
 
       let status: 'available' | 'booked' | 'mine' | 'disabled' = 'disabled'
-      if (example.myDays.has(iso)) status = 'mine'
-      else if (example.bookedDays.has(iso)) status = 'booked'
-      else if (example.availableDays.has(iso)) status = 'available'
+      if (availability.myDays.has(iso)) status = 'mine'
+      else if (availability.bookedDays.has(iso)) status = 'booked'
+      else if (availability.availableDays.has(iso)) status = 'available'
 
       const isPast = date < today
-      const isDisabled = isPast || status === 'booked' || status === 'disabled'
+      const isDisabled = !canInteract || isPast || status === 'booked' || status === 'disabled'
 
       dayEntries.push({
         iso,
@@ -215,19 +343,19 @@ export default function NewAppointmentExperience() {
     }
 
     return { startWeekday, dayEntries }
-  }, [example.availableDays, example.bookedDays, example.myDays, month, year])
+  }, [availability.availableDays, availability.bookedDays, availability.myDays, canInteract, month, year])
 
   const slots = useMemo(() => {
-    if (!selectedDate) return []
-    return [...(example.daySlots[selectedDate] ?? [])]
-  }, [example.daySlots, selectedDate])
+    if (!selectedDate || !canInteract) return []
+    return [...(availability.daySlots[selectedDate] ?? [])]
+  }, [availability.daySlots, canInteract, selectedDate])
 
   const bookedSlots = useMemo(() => {
-    if (!selectedDate) return new Set<string>()
-    return new Set(example.bookedSlots[selectedDate] ?? [])
-  }, [example.bookedSlots, selectedDate])
+    if (!selectedDate || !canInteract) return new Set<string>()
+    return new Set(availability.bookedSlots[selectedDate] ?? [])
+  }, [availability.bookedSlots, canInteract, selectedDate])
 
-  const isReadyToContinue = Boolean(selectedDate && selectedSlot)
+  const isReadyToContinue = Boolean(selectedDate && selectedSlot && !isSubmitting && canInteract)
 
   function goToPreviousMonth() {
     const previous = new Date(year, month - 1, 1)
@@ -242,40 +370,89 @@ export default function NewAppointmentExperience() {
   }
 
   function handleDaySelect(dayIso: string, disabled: boolean) {
-    if (disabled) return
+    if (disabled || !canInteract) return
     setSelectedDate(dayIso)
     setSelectedSlot(null)
+    setSubmitError(null)
+    setSubmitSuccess(null)
   }
 
   function handleSlotSelect(slotValue: string, disabled: boolean) {
-    if (disabled) return
+    if (disabled || !canInteract) return
     setSelectedSlot(slotValue)
+    setSubmitError(null)
+    setSubmitSuccess(null)
   }
 
-  function handleContinue() {
-    if (!selectedDate || !selectedSlot) return
+  async function handleContinue() {
+    if (!selectedDate || !selectedSlot || !canInteract) return
 
-    const payload = {
-      tipo,
-      tecnica,
-      densidade,
-      preco_total: toBRLCurrency(computed.total),
-      sinal: toBRLCurrency(computed.sinal),
-      duracao: minutesToText(computed.durationMinutes),
-      data: selectedDate,
-      horario: selectedSlot,
-      ts: Date.now(),
-    }
+    setSubmitError(null)
+    setSubmitSuccess(null)
+    setIsSubmitting(true)
 
     try {
-      window.localStorage.setItem('novo-agendamento', JSON.stringify(payload))
-    } catch {
-      // ignore write errors (storage may be unavailable)
-    }
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) throw sessionError
 
-    window.alert(
-      `Agendamento salvo!\n${formatIsoDateToBR(selectedDate)} às ${selectedSlot}.\nPróxima etapa: confirmar dados do cliente.`,
-    )
+      const session = sessionData.session
+      if (!session?.access_token || !session.user?.id) {
+        window.location.href = '/login'
+        return
+      }
+
+      const scheduledAt = combineDateAndTime(selectedDate, selectedSlot)
+      if (!scheduledAt) {
+        throw new Error('Horário selecionado é inválido.')
+      }
+
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          cliente_id: session.user.id,
+          tipo,
+          tecnica,
+          densidade,
+          scheduled_at: scheduledAt.toISOString(),
+          preco_total: toCurrencyNumber(computed.total),
+          valor_sinal: toCurrencyNumber(computed.sinal),
+          duration_minutes: computed.durationMinutes,
+        }),
+      })
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        const errorMessage =
+          (body && typeof body.error === 'string' && body.error) ||
+          'Não foi possível criar o agendamento. Tente novamente.'
+        throw new Error(errorMessage)
+      }
+
+      const payload = await response.json().catch(() => ({}))
+      const appointmentId = payload?.appointment_id as string | undefined
+
+      setSubmitSuccess('Agendamento criado com sucesso! Redirecionando…')
+
+      window.setTimeout(() => {
+        const target = appointmentId
+          ? `/dashboard/agendamentos?novo=${encodeURIComponent(appointmentId)}`
+          : '/dashboard/agendamentos'
+        router.push(target)
+      }, 600)
+    } catch (error) {
+      console.error('Erro ao criar agendamento', error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Erro inesperado ao criar o agendamento. Tente novamente.'
+      setSubmitError(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -409,6 +586,14 @@ export default function NewAppointmentExperience() {
         <section className={`${styles.card} ${styles.section}`} id="data-card">
           <div className={styles.label}>Data &amp; horário</div>
 
+          {availabilityError && (
+            <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>
+          )}
+
+          {!availabilityError && isLoadingAvailability && (
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
+          )}
+
           <div className={styles.calHead}>
             <button
               type="button"
@@ -480,7 +665,15 @@ export default function NewAppointmentExperience() {
           <div className={styles.spacerSmall} />
           <div className={styles.label}>Horários</div>
           <div className={styles.slots}>
-            {selectedDate ? (
+            {availabilityError ? (
+              <div className={`${styles.status} ${styles.statusError}`}>
+                Não foi possível carregar os horários.
+              </div>
+            ) : isLoadingAvailability ? (
+              <div className={`${styles.status} ${styles.statusInfo}`}>
+                Carregando horários disponíveis…
+              </div>
+            ) : selectedDate ? (
               slots.length > 0 ? (
                 slots.map((slotValue) => {
                   const disabled = bookedSlots.has(slotValue)
@@ -518,14 +711,20 @@ export default function NewAppointmentExperience() {
             <div className={styles.meta}>Sinal: R$ {toBRLCurrency(computed.sinal)}</div>
             <div className={styles.meta}>{computed.quando}</div>
           </div>
-          <button
-            type="button"
-            className={styles.cta}
-            disabled={!isReadyToContinue}
-            onClick={handleContinue}
-          >
-            Continuar
-          </button>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.cta}
+              disabled={!isReadyToContinue}
+              onClick={() => {
+                void handleContinue()
+              }}
+            >
+              {isSubmitting ? 'Salvando…' : 'Continuar'}
+            </button>
+            {submitError && <div className={`${styles.status} ${styles.statusError}`}>{submitError}</div>}
+            {submitSuccess && <div className={`${styles.status} ${styles.statusSuccess}`}>{submitSuccess}</div>}
+          </div>
         </div>
       </footer>
     </div>

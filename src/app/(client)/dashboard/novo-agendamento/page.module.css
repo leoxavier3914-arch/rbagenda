@@ -1,0 +1,48 @@
+.main {
+  --bg: #fbfaf7;
+  --card: #ffffff;
+  --ink: #1e1e1e;
+  --muted: #6b6b6b;
+  --brand: #1f8a70;
+  --brand-2: #c3dac5;
+  --stroke: #ece7df;
+  --ok: #1ea97c;
+  --warn: #d1a13b;
+  --info: #2e6bd9;
+  --disabled: #c9c4ba;
+  --radius: 18px;
+  --space: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Helvetica, Arial, sans-serif;
+  padding: 20px 16px 120px;
+}
+
+.shell {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.intro {
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+  margin: 8px 0 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+@media (max-width: 420px) {
+  .title {
+    font-size: 20px;
+  }
+}

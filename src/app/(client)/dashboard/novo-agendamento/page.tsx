@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import BookingFlow from '@/components/BookingFlow'
 import { supabase } from '@/lib/db'
+import styles from './page.module.css'
 
 export default function NewAppointment() {
   useEffect(() => {
@@ -13,15 +14,16 @@ export default function NewAppointment() {
   }, [])
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-8">
-      <div className="card card--flush-top space-y-1">
-        <span className="badge">Reserva</span>
-        <h1 className="text-3xl font-semibold text-[#1f2d28]">Novo agendamento</h1>
-        <p className="muted-text max-w-xl">
-          Escolha o melhor horário para você e confirme o sinal online em poucos minutos.
-        </p>
+    <main className={styles.main}>
+      <div className={styles.shell}>
+        <header className={styles.intro}>
+          <h1 className={styles.title}>Novo agendamento</h1>
+          <p className={styles.subtitle}>
+            Escolha o tipo de serviço, data e horário ideais. O valor e o sinal são atualizados automaticamente.
+          </p>
+        </header>
+        <BookingFlow />
       </div>
-      <BookingFlow />
     </main>
   )
 }

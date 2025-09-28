@@ -16,7 +16,7 @@
 
 .page {
   min-height: 100vh;
-  background: var(--bg-page);
+  background: transparent;
   color: var(--ink);
   display: flex;
   flex-direction: column;
@@ -74,6 +74,17 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+.tipoPills {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tipoPill {
   width: 100%;
 }
 
@@ -415,6 +426,10 @@
 
   .pills {
     gap: 8px;
+  }
+
+  .tipoPills {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 
   .pill {

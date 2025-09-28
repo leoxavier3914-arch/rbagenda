@@ -20,13 +20,8 @@ const ServiceBookingBody = z.object({
 
 const ExperienceBookingBody = z.object({
   cliente_id: z.string().uuid().optional(),
-  tipo: z.enum(['aplicacao', 'reaplicacao', 'manutencao']),
-  tecnica: z.enum(['volume_russo', 'volume_brasileiro', 'fox_eyes']),
-  densidade: z.enum(['natural', 'intermediario', 'cheio']),
+  service_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
-  preco_total: z.number().min(0),
-  valor_sinal: z.number().min(0),
-  duration_minutes: z.number().int().positive(),
   notes: z.string().max(500).optional(),
 })
 
@@ -40,7 +35,7 @@ export async function POST(req: NextRequest) {
   const parsed = Body.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
-  if ('service_id' in parsed.data) {
+  if ('starts_at' in parsed.data) {
     const { service_id, staff_id, starts_at, utm } = parsed.data
 
     const { data: svc } = await supabaseAdmin
@@ -89,33 +84,54 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ appointment_id: appt.id })
   }
 
-  const { tipo, tecnica, densidade, scheduled_at, preco_total, valor_sinal, duration_minutes, notes } = parsed.data
+  const { service_id, scheduled_at, notes } = parsed.data
+
+  const { data: svc } = await supabaseAdmin
+    .from('services')
+    .select('id, branch_id, duration_min, price_cents, deposit_cents')
+    .eq('id', service_id)
+    .eq('active', true)
+    .single()
+  if (!svc) return NextResponse.json({ error: 'service not found' }, { status: 404 })
+
+  let staffId: string | null = null
+  if (svc.branch_id) {
+    const { data: staffRows } = await supabaseAdmin
+      .from('staff')
+      .select('id')
+      .eq('branch_id', svc.branch_id)
+      .eq('active', true)
+      .limit(1)
+    staffId = staffRows?.[0]?.id || null
+  }
 
   const start = new Date(scheduled_at)
   if (Number.isNaN(start.getTime())) {
     return NextResponse.json({ error: 'invalid scheduled_at' }, { status: 400 })
   }
 
-  const end = new Date(start.getTime() + duration_minutes * 60 * 1000)
+  const end = new Date(start.getTime() + svc.duration_min * 60 * 1000)
 
-  const totalCents = Math.round(preco_total * 100)
-  const depositCents = Math.round(valor_sinal * 100)
+  const totalCents = Math.max(0, svc.price_cents)
+  const depositCents = Math.min(totalCents, Math.max(0, svc.deposit_cents))
+  const priceValue = Number((totalCents / 100).toFixed(2))
+  const depositValue = Number((depositCents / 100).toFixed(2))
 
   const { data: appt, error } = await supabaseAdmin
     .from('appointments')
     .insert({
+      branch_id: svc.branch_id,
       customer_id: user.id,
+      staff_id: staffId,
+      service_id: svc.id,
       starts_at: start.toISOString(),
       ends_at: end.toISOString(),
       scheduled_at: start.toISOString(),
       status: 'pending',
       total_cents: totalCents,
       deposit_cents: depositCents,
-      preco_total,
-      valor_sinal,
-      tipo,
-      tecnica,
-      densidade,
+      preco_total: priceValue,
+      valor_sinal: depositValue,
       notes,
     })
     .select('id, scheduled_at')

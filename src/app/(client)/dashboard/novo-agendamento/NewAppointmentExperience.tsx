@@ -7,9 +7,26 @@ import { supabase } from '@/lib/db'
 
 import styles from './newAppointment.module.css'
 
-type Tipo = 'aplicacao' | 'reaplicacao' | 'manutencao'
-type Tecnica = 'volume_russo' | 'volume_brasileiro' | 'fox_eyes'
-type Densidade = 'natural' | 'intermediario' | 'cheio'
+type ServiceTechnique = {
+  id: string
+  name: string
+  slug: string | null
+  duration_min: number
+  price_cents: number
+  deposit_cents: number
+  buffer_min: number | null
+  active: boolean
+}
+
+type ServiceTypeEntry = {
+  id: string
+  name: string
+  slug: string | null
+  description: string | null
+  order_index: number
+  active: boolean
+  services: ServiceTechnique[]
+}
 
 type ExampleData = {
   availableDays: Set<string>
@@ -27,58 +44,10 @@ type LoadedAppointment = {
   ends_at: string | null
   status: string
   customer_id: string | null
-}
-
-const PRICES: Record<Tipo, Record<Tecnica, number>> = {
-  aplicacao: { volume_russo: 220, volume_brasileiro: 240, fox_eyes: 260 },
-  reaplicacao: { volume_russo: 200, volume_brasileiro: 220, fox_eyes: 240 },
-  manutencao: { volume_russo: 130, volume_brasileiro: 140, fox_eyes: 150 },
-}
-
-const DURACOES: Record<Tipo, Record<Tecnica, number>> = {
-  aplicacao: { volume_russo: 120, volume_brasileiro: 130, fox_eyes: 140 },
-  reaplicacao: { volume_russo: 110, volume_brasileiro: 120, fox_eyes: 130 },
-  manutencao: { volume_russo: 70, volume_brasileiro: 80, fox_eyes: 90 },
-}
-
-const SINAL_PERCENT: Record<Tipo, number> = {
-  aplicacao: 0.3,
-  reaplicacao: 0.25,
-  manutencao: 0.2,
-}
-
-const DENSIDADE_EXTRA: Record<Densidade, number> = {
-  natural: 0,
-  intermediario: 10,
-  cheio: 20,
-}
-
-const tipoLabels: Record<Tipo, string> = {
-  aplicacao: 'Aplicação',
-  reaplicacao: 'Reaplicação',
-  manutencao: 'Manutenção',
-}
-
-const tecnicaLabels: Record<Tecnica, string> = {
-  volume_russo: 'Volume Russo',
-  volume_brasileiro: 'Volume Brasileiro',
-  fox_eyes: 'Fox Eyes',
-}
-
-const densidadeLabels: Record<Densidade, string> = {
-  natural: 'Natural',
-  intermediario: 'Intermediário',
-  cheio: 'Bem cheio',
-}
-
-const DEFAULT_SELECTIONS: {
-  tipo: Tipo
-  tecnica: Tecnica
-  densidade: Densidade
-} = {
-  tipo: 'aplicacao',
-  tecnica: 'volume_russo',
-  densidade: 'natural',
+  services?:
+    | { buffer_min?: number | null }[]
+    | { buffer_min?: number | null }
+    | null
 }
 
 function toBRLCurrency(value: number) {
@@ -86,10 +55,6 @@ function toBRLCurrency(value: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
-}
-
-function toCurrencyNumber(value: number) {
-  return Math.round(value * 100) / 100
 }
 
 function minutesToText(min: number) {
@@ -103,6 +68,32 @@ function minutesToText(min: number) {
 function formatIsoDateToBR(iso: string | null) {
   if (!iso) return '—'
   return iso.split('-').reverse().join('/')
+}
+
+function normalizeNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+function getBufferMinutesFromAppointment(appt: LoadedAppointment, fallback: number): number {
+  const entries = Array.isArray(appt.services)
+    ? appt.services
+    : appt.services
+    ? [appt.services]
+    : []
+
+  for (const entry of entries) {
+    const normalized = normalizeNumber(entry?.buffer_min)
+    if (normalized !== null) {
+      return Math.max(0, normalized)
+    }
+  }
+
+  return Math.max(0, fallback)
 }
 
 function makeSlots(start = '09:00', end = '18:00', stepMinutes = 30) {
@@ -123,12 +114,13 @@ function makeSlots(start = '09:00', end = '18:00', stepMinutes = 30) {
 }
 
 const DEFAULT_SLOT_TEMPLATE = makeSlots('09:00', '18:00', 30)
-const DEFAULT_BUFFER_MINUTES = Number(process.env.NEXT_PUBLIC_DEFAULT_BUFFER_MIN ?? '15') || 15
+const FALLBACK_BUFFER_MINUTES = Number(process.env.NEXT_PUBLIC_DEFAULT_BUFFER_MIN ?? '15') || 15
 const WORK_DAY_END = '18:00'
 
 function buildAvailabilityData(
   appointments: LoadedAppointment[],
   userId: string | null,
+  fallbackBufferMinutes = FALLBACK_BUFFER_MINUTES,
   days = 60,
 ): ExampleData {
   const today = new Date()
@@ -155,7 +147,8 @@ function buildAvailabilityData(
     const time = start.toISOString().slice(11, 16)
     const rawEnd = appt.ends_at ? new Date(appt.ends_at) : new Date(start.getTime() + 60 * 60000)
     if (Number.isNaN(rawEnd.getTime())) return
-    const endWithBuffer = new Date(rawEnd.getTime() + DEFAULT_BUFFER_MINUTES * 60000)
+    const bufferMinutes = getBufferMinutesFromAppointment(appt, fallbackBufferMinutes)
+    const endWithBuffer = new Date(rawEnd.getTime() + bufferMinutes * 60000)
 
     if (!perDay.has(isoDay)) {
       perDay.set(isoDay, { times: new Set(), myTimes: new Set(), intervals: [] })
@@ -219,15 +212,18 @@ function combineDateAndTime(dateIso: string, time: string) {
 
 export default function NewAppointmentExperience() {
   const router = useRouter()
-  const [tipo, setTipo] = useState<Tipo>(DEFAULT_SELECTIONS.tipo)
-  const [tecnica, setTecnica] = useState<Tecnica>(DEFAULT_SELECTIONS.tecnica)
-  const [densidade, setDensidade] = useState<Densidade>(DEFAULT_SELECTIONS.densidade)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-
   const now = useMemo(() => new Date(), [])
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
+
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeEntry[]>([])
+  const [catalogStatus, setCatalogStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null)
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
 
   const [appointments, setAppointments] = useState<LoadedAppointment[]>([])
   const [userId, setUserId] = useState<string | null>(null)
@@ -237,6 +233,91 @@ export default function NewAppointmentExperience() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    const loadCatalog = async () => {
+      setCatalogStatus('loading')
+      setCatalogError(null)
+
+      try {
+        const { data, error } = await supabase
+          .from('service_types')
+          .select(
+            'id, name, slug, description, active, order_index, services:services!services_service_type_id_fkey(id, name, slug, duration_min, price_cents, deposit_cents, buffer_min, active)'
+          )
+          .eq('active', true)
+          .order('order_index', { ascending: true, nullsFirst: true })
+          .order('name', { ascending: true })
+
+        if (error) throw error
+        if (!active) return
+
+        const normalized = (data ?? []).map((entry) => {
+          const servicesRaw = Array.isArray(entry.services)
+            ? entry.services
+            : entry.services
+            ? [entry.services]
+            : []
+
+          const services = servicesRaw
+            .filter((svc) => svc && svc.active !== false)
+            .map((svc) => {
+              const duration = normalizeNumber(svc?.duration_min) ?? 0
+              const price = normalizeNumber(svc?.price_cents) ?? 0
+              const deposit = normalizeNumber(svc?.deposit_cents) ?? 0
+              const buffer = normalizeNumber(svc?.buffer_min)
+
+              return {
+                id: svc.id,
+                name: svc.name ?? 'Serviço',
+                slug: svc.slug ?? null,
+                duration_min: Math.max(0, Math.round(duration)),
+                price_cents: Math.max(0, Math.round(price)),
+                deposit_cents: Math.max(0, Math.round(deposit)),
+                buffer_min: buffer !== null ? Math.max(0, Math.round(buffer)) : null,
+                active: svc.active !== false,
+              }
+            })
+            .filter((svc) => svc.duration_min > 0)
+            .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+
+          const orderIndex = normalizeNumber(entry.order_index)
+
+          return {
+            id: entry.id,
+            name: entry.name ?? 'Serviço',
+            slug: entry.slug ?? null,
+            description: entry.description ?? null,
+            order_index: orderIndex !== null ? Math.round(orderIndex) : 0,
+            active: entry.active !== false,
+            services,
+          }
+        }) satisfies ServiceTypeEntry[]
+
+        normalized.sort(
+          (a, b) =>
+            a.order_index - b.order_index || a.name.localeCompare(b.name, 'pt-BR')
+        )
+
+        setServiceTypes(normalized)
+        setCatalogStatus('ready')
+      } catch (error) {
+        console.error('Erro ao carregar serviços', error)
+        if (!active) return
+        setServiceTypes([])
+        setCatalogStatus('error')
+        setCatalogError('Não foi possível carregar os serviços disponíveis. Tente novamente mais tarde.')
+      }
+    }
+
+    void loadCatalog()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -265,7 +346,7 @@ export default function NewAppointmentExperience() {
 
         const { data, error } = await supabase
           .from('appointments')
-          .select('id, scheduled_at, starts_at, ends_at, status, customer_id')
+          .select('id, scheduled_at, starts_at, ends_at, status, customer_id, services(buffer_min)')
           .gte('starts_at', today.toISOString())
           .lte('starts_at', limit.toISOString())
           .in('status', ['pending', 'reserved', 'confirmed'])
@@ -295,12 +376,59 @@ export default function NewAppointmentExperience() {
     }
   }, [])
 
-  const availability = useMemo(
-    () => buildAvailabilityData(appointments, userId),
-    [appointments, userId],
+  const availableTypes = useMemo(
+    () => serviceTypes.filter((type) => type.services.length > 0),
+    [serviceTypes],
   )
 
-  const canInteract = !isLoadingAvailability && !availabilityError
+  useEffect(() => {
+    if (catalogStatus !== 'ready') return
+
+    if (availableTypes.length === 0) {
+      setSelectedTypeId(null)
+      return
+    }
+
+    if (!selectedTypeId || !availableTypes.some((type) => type.id === selectedTypeId)) {
+      setSelectedTypeId(availableTypes[0].id)
+    }
+  }, [availableTypes, catalogStatus, selectedTypeId])
+
+  const selectedType = useMemo(
+    () => availableTypes.find((type) => type.id === selectedTypeId) ?? null,
+    [availableTypes, selectedTypeId],
+  )
+
+  useEffect(() => {
+    if (!selectedType) {
+      setSelectedServiceId(null)
+      return
+    }
+
+    const activeServices = selectedType.services
+    if (activeServices.length === 0) {
+      setSelectedServiceId(null)
+      return
+    }
+
+    if (!selectedServiceId || !activeServices.some((svc) => svc.id === selectedServiceId)) {
+      setSelectedServiceId(activeServices[0].id)
+    }
+  }, [selectedServiceId, selectedType])
+
+  const selectedService = useMemo(
+    () => selectedType?.services.find((svc) => svc.id === selectedServiceId) ?? null,
+    [selectedServiceId, selectedType],
+  )
+
+  useEffect(() => {
+    setSelectedSlot(null)
+  }, [selectedServiceId])
+
+  const availability = useMemo(
+    () => buildAvailabilityData(appointments, userId, FALLBACK_BUFFER_MINUTES),
+    [appointments, userId],
+  )
 
   const monthTitle = useMemo(() => {
     const localeTitle = new Date(year, month, 1).toLocaleDateString('pt-BR', {
@@ -310,23 +438,42 @@ export default function NewAppointmentExperience() {
     return localeTitle.charAt(0).toUpperCase() + localeTitle.slice(1)
   }, [month, year])
 
+  const serviceBufferMinutes = useMemo(() => {
+    const normalized = normalizeNumber(selectedService?.buffer_min)
+    const fallback = FALLBACK_BUFFER_MINUTES
+    if (normalized === null) return Math.max(0, fallback)
+    return Math.max(0, Math.round(normalized))
+  }, [selectedService])
+
   const computed = useMemo(() => {
-    const basePrice = PRICES[tipo][tecnica]
-    const extra = densidade ? DENSIDADE_EXTRA[densidade] : 0
-    const total = basePrice + extra
-    const sinal = total * (SINAL_PERCENT[tipo] ?? 0.3)
-    const durationMinutes = DURACOES[tipo][tecnica]
+    if (!selectedType || !selectedService) {
+      return {
+        total: 0,
+        deposit: 0,
+        durationMinutes: 0,
+        escolha: 'Selecione um serviço',
+        quando: `Data: ${formatIsoDateToBR(selectedDate)} • Horário: ${selectedSlot ?? '—'}`,
+      }
+    }
+
+    const total = Math.max(0, selectedService.price_cents / 100)
+    const depositRaw = Math.max(0, selectedService.deposit_cents / 100)
+    const deposit = depositRaw > total ? total : depositRaw
 
     return {
       total,
-      sinal,
-      durationMinutes,
-      escolha: `${tipoLabels[tipo]} • ${tecnicaLabels[tecnica]} • Densidade: ${
-        densidade ? densidadeLabels[densidade] : '—'
-      }`,
+      deposit,
+      durationMinutes: selectedService.duration_min,
+      escolha: `${selectedType.name} • ${selectedService.name}`,
       quando: `Data: ${formatIsoDateToBR(selectedDate)} • Horário: ${selectedSlot ?? '—'}`,
     }
-  }, [densidade, selectedDate, selectedSlot, tecnica, tipo])
+  }, [selectedDate, selectedService, selectedSlot, selectedType])
+
+  const canInteract =
+    catalogStatus === 'ready' &&
+    !!selectedService &&
+    !isLoadingAvailability &&
+    !availabilityError
 
   const calendarDays = useMemo(() => {
     const firstDay = new Date(year, month, 1)
@@ -362,9 +509,11 @@ export default function NewAppointmentExperience() {
   }, [availability.availableDays, availability.bookedDays, availability.myDays, canInteract, month, year])
 
   const slots = useMemo(() => {
-    if (!selectedDate || !canInteract) return []
+    if (!selectedDate || !canInteract || !selectedService) return []
 
-    const durationMinutes = DURACOES[tipo][tecnica]
+    const durationMinutes = selectedService.duration_min
+    if (!durationMinutes) return []
+
     const busy = availability.busyIntervals[selectedDate] ?? []
     const template = availability.daySlots[selectedDate] ?? DEFAULT_SLOT_TEMPLATE
 
@@ -381,7 +530,7 @@ export default function NewAppointmentExperience() {
         return false
       }
 
-      const slotEnd = new Date(slotStart.getTime() + (durationMinutes + DEFAULT_BUFFER_MINUTES) * 60000)
+      const slotEnd = new Date(slotStart.getTime() + (durationMinutes + serviceBufferMinutes) * 60000)
       if (slotEnd > closing) {
         return false
       }
@@ -397,7 +546,7 @@ export default function NewAppointmentExperience() {
 
       return !overlaps
     })
-  }, [availability.busyIntervals, availability.daySlots, canInteract, now, selectedDate, tecnica, tipo])
+  }, [availability.busyIntervals, availability.daySlots, canInteract, now, selectedDate, selectedService, serviceBufferMinutes])
 
   const bookedSlots = useMemo(() => new Set<string>(), [])
 
@@ -408,9 +557,9 @@ export default function NewAppointmentExperience() {
     }
   }, [selectedSlot, slots])
 
-  const hasMetRequirements = Boolean(selectedDate && selectedSlot && canInteract)
+  const hasMetRequirements = Boolean(selectedDate && selectedSlot && selectedService && canInteract)
   const isReadyToContinue = hasMetRequirements && !isSubmitting
-  const shouldShowContinueButton = hasMetRequirements || isSubmitting
+  const shouldShowContinueButton = Boolean(selectedService && (hasMetRequirements || isSubmitting))
 
   function goToPreviousMonth() {
     const previous = new Date(year, month - 1, 1)
@@ -439,8 +588,22 @@ export default function NewAppointmentExperience() {
     setSubmitSuccess(null)
   }
 
+  function handleTypeSelect(typeId: string) {
+    if (typeId === selectedTypeId) return
+    setSelectedTypeId(typeId)
+    setSubmitError(null)
+    setSubmitSuccess(null)
+  }
+
+  function handleTechniqueSelect(serviceId: string) {
+    if (serviceId === selectedServiceId) return
+    setSelectedServiceId(serviceId)
+    setSubmitError(null)
+    setSubmitSuccess(null)
+  }
+
   async function handleContinue() {
-    if (!selectedDate || !selectedSlot || !canInteract) return
+    if (!selectedDate || !selectedSlot || !selectedService || !canInteract) return
 
     setSubmitError(null)
     setSubmitSuccess(null)
@@ -469,13 +632,8 @@ export default function NewAppointmentExperience() {
         },
         body: JSON.stringify({
           cliente_id: session.user.id,
-          tipo,
-          tecnica,
-          densidade,
+          service_id: selectedService.id,
           scheduled_at: scheduledAt.toISOString(),
-          preco_total: toCurrencyNumber(computed.total),
-          valor_sinal: toCurrencyNumber(computed.sinal),
-          duration_minutes: computed.durationMinutes,
         }),
       })
 
@@ -520,56 +678,63 @@ export default function NewAppointmentExperience() {
 
         <section className={`${styles.card} ${styles.section}`} id="tipo-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
-          <div
-            className={`${styles.pills} ${styles.tipoPills}`}
-            role="tablist"
-            aria-label="Tipo de serviço"
-          >
-            {(Object.keys(tipoLabels) as Tipo[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                className={`${styles.pill} ${styles.tipoPill}`}
-                data-active={tipo === value}
-                onClick={() => setTipo(value)}
-              >
-                {tipoLabels[value]}
-              </button>
-            ))}
-          </div>
+          {catalogError && (
+            <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>
+          )}
+          {catalogStatus === 'loading' && !catalogError && (
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando serviços…</div>
+          )}
+          {catalogStatus === 'ready' && availableTypes.length === 0 && (
+            <div className={styles.meta}>Nenhum serviço disponível no momento.</div>
+          )}
+          {catalogStatus === 'ready' && availableTypes.length > 0 && (
+            <div
+              className={`${styles.pills} ${styles.tipoPills}`}
+              role="tablist"
+              aria-label="Tipo de serviço"
+            >
+              {availableTypes.map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={`${styles.pill} ${styles.tipoPill}`}
+                  data-active={selectedTypeId === type.id}
+                  onClick={() => handleTypeSelect(type.id)}
+                >
+                  {type.name}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
-          <div className={styles.pills} role="tablist" aria-label="Técnica">
-            {(Object.keys(tecnicaLabels) as Tecnica[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                className={styles.pill}
-                data-active={tecnica === value}
-                onClick={() => setTecnica(value)}
-              >
-                {tecnicaLabels[value]}
-              </button>
-            ))}
-          </div>
+          {catalogStatus === 'ready' && selectedType && selectedType.services.length > 0 ? (
+            <div className={styles.pills} role="tablist" aria-label="Técnica">
+              {selectedType.services.map((service) => (
+                <button
+                  key={service.id}
+                  type="button"
+                  className={styles.pill}
+                  data-active={selectedServiceId === service.id}
+                  onClick={() => handleTechniqueSelect(service.id)}
+                >
+                  {service.name}
+                </button>
+              ))}
+            </div>
+          ) : catalogStatus === 'ready' ? (
+            <div className={`${styles.meta} ${styles.labelCentered}`}>
+              Selecione um tipo para ver as técnicas disponíveis.
+            </div>
+          ) : null}
         </section>
 
         <section className={`${styles.card} ${styles.section}`} id="extras-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Densidade (opcional)</div>
-          <div className={styles.pills} role="tablist" aria-label="Densidade">
-            {(Object.keys(densidadeLabels) as Densidade[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                className={styles.pill}
-                data-active={densidade === value}
-                onClick={() => setDensidade(value)}
-              >
-                {densidadeLabels[value]}
-              </button>
-            ))}
+          <div className={`${styles.label} ${styles.labelCentered}`}>Detalhes do serviço</div>
+          <div className={`${styles.meta} ${styles.labelCentered}`}>
+            A densidade é definida automaticamente conforme a técnica escolhida.
           </div>
 
           <div className={styles.spacer} />
@@ -767,7 +932,7 @@ export default function NewAppointmentExperience() {
           <div className={styles.grow}>
             <div className={styles.meta}>{computed.escolha}</div>
             <div className={styles.price}>R$ {toBRLCurrency(computed.total)}</div>
-            <div className={styles.meta}>Sinal: R$ {toBRLCurrency(computed.sinal)}</div>
+            <div className={styles.meta}>Sinal: R$ {toBRLCurrency(computed.deposit)}</div>
             <div className={styles.meta}>{computed.quando}</div>
           </div>
           <div className={styles.actions}>

@@ -32,18 +32,33 @@ create table if not exists branches (
   timezone text not null default 'America/Sao_Paulo',
   created_at timestamptz not null default now()
 );
+create table if not exists service_types (
+  id uuid primary key default gen_random_uuid(),
+  branch_id uuid references branches(id) on delete set null,
+  name text not null,
+  slug text unique,
+  description text,
+  active boolean not null default true,
+  order_index int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists service_types_branch_idx on service_types(branch_id);
 create table if not exists services (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete cascade,
+  service_type_id uuid references service_types(id) on delete set null,
   name text not null,
+  slug text,
   description text,
   duration_min int not null check (duration_min > 0),
   price_cents int not null check (price_cents >= 0),
   deposit_cents int not null default 0 check (deposit_cents >= 0),
+  buffer_min int not null default 15,
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
 create index if not exists services_branch_idx on services(branch_id);
+create index if not exists services_service_type_idx on services(service_type_id);
 create table if not exists staff (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete cascade,

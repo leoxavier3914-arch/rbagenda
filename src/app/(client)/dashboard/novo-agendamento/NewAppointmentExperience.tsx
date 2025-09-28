@@ -496,7 +496,7 @@ export default function NewAppointmentExperience() {
       total,
       deposit,
       durationMinutes: selectedService.duration_min,
-      escolha: `${selectedType.name} • ${selectedService.name}`,
+      escolha: `Tipo: ${selectedType.name} • Técnica: ${selectedService.name}`,
       quando: `Data: ${formatIsoDateToBR(selectedDate)} • Horário: ${selectedSlot ?? '—'}`,
     }
   }, [selectedDate, selectedService, selectedSlot, selectedType])
@@ -709,13 +709,13 @@ export default function NewAppointmentExperience() {
         </p>
 
         <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
+          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
           {catalogStatus === 'ready' && selectedType && selectedType.services.length > 0 ? (
             <>
               <div
                 className={`${styles.pills} ${styles.techniquePills}`}
                 role="tablist"
-                aria-label="Técnica"
+                aria-label="Tipo"
               >
                 {visibleServices.map((service) => (
                   <button
@@ -741,13 +741,13 @@ export default function NewAppointmentExperience() {
             </>
           ) : catalogStatus === 'ready' ? (
             <div className={`${styles.meta} ${styles.labelCentered}`}>
-              Selecione um tipo para ver as técnicas disponíveis.
+              Selecione uma técnica para ver os tipos disponíveis.
             </div>
           ) : null}
         </section>
 
         <section className={`${styles.card} ${styles.section}`} id="tipo-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
+          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
           {catalogError && (
             <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>
           )}
@@ -761,7 +761,7 @@ export default function NewAppointmentExperience() {
             <div
               className={`${styles.pills} ${styles.tipoPills}`}
               role="tablist"
-              aria-label="Tipo de serviço"
+              aria-label="Técnica"
             >
               {availableTypes.map((type) => (
                 <button

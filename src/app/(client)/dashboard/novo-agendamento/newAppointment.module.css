@@ -12,6 +12,7 @@
   --disabled: #c9c4ba;
   --radius-xl: 18px;
   --space: 14px;
+  --page-inline-padding: clamp(12px, 5vw, 28px);
 }
 
 .page {
@@ -21,7 +22,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-inline: clamp(12px, 5vw, 28px);
+  padding-inline: var(--page-inline-padding);
   width: 100%;
   box-sizing: border-box;
 }
@@ -344,29 +345,36 @@
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--stroke);
   margin-top: auto;
+  align-self: stretch;
+  width: 100%;
+  margin-inline: calc(-1 * var(--page-inline-padding));
+  padding-inline: var(--page-inline-padding);
 }
 
 .summaryInner {
   width: 100%;
-  max-width: 680px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 12px clamp(20px, 6vw, 32px);
   display: flex;
+  flex-direction: column;
   gap: 12px;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   box-sizing: border-box;
 }
 
 .actions {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 6px;
 }
 
 .actions .status {
   margin-top: 0;
-  text-align: right;
+  text-align: center;
 }
 
 .price {
@@ -375,7 +383,8 @@
 }
 
 .grow {
-  flex: 1;
+  flex: none;
+  text-align: center;
 }
 
 .cta {
@@ -446,11 +455,6 @@
     height: 38px;
   }
 
-  .summaryInner {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .cta {
     width: 100%;
     text-align: center;
@@ -458,16 +462,17 @@
 
   .actions {
     width: 100%;
-    align-items: stretch;
+    align-items: center;
   }
 
   .actions .status {
-    text-align: left;
+    text-align: center;
   }
 }
 
 @media (max-width: 600px) {
   .page {
+    --page-inline-padding: 0;
     padding-inline: 0;
   }
 
@@ -477,7 +482,6 @@
   }
 
   .summaryInner {
-    max-width: 100%;
     padding-inline: 16px;
   }
 

@@ -17,6 +17,7 @@ import type {
 import { useEffect, useMemo, useState } from 'react'
 
 import { stripePromise } from '@/lib/stripeClient'
+import styles from './CheckoutPage.module.css'
 
 type CheckoutPageProps = {
   clientSecret: string
@@ -84,29 +85,18 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
   }, [appearance, clientSecret])
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#faf9f6_45%,_#f5f0e6_100%)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-[1050px]">
-        <div className="mb-6 flex items-center justify-between text-sm text-[#6a5a46]">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-full border border-[#d6e6df] bg-white px-4 py-2 font-medium text-[#1b5e4a] shadow-[0_10px_25px_rgba(16,32,24,0.08)] transition hover:border-[#1b5e4a] hover:text-[#1b5e4a]"
-          >
+    <div className={styles.page}>
+      <div className={styles.wrap}>
+        <div className={styles.actions}>
+          <button type="button" onClick={() => router.back()} className={styles.backButton}>
             ← Voltar
           </button>
-          <Link
-            href="/dashboard/agendamentos"
-            className="font-medium underline-offset-4 hover:text-[#1b5e4a] hover:underline"
-          >
+          <Link href="/dashboard/agendamentos" className={styles.link}>
             Ver agendamentos
           </Link>
         </div>
 
-        {errorMessage && (
-          <div className="mb-6 rounded-[18px] border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700 shadow-[0_12px_28px_rgba(220,38,38,0.12)]">
-            {errorMessage}
-          </div>
-        )}
+        {errorMessage && <div className={styles.errorBanner}>{errorMessage}</div>}
 
         {hasCheckout && elementsOptions && stripePromise && (
           <Elements stripe={stripePromise} options={elementsOptions}>
@@ -140,6 +130,8 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
   const [phone, setPhone] = useState('')
   const [cpf, setCpf] = useState('')
   const [coupon, setCoupon] = useState('')
+  const [paymentMode, setPaymentMode] = useState<'pix' | 'card'>('card')
+  const pixUnavailableMessage = 'A geração do QR Code Pix estará disponível em breve.'
 
   const paymentElementOptions: StripePaymentElementOptions = useMemo(
     () => ({ layout: 'tabs' }),
@@ -178,6 +170,12 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (paymentMode !== 'card') {
+      setStatus('idle')
+      setMessage(pixUnavailableMessage)
+      return
+    }
+
     if (!stripe || !elements) return
 
     setIsSubmitting(true)
@@ -227,165 +225,222 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
 
   const isSuccess = status === 'succeeded'
   const isProcessing = status === 'processing' || isSubmitting
+  const isCardMode = paymentMode === 'card'
+  const isPixMode = paymentMode === 'pix'
+
+  const isSubmitDisabled = !stripe || !elements || isProcessing || isSuccess || !isCardMode
+
+  function handlePaymentModeChange(mode: 'pix' | 'card') {
+    setPaymentMode(mode)
+    if (mode === 'pix') {
+      if (!isSuccess && status !== 'processing' && status !== 'error') {
+        setMessage(pixUnavailableMessage)
+      }
+    } else if (message === pixUnavailableMessage && status === 'idle') {
+      setMessage(null)
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      {/* Coluna esquerda: dados do cliente */}
-      <section className="space-y-6 rounded-[22px] border border-[rgba(44,138,110,0.16)] bg-white/95 p-6 shadow-[0_30px_60px_rgba(16,32,24,0.12)] sm:p-8">
-        <header className="space-y-2">
-          <h2 className="text-2xl font-semibold text-[#1b5e4a]">Seus dados</h2>
-          <p className="text-sm leading-relaxed text-[rgba(106,90,70,0.85)]">
+    <form id="form-checkout" onSubmit={handleSubmit} className={styles.form}>
+      <section className={styles.card} aria-labelledby="checkout-customer-data">
+        <header>
+          <h2 id="checkout-customer-data" className={styles.cardTitle}>
+            Seus dados
+          </h2>
+          <p className={styles.lead}>
             Informe seus dados para enviarmos a confirmação do pagamento e atualizações sobre o agendamento.
           </p>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-2 text-sm font-semibold text-[rgba(106,90,70,0.85)]">
-            Nome completo
+        <div className={`${styles.row} ${styles.rowCols2}`}>
+          <label className={styles.field}>
+            <span className={styles.labelText}>Nome completo</span>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Ex.: Agnes Romeike"
               type="text"
-              className="rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
+              className={styles.input}
             />
           </label>
 
-          <label className="flex flex-col gap-2 text-sm font-semibold text-[rgba(106,90,70,0.85)]">
-            WhatsApp
+          <label className={styles.field}>
+            <span className={styles.labelText}>WhatsApp</span>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(16) 9 9999-9999"
               type="tel"
-              className="rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
+              className={styles.input}
             />
           </label>
+        </div>
 
-          <label className="flex flex-col gap-2 text-sm font-semibold text-[rgba(106,90,70,0.85)]">
-            E-mail
+        <div className={`${styles.row} ${styles.rowCols2}`}>
+          <label className={styles.field}>
+            <span className={styles.labelText}>E-mail</span>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="voce@exemplo.com"
               type="email"
               required
-              className={`rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20 ${isSuccess ? 'pointer-events-none opacity-75' : ''}`}
+              className={styles.input}
               disabled={isSuccess}
             />
           </label>
 
-          <label className="flex flex-col gap-2 text-sm font-semibold text-[rgba(106,90,70,0.85)]">
-            CPF (opcional)
+          <label className={styles.field}>
+            <span className={styles.labelText}>CPF (opcional)</span>
             <input
               value={cpf}
               onChange={(e) => setCpf(e.target.value)}
               placeholder="000.000.000-00"
               type="text"
-              className="rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
+              className={styles.input}
             />
           </label>
         </div>
 
-        <div className="space-y-2">
-          <span className="text-sm font-semibold text-[rgba(106,90,70,0.85)]">Cupom de desconto</span>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value)}
-              placeholder="BELEZA10"
-              type="text"
-              className="flex-1 rounded-[12px] border border-[rgba(27,94,74,0.16)] bg-white px-4 py-3 text-[15px] font-normal text-[#1b1b1b] shadow-[0_12px_28px_rgba(16,32,24,0.08)] outline-none transition focus:border-[#2c8a6e] focus:ring-2 focus:ring-[#2c8a6e]/20"
-            />
-            <button
-              type="button"
-              className="rounded-[12px] border border-dashed border-[#2c8a6e] px-5 py-3 text-sm font-semibold text-[#1b5e4a] transition hover:border-[#1b5e4a] hover:text-[#1b5e4a]"
-              disabled
-            >
-              Aplicar
-            </button>
-          </div>
-          <p className="text-xs text-[rgba(106,90,70,0.7)]">Insira um cupom válido se possuir. A validação ocorrerá automaticamente após o pagamento.</p>
+        <div className={styles.row}>
+          <label className={styles.field}>
+            <span className={styles.labelText}>Cupom de desconto</span>
+            <div className={styles.couponRow}>
+              <input
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value)}
+                placeholder="BELEZA10"
+                type="text"
+                className={`${styles.input} ${styles.couponInput}`}
+              />
+              <button type="button" className={styles.btnSecondary} disabled>
+                Aplicar
+              </button>
+            </div>
+            <span className={styles.contactHint}>
+              Insira um cupom válido se possuir. A validação ocorrerá automaticamente após o pagamento.
+            </span>
+          </label>
         </div>
       </section>
 
-      {/* Coluna direita: resumo e pagamento */}
-      <aside className="space-y-6 rounded-[22px] border border-[rgba(44,138,110,0.18)] bg-[#f7f3ed] p-6 shadow-[0_30px_60px_rgba(16,32,24,0.12)] sm:p-8">
-        <header className="space-y-2">
-          <h2 className="text-2xl font-semibold text-[#6a5a46]">Pagamento</h2>
-          <p className="text-sm text-[rgba(106,90,70,0.85)]">Revise o pedido, selecione a forma de pagamento desejada e finalize com segurança.</p>
+      <aside className={styles.card} aria-labelledby="checkout-payment-section">
+        <header>
+          <h2 id="checkout-payment-section" className={styles.cardTitle}>
+            Pagamento
+          </h2>
+          <p className={styles.lead}>Revise o pedido, escolha a forma de pagamento e finalize com segurança.</p>
         </header>
 
-        <section className="rounded-[22px] bg-[#f7f3ed]/60 p-4">
-          <div className="space-y-3 rounded-[18px] border border-[rgba(27,94,74,0.14)] bg-white px-5 py-4 shadow-[0_18px_36px_rgba(16,32,24,0.08)]">
-            <div className="flex items-center justify-between text-sm text-[rgba(106,90,70,0.8)]">
-              <span>Subtotal</span>
-              <span>{formattedAmount ?? '—'}</span>
-            </div>
-            <div className="flex items-center justify-between border-y border-dashed border-[rgba(106,90,70,0.2)] py-2 text-xs uppercase tracking-[0.12em] text-[rgba(106,90,70,0.65)]">
-              <span>Desconto</span>
-              <span>—</span>
-            </div>
-            <div className="flex items-center justify-between text-base font-semibold text-[#1b5e4a]">
-              <span>Total a pagar</span>
-              <span>{formattedAmount ?? '—'}</span>
-            </div>
+        <div className={styles.summary} role="region" aria-label="Resumo do pedido">
+          <div className={styles.line}>
+            <span>Subtotal</span>
+            <span>{formattedAmount ?? '—'}</span>
           </div>
-
-          {intent?.metadata?.payment_title && (
-            <div className="mt-4 flex items-start justify-between gap-4 text-sm text-[rgba(106,90,70,0.8)]">
-              <span>Descrição</span>
-              <span className="text-right font-medium text-[#1b1b1b]">{intent.metadata.payment_title}</span>
-            </div>
-          )}
-
-          {appointmentId && (
-            <div className="mt-2 flex items-start justify-between gap-4 text-sm text-[rgba(106,90,70,0.8)]">
-              <span>Agendamento</span>
-              <span className="font-semibold text-[#1b5e4a]">#{appointmentId}</span>
-            </div>
-          )}
-
-          {email && (
-            <div className="mt-2 flex items-start justify-between gap-4 text-sm text-[rgba(106,90,70,0.8)]">
-              <span>E-mail de contato</span>
-              <span className="text-right text-[#1b5e4a]">{email}</span>
-            </div>
-          )}
-        </section>
-
-        <div className="space-y-3">
-          <span className="text-sm font-semibold uppercase tracking-[0.16em] text-[rgba(106,90,70,0.85)]">Forma de pagamento</span>
-          <div className="rounded-[18px] border border-[rgba(27,94,74,0.16)] bg-white p-4 shadow-[0_12px_28px_rgba(16,32,24,0.08)]">
-            <PaymentElement options={paymentElementOptions} />
+          <div className={styles.line}>
+            <span>Desconto</span>
+            <span>—</span>
+          </div>
+          <div className={`${styles.line} ${styles.total}`}>
+            <span>Total a pagar</span>
+            <span>{formattedAmount ?? '—'}</span>
           </div>
         </div>
 
+        {intent?.metadata?.payment_title && (
+          <div className={styles.summaryDetail}>
+            <span>Descrição</span>
+            <span>{intent.metadata.payment_title}</span>
+          </div>
+        )}
+
+        {appointmentId && (
+          <div className={styles.summaryDetail}>
+            <span>Agendamento</span>
+            <span>#{appointmentId}</span>
+          </div>
+        )}
+
+        {email && (
+          <div className={styles.summaryDetail}>
+            <span>E-mail de contato</span>
+            <span>{email}</span>
+          </div>
+        )}
+
+        <div className={styles.row} role="radiogroup" aria-label="Forma de pagamento">
+          <label className={`${styles.payOption} ${isPixMode ? styles.payOptionActive : ''}`}>
+            <div>
+              <div className={styles.payLabel}>Pix</div>
+              <div className={styles.payHint}>Confirmação rápida após pagamento</div>
+            </div>
+            <span className={styles.pill}>Recomendado</span>
+            <input
+              type="radio"
+              name="payment-mode"
+              value="pix"
+              checked={isPixMode}
+              onChange={() => handlePaymentModeChange('pix')}
+            />
+          </label>
+
+          <label className={`${styles.payOption} ${isCardMode ? styles.payOptionActive : ''}`}>
+            <div>
+              <div className={styles.payLabel}>Cartão de crédito</div>
+              <div className={styles.payHint}>Principais bandeiras aceitas</div>
+            </div>
+            <span className={styles.pill}>Em até 12x</span>
+            <input
+              type="radio"
+              name="payment-mode"
+              value="card"
+              checked={isCardMode}
+              onChange={() => handlePaymentModeChange('card')}
+            />
+          </label>
+        </div>
+
+        {isCardMode ? (
+          <div className={styles.paymentBox}>
+            <PaymentElement options={paymentElementOptions} />
+          </div>
+        ) : (
+          <div className={styles.pixBox}>
+            <span className={styles.pixTitle}>Pagamento via Pix</span>
+            <p>
+              Em breve você poderá gerar o QR Code automaticamente por aqui. Enquanto isso, selecione “Pagar agora” para ser notificado
+              assim que a funcionalidade estiver disponível.
+            </p>
+            <button
+              type="button"
+              className={styles.pixButton}
+              onClick={() => setMessage(pixUnavailableMessage)}
+            >
+              Pagar agora
+            </button>
+          </div>
+        )}
+
         {message && (
           <div
-            className={`rounded-[14px] px-4 py-3 text-sm font-medium ${
-              isSuccess
-                ? 'border border-[#b7e4d5] bg-[#e8f7f1] text-[#1b5e4a]'
-                : status === 'error'
-                  ? 'border border-red-200 bg-red-50 text-red-700'
-                  : 'border border-[#f7e5b5] bg-[#fff8e1] text-[#7a5a1a]'
-            }`}
+            className={`${
+              styles.message
+            } ${isSuccess ? styles.messageSuccess : status === 'error' ? styles.messageError : styles.messageInfo}`}
           >
             {message}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={!stripe || !elements || isProcessing || isSuccess}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-[18px] bg-gradient-to-br from-[#2c8a6e] to-[#1b5e4a] px-6 py-3 text-base font-semibold text-white shadow-[0_20px_40px_rgba(27,94,74,0.28)] transition hover:from-[#267a63] hover:to-[#184f3f] disabled:cursor-not-allowed disabled:from-[#aacfc1] disabled:to-[#aacfc1]"
-        >
-          {isProcessing ? 'Processando…' : isSuccess ? 'Pagamento concluído' : 'Pagar agora'}
-        </button>
+        {isCardMode && (
+          <button type="submit" disabled={isSubmitDisabled} className={styles.btn}>
+            {isProcessing ? 'Processando…' : isSuccess ? 'Pagamento concluído' : 'Pagar agora'}
+          </button>
+        )}
 
-        <div className="flex items-start gap-3 rounded-[18px] border border-[rgba(27,94,74,0.16)] bg-white/80 px-4 py-3 text-[rgba(106,90,70,0.85)] shadow-[0_10px_22px_rgba(16,32,24,0.08)]">
-          <span className="mt-0.5 text-lg">🔒</span>
-          <p className="text-sm leading-relaxed">
+        <div className={styles.securityBox}>
+          <span className={styles.securityIcon}>🔒</span>
+          <p>
             Pagamento processado com criptografia de ponta a ponta. Precisa de ajuda? Fale com a nossa equipe pelo WhatsApp.
           </p>
         </div>

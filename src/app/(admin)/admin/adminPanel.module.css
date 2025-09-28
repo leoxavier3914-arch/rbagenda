@@ -290,6 +290,82 @@
   }
 }
 
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 4vw, 26px);
+}
+
+.sectionHeaderCard {
+  gap: clamp(18px, 4vw, 26px);
+}
+
+@media (min-width: 768px) {
+  .sectionHeaderCard {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.sectionHeaderInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sectionHeaderIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: rgba(31, 138, 112, 0.16);
+  font-size: 1.55rem;
+  color: var(--admin-brand-dark);
+}
+
+.sectionHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionHeaderEyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(27, 94, 74, 0.55);
+}
+
+.sectionHeaderTitle {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--admin-brand-dark);
+}
+
+.sectionHeaderDescription {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgba(27, 94, 74, 0.7);
+  line-height: 1.5;
+}
+
+.sectionHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+@media (min-width: 768px) {
+  .sectionHeaderActions {
+    justify-content: flex-end;
+  }
+}
+
 .heroCard {
   border-radius: var(--admin-radius-lg);
   padding: clamp(28px, 6vw, 38px);

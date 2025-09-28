@@ -21,7 +21,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-inline: 12px;
+  padding-inline: clamp(12px, 5vw, 28px);
   width: 100%;
   box-sizing: border-box;
 }
@@ -29,7 +29,7 @@
 .shell {
   max-width: 680px;
   margin: 0 auto;
-  padding: 20px;
+  padding: clamp(20px, 6vw, 32px);
   width: 100%;
   box-sizing: border-box;
 }
@@ -344,7 +344,7 @@
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: 12px clamp(20px, 6vw, 32px);
   display: flex;
   gap: 12px;
   align-items: center;
@@ -461,6 +461,20 @@
 }
 
 @media (max-width: 600px) {
+  .page {
+    padding-inline: 0;
+  }
+
+  .shell {
+    max-width: 100%;
+    padding: 24px 16px 32px;
+  }
+
+  .summaryInner {
+    max-width: 100%;
+    padding-inline: 16px;
+  }
+
   .card {
     gap: 10px;
   }

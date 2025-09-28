@@ -95,6 +95,18 @@
   width: 100%;
 }
 
+.techniquePills {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+}
+
+.techniquePill {
+  width: 100%;
+}
+
 .pill {
   border: 1px solid var(--stroke);
   background: #fff;
@@ -204,6 +216,25 @@
 }
 
 .btn:hover {
+  transform: translateY(-1px);
+}
+
+.viewMoreButton {
+  align-self: center;
+  border: 1px solid var(--stroke);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.viewMoreButton:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
   transform: translateY(-1px);
 }
 

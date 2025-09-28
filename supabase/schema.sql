@@ -46,7 +46,6 @@ create index if not exists service_types_branch_idx on service_types(branch_id);
 create table if not exists services (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete cascade,
-  service_type_id uuid references service_types(id) on delete set null,
   name text not null,
   slug text,
   description text,
@@ -58,7 +57,12 @@ create table if not exists services (
   created_at timestamptz not null default now()
 );
 create index if not exists services_branch_idx on services(branch_id);
-create index if not exists services_service_type_idx on services(service_type_id);
+create table if not exists service_type_assignments (
+  service_id uuid references services(id) on delete cascade,
+  service_type_id uuid references service_types(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (service_id, service_type_id)
+);
 create table if not exists staff (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete cascade,

@@ -518,12 +518,16 @@ export default function NewAppointmentExperience() {
 
         <section className={`${styles.card} ${styles.section}`} id="tipo-card">
           <div className={styles.label}>Tipo</div>
-          <div className={styles.pills} role="tablist" aria-label="Tipo de serviço">
+          <div
+            className={`${styles.pills} ${styles.tipoPills}`}
+            role="tablist"
+            aria-label="Tipo de serviço"
+          >
             {(Object.keys(tipoLabels) as Tipo[]).map((value) => (
               <button
                 key={value}
                 type="button"
-                className={styles.pill}
+                className={`${styles.pill} ${styles.tipoPill}`}
                 data-active={tipo === value}
                 onClick={() => setTipo(value)}
               >

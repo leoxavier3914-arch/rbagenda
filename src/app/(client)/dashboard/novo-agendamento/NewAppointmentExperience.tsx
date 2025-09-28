@@ -17,12 +17,14 @@ type ExampleData = {
   myDays: Set<string>
   daySlots: Record<string, string[]>
   bookedSlots: Record<string, string[]>
+  busyIntervals: Record<string, Array<{ start: string; end: string }>>
 }
 
 type LoadedAppointment = {
   id: string
   scheduled_at: string | null
   starts_at: string
+  ends_at: string | null
   status: string
   customer_id: string | null
 }
@@ -121,6 +123,8 @@ function makeSlots(start = '09:00', end = '18:00', stepMinutes = 30) {
 }
 
 const DEFAULT_SLOT_TEMPLATE = makeSlots('09:00', '18:00', 30)
+const DEFAULT_BUFFER_MINUTES = Number(process.env.NEXT_PUBLIC_DEFAULT_BUFFER_MIN ?? '15') || 15
+const WORK_DAY_END = '18:00'
 
 function buildAvailabilityData(
   appointments: LoadedAppointment[],
@@ -132,11 +136,15 @@ function buildAvailabilityData(
 
   const daySlots: Record<string, string[]> = {}
   const bookedSlots: Record<string, string[]> = {}
+  const busyIntervals: Record<string, Array<{ start: string; end: string }>> = {}
   const availableDays = new Set<string>()
   const bookedDays = new Set<string>()
   const myDays = new Set<string>()
 
-  const perDay = new Map<string, { times: Set<string>; myTimes: Set<string> }>()
+  const perDay = new Map<
+    string,
+    { times: Set<string>; myTimes: Set<string>; intervals: Array<{ start: string; end: string }> }
+  >()
 
   appointments.forEach((appt) => {
     const rawStart = appt.scheduled_at ?? appt.starts_at
@@ -145,13 +153,17 @@ function buildAvailabilityData(
     if (Number.isNaN(start.getTime())) return
     const isoDay = start.toISOString().slice(0, 10)
     const time = start.toISOString().slice(11, 16)
+    const rawEnd = appt.ends_at ? new Date(appt.ends_at) : new Date(start.getTime() + 60 * 60000)
+    if (Number.isNaN(rawEnd.getTime())) return
+    const endWithBuffer = new Date(rawEnd.getTime() + DEFAULT_BUFFER_MINUTES * 60000)
 
     if (!perDay.has(isoDay)) {
-      perDay.set(isoDay, { times: new Set(), myTimes: new Set() })
+      perDay.set(isoDay, { times: new Set(), myTimes: new Set(), intervals: [] })
     }
 
     const entry = perDay.get(isoDay)!
     entry.times.add(time)
+    entry.intervals.push({ start: start.toISOString(), end: endWithBuffer.toISOString() })
     if (userId && appt.customer_id === userId) {
       entry.myTimes.add(time)
     }
@@ -168,6 +180,10 @@ function buildAvailabilityData(
       const sortedTimes = Array.from(entry.times).sort()
       if (sortedTimes.length > 0) {
         bookedSlots[iso] = sortedTimes
+      }
+
+      if (entry.intervals.length > 0) {
+        busyIntervals[iso] = entry.intervals.sort((a, b) => a.start.localeCompare(b.start))
       }
 
       if (entry.myTimes.size > 0) {
@@ -187,7 +203,7 @@ function buildAvailabilityData(
     }
   }
 
-  return { availableDays, bookedDays, myDays, daySlots, bookedSlots }
+  return { availableDays, bookedDays, myDays, daySlots, bookedSlots, busyIntervals }
 }
 
 function combineDateAndTime(dateIso: string, time: string) {
@@ -249,7 +265,7 @@ export default function NewAppointmentExperience() {
 
         const { data, error } = await supabase
           .from('appointments')
-          .select('id, scheduled_at, starts_at, status, customer_id')
+          .select('id, scheduled_at, starts_at, ends_at, status, customer_id')
           .gte('starts_at', today.toISOString())
           .lte('starts_at', limit.toISOString())
           .in('status', ['pending', 'reserved', 'confirmed'])
@@ -347,13 +363,50 @@ export default function NewAppointmentExperience() {
 
   const slots = useMemo(() => {
     if (!selectedDate || !canInteract) return []
-    return [...(availability.daySlots[selectedDate] ?? [])]
-  }, [availability.daySlots, canInteract, selectedDate])
 
-  const bookedSlots = useMemo(() => {
-    if (!selectedDate || !canInteract) return new Set<string>()
-    return new Set(availability.bookedSlots[selectedDate] ?? [])
-  }, [availability.bookedSlots, canInteract, selectedDate])
+    const durationMinutes = DURACOES[tipo][tecnica]
+    const busy = availability.busyIntervals[selectedDate] ?? []
+    const template = availability.daySlots[selectedDate] ?? DEFAULT_SLOT_TEMPLATE
+
+    const closing = combineDateAndTime(selectedDate, WORK_DAY_END)
+    if (!closing) return []
+
+    const todayIso = now.toISOString().slice(0, 10)
+
+    return template.filter((slotValue) => {
+      const slotStart = combineDateAndTime(selectedDate, slotValue)
+      if (!slotStart) return false
+
+      if (selectedDate === todayIso && slotStart <= now) {
+        return false
+      }
+
+      const slotEnd = new Date(slotStart.getTime() + (durationMinutes + DEFAULT_BUFFER_MINUTES) * 60000)
+      if (slotEnd > closing) {
+        return false
+      }
+
+      const overlaps = busy.some(({ start, end }) => {
+        const busyStart = new Date(start)
+        const busyEnd = new Date(end)
+        if (Number.isNaN(busyStart.getTime()) || Number.isNaN(busyEnd.getTime())) {
+          return false
+        }
+        return slotEnd > busyStart && slotStart < busyEnd
+      })
+
+      return !overlaps
+    })
+  }, [availability.busyIntervals, availability.daySlots, canInteract, now, selectedDate, tecnica, tipo])
+
+  const bookedSlots = useMemo(() => new Set<string>(), [])
+
+  useEffect(() => {
+    if (!selectedSlot) return
+    if (!slots.includes(selectedSlot)) {
+      setSelectedSlot(null)
+    }
+  }, [selectedSlot, slots])
 
   const isReadyToContinue = Boolean(selectedDate && selectedSlot && !isSubmitting && canInteract)
 

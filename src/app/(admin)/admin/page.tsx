@@ -154,6 +154,7 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<ActionFeedback | null>(null)
   const [activeSection, setActiveSection] = useState<AdminSection>('agendamentos')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
 
@@ -379,6 +380,31 @@ export default function Admin() {
     }))
   }, [appointments])
 
+  const upcomingAppointmentsCount = useMemo(
+    () => appointments.filter((appt) => ['confirmed', 'reserved'].includes(appt.status)).length,
+    [appointments],
+  )
+
+  const pendingAppointmentsCount = useMemo(
+    () => appointments.filter((appt) => appt.status === 'pending').length,
+    [appointments],
+  )
+
+  const activeServicesCount = useMemo(
+    () => services.filter((service) => service.active).length,
+    [services],
+  )
+
+  const highlightStats = useMemo(
+    () => [
+      { label: 'Agendamentos ativos', value: upcomingAppointmentsCount },
+      { label: 'Pendentes', value: pendingAppointmentsCount },
+      { label: 'Clientes', value: clients.length },
+      { label: 'Serviços ativos', value: activeServicesCount },
+    ],
+    [upcomingAppointmentsCount, pendingAppointmentsCount, clients.length, activeServicesCount],
+  )
+
   const resetFormStates = useCallback(() => {
     setNewBranch({ name: '', timezone: timezoneOptions[0] })
     setBranchEdits({})
@@ -408,6 +434,31 @@ export default function Admin() {
     },
     [fetchAdminData, resetFormStates]
   )
+
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen((prev) => !prev)
+  }, [])
+
+  const closeMenu = useCallback(() => {
+    setIsMenuOpen(false)
+  }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    const { style } = document.body
+    const previousOverflow = style.overflow
+
+    if (isMenuOpen) {
+      style.overflow = 'hidden'
+    }
+
+    return () => {
+      style.overflow = previousOverflow
+    }
+  }, [isMenuOpen])
 
   const handleSignOut = useCallback(async () => {
     if (signingOut) return
@@ -1539,12 +1590,54 @@ export default function Admin() {
   }
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-[color:rgba(47,109,79,0.04)] md:flex-row">
-      <aside className="w-full border-b border-[color:rgba(31,45,40,0.08)] bg-white px-6 py-6 md:w-64 md:border-b-0 md:border-r">
-        <div className="space-y-6">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[color:rgba(31,45,40,0.6)]">Painel</p>
-            <h1 className="text-2xl font-semibold text-[#1f2d28]">Administração</h1>
+    <main className="relative flex min-h-screen flex-1 flex-col bg-[color:rgba(47,109,79,0.04)] md:flex-row">
+      <div className="flex items-center justify-between border-b border-[color:rgba(31,45,40,0.08)] bg-white/95 px-6 py-4 backdrop-blur md:hidden">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.2em] text-[color:rgba(31,45,40,0.6)]">Painel</p>
+          <h1 className="text-2xl font-semibold text-[#1f2d28]">Administração</h1>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full border border-[color:rgba(31,45,40,0.12)] bg-white px-4 py-2 text-sm font-semibold text-[#1f2d28] shadow-sm transition hover:border-[color:rgba(47,109,79,0.3)] hover:text-[#2f6d4f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          onClick={toggleMenu}
+          aria-expanded={isMenuOpen}
+          aria-controls="admin-sidebar"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          Menu
+        </button>
+      </div>
+      {isMenuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+          aria-hidden="true"
+          onClick={closeMenu}
+        />
+      )}
+      <aside
+        id="admin-sidebar"
+        className={`fixed inset-y-0 left-0 z-40 w-full max-w-xs transform border-r border-[color:rgba(31,45,40,0.08)] bg-white px-6 py-6 shadow-xl transition duration-300 ease-in-out md:static md:flex md:w-72 md:translate-x-0 md:border-b-0 md:border-r md:shadow-none ${
+          isMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        <div className="flex h-full flex-col gap-6">
+          <div className="flex items-center justify-between md:block">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[color:rgba(31,45,40,0.6)]">Painel</p>
+              <h1 className="text-2xl font-semibold text-[#1f2d28]">Administração</h1>
+            </div>
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:rgba(31,45,40,0.12)] text-[#1f2d28] shadow-sm transition hover:border-[color:rgba(47,109,79,0.3)] hover:text-[#2f6d4f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 md:hidden"
+              onClick={closeMenu}
+              aria-label="Fechar menu de navegação"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
           <nav className="space-y-1">
             {sections.map((section) => {
@@ -1552,7 +1645,7 @@ export default function Admin() {
               return (
                 <button
                   key={section.key}
-                  className={`flex w-full flex-col rounded-lg px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  className={`flex w-full flex-col rounded-2xl px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                     isActive
                       ? 'bg-[color:rgba(47,109,79,0.12)] text-[#1f2d28] shadow-sm'
                       : 'text-[color:rgba(31,45,40,0.75)] hover:bg-[color:rgba(47,109,79,0.08)]'
@@ -1560,6 +1653,7 @@ export default function Admin() {
                   onClick={() => {
                     setActiveSection(section.key)
                     setActionMessage(null)
+                    closeMenu()
                   }}
                 >
                   <span className="text-sm font-semibold">{section.label}</span>
@@ -1570,24 +1664,52 @@ export default function Admin() {
           </nav>
         </div>
       </aside>
-      <section className="flex-1 overflow-y-auto px-6 py-10">
+      <section className="flex-1 overflow-y-auto px-6 pb-16 pt-8 md:pb-16 md:pt-12">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-          <header className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="card flex-1 space-y-3">
-              <span className="badge">Painel administrativo</span>
-              <h2 className="text-3xl font-semibold text-[#1f2d28]">Bem-vindo(a) ao controle da agenda</h2>
-              <p className="muted-text">{headerDescription}</p>
+          <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr),280px]">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1f2d28] via-[#2f6d4f] to-[#5dbf90] p-8 text-white shadow-xl">
+              <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-3xl md:h-40 md:w-40" aria-hidden="true" />
+              <div className="flex flex-col gap-6">
+                <div className="space-y-3">
+                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
+                    Painel administrativo
+                  </span>
+                  <h2 className="text-3xl font-semibold leading-tight md:text-4xl">Bem-vindo(a) ao controle da agenda</h2>
+                  <p className="text-sm text-white/80">{headerDescription}</p>
+                </div>
+                <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {highlightStats.map((stat) => (
+                    <div key={stat.label} className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
+                      <dt className="text-xs font-medium uppercase tracking-wide text-white/70">{stat.label}</dt>
+                      <dd className="mt-1 text-2xl font-semibold">{stat.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
-            <div className="card flex w-full max-w-[260px] flex-col gap-3 text-sm">
-              <button className="btn-secondary w-full" onClick={handleSignOut} disabled={signingOut}>
-                {signingOut ? 'Encerrando sessão…' : 'Sair'}
-              </button>
+            <div className="card flex w-full flex-col gap-4 rounded-3xl border border-[color:rgba(47,109,79,0.12)] bg-white/90 p-6 text-sm shadow-md backdrop-blur">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-[#1f2d28]">Ações rápidas</h3>
+                <p className="text-xs text-[color:rgba(31,45,40,0.6)]">Gerencie seu acesso e mantenha os dados sempre atualizados.</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button className="btn-primary w-full" onClick={handleSignOut} disabled={signingOut}>
+                  {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
+                </button>
+                <button
+                  className="btn-secondary w-full"
+                  onClick={() => fetchAdminData()}
+                  disabled={status === 'loading'}
+                >
+                  {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+                </button>
+              </div>
               {signOutError && <p className="text-xs text-red-600">{signOutError}</p>}
             </div>
           </header>
 
           {error && (
-            <div className="surface-muted space-y-3 text-sm text-[color:rgba(31,45,40,0.85)]">
+            <div className="surface-muted space-y-3 rounded-3xl border border-[color:rgba(47,109,79,0.12)] bg-white/70 p-6 text-sm text-[color:rgba(31,45,40,0.85)] backdrop-blur">
               <p>{error}</p>
               <div className="flex justify-start">
                 <button className="btn-primary" onClick={() => fetchAdminData()}>
@@ -1599,7 +1721,7 @@ export default function Admin() {
 
           {actionMessage && (
             <div
-              className={`rounded-lg border px-4 py-3 text-sm ${
+              className={`rounded-2xl border px-4 py-3 text-sm ${
                 actionMessage.type === 'success'
                   ? 'border-[color:rgba(47,109,79,0.3)] bg-[color:rgba(47,109,79,0.1)] text-[#1f2d28]'
                   : 'border-red-200 bg-red-50 text-red-700'

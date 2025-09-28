@@ -221,6 +221,7 @@ export default function NewAppointmentExperience() {
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null)
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
+  const [showAllTechniques, setShowAllTechniques] = useState(false)
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
@@ -398,6 +399,16 @@ export default function NewAppointmentExperience() {
     () => availableTypes.find((type) => type.id === selectedTypeId) ?? null,
     [availableTypes, selectedTypeId],
   )
+
+  const visibleServices = useMemo(() => {
+    if (!selectedType) return []
+    if (showAllTechniques) return selectedType.services
+    return selectedType.services.slice(0, 6)
+  }, [selectedType, showAllTechniques])
+
+  useEffect(() => {
+    setShowAllTechniques(false)
+  }, [selectedTypeId])
 
   useEffect(() => {
     if (!selectedType) {
@@ -711,19 +722,34 @@ export default function NewAppointmentExperience() {
         <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
           {catalogStatus === 'ready' && selectedType && selectedType.services.length > 0 ? (
-            <div className={styles.pills} role="tablist" aria-label="Técnica">
-              {selectedType.services.map((service) => (
+            <>
+              <div
+                className={`${styles.pills} ${styles.techniquePills}`}
+                role="tablist"
+                aria-label="Técnica"
+              >
+                {visibleServices.map((service) => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    className={`${styles.pill} ${styles.techniquePill}`}
+                    data-active={selectedServiceId === service.id}
+                    onClick={() => handleTechniqueSelect(service.id)}
+                  >
+                    {service.name}
+                  </button>
+                ))}
+              </div>
+              {!showAllTechniques && selectedType.services.length > 6 && (
                 <button
-                  key={service.id}
                   type="button"
-                  className={styles.pill}
-                  data-active={selectedServiceId === service.id}
-                  onClick={() => handleTechniqueSelect(service.id)}
+                  className={styles.viewMoreButton}
+                  onClick={() => setShowAllTechniques(true)}
                 >
-                  {service.name}
+                  Ver mais
                 </button>
-              ))}
-            </div>
+              )}
+            </>
           ) : catalogStatus === 'ready' ? (
             <div className={`${styles.meta} ${styles.labelCentered}`}>
               Selecione um tipo para ver as técnicas disponíveis.
@@ -733,10 +759,6 @@ export default function NewAppointmentExperience() {
 
         <section className={`${styles.card} ${styles.section}`} id="extras-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Detalhes do serviço</div>
-          <div className={`${styles.meta} ${styles.labelCentered}`}>
-            A densidade é definida automaticamente conforme a técnica escolhida.
-          </div>
-
           <div className={styles.spacer} />
 
           <div className={styles.row}>

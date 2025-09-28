@@ -434,6 +434,13 @@ export default function Admin() {
     configuracoes: '⚙️',
   }
 
+  const activeSectionInfo = useMemo(
+    () => sections.find((section) => section.key === activeSection) ?? sections[0],
+    [activeSection],
+  )
+  const isDashboardSection = activeSection === 'agendamentos'
+  const currentSectionIcon = sectionIcons[activeSectionInfo.key]
+
   const resetFormStates = useCallback(() => {
     setNewBranch({ name: '', timezone: timezoneOptions[0] })
     setBranchEdits({})
@@ -529,6 +536,7 @@ export default function Admin() {
   }
 
   const handleUpdateBranch = async (branchId: string) => {
+    setActionMessage(null)
     const form = branchEdits[branchId] ?? {
       name: '',
       timezone: timezoneOptions[0],
@@ -593,6 +601,7 @@ export default function Admin() {
   }
 
   const handleUpdateServiceType = async (typeId: string) => {
+    setActionMessage(null)
     const form = serviceTypeEdits[typeId]
 
     if (!form || !form.name.trim() || !form.branch_id) {
@@ -684,6 +693,7 @@ export default function Admin() {
   }
 
   const handleUpdateService = async (serviceId: string) => {
+    setActionMessage(null)
     const form = serviceEdits[serviceId]
 
     if (!form || !form.name.trim() || !form.branch_id) {
@@ -1721,38 +1731,62 @@ export default function Admin() {
 
         <section className={styles.contentArea}>
           <div className={styles.contentShell}>
-            <header className={styles.headerGrid}>
-              <div className={glassCardClass}>
-                <div className={styles.heroIntro}>
-                  <span className={badgeClass}>Painel administrativo</span>
-                  <h2 className={styles.heroTitle}>Controle completo da agenda e operações</h2>
-                  <p className={styles.heroSubtitle}>{headerDescription}</p>
+            {isDashboardSection ? (
+              <header className={styles.headerGrid}>
+                <div className={glassCardClass}>
+                  <div className={styles.heroIntro}>
+                    <span className={badgeClass}>Painel administrativo</span>
+                    <h2 className={styles.heroTitle}>Controle completo da agenda e operações</h2>
+                    <p className={styles.heroSubtitle}>{headerDescription}</p>
+                  </div>
+                  <dl className={styles.heroMetrics}>
+                    {highlightStats.map((stat) => (
+                      <div key={stat.label} className={styles.heroMetric}>
+                        <dt className={styles.heroMetricLabel}>{stat.label}</dt>
+                        <dd className={styles.heroMetricValue}>{stat.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-                <dl className={styles.heroMetrics}>
-                  {highlightStats.map((stat) => (
-                    <div key={stat.label} className={styles.heroMetric}>
-                      <dt className={styles.heroMetricLabel}>{stat.label}</dt>
-                      <dd className={styles.heroMetricValue}>{stat.value}</dd>
+                <div className={panelCardClass}>
+                  <div className={styles.quickActionsHeader}>
+                    <h3>Ações rápidas</h3>
+                    <p>Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
+                  </div>
+                  <div className={styles.quickActionsButtons}>
+                    <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
+                      {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
+                    </button>
+                    <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
+                      {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+                    </button>
+                  </div>
+                  {signOutError && <p className={styles.errorText}>{signOutError}</p>}
+                </div>
+              </header>
+            ) : (
+              <header className={styles.sectionHeader}>
+                <div className={`${panelCardClass} ${styles.sectionHeaderCard}`}>
+                  <div className={styles.sectionHeaderInfo}>
+                    <span className={styles.sectionHeaderIcon}>{currentSectionIcon}</span>
+                    <div className={styles.sectionHeaderText}>
+                      <span className={styles.sectionHeaderEyebrow}>Área selecionada</span>
+                      <h2 className={styles.sectionHeaderTitle}>{activeSectionInfo.label}</h2>
+                      <p className={styles.sectionHeaderDescription}>{activeSectionInfo.description}</p>
                     </div>
-                  ))}
-                </dl>
-              </div>
-              <div className={panelCardClass}>
-                <div className={styles.quickActionsHeader}>
-                  <h3>Ações rápidas</h3>
-                  <p>Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
-                </div>
-                <div className={styles.quickActionsButtons}>
-                  <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
-                    {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
-                  </button>
-                  <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
-                    {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
-                  </button>
+                  </div>
+                  <div className={styles.sectionHeaderActions}>
+                    <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
+                      {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+                    </button>
+                    <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
+                      {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
+                    </button>
+                  </div>
                 </div>
                 {signOutError && <p className={styles.errorText}>{signOutError}</p>}
-              </div>
-            </header>
+              </header>
+            )}
 
             {error && (
               <div className={`${styles.alert} ${styles.alertError}`}>

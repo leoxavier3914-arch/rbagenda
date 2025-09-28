@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactEl
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 
+import styles from './adminPanel.module.css'
+
 type LoadingState = 'idle' | 'loading' | 'ready'
 
 type Branch = {
@@ -405,31 +407,22 @@ export default function Admin() {
     [upcomingAppointmentsCount, pendingAppointmentsCount, clients.length, activeServicesCount],
   )
 
-  const glassCardClass =
-    'rounded-3xl border border-white/60 bg-white/80 p-8 shadow-[0_45px_90px_-60px_rgba(16,58,40,0.65)] backdrop-blur-2xl transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_60px_120px_-60px_rgba(16,58,40,0.45)]'
-  const panelCardClass =
-    'rounded-3xl border border-emerald-900/15 bg-white/85 p-8 shadow-[0_45px_70px_-50px_rgba(16,58,40,0.55)] backdrop-blur-xl'
-  const mutedPanelClass =
-    'rounded-3xl border border-emerald-900/10 bg-emerald-50/55 p-8 text-emerald-900/85 shadow-inner shadow-emerald-900/5 backdrop-blur-xl'
-  const primaryButtonClass =
-    'inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:from-emerald-500 hover:to-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none'
-  const secondaryButtonClass =
-    'inline-flex items-center justify-center gap-2 rounded-full border border-emerald-500/30 bg-white/70 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-500/50 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none'
-  const dangerButtonClass =
-    'inline-flex items-center justify-center gap-2 rounded-full border border-red-300/70 bg-red-50/80 px-5 py-2.5 text-sm font-semibold text-red-600 shadow-sm transition hover:border-red-400 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60'
-  const inputClass =
-    'w-full rounded-2xl border border-emerald-900/15 bg-white/85 px-4 py-3 text-sm text-emerald-950 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 placeholder:text-emerald-900/40'
-  const textareaClass = `${inputClass} min-h-[96px]`
-  const labelClass = 'grid gap-2 text-sm font-medium text-emerald-950/80'
-  const labelCaptionClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/55'
-  const surfaceCardClass =
-    'rounded-3xl border border-emerald-900/10 bg-white/65 p-6 shadow-[0_35px_60px_-45px_rgba(16,58,40,0.4)] backdrop-blur'
-  const navButtonBaseClass =
-    'group flex w-full items-center justify-between gap-3 rounded-3xl px-4 py-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2'
-  const badgeClass =
-    'inline-flex w-fit items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-emerald-900/70'
-  const statCardClass =
-    'rounded-3xl border border-white/60 bg-gradient-to-br from-white/95 via-white/80 to-emerald-50/70 p-6 shadow-[0_35px_70px_-45px_rgba(16,58,40,0.55)] backdrop-blur-xl'
+  const glassCardClass = styles.heroCard
+  const panelCardClass = styles.panelCard
+  const mutedPanelClass = styles.mutedPanel
+  const primaryButtonClass = styles.primaryButton
+  const secondaryButtonClass = styles.secondaryButton
+  const dangerButtonClass = styles.dangerButton
+  const inputClass = styles.input
+  const textareaClass = styles.textarea
+  const labelClass = styles.field
+  const labelCaptionClass = styles.fieldLabel
+  const surfaceCardClass = styles.surfaceCard
+  const navButtonBaseClass = styles.navButton
+  const navButtonActiveClass = styles.navButtonActive
+  const navButtonInactiveClass = styles.navButtonInactive
+  const badgeClass = styles.badge
+  const statCardClass = styles.statCard
 
   const sectionIcons: Record<AdminSection, string> = {
     agendamentos: '📅',
@@ -828,9 +821,7 @@ export default function Admin() {
                         Criada em {new Date(branch.created_at).toLocaleString()}
                       </p>
                     </div>
-                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-800">
-                      {branch.timezone}
-                    </span>
+                    <span className={styles.metaPill}>{branch.timezone}</span>
                   </div>
                   <p className="text-xs text-emerald-900/60">ID: {branch.id}</p>
                 </div>
@@ -1012,10 +1003,8 @@ export default function Admin() {
                     </p>
                   </div>
                   <span
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-xs font-semibold ${
-                      type.active
-                        ? 'bg-emerald-500/15 text-emerald-700'
-                        : 'bg-amber-200/40 text-amber-700'
+                    className={`${styles.statusPill} ${
+                      type.active ? styles.statusPillActive : styles.statusPillInactive
                     }`}
                   >
                     {type.active ? 'Ativo' : 'Inativo'}
@@ -1314,20 +1303,14 @@ export default function Admin() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-900/65">
                     <span
-                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold ${
-                        service.active
-                          ? 'bg-emerald-500/15 text-emerald-700'
-                          : 'bg-amber-200/40 text-amber-700'
+                      className={`${styles.statusPill} ${
+                        service.active ? styles.statusPillActive : styles.statusPillInactive
                       }`}
                     >
                       {service.active ? 'Ativo' : 'Inativo'}
                     </span>
-                    <span className="rounded-full bg-white/70 px-3 py-1 font-semibold">
-                      {service.duration_min} min
-                    </span>
-                    <span className="rounded-full bg-white/70 px-3 py-1 font-semibold">
-                      Intervalo {service.buffer_min} min
-                    </span>
+                    <span className={styles.metaPill}>{service.duration_min} min</span>
+                    <span className={styles.metaPill}>Intervalo {service.buffer_min} min</span>
                   </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -1546,7 +1529,7 @@ export default function Admin() {
                       </h3>
                       <p className="text-xs text-emerald-900/60">ID: {appointment.id}</p>
                     </div>
-                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    <span className={`${styles.statusPill} ${styles.statusPillInfo}`}>
                       {appointmentStatusLabels[appointment.status] ?? appointment.status}
                     </span>
                   </div>
@@ -1592,28 +1575,28 @@ export default function Admin() {
           Nenhum cliente cadastrado ainda.
         </div>
       ) : (
-        <div className={`${panelCardClass} overflow-hidden p-0`}>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-emerald-950">
+        <div className={`${panelCardClass} ${styles.tableCard}`}>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
               <thead>
-                <tr className="bg-gradient-to-r from-emerald-600/15 to-emerald-400/15 text-left text-xs uppercase tracking-[0.18em] text-emerald-900/70">
-                  <th className="px-6 py-4 font-semibold">Nome</th>
-                  <th className="px-6 py-4 font-semibold">E-mail</th>
-                  <th className="px-6 py-4 font-semibold">WhatsApp</th>
-                  <th className="px-6 py-4 font-semibold">Desde</th>
-                  <th className="px-6 py-4 font-semibold">ID</th>
+                <tr>
+                  <th className={styles.tableHeadCell}>Nome</th>
+                  <th className={styles.tableHeadCell}>E-mail</th>
+                  <th className={styles.tableHeadCell}>WhatsApp</th>
+                  <th className={styles.tableHeadCell}>Desde</th>
+                  <th className={styles.tableHeadCell}>ID</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-emerald-900/10 bg-white/85">
+              <tbody>
                 {clients.map((client) => (
-                  <tr key={client.id} className="transition hover:bg-emerald-500/5">
-                    <td className="px-6 py-4 font-semibold">{client.full_name ?? '—'}</td>
-                    <td className="px-6 py-4">{client.email ?? '—'}</td>
-                    <td className="px-6 py-4">{client.whatsapp ?? '—'}</td>
-                    <td className="px-6 py-4">
+                  <tr key={client.id} className={styles.tableBodyRow}>
+                    <td className={`${styles.tableCell} font-semibold`}>{client.full_name ?? '—'}</td>
+                    <td className={styles.tableCell}>{client.email ?? '—'}</td>
+                    <td className={styles.tableCell}>{client.whatsapp ?? '—'}</td>
+                    <td className={styles.tableCell}>
                       {client.created_at ? new Date(client.created_at).toLocaleString() : '—'}
                     </td>
-                    <td className="px-6 py-4 text-xs text-emerald-900/60">{client.id}</td>
+                    <td className={`${styles.tableCell} ${styles.tableId}`}>{client.id}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1624,14 +1607,12 @@ export default function Admin() {
     </section>
   )
   const renderPlaceholderSection = (message: string) => (
-    <section className={`${mutedPanelClass} flex min-h-[320px] items-center justify-center text-center text-sm`}>
-      {message}
-    </section>
+    <section className={styles.placeholder}>{message}</section>
   )
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16" aria-busy="true" aria-live="polite">
+      <main className={`${styles.page} ${styles.loadingState}`} aria-busy="true" aria-live="polite">
         <span className="sr-only">Carregando painel administrativo…</span>
       </main>
     )
@@ -1665,148 +1646,116 @@ export default function Admin() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-emerald-100 to-emerald-200/60">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-emerald-400/25 blur-3xl" aria-hidden="true" />
-        <div className="absolute bottom-[-160px] right-[-120px] h-[520px] w-[520px] rounded-full bg-emerald-700/20 blur-3xl" aria-hidden="true" />
-      </div>
-      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row">
-        <div className="flex items-center justify-between gap-3 border-b border-white/40 bg-white/80 px-6 py-4 backdrop-blur lg:hidden">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-900/60">Painel</p>
-            <h1 className="text-2xl font-semibold text-emerald-950">Administração</h1>
-          </div>
+    <main className={styles.page}>
+      <div className={styles.layout}>
+        <div className={styles.topBar}>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-emerald-900 shadow-sm shadow-emerald-500/10 transition hover:bg-white"
+            className={styles.hamburger}
             onClick={toggleMenu}
             aria-expanded={isMenuOpen}
             aria-controls="admin-sidebar"
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
             </svg>
             Menu
           </button>
+          <div className={styles.topBarTitleGroup}>
+            <span className={styles.sidebarEyebrow}>Painel</span>
+            <span className={styles.sidebarTitle}>Administração</span>
+          </div>
         </div>
 
-        {isMenuOpen && (
-          <div
-            className="fixed inset-0 z-30 bg-emerald-900/30 backdrop-blur-sm lg:hidden"
-            aria-hidden="true"
-            onClick={closeMenu}
-          />
-        )}
+        {isMenuOpen && <div className={styles.menuOverlay} aria-hidden="true" onClick={closeMenu} />}
 
         <aside
           id="admin-sidebar"
-          className={`fixed inset-y-0 left-0 z-40 w-full max-w-xs transform bg-white/75 px-6 py-8 shadow-2xl shadow-emerald-900/15 backdrop-blur-xl transition duration-300 ease-in-out lg:static lg:flex lg:w-80 lg:translate-x-0 lg:border-r lg:border-white/60 lg:shadow-none ${
-            isMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          }`}
+          className={`${styles.sidebar} ${isMenuOpen ? styles.sidebarOpen : ''}`}
+          aria-label="Menu de navegação do painel administrativo"
         >
-          <div className="flex h-full flex-col gap-8">
-            <div className="flex items-center justify-between lg:block">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-900/60">Painel</p>
-                <h1 className="text-2xl font-semibold text-emerald-950">Administração</h1>
-              </div>
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-emerald-900 shadow-sm shadow-emerald-500/10 transition hover:bg-white lg:hidden"
-                onClick={closeMenu}
-                aria-label="Fechar menu de navegação"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className={styles.sidebarHeader}>
+            <div className={styles.sidebarTitleGroup}>
+              <span className={styles.sidebarEyebrow}>Painel</span>
+              <h1 className={styles.sidebarTitle}>Administração</h1>
             </div>
-            <nav className="space-y-2">
-              {sections.map((section) => {
-                const isActive = activeSection === section.key
-                return (
-                  <button
-                    key={section.key}
-                    className={`${navButtonBaseClass} ${
-                      isActive
-                        ? 'bg-emerald-500/15 text-emerald-950 shadow-lg shadow-emerald-500/25'
-                        : 'text-emerald-900/65 hover:bg-white/70'
-                    }`}
-                    onClick={() => {
-                      setActiveSection(section.key)
-                      setActionMessage(null)
-                      closeMenu()
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-lg">
-                        {sectionIcons[section.key]}
-                      </span>
-                      <span>
-                        <span className="block text-sm font-semibold">{section.label}</span>
-                        <span className="block text-xs text-emerald-900/60">{section.description}</span>
-                      </span>
-                    </div>
-                    <svg
-                      className={`h-5 w-5 transition ${isActive ? 'translate-x-1 opacity-100' : 'opacity-40 group-hover:opacity-70'}`}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
-                    </svg>
-                  </button>
-                )
-              })}
-            </nav>
+            <button
+              type="button"
+              className={styles.closeButton}
+              onClick={closeMenu}
+              aria-label="Fechar menu de navegação"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
+          <nav className={styles.sidebarNav}>
+            {sections.map((section) => {
+              const isActive = activeSection === section.key
+              return (
+                <button
+                  key={section.key}
+                  className={`${navButtonBaseClass} ${isActive ? navButtonActiveClass : navButtonInactiveClass}`}
+                  onClick={() => {
+                    setActiveSection(section.key)
+                    setActionMessage(null)
+                    closeMenu()
+                  }}
+                >
+                  <div className={styles.navButtonContent}>
+                    <span className={styles.navIcon}>{sectionIcons[section.key]}</span>
+                    <span className={styles.navText}>
+                      <span className={styles.navTitle}>{section.label}</span>
+                      <span className={styles.navDescription}>{section.description}</span>
+                    </span>
+                  </div>
+                  <svg className={styles.navChevron} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
+                  </svg>
+                </button>
+              )
+            })}
+          </nav>
         </aside>
 
-        <section className="flex-1 overflow-y-auto px-6 py-10 lg:px-10">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
-            <header className="grid gap-6 xl:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
-              <div className={`${glassCardClass} space-y-8`}>
-                <div className="space-y-4">
+        <section className={styles.contentArea}>
+          <div className={styles.contentShell}>
+            <header className={styles.headerGrid}>
+              <div className={glassCardClass}>
+                <div className={styles.heroIntro}>
                   <span className={badgeClass}>Painel administrativo</span>
-                  <h2 className="text-3xl font-semibold leading-tight text-white drop-shadow-sm md:text-4xl">
-                    Controle completo da agenda e operações
-                  </h2>
-                  <p className="text-sm text-white/80">{headerDescription}</p>
+                  <h2 className={styles.heroTitle}>Controle completo da agenda e operações</h2>
+                  <p className={styles.heroSubtitle}>{headerDescription}</p>
                 </div>
-                <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <dl className={styles.heroMetrics}>
                   {highlightStats.map((stat) => (
-                    <div key={stat.label} className="rounded-2xl bg-white/15 px-4 py-3 text-white backdrop-blur-sm">
-                      <dt className="text-xs font-medium uppercase tracking-[0.18em] text-white/70">{stat.label}</dt>
-                      <dd className="mt-1 text-2xl font-semibold">{stat.value}</dd>
+                    <div key={stat.label} className={styles.heroMetric}>
+                      <dt className={styles.heroMetricLabel}>{stat.label}</dt>
+                      <dd className={styles.heroMetricValue}>{stat.value}</dd>
                     </div>
                   ))}
                 </dl>
               </div>
-              <div className={`${panelCardClass} space-y-6`}>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-emerald-950">Ações rápidas</h3>
-                  <p className="text-xs text-emerald-900/70">Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
+              <div className={panelCardClass}>
+                <div className={styles.quickActionsHeader}>
+                  <h3>Ações rápidas</h3>
+                  <p>Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
                 </div>
-                <div className="flex flex-col gap-3">
-                  <button className={`${primaryButtonClass} w-full`} onClick={handleSignOut} disabled={signingOut}>
+                <div className={styles.quickActionsButtons}>
+                  <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
                     {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
                   </button>
-                  <button
-                    className={`${secondaryButtonClass} w-full`}
-                    onClick={() => fetchAdminData()}
-                    disabled={status === 'loading'}
-                  >
+                  <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
                     {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
                   </button>
                 </div>
-                {signOutError && <p className="text-xs text-red-600">{signOutError}</p>}
+                {signOutError && <p className={styles.errorText}>{signOutError}</p>}
               </div>
             </header>
 
             {error && (
-              <div className={`${mutedPanelClass} space-y-3 text-sm`}>
+              <div className={`${styles.alert} ${styles.alertError}`}>
                 <p>{error}</p>
                 <div>
                   <button className={primaryButtonClass} onClick={() => fetchAdminData()}>
@@ -1818,10 +1767,8 @@ export default function Admin() {
 
             {actionMessage && (
               <div
-                className={`rounded-3xl border px-5 py-3 text-sm shadow-sm ${
-                  actionMessage.type === 'success'
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-900'
-                    : 'border-red-300 bg-red-50 text-red-700'
+                className={`${styles.feedback} ${
+                  actionMessage.type === 'success' ? styles.feedbackSuccess : styles.feedbackError
                 }`}
               >
                 {actionMessage.text}

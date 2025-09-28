@@ -39,12 +39,14 @@
   font-weight: 750;
   letter-spacing: 0.2px;
   margin: 8px 0 4px;
+  text-align: center;
 }
 
 .subtitle {
   font-size: 14px;
   color: var(--muted);
   margin: 0 0 18px;
+  text-align: center;
 }
 
 .card {
@@ -425,15 +427,15 @@
   }
 
   .pills {
-    gap: 8px;
+    gap: 6px;
   }
 
   .tipoPills {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .pill {
-    padding: 10px 12px;
+    padding: 10px 10px;
   }
 
   .day {

@@ -710,38 +710,6 @@ export default function NewAppointmentExperience() {
 
         <section className={`${styles.card} ${styles.section}`} id="tipo-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
-          {catalogError && (
-            <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>
-          )}
-          {catalogStatus === 'loading' && !catalogError && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando serviços…</div>
-          )}
-          {catalogStatus === 'ready' && availableTypes.length === 0 && (
-            <div className={styles.meta}>Nenhum serviço disponível no momento.</div>
-          )}
-          {catalogStatus === 'ready' && availableTypes.length > 0 && (
-            <div
-              className={`${styles.pills} ${styles.tipoPills}`}
-              role="tablist"
-              aria-label="Tipo de serviço"
-            >
-              {availableTypes.map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  className={`${styles.pill} ${styles.tipoPill}`}
-                  data-active={selectedTypeId === type.id}
-                  onClick={() => handleTypeSelect(type.id)}
-                >
-                  {type.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
           {catalogStatus === 'ready' && selectedType && selectedType.services.length > 0 ? (
             <>
               <div
@@ -770,12 +738,58 @@ export default function NewAppointmentExperience() {
                   Ver mais
                 </button>
               )}
+              {!hasAvailabilityForSelectedTechnique && (
+                <div className={`${styles.status} ${styles.statusWarning}`}>
+                  Não há horários disponíveis para esta técnica nos próximos 60 dias.
+                </div>
+              )}
+              {showAllTechniques && selectedType.services.length > 6 && (
+                <button
+                  type="button"
+                  className={styles.viewMoreButton}
+                  onClick={() => setShowAllTechniques(false)}
+                >
+                  Ver menos
+                </button>
+              )}
             </>
           ) : catalogStatus === 'ready' ? (
             <div className={`${styles.meta} ${styles.labelCentered}`}>
               Selecione um tipo para ver as técnicas disponíveis.
             </div>
           ) : null}
+        </section>
+
+        <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
+          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
+          {catalogError && (
+            <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>
+          )}
+          {catalogStatus === 'loading' && !catalogError && (
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando serviços…</div>
+          )}
+          {catalogStatus === 'ready' && availableTypes.length === 0 && (
+            <div className={styles.meta}>Nenhum serviço disponível no momento.</div>
+          )}
+          {catalogStatus === 'ready' && availableTypes.length > 0 && (
+            <div
+              className={`${styles.pills} ${styles.tipoPills}`}
+              role="tablist"
+              aria-label="Tipo de serviço"
+            >
+              {availableTypes.map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={`${styles.pill} ${styles.tipoPill}`}
+                  data-active={selectedTypeId === type.id}
+                  onClick={() => handleTypeSelect(type.id)}
+                >
+                  {type.name}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className={`${styles.card} ${styles.section}`} id="extras-card">

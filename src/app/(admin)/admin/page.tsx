@@ -28,7 +28,6 @@ type ServiceType = {
 type Service = {
   id: string
   branch_id: string | null
-  service_type_id: string | null
   name: string
   description: string | null
   duration_min: number
@@ -37,6 +36,7 @@ type Service = {
   buffer_min: number
   active: boolean
   created_at: string
+  service_type_ids: string[]
 }
 
 const appointmentStatuses = ['pending', 'reserved', 'confirmed', 'canceled', 'completed'] as const
@@ -131,7 +131,7 @@ type ServiceTypeFormState = {
 type ServiceFormState = {
   name: string
   branch_id: string
-  service_type_id: string
+  service_type_ids: string[]
   description: string
   duration_min: string
   price_cents: string
@@ -184,7 +184,7 @@ export default function Admin() {
   const [newService, setNewService] = useState<ServiceFormState>({
     name: '',
     branch_id: '',
-    service_type_id: '',
+    service_type_ids: [],
     description: '',
     duration_min: '30',
     price_cents: '0',
@@ -238,7 +238,7 @@ export default function Admin() {
         supabase
           .from('services')
           .select(
-            'id, branch_id, service_type_id, name, description, duration_min, price_cents, deposit_cents, buffer_min, active, created_at'
+            'id, branch_id, name, description, duration_min, price_cents, deposit_cents, buffer_min, active, created_at, service_type_assignments(service_type_id)'
           )
           .order('created_at', { ascending: false }),
         supabase
@@ -293,12 +293,31 @@ export default function Admin() {
         }
       }) satisfies AdminAppointment[]
 
-      const normalizedServices = (servicesResponse.data ?? []).map((service) => ({
-        ...service,
-        description: service.description ?? null,
-        branch_id: service.branch_id ?? null,
-        service_type_id: service.service_type_id ?? null,
-      })) satisfies Service[]
+      const normalizedServices = (servicesResponse.data ?? []).map((service) => {
+        const assignments = Array.isArray(service.service_type_assignments)
+          ? service.service_type_assignments
+          : service.service_type_assignments
+          ? [service.service_type_assignments]
+          : []
+
+        const service_type_ids = assignments
+          .map((assignment) => assignment?.service_type_id)
+          .filter((value): value is string => typeof value === 'string')
+
+        return {
+          id: service.id,
+          branch_id: service.branch_id ?? null,
+          name: service.name,
+          description: service.description ?? null,
+          duration_min: service.duration_min,
+          price_cents: service.price_cents,
+          deposit_cents: service.deposit_cents,
+          buffer_min: service.buffer_min,
+          active: service.active,
+          created_at: service.created_at,
+          service_type_ids,
+        }
+      }) satisfies Service[]
 
       const normalizedServiceTypes = (serviceTypesResponse.data ?? []).map((type) => ({
         ...type,
@@ -449,7 +468,7 @@ export default function Admin() {
     setNewService({
       name: '',
       branch_id: '',
-      service_type_id: '',
+      service_type_ids: [],
       description: '',
       duration_min: '30',
       price_cents: '0',
@@ -672,21 +691,41 @@ export default function Admin() {
       return
     }
 
-    const { error: createError } = await supabase.from('services').insert({
-      name: newService.name.trim(),
-      branch_id: newService.branch_id,
-      service_type_id: newService.service_type_id || null,
-      description: newService.description.trim() || null,
-      duration_min: duration,
-      price_cents: price,
-      deposit_cents: deposit,
-      buffer_min: buffer,
-      active: newService.active,
-    })
+    const { data: createdService, error: createError } = await supabase
+      .from('services')
+      .insert({
+        name: newService.name.trim(),
+        branch_id: newService.branch_id,
+        description: newService.description.trim() || null,
+        duration_min: duration,
+        price_cents: price,
+        deposit_cents: deposit,
+        buffer_min: buffer,
+        active: newService.active,
+      })
+      .select('id')
+      .single()
 
-    if (createError) {
+    if (createError || !createdService) {
       setActionMessage({ type: 'error', text: 'Não foi possível criar o serviço. Tente novamente.' })
       return
+    }
+
+    if (newService.service_type_ids.length > 0) {
+      const assignmentsPayload = newService.service_type_ids.map((typeId) => ({
+        service_id: createdService.id,
+        service_type_id: typeId,
+      }))
+
+      const { error: assignmentsError } = await supabase
+        .from('service_type_assignments')
+        .insert(assignmentsPayload)
+
+      if (assignmentsError) {
+        await supabase.from('services').delete().eq('id', createdService.id)
+        setActionMessage({ type: 'error', text: 'Não foi possível vincular os tipos ao serviço. Tente novamente.' })
+        return
+      }
     }
 
     await refreshData({ type: 'success', text: 'Serviço criado com sucesso!' })
@@ -721,12 +760,11 @@ export default function Admin() {
       return
     }
 
-    const { error: updateError } = await supabase
+    const { data: updatedService, error: updateError } = await supabase
       .from('services')
       .update({
         name: form.name.trim(),
         branch_id: form.branch_id,
-        service_type_id: form.service_type_id || null,
         description: form.description.trim() || null,
         duration_min: duration,
         price_cents: price,
@@ -735,10 +773,38 @@ export default function Admin() {
         active: form.active,
       })
       .eq('id', serviceId)
+      .select('id')
+      .single()
 
-    if (updateError) {
+    if (updateError || !updatedService) {
       setActionMessage({ type: 'error', text: 'Não foi possível atualizar o serviço. Tente novamente.' })
       return
+    }
+
+    const { error: removeAssignmentsError } = await supabase
+      .from('service_type_assignments')
+      .delete()
+      .eq('service_id', serviceId)
+
+    if (removeAssignmentsError) {
+      setActionMessage({ type: 'error', text: 'Não foi possível atualizar os tipos do serviço. Tente novamente.' })
+      return
+    }
+
+    if (form.service_type_ids.length > 0) {
+      const assignmentsPayload = form.service_type_ids.map((typeId) => ({
+        service_id: serviceId,
+        service_type_id: typeId,
+      }))
+
+      const { error: assignmentsError } = await supabase
+        .from('service_type_assignments')
+        .insert(assignmentsPayload)
+
+      if (assignmentsError) {
+        setActionMessage({ type: 'error', text: 'Não foi possível atualizar os tipos do serviço. Tente novamente.' })
+        return
+      }
     }
 
     await refreshData({ type: 'success', text: 'Serviço atualizado com sucesso!' })
@@ -1158,24 +1224,29 @@ export default function Admin() {
             </select>
           </label>
           <label className={labelClass}>
-            <span className={labelCaptionClass}>Tipo</span>
+            <span className={labelCaptionClass}>Tipos</span>
             <select
-              className={inputClass}
-              value={newService.service_type_id}
-              onChange={(event) =>
+              className={`${inputClass} h-auto`}
+              multiple
+              value={newService.service_type_ids}
+              size={Math.min(6, Math.max(3, serviceTypes.length || 3))}
+              onChange={(event) => {
+                const selected = Array.from(event.target.selectedOptions).map((option) => option.value)
                 setNewService((state) => ({
                   ...state,
-                  service_type_id: event.target.value,
+                  service_type_ids: selected,
                 }))
-              }
+              }}
             >
-              <option value="">Sem categoria</option>
               {serviceTypes.map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.name}
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-900/50">
+              Selecione quantos tipos forem necessários. Use Ctrl (ou ⌘ no Mac) para marcar mais de uma opção.
+            </p>
           </label>
           <label className={labelClass}>
             <span className={labelCaptionClass}>Duração (min)</span>
@@ -1293,7 +1364,7 @@ export default function Admin() {
               serviceEdits[service.id] ?? ({
                 name: service.name,
                 branch_id: service.branch_id ?? '',
-                service_type_id: service.service_type_id ?? '',
+                service_type_ids: [...service.service_type_ids],
                 description: service.description ?? '',
                 duration_min: String(service.duration_min),
                 price_cents: String(service.price_cents),
@@ -1301,6 +1372,10 @@ export default function Admin() {
                 buffer_min: String(service.buffer_min),
                 active: service.active,
               } satisfies ServiceFormState)
+
+            const assignedTypes = service.service_type_ids
+              .map((typeId) => serviceTypes.find((type) => type.id === typeId))
+              .filter((type): type is ServiceType => Boolean(type))
 
             return (
               <div key={service.id} className={`${surfaceCardClass} space-y-5`}>
@@ -1322,6 +1397,15 @@ export default function Admin() {
                     <span className={styles.metaPill}>{service.duration_min} min</span>
                     <span className={styles.metaPill}>Intervalo {service.buffer_min} min</span>
                   </div>
+                  {assignedTypes.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-900/60">
+                      {assignedTypes.map((type) => (
+                        <span key={type.id} className={styles.metaPill}>
+                          {type.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className={labelClass}>
@@ -1358,24 +1442,29 @@ export default function Admin() {
                     </select>
                   </label>
                   <label className={labelClass}>
-                    <span className={labelCaptionClass}>Tipo</span>
+                    <span className={labelCaptionClass}>Tipos</span>
                     <select
-                      className={inputClass}
-                      value={form.service_type_id}
-                      onChange={(event) =>
+                      className={`${inputClass} h-auto`}
+                      multiple
+                      value={form.service_type_ids}
+                      size={Math.min(6, Math.max(3, serviceTypes.length || 3))}
+                      onChange={(event) => {
+                        const selected = Array.from(event.target.selectedOptions).map((option) => option.value)
                         setServiceEdits((state) => ({
                           ...state,
-                          [service.id]: { ...form, service_type_id: event.target.value },
+                          [service.id]: { ...form, service_type_ids: selected },
                         }))
-                      }
+                      }}
                     >
-                      <option value="">Sem categoria</option>
                       {serviceTypes.map((type) => (
                         <option key={type.id} value={type.id}>
                           {type.name}
                         </option>
                       ))}
                     </select>
+                    <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-900/50">
+                      Selecione quantos tipos forem necessários. Use Ctrl (ou ⌘ no Mac) para marcar mais de uma opção.
+                    </p>
                   </label>
                   <label className={labelClass}>
                     <span className={labelCaptionClass}>Duração (min)</span>

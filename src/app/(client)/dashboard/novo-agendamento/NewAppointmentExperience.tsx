@@ -18,6 +18,10 @@ type ServiceTechnique = {
   active: boolean
 }
 
+type ServiceTypeAssignment = {
+  services?: ServiceTechnique | ServiceTechnique[] | null
+}
+
 type ServiceTypeEntry = {
   id: string
   name: string
@@ -246,7 +250,7 @@ export default function NewAppointmentExperience() {
         const { data, error } = await supabase
           .from('service_types')
           .select(
-            'id, name, slug, description, active, order_index, services:services!services_service_type_id_fkey(id, name, slug, duration_min, price_cents, deposit_cents, buffer_min, active)'
+            `id, name, slug, description, active, order_index, assignments:service_type_assignments(services:services(id, name, slug, duration_min, price_cents, deposit_cents, buffer_min, active))`
           )
           .eq('active', true)
           .order('order_index', { ascending: true, nullsFirst: true })
@@ -256,11 +260,28 @@ export default function NewAppointmentExperience() {
         if (!active) return
 
         const normalized = (data ?? []).map((entry) => {
-          const servicesRaw = Array.isArray(entry.services)
-            ? entry.services
-            : entry.services
-            ? [entry.services]
+          const assignments = Array.isArray(entry.assignments)
+            ? entry.assignments
+            : entry.assignments
+            ? [entry.assignments]
             : []
+
+          const seenServices = new Set<string>()
+          const servicesRaw = assignments.flatMap((assignment: ServiceTypeAssignment) => {
+            const related = assignment?.services
+            const relatedArray = Array.isArray(related)
+              ? related
+              : related
+              ? [related]
+              : []
+
+            return relatedArray.filter((svc): svc is ServiceTechnique => {
+              if (!svc || typeof svc.id !== 'string') return false
+              if (seenServices.has(svc.id)) return false
+              seenServices.add(svc.id)
+              return true
+            })
+          })
 
           const services = servicesRaw
             .filter((svc) => svc && svc.active !== false)

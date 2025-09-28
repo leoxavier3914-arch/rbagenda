@@ -408,7 +408,9 @@ export default function NewAppointmentExperience() {
     }
   }, [selectedSlot, slots])
 
-  const isReadyToContinue = Boolean(selectedDate && selectedSlot && !isSubmitting && canInteract)
+  const hasMetRequirements = Boolean(selectedDate && selectedSlot && canInteract)
+  const isReadyToContinue = hasMetRequirements && !isSubmitting
+  const shouldShowContinueButton = hasMetRequirements || isSubmitting
 
   function goToPreviousMonth() {
     const previous = new Date(year, month - 1, 1)
@@ -517,7 +519,7 @@ export default function NewAppointmentExperience() {
         </p>
 
         <section className={`${styles.card} ${styles.section}`} id="tipo-card">
-          <div className={styles.label}>Tipo</div>
+          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
           <div
             className={`${styles.pills} ${styles.tipoPills}`}
             role="tablist"
@@ -538,7 +540,7 @@ export default function NewAppointmentExperience() {
         </section>
 
         <section className={`${styles.card} ${styles.section}`} id="tecnica-card">
-          <div className={styles.label}>Técnica</div>
+          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
           <div className={styles.pills} role="tablist" aria-label="Técnica">
             {(Object.keys(tecnicaLabels) as Tecnica[]).map((value) => (
               <button
@@ -555,7 +557,7 @@ export default function NewAppointmentExperience() {
         </section>
 
         <section className={`${styles.card} ${styles.section}`} id="extras-card">
-          <div className={styles.label}>Densidade (opcional)</div>
+          <div className={`${styles.label} ${styles.labelCentered}`}>Densidade (opcional)</div>
           <div className={styles.pills} role="tablist" aria-label="Densidade">
             {(Object.keys(densidadeLabels) as Densidade[]).map((value) => (
               <button
@@ -631,17 +633,8 @@ export default function NewAppointmentExperience() {
           </div>
         </section>
 
-        <section className={`${styles.card} ${styles.section}`} id="regras">
-          <div className={styles.label}>Regras rápidas</div>
-          <ul className={styles.rules}>
-            <li>Manutenção: até 21 dias e com pelo menos 40% de fios.</li>
-            <li>Reaplicação: quando não atende às regras de manutenção.</li>
-            <li>Sinal para confirmar o horário. Saldo no dia.</li>
-          </ul>
-        </section>
-
         <section className={`${styles.card} ${styles.section}`} id="data-card">
-          <div className={styles.label}>Data &amp; horário</div>
+          <div className={`${styles.label} ${styles.labelCentered}`}>Data &amp; horário</div>
 
           {availabilityError && (
             <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>
@@ -757,6 +750,15 @@ export default function NewAppointmentExperience() {
           </div>
         </section>
 
+        <section className={`${styles.card} ${styles.section}`} id="regras">
+          <div className={styles.label}>Regras rápidas</div>
+          <ul className={styles.rules}>
+            <li>Manutenção: até 21 dias e com pelo menos 40% de fios.</li>
+            <li>Reaplicação: quando não atende às regras de manutenção.</li>
+            <li>Sinal para confirmar o horário. Saldo no dia.</li>
+          </ul>
+        </section>
+
         <div className={styles.bottomSpacer} />
       </div>
 
@@ -769,16 +771,18 @@ export default function NewAppointmentExperience() {
             <div className={styles.meta}>{computed.quando}</div>
           </div>
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.cta}
-              disabled={!isReadyToContinue}
-              onClick={() => {
-                void handleContinue()
-              }}
-            >
-              {isSubmitting ? 'Salvando…' : 'Continuar'}
-            </button>
+            {shouldShowContinueButton && (
+              <button
+                type="button"
+                className={styles.cta}
+                disabled={!isReadyToContinue}
+                onClick={() => {
+                  void handleContinue()
+                }}
+              >
+                {isSubmitting ? 'Salvando…' : 'Continuar'}
+              </button>
+            )}
             {submitError && <div className={`${styles.status} ${styles.statusError}`}>{submitError}</div>}
             {submitSuccess && <div className={`${styles.status} ${styles.statusSuccess}`}>{submitSuccess}</div>}
           </div>

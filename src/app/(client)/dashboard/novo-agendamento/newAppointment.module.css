@@ -20,6 +20,10 @@
   color: var(--ink);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding-inline: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .shell {
@@ -27,6 +31,7 @@
   margin: 0 auto;
   padding: 20px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .title {
@@ -325,12 +330,14 @@
 }
 
 .summaryInner {
+  width: 100%;
   max-width: 680px;
   margin: 0 auto;
   padding: 12px 20px;
   display: flex;
   gap: 12px;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .actions {

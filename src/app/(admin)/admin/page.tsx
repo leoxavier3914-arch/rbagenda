@@ -405,6 +405,42 @@ export default function Admin() {
     [upcomingAppointmentsCount, pendingAppointmentsCount, clients.length, activeServicesCount],
   )
 
+  const glassCardClass =
+    'rounded-3xl border border-white/60 bg-white/80 p-8 shadow-[0_45px_90px_-60px_rgba(16,58,40,0.65)] backdrop-blur-2xl transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_60px_120px_-60px_rgba(16,58,40,0.45)]'
+  const panelCardClass =
+    'rounded-3xl border border-emerald-900/15 bg-white/85 p-8 shadow-[0_45px_70px_-50px_rgba(16,58,40,0.55)] backdrop-blur-xl'
+  const mutedPanelClass =
+    'rounded-3xl border border-emerald-900/10 bg-emerald-50/55 p-8 text-emerald-900/85 shadow-inner shadow-emerald-900/5 backdrop-blur-xl'
+  const primaryButtonClass =
+    'inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:from-emerald-500 hover:to-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none'
+  const secondaryButtonClass =
+    'inline-flex items-center justify-center gap-2 rounded-full border border-emerald-500/30 bg-white/70 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-500/50 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none'
+  const dangerButtonClass =
+    'inline-flex items-center justify-center gap-2 rounded-full border border-red-300/70 bg-red-50/80 px-5 py-2.5 text-sm font-semibold text-red-600 shadow-sm transition hover:border-red-400 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60'
+  const inputClass =
+    'w-full rounded-2xl border border-emerald-900/15 bg-white/85 px-4 py-3 text-sm text-emerald-950 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 placeholder:text-emerald-900/40'
+  const textareaClass = `${inputClass} min-h-[96px]`
+  const labelClass = 'grid gap-2 text-sm font-medium text-emerald-950/80'
+  const labelCaptionClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/55'
+  const surfaceCardClass =
+    'rounded-3xl border border-emerald-900/10 bg-white/65 p-6 shadow-[0_35px_60px_-45px_rgba(16,58,40,0.4)] backdrop-blur'
+  const navButtonBaseClass =
+    'group flex w-full items-center justify-between gap-3 rounded-3xl px-4 py-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2'
+  const badgeClass =
+    'inline-flex w-fit items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-emerald-900/70'
+  const statCardClass =
+    'rounded-3xl border border-white/60 bg-gradient-to-br from-white/95 via-white/80 to-emerald-50/70 p-6 shadow-[0_35px_70px_-45px_rgba(16,58,40,0.55)] backdrop-blur-xl'
+
+  const sectionIcons: Record<AdminSection, string> = {
+    agendamentos: '📅',
+    filiais: '🏢',
+    servicos: '💼',
+    tipos: '🗂️',
+    clientes: '🧑‍🤝‍🧑',
+    emailjs: '✉️',
+    configuracoes: '⚙️',
+  }
+
   const resetFormStates = useCallback(() => {
     setNewBranch({ name: '', timezone: timezoneOptions[0] })
     setBranchEdits({})
@@ -722,26 +758,32 @@ export default function Admin() {
   }
 
   const renderBranchSection = () => (
-    <section className="space-y-8">
-      <div className="card space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-[#1f2d28]">Cadastrar nova filial</h2>
-          <p className="muted-text">Gerencie a expansão do seu negócio adicionando novas unidades.</p>
+    <section className="space-y-10">
+      <div className={`${panelCardClass} space-y-6`}>
+        <div className="space-y-3">
+          <span className={badgeClass}>Cadastro de filiais</span>
+          <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Cadastrar nova filial</h2>
+          <p className="text-sm text-emerald-900/70">
+            Estruture a expansão do estúdio registrando novas unidades com fuso horário personalizado.
+          </p>
         </div>
-        <form className="grid gap-4 md:grid-cols-3" onSubmit={handleCreateBranch}>
-          <label className="grid gap-2 text-sm">
-            <span>Nome</span>
+        <form
+          className="grid gap-5 md:grid-cols-[minmax(0,2fr),minmax(0,2fr),minmax(0,1.2fr)]"
+          onSubmit={handleCreateBranch}
+        >
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Nome</span>
             <input
-              className="input"
+              className={inputClass}
               value={newBranch.name}
               onChange={(event) => setNewBranch((state) => ({ ...state, name: event.target.value }))}
               placeholder="Ex: Unidade Centro"
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Fuso horário</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Fuso horário</span>
             <select
-              className="input"
+              className={inputClass}
               value={newBranch.timezone}
               onChange={(event) => setNewBranch((state) => ({ ...state, timezone: event.target.value }))}
             >
@@ -753,42 +795,52 @@ export default function Admin() {
             </select>
           </label>
           <div className="flex items-end">
-            <button className="btn-primary w-full" type="submit">
+            <button className={`${primaryButtonClass} w-full`} type="submit">
               Adicionar filial
             </button>
           </div>
         </form>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-[#1f2d28]">Filiais cadastradas</h2>
-        <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Filiais cadastradas</h2>
+            <p className="text-sm text-emerald-900/70">Atualize rapidamente detalhes e mantenha as informações consistentes.</p>
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
+            {branches.length} {branches.length === 1 ? 'filial' : 'filiais'}
+          </span>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
           {branches.map((branch) => {
             const form = branchEdits[branch.id] ?? {
               name: branch.name,
               timezone: branch.timezone,
             }
             return (
-              <div key={branch.id} className="card space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-[#1f2d28]">{branch.name}</h3>
-                  <p className="muted-text text-xs">Criada em {new Date(branch.created_at).toLocaleString()}</p>
-                </div>
-                <div className="space-y-2 text-sm text-[#1f2d28]">
-                  <div>
-                    <span className="font-medium">Fuso horário:</span> {branch.timezone}
+              <div key={branch.id} className={`${surfaceCardClass} space-y-5`}>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-emerald-950">{branch.name}</h3>
+                      <p className="text-xs text-emerald-900/60">
+                        Criada em {new Date(branch.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-800">
+                      {branch.timezone}
+                    </span>
                   </div>
-                  <div>
-                    <span className="font-medium">ID:</span> {branch.id}
-                  </div>
+                  <p className="text-xs text-emerald-900/60">ID: {branch.id}</p>
                 </div>
-                <div className="space-y-3 border-t border-[color:rgba(31,45,40,0.08)] pt-4">
-                  <h4 className="text-sm font-medium text-[#1f2d28]">Editar filial</h4>
-                  <div className="grid gap-3">
-                    <label className="grid gap-2 text-sm">
-                      <span>Nome</span>
+                <div className="space-y-4 border-t border-emerald-900/10 pt-4">
+                  <h4 className="text-sm font-semibold text-emerald-950">Editar filial</h4>
+                  <div className="grid gap-4">
+                    <label className={labelClass}>
+                      <span className={labelCaptionClass}>Nome</span>
                       <input
-                        className="input"
+                        className={inputClass}
                         value={form.name}
                         onChange={(event) =>
                           setBranchEdits((state) => ({
@@ -798,10 +850,10 @@ export default function Admin() {
                         }
                       />
                     </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Fuso horário</span>
+                    <label className={labelClass}>
+                      <span className={labelCaptionClass}>Fuso horário</span>
                       <select
-                        className="input"
+                        className={inputClass}
                         value={form.timezone}
                         onChange={(event) =>
                           setBranchEdits((state) => ({
@@ -817,20 +869,20 @@ export default function Admin() {
                         ))}
                       </select>
                     </label>
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="flex flex-col gap-3 sm:flex-row">
                       <button
-                        className="btn-primary flex-1"
+                        className={`${primaryButtonClass} flex-1`}
                         type="button"
                         onClick={() => handleUpdateBranch(branch.id)}
                       >
                         Salvar alterações
                       </button>
                       <button
-                        className="btn-secondary flex-1 border-red-200 text-red-600"
+                        className={`${dangerButtonClass} flex-1`}
                         type="button"
                         onClick={() => handleDeleteBranch(branch.id)}
                       >
-                        Remover
+                        Remover filial
                       </button>
                     </div>
                   </div>
@@ -839,7 +891,7 @@ export default function Admin() {
             )
           })}
           {branches.length === 0 && (
-            <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.8)]">
+            <div className={`${mutedPanelClass} text-sm`}>
               Nenhuma filial cadastrada até o momento.
             </div>
           )}
@@ -847,21 +899,21 @@ export default function Admin() {
       </div>
     </section>
   )
-
   const renderServiceTypesSection = () => (
-    <section className="space-y-8">
-      <div className="card space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-[#1f2d28]">Cadastrar tipo de serviço</h2>
-          <p className="muted-text">
-            Organize seus serviços por categorias para facilitar a navegação e o agendamento.
+    <section className="space-y-10">
+      <div className={`${panelCardClass} space-y-6`}>
+        <div className="space-y-3">
+          <span className={badgeClass}>Organização</span>
+          <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Cadastrar tipo de serviço</h2>
+          <p className="text-sm text-emerald-900/70">
+            Estruture seu catálogo em categorias para acelerar a busca por serviços durante o agendamento.
           </p>
         </div>
-        <form className="grid gap-4 md:grid-cols-4" onSubmit={handleCreateServiceType}>
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>Nome</span>
+        <form className="grid gap-5 md:grid-cols-4" onSubmit={handleCreateServiceType}>
+          <label className={`${labelClass} md:col-span-2`}>
+            <span className={labelCaptionClass}>Nome</span>
             <input
-              className="input"
+              className={inputClass}
               value={newServiceType.name}
               onChange={(event) =>
                 setNewServiceType((state) => ({
@@ -872,10 +924,10 @@ export default function Admin() {
               placeholder="Ex: Sobrancelhas"
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Filial</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Filial</span>
             <select
-              className="input"
+              className={inputClass}
               value={newServiceType.branch_id}
               onChange={(event) =>
                 setNewServiceType((state) => ({
@@ -892,10 +944,10 @@ export default function Admin() {
               ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Status</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Status</span>
             <select
-              className="input"
+              className={inputClass}
               value={newServiceType.active ? 'true' : 'false'}
               onChange={(event) =>
                 setNewServiceType((state) => ({
@@ -908,10 +960,10 @@ export default function Admin() {
               <option value="false">Inativo</option>
             </select>
           </label>
-          <label className="grid gap-2 text-sm md:col-span-4">
-            <span>Descrição</span>
+          <label className={`${labelClass} md:col-span-4`}>
+            <span className={labelCaptionClass}>Descrição</span>
             <textarea
-              className="input min-h-[72px]"
+              className={textareaClass}
               value={newServiceType.description}
               onChange={(event) =>
                 setNewServiceType((state) => ({
@@ -919,20 +971,28 @@ export default function Admin() {
                   description: event.target.value,
                 }))
               }
-              placeholder="Descreva o tipo de serviço"
+              placeholder="Descreva como esta categoria organiza seus serviços"
             />
           </label>
-          <div className="flex items-end md:col-span-4">
-            <button className="btn-primary w-full" type="submit">
+          <div className="md:col-span-4 flex items-end">
+            <button className={`${primaryButtonClass} w-full`} type="submit">
               Adicionar tipo
             </button>
           </div>
         </form>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-[#1f2d28]">Tipos cadastrados</h2>
-        <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Tipos cadastrados</h2>
+            <p className="text-sm text-emerald-900/70">Edite descrições, status e vínculos com filiais em tempo real.</p>
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
+            {serviceTypes.length} {serviceTypes.length === 1 ? 'categoria' : 'categorias'}
+          </span>
+        </div>
+        <div className="grid gap-6">
           {serviceTypes.map((type) => {
             const form =
               serviceTypeEdits[type.id] ?? ({
@@ -943,21 +1003,29 @@ export default function Admin() {
               } satisfies ServiceTypeFormState)
 
             return (
-              <div key={type.id} className="card space-y-4">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#1f2d28]">{type.name}</h3>
-                    <p className="muted-text text-xs">Criado em {new Date(type.created_at).toLocaleString()}</p>
+              <div key={type.id} className={`${surfaceCardClass} space-y-5`}>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-semibold text-emerald-950">{type.name}</h3>
+                    <p className="text-xs text-emerald-900/60">
+                      Criado em {new Date(type.created_at).toLocaleString()}
+                    </p>
                   </div>
-                  <span className="badge self-start md:self-auto">
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-xs font-semibold ${
+                      type.active
+                        ? 'bg-emerald-500/15 text-emerald-700'
+                        : 'bg-amber-200/40 text-amber-700'
+                    }`}
+                  >
                     {type.active ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
-                <div className="space-y-3">
-                  <label className="grid gap-2 text-sm">
-                    <span>Nome</span>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Nome</span>
                     <input
-                      className="input"
+                      className={inputClass}
                       value={form.name}
                       onChange={(event) =>
                         setServiceTypeEdits((state) => ({
@@ -967,10 +1035,10 @@ export default function Admin() {
                       }
                     />
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>Filial</span>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Filial</span>
                     <select
-                      className="input"
+                      className={inputClass}
                       value={form.branch_id}
                       onChange={(event) =>
                         setServiceTypeEdits((state) => ({
@@ -987,10 +1055,10 @@ export default function Admin() {
                       ))}
                     </select>
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>Status</span>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Status</span>
                     <select
-                      className="input"
+                      className={inputClass}
                       value={form.active ? 'true' : 'false'}
                       onChange={(event) =>
                         setServiceTypeEdits((state) => ({
@@ -1003,10 +1071,10 @@ export default function Admin() {
                       <option value="false">Inativo</option>
                     </select>
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>Descrição</span>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Descrição</span>
                     <textarea
-                      className="input min-h-[72px]"
+                      className={textareaClass}
                       value={form.description}
                       onChange={(event) =>
                         setServiceTypeEdits((state) => ({
@@ -1016,28 +1084,28 @@ export default function Admin() {
                       }
                     />
                   </label>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <button
-                      className="btn-primary flex-1"
-                      type="button"
-                      onClick={() => handleUpdateServiceType(type.id)}
-                    >
-                      Salvar alterações
-                    </button>
-                    <button
-                      className="btn-secondary flex-1 border-red-200 text-red-600"
-                      type="button"
-                      onClick={() => handleDeleteServiceType(type.id)}
-                    >
-                      Remover
-                    </button>
-                  </div>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    className={`${primaryButtonClass} flex-1`}
+                    type="button"
+                    onClick={() => handleUpdateServiceType(type.id)}
+                  >
+                    Salvar alterações
+                  </button>
+                  <button
+                    className={`${dangerButtonClass} flex-1`}
+                    type="button"
+                    onClick={() => handleDeleteServiceType(type.id)}
+                  >
+                    Remover tipo
+                  </button>
                 </div>
               </div>
             )
           })}
           {serviceTypes.length === 0 && (
-            <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.8)]">
+            <div className={`${mutedPanelClass} text-sm`}>
               Nenhum tipo de serviço cadastrado até o momento.
             </div>
           )}
@@ -1045,21 +1113,21 @@ export default function Admin() {
       </div>
     </section>
   )
-
   const renderServicesSection = () => (
-    <section className="space-y-8">
-      <div className="card space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-[#1f2d28]">Cadastrar serviço</h2>
-          <p className="muted-text">
-            Controle seu portfólio com todos os detalhes necessários para um agendamento preciso.
+    <section className="space-y-10">
+      <div className={`${panelCardClass} space-y-6`}>
+        <div className="space-y-3">
+          <span className={badgeClass}>Portfólio</span>
+          <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Cadastrar serviço</h2>
+          <p className="text-sm text-emerald-900/70">
+            Construa descrições completas com preço, duração e intervalo entre atendimentos para uma operação consistente.
           </p>
         </div>
-        <form className="grid gap-4 md:grid-cols-4" onSubmit={handleCreateService}>
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>Nome</span>
+        <form className="grid gap-5 md:grid-cols-4" onSubmit={handleCreateService}>
+          <label className={`${labelClass} md:col-span-2`}>
+            <span className={labelCaptionClass}>Nome</span>
             <input
-              className="input"
+              className={inputClass}
               value={newService.name}
               onChange={(event) =>
                 setNewService((state) => ({
@@ -1070,10 +1138,10 @@ export default function Admin() {
               placeholder="Ex: Design de sobrancelhas"
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Filial</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Filial</span>
             <select
-              className="input"
+              className={inputClass}
               value={newService.branch_id}
               onChange={(event) =>
                 setNewService((state) => ({
@@ -1090,10 +1158,10 @@ export default function Admin() {
               ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Tipo</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Tipo</span>
             <select
-              className="input"
+              className={inputClass}
               value={newService.service_type_id}
               onChange={(event) =>
                 setNewService((state) => ({
@@ -1110,10 +1178,10 @@ export default function Admin() {
               ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Duração (min)</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Duração (min)</span>
             <input
-              className="input"
+              className={inputClass}
               type="number"
               min={1}
               value={newService.duration_min}
@@ -1125,10 +1193,10 @@ export default function Admin() {
               }
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Preço (centavos)</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Preço (centavos)</span>
             <input
-              className="input"
+              className={inputClass}
               type="number"
               min={0}
               value={newService.price_cents}
@@ -1140,10 +1208,10 @@ export default function Admin() {
               }
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Sinal (centavos)</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Sinal (centavos)</span>
             <input
-              className="input"
+              className={inputClass}
               type="number"
               min={0}
               value={newService.deposit_cents}
@@ -1155,10 +1223,10 @@ export default function Admin() {
               }
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Intervalo (min)</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Intervalo (min)</span>
             <input
-              className="input"
+              className={inputClass}
               type="number"
               min={0}
               value={newService.buffer_min}
@@ -1170,10 +1238,10 @@ export default function Admin() {
               }
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>Status</span>
+          <label className={labelClass}>
+            <span className={labelCaptionClass}>Status</span>
             <select
-              className="input"
+              className={inputClass}
               value={newService.active ? 'true' : 'false'}
               onChange={(event) =>
                 setNewService((state) => ({
@@ -1186,10 +1254,10 @@ export default function Admin() {
               <option value="false">Inativo</option>
             </select>
           </label>
-          <label className="grid gap-2 text-sm md:col-span-4">
-            <span>Descrição</span>
+          <label className={`${labelClass} md:col-span-4`}>
+            <span className={labelCaptionClass}>Descrição</span>
             <textarea
-              className="input min-h-[72px]"
+              className={textareaClass}
               value={newService.description}
               onChange={(event) =>
                 setNewService((state) => ({
@@ -1197,20 +1265,30 @@ export default function Admin() {
                   description: event.target.value,
                 }))
               }
-              placeholder="Descreva os detalhes do serviço"
+              placeholder="Detalhe benefícios, materiais e diferenciais deste serviço"
             />
           </label>
-          <div className="flex items-end md:col-span-4">
-            <button className="btn-primary w-full" type="submit">
+          <div className="md:col-span-4 flex items-end">
+            <button className={`${primaryButtonClass} w-full`} type="submit">
               Adicionar serviço
             </button>
           </div>
         </form>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-[#1f2d28]">Serviços cadastrados</h2>
-        <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Serviços cadastrados</h2>
+            <p className="text-sm text-emerald-900/70">
+              Ajuste rapidamente preços, intervalos e descrições para manter o catálogo atualizado.
+            </p>
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
+            {services.length} {services.length === 1 ? 'serviço' : 'serviços'}
+          </span>
+        </div>
+        <div className="grid gap-6">
           {services.map((service) => {
             const form =
               serviceEdits[service.id] ?? ({
@@ -1225,210 +1303,198 @@ export default function Admin() {
                 active: service.active,
               } satisfies ServiceFormState)
 
-            const branchName = branches.find((branch) => branch.id === service.branch_id)?.name
-            const typeName = service.service_type_id
-              ? serviceTypes.find((type) => type.id === service.service_type_id)?.name
-              : null
-
             return (
-              <div key={service.id} className="card space-y-4">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#1f2d28]">{service.name}</h3>
-                    <p className="muted-text text-xs">Atualizado em {new Date(service.created_at).toLocaleString()}</p>
+              <div key={service.id} className={`${surfaceCardClass} space-y-5`}>
+                <div className="flex flex-col gap-3 border-b border-emerald-900/10 pb-4 md:flex-row md:items-start md:justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-semibold text-emerald-950">{service.name}</h3>
+                    <p className="text-xs text-emerald-900/60">
+                      Criado em {new Date(service.created_at).toLocaleString()}
+                    </p>
                   </div>
-                  <span className="badge self-start md:self-auto">
-                    {service.active ? 'Ativo' : 'Inativo'}
-                  </span>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="text-sm text-[#1f2d28]">
-                    <span className="font-medium">Filial:</span> {branchName ?? 'Não vinculada'}
-                  </div>
-                  <div className="text-sm text-[#1f2d28]">
-                    <span className="font-medium">Tipo:</span> {typeName ?? 'Sem categoria'}
-                  </div>
-                  <div className="text-sm text-[#1f2d28]">
-                    <span className="font-medium">Duração:</span> {service.duration_min} minutos
-                  </div>
-                  <div className="text-sm text-[#1f2d28]">
-                    <span className="font-medium">Preço:</span> R$ {(service.price_cents / 100).toFixed(2)}
-                  </div>
-                  <div className="text-sm text-[#1f2d28]">
-                    <span className="font-medium">Sinal:</span> R$ {(service.deposit_cents / 100).toFixed(2)}
-                  </div>
-                  <div className="text-sm text-[#1f2d28]">
-                    <span className="font-medium">Intervalo:</span> {service.buffer_min} minutos
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-900/65">
+                    <span
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold ${
+                        service.active
+                          ? 'bg-emerald-500/15 text-emerald-700'
+                          : 'bg-amber-200/40 text-amber-700'
+                      }`}
+                    >
+                      {service.active ? 'Ativo' : 'Inativo'}
+                    </span>
+                    <span className="rounded-full bg-white/70 px-3 py-1 font-semibold">
+                      {service.duration_min} min
+                    </span>
+                    <span className="rounded-full bg-white/70 px-3 py-1 font-semibold">
+                      Intervalo {service.buffer_min} min
+                    </span>
                   </div>
                 </div>
-                <div className="space-y-3 border-t border-[color:rgba(31,45,40,0.08)] pt-4">
-                  <h4 className="text-sm font-medium text-[#1f2d28]">Editar serviço</h4>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="grid gap-2 text-sm">
-                      <span>Nome</span>
-                      <input
-                        className="input"
-                        value={form.name}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, name: event.target.value },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Filial</span>
-                      <select
-                        className="input"
-                        value={form.branch_id}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, branch_id: event.target.value },
-                          }))
-                        }
-                      >
-                        <option value="">Selecione uma filial</option>
-                        {branches.map((branch) => (
-                          <option key={branch.id} value={branch.id}>
-                            {branch.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Tipo</span>
-                      <select
-                        className="input"
-                        value={form.service_type_id}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, service_type_id: event.target.value },
-                          }))
-                        }
-                      >
-                        <option value="">Sem categoria</option>
-                        {serviceTypes.map((type) => (
-                          <option key={type.id} value={type.id}>
-                            {type.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Duração (min)</span>
-                      <input
-                        className="input"
-                        type="number"
-                        min={1}
-                        value={form.duration_min}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, duration_min: event.target.value },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Preço (centavos)</span>
-                      <input
-                        className="input"
-                        type="number"
-                        min={0}
-                        value={form.price_cents}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, price_cents: event.target.value },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Sinal (centavos)</span>
-                      <input
-                        className="input"
-                        type="number"
-                        min={0}
-                        value={form.deposit_cents}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, deposit_cents: event.target.value },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Intervalo (min)</span>
-                      <input
-                        className="input"
-                        type="number"
-                        min={0}
-                        value={form.buffer_min}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, buffer_min: event.target.value },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>Status</span>
-                      <select
-                        className="input"
-                        value={form.active ? 'true' : 'false'}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, active: event.target.value === 'true' },
-                          }))
-                        }
-                      >
-                        <option value="true">Ativo</option>
-                        <option value="false">Inativo</option>
-                      </select>
-                    </label>
-                    <label className="grid gap-2 text-sm md:col-span-2">
-                      <span>Descrição</span>
-                      <textarea
-                        className="input min-h-[72px]"
-                        value={form.description}
-                        onChange={(event) =>
-                          setServiceEdits((state) => ({
-                            ...state,
-                            [service.id]: { ...form, description: event.target.value },
-                          }))
-                        }
-                      />
-                    </label>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <button
-                      className="btn-primary flex-1"
-                      type="button"
-                      onClick={() => handleUpdateService(service.id)}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Nome</span>
+                    <input
+                      className={inputClass}
+                      value={form.name}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, name: event.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Filial</span>
+                    <select
+                      className={inputClass}
+                      value={form.branch_id}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, branch_id: event.target.value },
+                        }))
+                      }
                     >
-                      Salvar alterações
-                    </button>
-                    <button
-                      className="btn-secondary flex-1 border-red-200 text-red-600"
-                      type="button"
-                      onClick={() => handleDeleteService(service.id)}
+                      <option value="">Selecione uma filial</option>
+                      {branches.map((branch) => (
+                        <option key={branch.id} value={branch.id}>
+                          {branch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Tipo</span>
+                    <select
+                      className={inputClass}
+                      value={form.service_type_id}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, service_type_id: event.target.value },
+                        }))
+                      }
                     >
-                      Remover
-                    </button>
-                  </div>
+                      <option value="">Sem categoria</option>
+                      {serviceTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Duração (min)</span>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      min={1}
+                      value={form.duration_min}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, duration_min: event.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Preço (centavos)</span>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      min={0}
+                      value={form.price_cents}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, price_cents: event.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Sinal (centavos)</span>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      min={0}
+                      value={form.deposit_cents}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, deposit_cents: event.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Intervalo (min)</span>
+                    <input
+                      className={inputClass}
+                      type="number"
+                      min={0}
+                      value={form.buffer_min}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, buffer_min: event.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    <span className={labelCaptionClass}>Status</span>
+                    <select
+                      className={inputClass}
+                      value={form.active ? 'true' : 'false'}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, active: event.target.value === 'true' },
+                        }))
+                      }
+                    >
+                      <option value="true">Ativo</option>
+                      <option value="false">Inativo</option>
+                    </select>
+                  </label>
+                  <label className={`${labelClass} md:col-span-2`}>
+                    <span className={labelCaptionClass}>Descrição</span>
+                    <textarea
+                      className={textareaClass}
+                      value={form.description}
+                      onChange={(event) =>
+                        setServiceEdits((state) => ({
+                          ...state,
+                          [service.id]: { ...form, description: event.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="flex flex-col gap-3 border-t border-emerald-900/10 pt-4 sm:flex-row">
+                  <button
+                    className={`${primaryButtonClass} flex-1`}
+                    type="button"
+                    onClick={() => handleUpdateService(service.id)}
+                  >
+                    Salvar alterações
+                  </button>
+                  <button
+                    className={`${dangerButtonClass} flex-1`}
+                    type="button"
+                    onClick={() => handleDeleteService(service.id)}
+                  >
+                    Remover serviço
+                  </button>
                 </div>
               </div>
             )
           })}
           {services.length === 0 && (
-            <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.8)]">
+            <div className={`${mutedPanelClass} text-sm`}>
               Nenhum serviço cadastrado até o momento.
             </div>
           )}
@@ -1436,17 +1502,14 @@ export default function Admin() {
       </div>
     </section>
   )
-
   const renderAppointmentsSection = () => (
-    <section className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-4">
+    <section className="space-y-10">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {groupedAppointments.map((group) => (
-          <div key={group.key} className="card space-y-2">
-            <span className="text-sm font-medium uppercase tracking-wide text-[#2f6d4f]">
-              {group.label}
-            </span>
-            <p className="text-3xl font-semibold text-[#1f2d28]">{group.items.length}</p>
-            <p className="muted-text text-xs">
+          <div key={group.key} className={`${statCardClass} space-y-3`}>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-900/55">{group.label}</span>
+            <p className="text-3xl font-semibold text-emerald-950">{group.items.length}</p>
+            <p className="text-xs text-emerald-900/60">
               {group.statuses.length > 1
                 ? 'Inclui agendamentos confirmados ou reservados.'
                 : `Status: ${appointmentStatusLabels[group.statuses[0]]}`}
@@ -1456,49 +1519,56 @@ export default function Admin() {
       </div>
 
       {groupedAppointments.map((group) => (
-        <div key={group.key} className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-[#1f2d28]">{group.label}</h2>
-            <span className="badge">{group.items.length} registros</span>
+        <div key={group.key} className="space-y-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">{group.label}</h2>
+              <p className="text-sm text-emerald-900/70">
+                Visualize o histórico de cada reserva com dados completos de cliente e horários.
+              </p>
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
+              {group.items.length} {group.items.length === 1 ? 'agendamento' : 'agendamentos'}
+            </span>
           </div>
           {group.items.length === 0 ? (
-            <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.8)]">
+            <div className={`${mutedPanelClass} text-sm`}>
               Nenhum agendamento {group.label.toLowerCase()}.
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-2">
               {group.items.map((appointment) => (
-                <div key={appointment.id} className="card space-y-3">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-[#1f2d28]">
+                <article key={appointment.id} className={`${surfaceCardClass} space-y-4`}>
+                  <div className="flex flex-col gap-3 border-b border-emerald-900/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-emerald-950">
                         {appointment.services?.name ?? 'Serviço não informado'}
                       </h3>
-                      <p className="muted-text text-xs">ID: {appointment.id}</p>
+                      <p className="text-xs text-emerald-900/60">ID: {appointment.id}</p>
                     </div>
-                    <span className="badge">
+                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-700">
                       {appointmentStatusLabels[appointment.status] ?? appointment.status}
                     </span>
                   </div>
-                  <div className="grid gap-2 text-sm text-[#1f2d28] md:grid-cols-2">
-                    <div>
-                      <span className="font-medium">Cliente:</span>{' '}
-                      {appointment.profiles?.full_name ?? 'Sem nome informado'}
+                  <dl className="grid gap-3 text-sm text-emerald-900/80 md:grid-cols-2">
+                    <div className="space-y-1">
+                      <dt className={labelCaptionClass}>Cliente</dt>
+                      <dd className="font-semibold">{appointment.profiles?.full_name ?? 'Sem nome informado'}</dd>
                     </div>
-                    <div>
-                      <span className="font-medium">E-mail:</span>{' '}
-                      {appointment.profiles?.email ?? '—'}
+                    <div className="space-y-1">
+                      <dt className={labelCaptionClass}>E-mail</dt>
+                      <dd>{appointment.profiles?.email ?? '—'}</dd>
                     </div>
-                    <div>
-                      <span className="font-medium">Início:</span>{' '}
-                      {new Date(appointment.starts_at).toLocaleString()}
+                    <div className="space-y-1">
+                      <dt className={labelCaptionClass}>Início</dt>
+                      <dd>{new Date(appointment.starts_at).toLocaleString()}</dd>
                     </div>
-                    <div>
-                      <span className="font-medium">Fim:</span>{' '}
-                      {new Date(appointment.ends_at).toLocaleString()}
+                    <div className="space-y-1">
+                      <dt className={labelCaptionClass}>Fim</dt>
+                      <dd>{new Date(appointment.ends_at).toLocaleString()}</dd>
                     </div>
-                  </div>
-                </div>
+                  </dl>
+                </article>
               ))}
             </div>
           )}
@@ -1506,50 +1576,55 @@ export default function Admin() {
       ))}
     </section>
   )
-
   const renderClientsSection = () => (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-[#1f2d28]">Clientes cadastrados</h2>
-        <span className="badge">{clients.length} clientes</span>
+    <section className="space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Clientes cadastrados</h2>
+          <p className="text-sm text-emerald-900/70">Acompanhe a evolução da sua base e mantenha o relacionamento ativo.</p>
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
+          {clients.length} {clients.length === 1 ? 'cliente' : 'clientes'}
+        </span>
       </div>
       {clients.length === 0 ? (
-        <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.8)]">
+        <div className={`${mutedPanelClass} text-sm`}>
           Nenhum cliente cadastrado ainda.
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:rgba(31,45,40,0.08)] text-sm">
-            <thead>
-              <tr className="bg-[color:rgba(47,109,79,0.05)] text-left text-[#1f2d28]">
-                <th className="px-4 py-3 font-medium">Nome</th>
-                <th className="px-4 py-3 font-medium">E-mail</th>
-                <th className="px-4 py-3 font-medium">WhatsApp</th>
-                <th className="px-4 py-3 font-medium">Desde</th>
-                <th className="px-4 py-3 font-medium">ID</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:rgba(31,45,40,0.08)]">
-              {clients.map((client) => (
-                <tr key={client.id} className="text-[#1f2d28]">
-                  <td className="px-4 py-3">{client.full_name ?? '—'}</td>
-                  <td className="px-4 py-3">{client.email ?? '—'}</td>
-                  <td className="px-4 py-3">{client.whatsapp ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    {client.created_at ? new Date(client.created_at).toLocaleString() : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-[color:rgba(31,45,40,0.7)]">{client.id}</td>
+        <div className={`${panelCardClass} overflow-hidden p-0`}>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-emerald-950">
+              <thead>
+                <tr className="bg-gradient-to-r from-emerald-600/15 to-emerald-400/15 text-left text-xs uppercase tracking-[0.18em] text-emerald-900/70">
+                  <th className="px-6 py-4 font-semibold">Nome</th>
+                  <th className="px-6 py-4 font-semibold">E-mail</th>
+                  <th className="px-6 py-4 font-semibold">WhatsApp</th>
+                  <th className="px-6 py-4 font-semibold">Desde</th>
+                  <th className="px-6 py-4 font-semibold">ID</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-emerald-900/10 bg-white/85">
+                {clients.map((client) => (
+                  <tr key={client.id} className="transition hover:bg-emerald-500/5">
+                    <td className="px-6 py-4 font-semibold">{client.full_name ?? '—'}</td>
+                    <td className="px-6 py-4">{client.email ?? '—'}</td>
+                    <td className="px-6 py-4">{client.whatsapp ?? '—'}</td>
+                    <td className="px-6 py-4">
+                      {client.created_at ? new Date(client.created_at).toLocaleString() : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-emerald-900/60">{client.id}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </section>
   )
-
   const renderPlaceholderSection = (message: string) => (
-    <section className="surface-muted flex min-h-[320px] items-center justify-center text-sm text-[color:rgba(31,45,40,0.8)]">
+    <section className={`${mutedPanelClass} flex min-h-[320px] items-center justify-center text-center text-sm`}>
       {message}
     </section>
   )
@@ -1590,150 +1665,173 @@ export default function Admin() {
   }
 
   return (
-    <main className="relative flex min-h-screen flex-1 flex-col bg-[color:rgba(47,109,79,0.04)] md:flex-row">
-      <div className="flex items-center justify-between border-b border-[color:rgba(31,45,40,0.08)] bg-white/95 px-6 py-4 backdrop-blur md:hidden">
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.2em] text-[color:rgba(31,45,40,0.6)]">Painel</p>
-          <h1 className="text-2xl font-semibold text-[#1f2d28]">Administração</h1>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-[color:rgba(31,45,40,0.12)] bg-white px-4 py-2 text-sm font-semibold text-[#1f2d28] shadow-sm transition hover:border-[color:rgba(47,109,79,0.3)] hover:text-[#2f6d4f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-          onClick={toggleMenu}
-          aria-expanded={isMenuOpen}
-          aria-controls="admin-sidebar"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
-          Menu
-        </button>
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-emerald-100 to-emerald-200/60">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-emerald-400/25 blur-3xl" aria-hidden="true" />
+        <div className="absolute bottom-[-160px] right-[-120px] h-[520px] w-[520px] rounded-full bg-emerald-700/20 blur-3xl" aria-hidden="true" />
       </div>
-      {isMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
-          aria-hidden="true"
-          onClick={closeMenu}
-        />
-      )}
-      <aside
-        id="admin-sidebar"
-        className={`fixed inset-y-0 left-0 z-40 w-full max-w-xs transform border-r border-[color:rgba(31,45,40,0.08)] bg-white px-6 py-6 shadow-xl transition duration-300 ease-in-out md:static md:flex md:w-72 md:translate-x-0 md:border-b-0 md:border-r md:shadow-none ${
-          isMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-      >
-        <div className="flex h-full flex-col gap-6">
-          <div className="flex items-center justify-between md:block">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[color:rgba(31,45,40,0.6)]">Painel</p>
-              <h1 className="text-2xl font-semibold text-[#1f2d28]">Administração</h1>
-            </div>
-            <button
-              type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:rgba(31,45,40,0.12)] text-[#1f2d28] shadow-sm transition hover:border-[color:rgba(47,109,79,0.3)] hover:text-[#2f6d4f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 md:hidden"
-              onClick={closeMenu}
-              aria-label="Fechar menu de navegação"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row">
+        <div className="flex items-center justify-between gap-3 border-b border-white/40 bg-white/80 px-6 py-4 backdrop-blur lg:hidden">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-900/60">Painel</p>
+            <h1 className="text-2xl font-semibold text-emerald-950">Administração</h1>
           </div>
-          <nav className="space-y-1">
-            {sections.map((section) => {
-              const isActive = activeSection === section.key
-              return (
-                <button
-                  key={section.key}
-                  className={`flex w-full flex-col rounded-2xl px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                    isActive
-                      ? 'bg-[color:rgba(47,109,79,0.12)] text-[#1f2d28] shadow-sm'
-                      : 'text-[color:rgba(31,45,40,0.75)] hover:bg-[color:rgba(47,109,79,0.08)]'
-                  }`}
-                  onClick={() => {
-                    setActiveSection(section.key)
-                    setActionMessage(null)
-                    closeMenu()
-                  }}
-                >
-                  <span className="text-sm font-semibold">{section.label}</span>
-                  <span className="text-xs text-[color:rgba(31,45,40,0.6)]">{section.description}</span>
-                </button>
-              )
-            })}
-          </nav>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-emerald-900 shadow-sm shadow-emerald-500/10 transition hover:bg-white"
+            onClick={toggleMenu}
+            aria-expanded={isMenuOpen}
+            aria-controls="admin-sidebar"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            Menu
+          </button>
         </div>
-      </aside>
-      <section className="flex-1 overflow-y-auto px-6 pb-16 pt-8 md:pb-16 md:pt-12">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-          <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr),280px]">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1f2d28] via-[#2f6d4f] to-[#5dbf90] p-8 text-white shadow-xl">
-              <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-3xl md:h-40 md:w-40" aria-hidden="true" />
-              <div className="flex flex-col gap-6">
-                <div className="space-y-3">
-                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                    Painel administrativo
-                  </span>
-                  <h2 className="text-3xl font-semibold leading-tight md:text-4xl">Bem-vindo(a) ao controle da agenda</h2>
+
+        {isMenuOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-emerald-900/30 backdrop-blur-sm lg:hidden"
+            aria-hidden="true"
+            onClick={closeMenu}
+          />
+        )}
+
+        <aside
+          id="admin-sidebar"
+          className={`fixed inset-y-0 left-0 z-40 w-full max-w-xs transform bg-white/75 px-6 py-8 shadow-2xl shadow-emerald-900/15 backdrop-blur-xl transition duration-300 ease-in-out lg:static lg:flex lg:w-80 lg:translate-x-0 lg:border-r lg:border-white/60 lg:shadow-none ${
+            isMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
+        >
+          <div className="flex h-full flex-col gap-8">
+            <div className="flex items-center justify-between lg:block">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-900/60">Painel</p>
+                <h1 className="text-2xl font-semibold text-emerald-950">Administração</h1>
+              </div>
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-emerald-900 shadow-sm shadow-emerald-500/10 transition hover:bg-white lg:hidden"
+                onClick={closeMenu}
+                aria-label="Fechar menu de navegação"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="space-y-2">
+              {sections.map((section) => {
+                const isActive = activeSection === section.key
+                return (
+                  <button
+                    key={section.key}
+                    className={`${navButtonBaseClass} ${
+                      isActive
+                        ? 'bg-emerald-500/15 text-emerald-950 shadow-lg shadow-emerald-500/25'
+                        : 'text-emerald-900/65 hover:bg-white/70'
+                    }`}
+                    onClick={() => {
+                      setActiveSection(section.key)
+                      setActionMessage(null)
+                      closeMenu()
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-lg">
+                        {sectionIcons[section.key]}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold">{section.label}</span>
+                        <span className="block text-xs text-emerald-900/60">{section.description}</span>
+                      </span>
+                    </div>
+                    <svg
+                      className={`h-5 w-5 transition ${isActive ? 'translate-x-1 opacity-100' : 'opacity-40 group-hover:opacity-70'}`}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
+                    </svg>
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
+        </aside>
+
+        <section className="flex-1 overflow-y-auto px-6 py-10 lg:px-10">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+            <header className="grid gap-6 xl:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+              <div className={`${glassCardClass} space-y-8`}>
+                <div className="space-y-4">
+                  <span className={badgeClass}>Painel administrativo</span>
+                  <h2 className="text-3xl font-semibold leading-tight text-white drop-shadow-sm md:text-4xl">
+                    Controle completo da agenda e operações
+                  </h2>
                   <p className="text-sm text-white/80">{headerDescription}</p>
                 </div>
-                <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {highlightStats.map((stat) => (
-                    <div key={stat.label} className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                      <dt className="text-xs font-medium uppercase tracking-wide text-white/70">{stat.label}</dt>
+                    <div key={stat.label} className="rounded-2xl bg-white/15 px-4 py-3 text-white backdrop-blur-sm">
+                      <dt className="text-xs font-medium uppercase tracking-[0.18em] text-white/70">{stat.label}</dt>
                       <dd className="mt-1 text-2xl font-semibold">{stat.value}</dd>
                     </div>
                   ))}
                 </dl>
               </div>
-            </div>
-            <div className="card flex w-full flex-col gap-4 rounded-3xl border border-[color:rgba(47,109,79,0.12)] bg-white/90 p-6 text-sm shadow-md backdrop-blur">
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-[#1f2d28]">Ações rápidas</h3>
-                <p className="text-xs text-[color:rgba(31,45,40,0.6)]">Gerencie seu acesso e mantenha os dados sempre atualizados.</p>
+              <div className={`${panelCardClass} space-y-6`}>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-emerald-950">Ações rápidas</h3>
+                  <p className="text-xs text-emerald-900/70">Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <button className={`${primaryButtonClass} w-full`} onClick={handleSignOut} disabled={signingOut}>
+                    {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
+                  </button>
+                  <button
+                    className={`${secondaryButtonClass} w-full`}
+                    onClick={() => fetchAdminData()}
+                    disabled={status === 'loading'}
+                  >
+                    {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+                  </button>
+                </div>
+                {signOutError && <p className="text-xs text-red-600">{signOutError}</p>}
               </div>
-              <div className="flex flex-col gap-2">
-                <button className="btn-primary w-full" onClick={handleSignOut} disabled={signingOut}>
-                  {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
-                </button>
-                <button
-                  className="btn-secondary w-full"
-                  onClick={() => fetchAdminData()}
-                  disabled={status === 'loading'}
-                >
-                  {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
-                </button>
+            </header>
+
+            {error && (
+              <div className={`${mutedPanelClass} space-y-3 text-sm`}>
+                <p>{error}</p>
+                <div>
+                  <button className={primaryButtonClass} onClick={() => fetchAdminData()}>
+                    Tentar novamente
+                  </button>
+                </div>
               </div>
-              {signOutError && <p className="text-xs text-red-600">{signOutError}</p>}
-            </div>
-          </header>
+            )}
 
-          {error && (
-            <div className="surface-muted space-y-3 rounded-3xl border border-[color:rgba(47,109,79,0.12)] bg-white/70 p-6 text-sm text-[color:rgba(31,45,40,0.85)] backdrop-blur">
-              <p>{error}</p>
-              <div className="flex justify-start">
-                <button className="btn-primary" onClick={() => fetchAdminData()}>
-                  Tentar novamente
-                </button>
+            {actionMessage && (
+              <div
+                className={`rounded-3xl border px-5 py-3 text-sm shadow-sm ${
+                  actionMessage.type === 'success'
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-900'
+                    : 'border-red-300 bg-red-50 text-red-700'
+                }`}
+              >
+                {actionMessage.text}
               </div>
-            </div>
-          )}
+            )}
 
-          {actionMessage && (
-            <div
-              className={`rounded-2xl border px-4 py-3 text-sm ${
-                actionMessage.type === 'success'
-                  ? 'border-[color:rgba(47,109,79,0.3)] bg-[color:rgba(47,109,79,0.1)] text-[#1f2d28]'
-                  : 'border-red-200 bg-red-50 text-red-700'
-              }`}
-            >
-              {actionMessage.text}
-            </div>
-          )}
-
-          {sectionContent}
-        </div>
-      </section>
+            {sectionContent}
+          </div>
+        </section>
+      </div>
     </main>
   )
 }

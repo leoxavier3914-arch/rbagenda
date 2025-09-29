@@ -31,8 +31,15 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  gap: clamp(18px, 4vw, 26px);
   padding: clamp(20px, 6vw, 32px);
   box-sizing: border-box;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .title {
@@ -80,21 +87,15 @@
 
 
 .card {
-  padding: 20px 0;
+  background: var(--appointments-surface);
+  border: 1px solid var(--appointments-line);
+  border-radius: var(--appointments-radius);
+  box-shadow: var(--appointments-shadow);
+  padding: 20px 22px;
   margin: 0;
-  border-bottom: 1px solid var(--appointments-line);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.card:first-of-type {
-  padding-top: 0;
-}
-
-.card:last-of-type {
-  border-bottom: none;
-  padding-bottom: 0;
+  gap: 16px;
 }
 
 .cardHeader {
@@ -102,7 +103,6 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 8px;
 }
 
 .cardInfo {
@@ -152,13 +152,16 @@
 }
 
 .cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   font-size: 14px;
   color: var(--appointments-ink);
   line-height: 1.6;
 }
 
 .line {
-  margin: 6px 0;
+  margin: 0;
   color: var(--appointments-muted);
 }
 
@@ -174,8 +177,7 @@
 .cardFooter {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
+  gap: 10px;
 }
 
 .btn {

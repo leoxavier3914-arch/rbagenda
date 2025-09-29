@@ -181,8 +181,13 @@ const normalizeAppointment = (
   const paidValue = Math.max(0, rawPaid) / 100
 
   const { typeName, techniqueName } = extractServiceDetails(record.services)
-  const serviceType = typeName ?? 'Serviço'
-  const serviceTechnique = techniqueName
+
+  const serviceType = techniqueName ?? typeName ?? 'Serviço'
+  const shouldShowTypeAsSecondary =
+    Boolean(typeName) &&
+    Boolean(techniqueName) &&
+    typeName!.localeCompare(techniqueName!, 'pt-BR', { sensitivity: 'base' }) !== 0
+  const serviceTechnique = shouldShowTypeAsSecondary ? typeName : null
 
   return {
     id: record.id,

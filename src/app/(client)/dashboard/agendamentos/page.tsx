@@ -50,10 +50,11 @@ const toIsoDate = (date: Date) => {
 const formatDate = (iso: string) => {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return '--'
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${day}/${month}/${year}`
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 const formatTime = (iso: string) => {
@@ -846,27 +847,26 @@ export default function MyAppointments() {
         ) : appointments.length === 0 ? (
           <div className={styles.empty}>Você ainda não tem agendamentos cadastrados.</div>
         ) : (
-          <div className={styles.cards}>
-            {appointments.map((appointment) => {
-              const statusLabel = statusLabels[appointment.status] ?? appointment.status
-              const statusClass =
-                styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
-                styles.statusDefault
-              const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
+          appointments.map((appointment) => {
+            const statusLabel = statusLabels[appointment.status] ?? appointment.status
+            const statusClass =
+              styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
+              styles.statusDefault
+            const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
             const showPay = canShowPay(appointment)
             const showCancel = canShowCancel(appointment.status)
             const showEdit = canShowEdit(appointment)
             const actions = [showPay, showCancel, showEdit].filter(Boolean)
             const shouldShowPayError = payError && lastPayAttemptId === appointment.id
-            const serviceDisplay = appointment.serviceTechnique
-              ? `${appointment.serviceType} - ${appointment.serviceTechnique}`
-              : appointment.serviceType
 
             return (
               <article key={appointment.id} className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardInfo}>
-                    <div className={styles.serviceTitle}>{serviceDisplay}</div>
+                    <div className={styles.serviceType}>{appointment.serviceType}</div>
+                    {appointment.serviceTechnique ? (
+                      <div className={styles.serviceTechnique}>{appointment.serviceTechnique}</div>
+                    ) : null}
                   </div>
                   <span className={`${styles.status} ${statusClass}`}>{statusLabel}</span>
                 </div>
@@ -928,8 +928,7 @@ export default function MyAppointments() {
                 {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
               </article>
             )
-          })}
-          </div>
+          })
         )}
       </div>
 

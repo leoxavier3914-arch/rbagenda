@@ -35,6 +35,7 @@ type ServiceTypeEntry = {
 
 type ExampleData = {
   availableDays: Set<string>
+  partiallyBookedDays: Set<string>
   bookedDays: Set<string>
   myDays: Set<string>
   daySlots: Record<string, string[]>
@@ -135,6 +136,7 @@ function buildAvailabilityData(
   const bookedSlots: Record<string, string[]> = {}
   const busyIntervals: Record<string, Array<{ start: string; end: string }>> = {}
   const availableDays = new Set<string>()
+  const partiallyBookedDays = new Set<string>()
   const bookedDays = new Set<string>()
   const myDays = new Set<string>()
 
@@ -192,6 +194,8 @@ function buildAvailabilityData(
         const totalSlots = daySlots[iso]?.length ?? DEFAULT_SLOT_TEMPLATE.length
         if (entry.times.size >= totalSlots) {
           bookedDays.add(iso)
+        } else if (entry.times.size > 0) {
+          partiallyBookedDays.add(iso)
         } else {
           availableDays.add(iso)
         }
@@ -201,7 +205,15 @@ function buildAvailabilityData(
     }
   }
 
-  return { availableDays, bookedDays, myDays, daySlots, bookedSlots, busyIntervals }
+  return {
+    availableDays,
+    partiallyBookedDays,
+    bookedDays,
+    myDays,
+    daySlots,
+    bookedSlots,
+    busyIntervals,
+  }
 }
 
 function combineDateAndTime(dateIso: string, time: string) {
@@ -580,13 +592,19 @@ export default function NewAppointmentExperience() {
       const date = new Date(year, month, day)
       const iso = date.toISOString().slice(0, 10)
 
-      let status: 'available' | 'booked' | 'mine' | 'disabled' = 'disabled'
+      let status: 'available' | 'booked' | 'full' | 'mine' | 'disabled' = 'disabled'
       if (availability.myDays.has(iso)) status = 'mine'
-      else if (availability.bookedDays.has(iso)) status = 'booked'
+      else if (availability.bookedDays.has(iso)) status = 'full'
+      else if (availability.partiallyBookedDays.has(iso)) status = 'booked'
       else if (availability.availableDays.has(iso)) status = 'available'
 
       const isPast = date < today
-      const isDisabled = !canInteract || isPast || status === 'booked' || status === 'disabled'
+      const isDisabled =
+        !canInteract ||
+        isPast ||
+        status === 'full' ||
+        status === 'booked' ||
+        status === 'disabled'
 
       dayEntries.push({
         iso,
@@ -597,7 +615,15 @@ export default function NewAppointmentExperience() {
     }
 
     return { startWeekday, dayEntries }
-  }, [availability.availableDays, availability.bookedDays, availability.myDays, canInteract, month, year])
+  }, [
+    availability.availableDays,
+    availability.bookedDays,
+    availability.partiallyBookedDays,
+    availability.myDays,
+    canInteract,
+    month,
+    year,
+  ])
 
   const slots = useMemo(() => {
     if (!selectedDate || !canInteract || !selectedService) return []
@@ -1067,7 +1093,10 @@ export default function NewAppointmentExperience() {
               <span className={`${styles.dot} ${styles.dotAvail}`} /> Disponível
             </div>
             <div className={styles.legendItem}>
-              <span className={`${styles.dot} ${styles.dotBooked}`} /> Agendado
+              <span className={`${styles.dot} ${styles.dotBooked}`} /> Parcialmente agendado
+            </div>
+            <div className={styles.legendItem}>
+              <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
             </div>
             <div className={styles.legendItem}>
               <span className={`${styles.dot} ${styles.dotMine}`} /> Meus agendamentos

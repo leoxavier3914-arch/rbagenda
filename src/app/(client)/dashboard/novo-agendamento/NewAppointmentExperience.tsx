@@ -610,7 +610,6 @@ export default function NewAppointmentExperience() {
         !canInteract ||
         isPast ||
         status === 'full' ||
-        status === 'booked' ||
         status === 'disabled'
 
       dayEntries.push({

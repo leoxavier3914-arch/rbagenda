@@ -641,17 +641,23 @@ export default function NewAppointmentExperience() {
       throw new Error('Horário selecionado é inválido.')
     }
 
+    const payload: Record<string, unknown> = {
+      cliente_id: session.user.id,
+      service_id: selectedService.id,
+      scheduled_at: scheduledAt.toISOString(),
+    }
+
+    if (selectedType?.id) {
+      payload.service_type_id = selectedType.id
+    }
+
     const response = await fetch('/api/appointments', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({
-        cliente_id: session.user.id,
-        service_id: selectedService.id,
-        scheduled_at: scheduledAt.toISOString(),
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {

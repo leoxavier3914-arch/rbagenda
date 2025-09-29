@@ -20,7 +20,6 @@ const ServiceBookingBody = z.object({
 })
 
 const ExperienceBookingBody = z.object({
-  cliente_id: z.string().uuid().optional(),
   service_id: z.string().uuid(),
   service_type_id: z.string().uuid().optional(),
   scheduled_at: z.string().datetime(),

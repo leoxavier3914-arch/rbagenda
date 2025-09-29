@@ -641,11 +641,10 @@ export default function NewAppointmentExperience() {
       throw new Error('Horário selecionado é inválido.')
     }
 
-    const payload: Record<string, unknown> = {
-      cliente_id: session.user.id,
-      service_id: selectedService.id,
-      scheduled_at: scheduledAt.toISOString(),
-    }
+      const payload: Record<string, unknown> = {
+        service_id: selectedService.id,
+        scheduled_at: scheduledAt.toISOString(),
+      }
 
     if (selectedType?.id) {
       payload.service_type_id = selectedType.id

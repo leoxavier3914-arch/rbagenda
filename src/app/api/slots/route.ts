@@ -12,14 +12,24 @@ export async function GET(req: NextRequest) {
 
   if (!service_id || !dateStr) return NextResponse.json({ error: 'service_id and date required' }, { status: 400 })
 
-  const { data: service } = await supabaseAdmin.from('services').select('id, duration_min, branch_id').eq('id', service_id).single()
+  const { data: service } = await supabaseAdmin
+    .from('services')
+    .select('id, duration_min, branch_id')
+    .eq('id', service_id)
+    .single()
   if (!service) return NextResponse.json({ slots: [] })
 
   const { data: branch } = await supabaseAdmin.from('branches').select('timezone').eq('id', service.branch_id).maybeSingle()
   if (!branch) return NextResponse.json({ slots: [] })
   const branchTimezone = branch.timezone || 'America/Sao_Paulo'
 
-  const bufferMin = Number(process.env.DEFAULT_BUFFER_MIN || 15)
+  const durationMinRaw = Number(service.duration_min)
+  if (!Number.isFinite(durationMinRaw) || durationMinRaw <= 0) {
+    return NextResponse.json({ slots: [] })
+  }
+
+  const bufferMinEnv = Number(process.env.DEFAULT_BUFFER_MIN || 15)
+  const bufferMin = Number.isFinite(bufferMinEnv) && bufferMinEnv >= 0 ? bufferMinEnv : 15
   const normalizeTime = (time: string) => {
     const [rawHour = '0', rawMinute = '0', rawSecond] = time.split(':')
     const hour = rawHour.padStart(2, '0')
@@ -74,6 +84,7 @@ export async function GET(req: NextRequest) {
     .eq('staff_id', staffId)
     .gte('starts_at', dayStart.toISOString())
     .lte('ends_at', dayEnd.toISOString())
+    .not('status', 'eq', 'canceled')
 
   const { data: offs } = await supabaseAdmin
     .from('blackouts').select('starts_at, ends_at')
@@ -81,8 +92,19 @@ export async function GET(req: NextRequest) {
     .gte('starts_at', dayStart.toISOString())
     .lte('ends_at', dayEnd.toISOString())
 
-  const busy = [...(appts||[]), ...(offs||[])].map(b => ({ start: new Date(b.starts_at), end: new Date(b.ends_at) }))
-  const step = 15, need = (service.duration_min + bufferMin) * 60 * 1000
+  const busy = [...(appts || []), ...(offs || [])]
+    .map((b) => {
+      const start = b?.starts_at ? new Date(b.starts_at) : null
+      const end = b?.ends_at ? new Date(b.ends_at) : null
+      if (!start || Number.isNaN(start.getTime()) || !end || Number.isNaN(end.getTime())) {
+        return null
+      }
+      return { start, end }
+    })
+    .filter((entry): entry is { start: Date; end: Date } => Boolean(entry))
+
+  const step = 15
+  const need = (durationMinRaw + bufferMin) * 60 * 1000
   const slots: string[] = []
 
   for (let t = dayStart.getTime(); t + need <= dayEnd.getTime(); t += step*60*1000) {

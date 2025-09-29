@@ -273,16 +273,22 @@
 }
 
 .day[data-state='available'] {
-  border-color: var(--brand-soft);
+  background: rgba(31, 138, 112, 0.12);
+  border-color: #a3d2c4;
 }
 
 .day[data-state='booked'] {
-  background: rgba(209, 161, 59, 0.1);
+  background: rgba(209, 161, 59, 0.18);
   border-color: #ead9a7;
 }
 
+.day[data-state='full'] {
+  background: rgba(194, 75, 75, 0.16);
+  border-color: #f2b8b8;
+}
+
 .day[data-state='mine'] {
-  background: rgba(46, 107, 217, 0.1);
+  background: rgba(46, 107, 217, 0.12);
   border-color: #bcd0ff;
 }
 
@@ -318,6 +324,10 @@
 
 .dotBooked {
   background: var(--warn);
+}
+
+.dotFull {
+  background: #c24b4b;
 }
 
 .dotMine {

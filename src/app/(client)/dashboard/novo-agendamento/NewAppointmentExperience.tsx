@@ -123,6 +123,13 @@ const DEFAULT_SLOT_TEMPLATE = makeSlots('09:00', '18:00', 30)
 const FALLBACK_BUFFER_MINUTES = Number(process.env.NEXT_PUBLIC_DEFAULT_BUFFER_MIN ?? '15') || 15
 const WORK_DAY_END = '18:00'
 
+function formatDateToIsoDay(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function buildAvailabilityData(
   appointments: LoadedAppointment[],
   userId: string | null,
@@ -150,7 +157,7 @@ function buildAvailabilityData(
     if (!rawStart) return
     const start = new Date(rawStart)
     if (Number.isNaN(start.getTime())) return
-    const isoDay = start.toISOString().slice(0, 10)
+    const isoDay = formatDateToIsoDay(start)
     const time = start.toISOString().slice(11, 16)
     const rawEnd = appt.ends_at ? new Date(appt.ends_at) : new Date(start.getTime() + 60 * 60000)
     if (Number.isNaN(rawEnd.getTime())) return
@@ -172,7 +179,7 @@ function buildAvailabilityData(
   for (let i = 0; i < days; i += 1) {
     const date = new Date(today)
     date.setDate(date.getDate() + i)
-    const iso = date.toISOString().slice(0, 10)
+    const iso = formatDateToIsoDay(date)
     daySlots[iso] = [...DEFAULT_SLOT_TEMPLATE]
 
     const entry = perDay.get(iso)
@@ -590,7 +597,7 @@ export default function NewAppointmentExperience() {
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = new Date(year, month, day)
-      const iso = date.toISOString().slice(0, 10)
+      const iso = formatDateToIsoDay(date)
 
       let status: 'available' | 'booked' | 'full' | 'mine' | 'disabled' = 'disabled'
       if (availability.myDays.has(iso)) status = 'mine'
@@ -637,7 +644,7 @@ export default function NewAppointmentExperience() {
     const closing = combineDateAndTime(selectedDate, WORK_DAY_END)
     if (!closing) return []
 
-    const todayIso = now.toISOString().slice(0, 10)
+    const todayIso = formatDateToIsoDay(now)
 
     return template.filter((slotValue) => {
       const slotStart = combineDateAndTime(selectedDate, slotValue)

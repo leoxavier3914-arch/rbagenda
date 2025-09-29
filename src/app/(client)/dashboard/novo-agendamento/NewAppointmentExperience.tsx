@@ -240,9 +240,12 @@ export default function NewAppointmentExperience() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
   const [isSummaryOpen, setIsSummaryOpen] = useState(false)
+  const [isPayLaterNoticeOpen, setIsPayLaterNoticeOpen] = useState(false)
+  const [payLaterError, setPayLaterError] = useState<string | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null)
   const payNowButtonRef = useRef<HTMLButtonElement | null>(null)
+  const payLaterNoticeButtonRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     let active = true
@@ -480,6 +483,24 @@ export default function NewAppointmentExperience() {
     if (!isSummaryOpen) return
     payNowButtonRef.current?.focus()
   }, [isSummaryOpen])
+
+  useEffect(() => {
+    if (!isPayLaterNoticeOpen) return
+    payLaterNoticeButtonRef.current?.focus()
+  }, [isPayLaterNoticeOpen])
+
+  useEffect(() => {
+    if (!isPayLaterNoticeOpen || isSummaryOpen) return
+    if (typeof document === 'undefined') return
+
+    const { body } = document
+    const previousOverflow = body.style.overflow
+    body.style.overflow = 'hidden'
+
+    return () => {
+      body.style.overflow = previousOverflow
+    }
+  }, [isPayLaterNoticeOpen, isSummaryOpen])
 
   useEffect(() => {
     setSelectedSlot(null)
@@ -803,16 +824,26 @@ export default function NewAppointmentExperience() {
     }
   }
 
-  async function handleSummaryClose() {
+  function handlePayLaterClick() {
     if (isSubmitting) return
 
     setSummaryError(null)
+    setPayLaterError(null)
+    setIsPayLaterNoticeOpen(true)
+  }
+
+  async function handlePayLaterConfirm() {
+    if (isSubmitting) return
+
+    setSummaryError(null)
+    setPayLaterError(null)
     setIsSubmitting(true)
 
     try {
       const session = await ensureSession()
       const appointmentId = await ensureAppointment(session)
       setIsSummaryOpen(false)
+      setIsPayLaterNoticeOpen(false)
       router.push(`/dashboard/agendamentos?novo=${encodeURIComponent(appointmentId)}`)
     } catch (error) {
       console.error('Erro ao finalizar agendamento sem pagamento', error)
@@ -820,7 +851,7 @@ export default function NewAppointmentExperience() {
         error instanceof Error
           ? error.message
           : 'Erro inesperado ao concluir o agendamento. Tente novamente.'
-      setSummaryError(message)
+      setPayLaterError(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -1172,15 +1203,59 @@ export default function NewAppointmentExperience() {
             </button>
             <button
               type="button"
-              className={styles.modalClose}
+              className={`${styles.cta} ${styles.payLaterCta}`}
               disabled={isSubmitting}
-              onClick={() => {
-                void handleSummaryClose()
-              }}
+              onClick={handlePayLaterClick}
             >
-              Fechar
+              Pagar depois
             </button>
           </div>
+        </div>
+      </div>
+      <div
+        className={styles.noticeModal}
+        data-open={isPayLaterNoticeOpen ? 'true' : 'false'}
+        aria-hidden={isPayLaterNoticeOpen ? 'false' : 'true'}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pay-later-notice-title"
+      >
+        <div className={styles.noticeBackdrop} aria-hidden="true" />
+        <div className={styles.noticeContent} role="document">
+          <div className={styles.noticeIcon} aria-hidden="true">
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#1f8a70"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4m0 4h.01" />
+            </svg>
+          </div>
+          <h2 className={styles.noticeTitle} id="pay-later-notice-title">
+            Agendamento criado!
+          </h2>
+          <p className={styles.noticeText}>
+            O <strong>sinal deve ser pago em até 2 horas</strong> para garantir sua reserva. Após esse prazo, o
+            horário será <strong>cancelado automaticamente</strong> e liberado para novos agendamentos.
+          </p>
+          {payLaterError && <div className={styles.noticeError}>{payLaterError}</div>}
+          <button
+            ref={payLaterNoticeButtonRef}
+            type="button"
+            className={styles.noticeButton}
+            disabled={isSubmitting}
+            onClick={() => {
+              void handlePayLaterConfirm()
+            }}
+          >
+            {isSubmitting ? 'Processando…' : 'OK'}
+          </button>
         </div>
       </div>
     </div>

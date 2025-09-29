@@ -12,6 +12,29 @@ const Body = z.object({
   mode: z.enum(['deposit', 'balance', 'full']),
 })
 
+function parseCents(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    if (Number.isInteger(value)) {
+      return value
+    }
+    return Math.round(value * 100)
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+    const normalized = trimmed.replace(',', '.')
+    const parsed = Number(normalized)
+    if (!Number.isFinite(parsed)) return null
+    if (normalized.includes('.')) {
+      return Math.round(parsed * 100)
+    }
+    return Math.round(parsed)
+  }
+
+  return null
+}
+
 export async function POST(req: NextRequest) {
   const user = await getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
@@ -29,25 +52,12 @@ export async function POST(req: NextRequest) {
     .single()
   if (!appt || appt.customer_id !== user.id) return NextResponse.json({ error: 'not found' }, { status: 404 })
 
-  const totalCentsRaw = appt.total_cents
-  const totalCents =
-    typeof totalCentsRaw === 'number'
-      ? totalCentsRaw
-      : totalCentsRaw
-      ? Number(totalCentsRaw)
-      : null
-
-  const depositCentsRaw = appt.deposit_cents
-  const depositCents =
-    typeof depositCentsRaw === 'number'
-      ? depositCentsRaw
-      : depositCentsRaw
-      ? Number(depositCentsRaw)
-      : null
-
-  if (totalCents === null || Number.isNaN(totalCents)) {
+  const totalCents = parseCents(appt.total_cents)
+  if (totalCents === null || !Number.isFinite(totalCents) || totalCents <= 0) {
     return NextResponse.json({ error: 'Total inválido para o agendamento' }, { status: 400 })
   }
+
+  const depositCents = parseCents(appt.deposit_cents)
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
@@ -60,30 +70,20 @@ export async function POST(req: NextRequest) {
     .select('paid_cents')
     .eq('appointment_id', appointment_id)
     .maybeSingle()
-  const paidRaw = tot?.paid_cents
-  const paid =
-    typeof paidRaw === 'number'
-      ? paidRaw
-      : paidRaw
-      ? Number(paidRaw)
-      : 0
-
-  if (Number.isNaN(paid)) {
-    return NextResponse.json({ error: 'Total pago inválido' }, { status: 500 })
-  }
+  const paid = parseCents(tot?.paid_cents) ?? 0
 
   let amount = 0
   let title = 'Pagamento'
   let coversDeposit = false
   if (mode === 'deposit') {
-    if (depositCents === null || depositCents <= 0 || Number.isNaN(depositCents)) {
+    if (depositCents === null || depositCents <= 0 || !Number.isFinite(depositCents)) {
       return NextResponse.json({ error: 'Sinal não configurado para este agendamento' }, { status: 400 })
     }
     amount = depositCents
     title = 'Sinal'
     coversDeposit = true
   } else if (mode === 'balance') {
-    amount = Math.max(totalCents - paid, 0)
+    amount = Math.max(totalCents - Math.max(0, paid), 0)
     title = 'Saldo'
   } else {
     amount = totalCents
@@ -98,6 +98,11 @@ export async function POST(req: NextRequest) {
   if (amount <= 0) return NextResponse.json({ error: 'Nada a pagar' }, { status: 400 })
 
   const nowIso = new Date().toISOString()
+  const requestUrl = new URL(req.url)
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    `${requestUrl.protocol}//${requestUrl.host}`
 
   const { data: existingPayment } = await supabaseAdmin
     .from('payments')
@@ -146,7 +151,7 @@ export async function POST(req: NextRequest) {
     title,
     amount_cents: amount,
     reference: appointment_id,
-    notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/stripe`,
+    notification_url: `${baseUrl}/api/webhooks/stripe`,
     mode,
     customer: {
       name: profile?.full_name ?? undefined,

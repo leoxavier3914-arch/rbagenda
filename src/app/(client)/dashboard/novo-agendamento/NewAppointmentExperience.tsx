@@ -589,11 +589,32 @@ export default function NewAppointmentExperience() {
     const firstDay = new Date(year, month, 1)
     const startWeekday = firstDay.getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const daysInPreviousMonth = new Date(year, month, 0).getDate()
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const dayEntries: Array<{ iso: string; day: number; isDisabled: boolean; state: string }> = []
+    const dayEntries: Array<{
+      iso: string
+      day: number
+      isDisabled: boolean
+      state: string
+      isOutsideCurrentMonth: boolean
+    }> = []
+
+    for (let offset = startWeekday; offset > 0; offset -= 1) {
+      const day = daysInPreviousMonth - offset + 1
+      const date = new Date(year, month - 1, day)
+      const iso = formatDateToIsoDay(date)
+
+      dayEntries.push({
+        iso,
+        day,
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = new Date(year, month, day)
@@ -617,10 +638,25 @@ export default function NewAppointmentExperience() {
         day,
         isDisabled,
         state: status,
+        isOutsideCurrentMonth: false,
       })
     }
 
-    return { startWeekday, dayEntries }
+    const trailingSpacers = (7 - (dayEntries.length % 7)) % 7
+    for (let day = 1; day <= trailingSpacers; day += 1) {
+      const date = new Date(year, month + 1, day)
+      const iso = formatDateToIsoDay(date)
+
+      dayEntries.push({
+        iso,
+        day,
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
+
+    return { dayEntries }
   }, [
     availability.availableDays,
     availability.bookedDays,
@@ -1074,17 +1110,14 @@ export default function NewAppointmentExperience() {
           </div>
 
           <div className={styles.grid}>
-            {Array.from({ length: calendarDays.startWeekday }).map((_, index) => (
-              <div key={`spacer-${index}`} aria-hidden="true" />
-            ))}
-
-            {calendarDays.dayEntries.map(({ iso, day, isDisabled, state }) => (
+            {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
               <button
                 key={iso}
                 type="button"
                 className={styles.day}
                 data-state={state}
-                data-selected={selectedDate === iso}
+                data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+                data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
                 aria-disabled={isDisabled}
                 disabled={isDisabled}
                 onClick={() => handleDaySelect(iso, isDisabled)}

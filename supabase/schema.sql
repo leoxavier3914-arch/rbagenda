@@ -106,6 +106,7 @@ create table if not exists appointments (
   customer_id uuid references profiles(id) on delete restrict,
   staff_id uuid references staff(id) on delete set null,
   service_id uuid references services(id) on delete restrict,
+  service_type_id uuid references service_types(id) on delete set null,
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   status appointment_status not null default 'pending',
@@ -121,6 +122,7 @@ create table if not exists appointments (
 );
 create index if not exists appointments_customer_idx on appointments(customer_id);
 create index if not exists appointments_staff_time_idx on appointments(staff_id, starts_at);
+create index if not exists appointments_service_type_idx on appointments(service_type_id);
 create table if not exists payments (
   id uuid primary key default gen_random_uuid(),
   appointment_id uuid not null references appointments(id) on delete cascade,

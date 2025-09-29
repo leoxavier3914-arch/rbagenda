@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
@@ -22,7 +22,9 @@ export default function BookingFlow(){
   const [staffId,setStaffId]=useState<string|null>(null)
   const [apptId,setApptId]=useState('')
   const [error,setError]=useState<string|null>(null)
-  const [isLoading,setIsLoading]=useState(false)
+  const [slotsError,setSlotsError]=useState<string|null>(null)
+  const [isCreating,setIsCreating]=useState(false)
+  const [isProcessingPayment,setIsProcessingPayment]=useState(false)
   const router = useRouter()
 
   useEffect(()=>{
@@ -40,9 +42,11 @@ export default function BookingFlow(){
       if (error) {
         console.error('Erro ao carregar serviços', error)
         setServices([])
+        setError('Não foi possível carregar os serviços disponíveis no momento. Tente novamente mais tarde.')
         return
       }
 
+      setError(null)
       setServices(data ?? [])
     }
 
@@ -54,63 +58,142 @@ export default function BookingFlow(){
   },[])
 
   useEffect(()=>{
-    if(serviceId && date){
+    if(!serviceId || !date){
       setSlots([])
       setSlot('')
       setStaffId(null)
-      fetch(`/api/slots?service_id=${serviceId}&date=${date}`)
-        .then(r=>r.json())
-        .then(d=>{
-          setStaffId(d.staff_id ?? null)
-          setSlots(d.slots||[])
-        })
-        .catch(()=>{
-          setStaffId(null)
-          setSlots([])
-        })
-    } else {
+      setSlotsError(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    async function loadSlots(){
       setSlots([])
       setSlot('')
       setStaffId(null)
+      setSlotsError(null)
+
+      try {
+        const params = new URLSearchParams({ service_id: serviceId, date })
+        const res = await fetch(`/api/slots?${params.toString()}`, { signal: controller.signal })
+        if (!res.ok) {
+          throw new Error(`Falha ao carregar horários: ${res.status}`)
+        }
+        const d = await res.json().catch(() => null)
+        if (controller.signal.aborted) return
+
+        const nextStaff = typeof d?.staff_id === 'string' ? d.staff_id : null
+        const slotList = Array.isArray(d?.slots)
+          ? d.slots.filter((value): value is string => typeof value === 'string')
+          : []
+
+        setStaffId(nextStaff)
+        setSlots(slotList)
+      } catch (err) {
+        if (controller.signal.aborted) return
+        console.error('Erro ao carregar horários disponíveis', err)
+        setStaffId(null)
+        setSlots([])
+        setSlotsError('Não foi possível carregar os horários disponíveis. Atualize a página ou selecione outra data.')
+      }
+    }
+
+    void loadSlots()
+
+    return () => {
+      controller.abort()
     }
   },[serviceId,date])
 
-  async function ensureAuth(){
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) window.location.href='/login';
-    return data.session?.access_token
+  const ensureSession = useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error('Erro ao recuperar sessão do usuário', error)
+      setError('Não foi possível validar sua sessão. Faça login novamente.')
+      return null
+    }
+
+    const session = data.session
+    if (!session) {
+      router.replace('/login')
+      return null
+    }
+
+    return session
+  }, [router])
+
+  const resetAppointmentState = () => {
+    setApptId('')
+    setError(null)
   }
 
   async function createAppt(){
-    const token = await ensureAuth();
-    if(!token) return
-    const res = await fetch('/api/appointments', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        Authorization:`Bearer ${token}`
-      },
-      body: JSON.stringify({ service_id: serviceId, staff_id: staffId ?? undefined, starts_at: slot })
-    })
-    const d = await res.json();
-    if (d.appointment_id) setApptId(d.appointment_id)
+    if (!serviceId || !slot) return
+
+    setError(null)
+    setIsCreating(true)
+    resetAppointmentState()
+
+    try {
+      const session = await ensureSession()
+      if (!session) return
+
+      const res = await fetch('/api/appointments', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          Authorization:`Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ service_id: serviceId, staff_id: staffId ?? undefined, starts_at: slot })
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Falha na criação do agendamento' }))
+        const message = typeof err.error === 'string' ? err.error : 'Não foi possível criar o agendamento.'
+        throw new Error(message)
+      }
+
+      const d = await res.json().catch(() => null)
+      const appointmentId = typeof d?.appointment_id === 'string' ? d.appointment_id : null
+      if (!appointmentId) {
+        throw new Error('Resposta inválida ao criar o agendamento. Tente novamente.')
+      }
+
+      setApptId(appointmentId)
+    } catch (err) {
+      console.error('Erro ao criar agendamento', err)
+      const message = err instanceof Error ? err.message : 'Não foi possível criar o agendamento. Tente novamente.'
+      setError(message)
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   async function payDeposit(){
     setError(null)
+
     if(!stripePromise){
       setError('Checkout indisponível. Verifique a chave pública do Stripe.')
       return
     }
-    const token = await ensureAuth();
-    if(!token || !apptId) return
-    setIsLoading(true)
+
+    if(!apptId){
+      setError('Crie um agendamento antes de iniciar o pagamento.')
+      return
+    }
+
+    setIsProcessingPayment(true)
+
     try {
+      const session = await ensureSession()
+      if (!session) return
+
       const res = await fetch('/api/payments/create', {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          Authorization:`Bearer ${token}`
+          Authorization:`Bearer ${session.access_token}`
         },
         body: JSON.stringify({ appointment_id: apptId, mode: 'deposit' })
       })
@@ -119,7 +202,7 @@ export default function BookingFlow(){
         setError(typeof err.error === 'string' ? err.error : 'Não foi possível iniciar o checkout.')
         return
       }
-      const d = await res.json();
+      const d = await res.json()
       if (d.client_secret) {
         router.push(`/checkout?client_secret=${encodeURIComponent(d.client_secret)}&appointment_id=${encodeURIComponent(apptId)}`)
       } else {
@@ -129,7 +212,7 @@ export default function BookingFlow(){
       console.error(e)
       setError('Erro inesperado ao iniciar o checkout.')
     } finally {
-      setIsLoading(false)
+      setIsProcessingPayment(false)
     }
   }
 
@@ -178,7 +261,11 @@ export default function BookingFlow(){
             onChange={e=>setDate(e.target.value)}
           />
         </div>
-        {slots.length>0 ? (
+        {slotsError ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+            {slotsError}
+          </div>
+        ) : slots.length>0 ? (
           <div className="space-y-3">
             <span className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]">Horário</span>
             <div className="grid gap-2 sm:grid-cols-3">
@@ -210,11 +297,11 @@ export default function BookingFlow(){
         )}
         {!apptId ? (
           <button
-            disabled={!serviceId||!date||!slot}
+            disabled={!serviceId||!date||!slot||isCreating}
             onClick={createAppt}
             className="btn-primary w-full"
           >
-            Continuar
+            {isCreating ? 'Criando agendamento…' : 'Continuar'}
           </button>
         ) : (
           <div className="space-y-3">
@@ -230,11 +317,11 @@ export default function BookingFlow(){
             </Link>
             <div className="grid gap-2">
               <button
-                disabled={isLoading}
+                disabled={isProcessingPayment}
                 onClick={payDeposit}
                 className="btn-primary"
               >
-                {isLoading?'Abrindo checkout…':'Pagar sinal'}
+                {isProcessingPayment?'Abrindo checkout…':'Pagar sinal'}
               </button>
             </div>
           </div>

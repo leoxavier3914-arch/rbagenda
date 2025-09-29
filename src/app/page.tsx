@@ -11,67 +11,75 @@ export default function Home(){
   const router = useRouter()
   const [access, setAccess] = useState<'checking' | 'admin'>('checking')
 
-  const handleSession = useCallback(async (session: Session | null) => {
-    if (!session?.user?.id) {
-      setAccess('checking')
-      router.replace('/login')
-      return
-    }
+  const redirectTo = useCallback((path: string) => {
+    setAccess('checking')
+    router.replace(path)
+  }, [router])
+
+  const resolveRole = useCallback(async (session: Session | null) => {
+    if (!session?.user?.id) return null
 
     try {
-      const { data: profile } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
         .maybeSingle()
 
-      const role = profile?.role === 'admin' ? 'admin' : 'client'
-      if (role === 'admin') {
-        setAccess('admin')
-      } else {
-        setAccess('checking')
-        router.replace('/dashboard/novo-agendamento')
-      }
-    } catch {
-      setAccess('checking')
-      router.replace('/dashboard/novo-agendamento')
+      if (error) throw error
+
+      return data?.role === 'admin' ? 'admin' : 'client'
+    } catch (error) {
+      console.error('Erro ao carregar perfil do usuário', error)
+      return null
     }
-  }, [router])
+  }, [])
 
   useEffect(()=>{
     let ignore = false
 
-    async function checkSession(){
-      const { data } = await supabase.auth.getSession()
+    const evaluateSession = async (session: Session | null) => {
       if (ignore) return
 
-      if (!data.session){
-        setAccess('checking')
-        router.replace('/login')
+      if (!session) {
+        redirectTo('/login')
         return
       }
 
-      handleSession(data.session)
+      const role = await resolveRole(session)
+      if (ignore) return
+
+      if (role === 'admin') {
+        setAccess('admin')
+      } else {
+        redirectTo('/dashboard/novo-agendamento')
+      }
+    }
+
+    async function checkSession(){
+      const { data, error } = await supabase.auth.getSession()
+      if (ignore) return
+
+      if (error) {
+        console.error('Erro ao verificar sessão do usuário', error)
+        redirectTo('/login')
+        return
+      }
+
+      await evaluateSession(data.session)
     }
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session)=>{
-      if (ignore) return
-      if (!session){
-        setAccess('checking')
-        router.replace('/login')
-        return
-      }
-
-      handleSession(session)
+      void evaluateSession(session)
     })
 
-    checkSession()
+    void checkSession()
 
     return ()=>{
       ignore = true
-      listener.subscription.unsubscribe()
+      listener?.subscription?.unsubscribe()
     }
-  },[handleSession, router])
+  },[redirectTo, resolveRole])
 
   if (access !== 'admin'){
     return (

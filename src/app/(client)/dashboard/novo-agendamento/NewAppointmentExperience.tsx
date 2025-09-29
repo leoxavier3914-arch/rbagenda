@@ -589,27 +589,22 @@ export default function NewAppointmentExperience() {
     const firstDay = new Date(year, month, 1)
     const startWeekday = firstDay.getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const daysInPreviousMonth = new Date(year, month, 0).getDate()
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
     const dayEntries: Array<{
       iso: string
-      day: number
+      day: string
       isDisabled: boolean
       state: string
       isOutsideCurrentMonth: boolean
     }> = []
 
-    for (let offset = startWeekday; offset > 0; offset -= 1) {
-      const day = daysInPreviousMonth - offset + 1
-      const date = new Date(year, month - 1, day)
-      const iso = formatDateToIsoDay(date)
-
+    for (let offset = 0; offset < startWeekday; offset += 1) {
       dayEntries.push({
-        iso,
-        day,
+        iso: `leading-${year}-${month}-${offset}`,
+        day: '',
         isDisabled: true,
         state: 'disabled',
         isOutsideCurrentMonth: true,
@@ -635,7 +630,7 @@ export default function NewAppointmentExperience() {
 
       dayEntries.push({
         iso,
-        day,
+        day: String(day),
         isDisabled,
         state: status,
         isOutsideCurrentMonth: false,
@@ -644,12 +639,9 @@ export default function NewAppointmentExperience() {
 
     const trailingSpacers = (7 - (dayEntries.length % 7)) % 7
     for (let day = 1; day <= trailingSpacers; day += 1) {
-      const date = new Date(year, month + 1, day)
-      const iso = formatDateToIsoDay(date)
-
       dayEntries.push({
-        iso,
-        day,
+        iso: `trailing-${year}-${month}-${day}`,
+        day: '',
         isDisabled: true,
         state: 'disabled',
         isOutsideCurrentMonth: true,

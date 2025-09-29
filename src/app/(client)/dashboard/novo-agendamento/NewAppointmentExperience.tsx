@@ -585,9 +585,15 @@ export default function NewAppointmentExperience() {
     !isLoadingAvailability &&
     !availabilityError
 
-  const calendarDays = useMemo(() => {
+  const calendarHeaderDays = useMemo(() => {
     const firstDay = new Date(year, month, 1)
     const startWeekday = firstDay.getDay()
+    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+
+    return Array.from({ length: 7 }, (_, index) => labels[(startWeekday + index) % 7])
+  }, [month, year])
+
+  const calendarDays = useMemo(() => {
     const daysInMonth = new Date(year, month + 1, 0).getDate()
 
     const today = new Date()
@@ -600,16 +606,6 @@ export default function NewAppointmentExperience() {
       state: string
       isOutsideCurrentMonth: boolean
     }> = []
-
-    for (let offset = 0; offset < startWeekday; offset += 1) {
-      dayEntries.push({
-        iso: `leading-${year}-${month}-${offset}`,
-        day: '',
-        isDisabled: true,
-        state: 'disabled',
-        isOutsideCurrentMonth: true,
-      })
-    }
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = new Date(year, month, day)
@@ -1092,13 +1088,11 @@ export default function NewAppointmentExperience() {
           </div>
 
           <div className={styles.grid} aria-hidden="true">
-            <div className={styles.dow}>D</div>
-            <div className={styles.dow}>S</div>
-            <div className={styles.dow}>T</div>
-            <div className={styles.dow}>Q</div>
-            <div className={styles.dow}>Q</div>
-            <div className={styles.dow}>S</div>
-            <div className={styles.dow}>S</div>
+            {calendarHeaderDays.map((label, index) => (
+              <div key={`dow-${index}`} className={styles.dow}>
+                {label}
+              </div>
+            ))}
           </div>
 
           <div className={styles.grid}>

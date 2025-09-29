@@ -89,7 +89,7 @@ const hoursUntil = (iso: string) => {
   return (starts - Date.now()) / 3_600_000
 }
 
-type ServiceTypeShape = { name?: string | null } | null
+type ServiceTypeShape = { id?: string | null; name?: string | null } | null
 
 type ServiceAssignmentShape = {
   service_types?: ServiceTypeShape | ServiceTypeShape[] | null
@@ -112,6 +112,8 @@ type AppointmentRecord = {
   preco_total: number | string | null
   services?: ServiceShape | ServiceShape[]
   service_id?: string | null
+  service_type_id?: string | null
+  service_type?: ServiceTypeShape | ServiceTypeShape[] | null
 }
 
 type AppointmentTotalsRecord = {
@@ -122,6 +124,7 @@ type AppointmentTotalsRecord = {
 type NormalizedAppointment = {
   id: string
   serviceId: string | null
+  serviceTypeId: string | null
   startsAt: string
   endsAt: string | null
   status: string
@@ -165,6 +168,7 @@ const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
 const extractServiceDetails = (
   services?: ServiceShape | ServiceShape[],
   preferredServiceId?: string | null,
+  preferredServiceTypeId?: string | null,
 ): { serviceName: string | null; techniqueName: string | null } => {
   const candidates = toArray(services).filter(
     (item): item is Exclude<ServiceShape, null> => Boolean(item) && typeof item === 'object',
@@ -176,15 +180,35 @@ const extractServiceDetails = (
       : undefined) ?? candidates[0]
   const rawServiceName = typeof service?.name === 'string' ? service.name.trim() : ''
   const assignments = toArray(service?.service_type_assignments)
+  const normalizedPreferredTypeId = preferredServiceTypeId?.toString().trim()
 
-  const techniqueName = assignments
+  const techniqueCandidates = assignments
     .flatMap((assignment) => toArray(assignment?.service_types))
-    .map((type) => (typeof type?.name === 'string' ? type.name.trim() : ''))
-    .find((name) => name.length > 0)
+    .filter((type): type is Exclude<ServiceTypeShape, null> => Boolean(type) && typeof type === 'object')
+
+  let techniqueName: string | null = null
+  if (normalizedPreferredTypeId) {
+    const match = techniqueCandidates.find(
+      (type) => type?.id?.toString().trim() === normalizedPreferredTypeId,
+    )
+    if (match && typeof match.name === 'string') {
+      const trimmed = match.name.trim()
+      if (trimmed.length > 0) {
+        techniqueName = trimmed
+      }
+    }
+  }
+
+  if (!techniqueName) {
+    const fallback = techniqueCandidates
+      .map((type) => (typeof type?.name === 'string' ? type.name.trim() : ''))
+      .find((name) => name.length > 0)
+    techniqueName = fallback && fallback.length > 0 ? fallback : null
+  }
 
   return {
     serviceName: rawServiceName.length > 0 ? rawServiceName : null,
-    techniqueName: techniqueName && techniqueName.length > 0 ? techniqueName : null,
+    techniqueName,
   }
 }
 
@@ -200,7 +224,38 @@ const normalizeAppointment = (
   const depositValue = Math.max(0, rawDeposit) / 100
   const paidValue = Math.max(0, rawPaid) / 100
 
-  const { serviceName, techniqueName } = extractServiceDetails(record.services, record.service_id ?? null)
+  const normalizedServiceTypeId = record.service_type_id?.toString().trim() ?? null
+  const storedTechniqueNameCandidates = toArray(record.service_type).filter(
+    (item): item is Exclude<ServiceTypeShape, null> => Boolean(item) && typeof item === 'object',
+  )
+
+  let storedTechniqueName: string | null = null
+  if (normalizedServiceTypeId) {
+    const match = storedTechniqueNameCandidates.find(
+      (item) => item?.id?.toString().trim() === normalizedServiceTypeId,
+    )
+    if (match && typeof match.name === 'string') {
+      const trimmed = match.name.trim()
+      if (trimmed.length > 0) {
+        storedTechniqueName = trimmed
+      }
+    }
+  }
+
+  if (!storedTechniqueName) {
+    const fallback = storedTechniqueNameCandidates
+      .map((item) => (typeof item?.name === 'string' ? item.name.trim() : ''))
+      .find((name) => name.length > 0)
+    storedTechniqueName = fallback && fallback.length > 0 ? fallback : null
+  }
+
+  const { serviceName, techniqueName: fallbackTechniqueName } = extractServiceDetails(
+    record.services,
+    record.service_id ?? null,
+    normalizedServiceTypeId,
+  )
+
+  const techniqueName = storedTechniqueName ?? fallbackTechniqueName
 
   const serviceType = serviceName ?? techniqueName ?? 'Serviço'
   const shouldShowTechniqueAsSecondary =
@@ -212,6 +267,7 @@ const normalizeAppointment = (
   return {
     id: record.id,
     serviceId: record.service_id ?? null,
+    serviceTypeId: record.service_type_id ?? null,
     startsAt: record.starts_at,
     endsAt: record.ends_at ?? null,
     status: normalizeStatusValue(record.status),
@@ -771,7 +827,7 @@ export default function MyAppointments() {
         const { data, error: fetchError } = await supabase
           .from('appointments')
           .select(
-            'id, starts_at, ends_at, status, total_cents, deposit_cents, valor_sinal, preco_total, services(id, name, service_type_assignments(service_types(name))), service_id',
+            'id, starts_at, ends_at, status, total_cents, deposit_cents, valor_sinal, preco_total, service_id, service_type_id, services(id, name, service_type_assignments(service_types(id, name))), service_type:service_types!appointments_service_type_id_fkey(id, name)',
           )
           .eq('customer_id', session.user.id)
           .order('starts_at', { ascending: true })

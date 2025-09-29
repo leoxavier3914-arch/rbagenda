@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { Session } from '@supabase/supabase-js'
 
 import { supabase } from '@/lib/db'
 
@@ -238,6 +239,10 @@ export default function NewAppointmentExperience() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null)
+  const payNowButtonRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     let active = true
@@ -454,6 +459,29 @@ export default function NewAppointmentExperience() {
   )
 
   useEffect(() => {
+    setCreatedAppointmentId(null)
+    setSummaryError(null)
+  }, [selectedDate, selectedSlot, selectedServiceId, selectedTypeId])
+
+  useEffect(() => {
+    if (!isSummaryOpen) return
+    if (typeof document === 'undefined') return
+
+    const { body } = document
+    const previousOverflow = body.style.overflow
+    body.style.overflow = 'hidden'
+
+    return () => {
+      body.style.overflow = previousOverflow
+    }
+  }, [isSummaryOpen])
+
+  useEffect(() => {
+    if (!isSummaryOpen) return
+    payNowButtonRef.current?.focus()
+  }, [isSummaryOpen])
+
+  useEffect(() => {
     setSelectedSlot(null)
   }, [selectedServiceId])
 
@@ -500,6 +528,16 @@ export default function NewAppointmentExperience() {
       quando: `Data: ${formatIsoDateToBR(selectedDate)} • Horário: ${selectedSlot ?? '—'}`,
     }
   }, [selectedDate, selectedService, selectedSlot, selectedType])
+
+  const summaryProcedure = useMemo(() => {
+    if (selectedService && selectedType) {
+      return `${selectedService.name} • ${selectedType.name}`
+    }
+
+    if (selectedService) return selectedService.name
+    if (selectedType) return selectedType.name
+    return '—'
+  }, [selectedService, selectedType])
 
   const canInteract =
     catalogStatus === 'ready' &&
@@ -611,6 +649,7 @@ export default function NewAppointmentExperience() {
     setSelectedSlot(null)
     setSubmitError(null)
     setSubmitSuccess(null)
+    setCreatedAppointmentId(null)
   }
 
   function handleSlotSelect(slotValue: string, disabled: boolean) {
@@ -618,6 +657,7 @@ export default function NewAppointmentExperience() {
     setSelectedSlot(slotValue)
     setSubmitError(null)
     setSubmitSuccess(null)
+    setCreatedAppointmentId(null)
   }
 
   function handleTypeSelect(typeId: string) {
@@ -625,6 +665,7 @@ export default function NewAppointmentExperience() {
     setSelectedTypeId(typeId)
     setSubmitError(null)
     setSubmitSuccess(null)
+    setCreatedAppointmentId(null)
   }
 
   function handleTechniqueSelect(serviceId: string) {
@@ -632,69 +673,154 @@ export default function NewAppointmentExperience() {
     setSelectedServiceId(serviceId)
     setSubmitError(null)
     setSubmitSuccess(null)
+    setCreatedAppointmentId(null)
   }
 
-  async function handleContinue() {
-    if (!selectedDate || !selectedSlot || !selectedService || !canInteract) return
-
+  function handleContinue() {
+    if (!isReadyToContinue) return
     setSubmitError(null)
     setSubmitSuccess(null)
+    setSummaryError(null)
+    setIsSummaryOpen(true)
+  }
+
+  async function ensureSession() {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
+
+    const session = sessionData.session
+    if (!session?.access_token || !session.user?.id) {
+      window.location.href = '/login'
+      throw new Error('Sessão expirada. Faça login novamente.')
+    }
+
+    return session
+  }
+
+  async function ensureAppointment(session: Session) {
+    if (!selectedDate || !selectedSlot || !selectedService) {
+      throw new Error('Selecione uma data e horário válidos.')
+    }
+
+    if (createdAppointmentId) {
+      return createdAppointmentId
+    }
+
+    const scheduledAt = combineDateAndTime(selectedDate, selectedSlot)
+    if (!scheduledAt) {
+      throw new Error('Horário selecionado é inválido.')
+    }
+
+    const response = await fetch('/api/appointments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        cliente_id: session.user.id,
+        service_id: selectedService.id,
+        scheduled_at: scheduledAt.toISOString(),
+      }),
+    })
+
+    if (!response.ok) {
+      let errorMessage = 'Não foi possível criar o agendamento. Tente novamente.'
+      try {
+        const body = await response.json()
+        if (body && typeof body.error === 'string') {
+          errorMessage = body.error
+        }
+      } catch (err) {
+        console.error('Falha ao analisar resposta de erro do agendamento', err)
+      }
+      throw new Error(errorMessage)
+    }
+
+    const payload = await response.json().catch(() => null)
+    const appointmentId = (payload?.appointment_id as string | undefined) ?? null
+
+    if (!appointmentId) {
+      throw new Error('Resposta inválida ao criar o agendamento. Tente novamente.')
+    }
+
+    setCreatedAppointmentId(appointmentId)
+    return appointmentId
+  }
+
+  async function handlePayNow() {
+    if (!isReadyToContinue || isSubmitting) return
+
+    setSummaryError(null)
     setIsSubmitting(true)
 
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError) throw sessionError
+      const session = await ensureSession()
+      const appointmentId = await ensureAppointment(session)
 
-      const session = sessionData.session
-      if (!session?.access_token || !session.user?.id) {
-        window.location.href = '/login'
-        return
-      }
-
-      const scheduledAt = combineDateAndTime(selectedDate, selectedSlot)
-      if (!scheduledAt) {
-        throw new Error('Horário selecionado é inválido.')
-      }
-
-      const response = await fetch('/api/appointments', {
+      const response = await fetch('/api/payments/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          cliente_id: session.user.id,
-          service_id: selectedService.id,
-          scheduled_at: scheduledAt.toISOString(),
-        }),
+        body: JSON.stringify({ appointment_id: appointmentId, mode: 'deposit' }),
       })
 
       if (!response.ok) {
-        const body = await response.json().catch(() => null)
-        const errorMessage =
-          (body && typeof body.error === 'string' && body.error) ||
-          'Não foi possível criar o agendamento. Tente novamente.'
+        let errorMessage = 'Não foi possível iniciar o checkout. Tente novamente.'
+        try {
+          const body = await response.json()
+          if (body && typeof body.error === 'string') {
+            errorMessage = body.error
+          }
+        } catch (err) {
+          console.error('Falha ao analisar resposta do pagamento', err)
+        }
         throw new Error(errorMessage)
       }
 
-      const payload = await response.json().catch(() => ({}))
-      const appointmentId = payload?.appointment_id as string | undefined
+      const data = await response.json().catch(() => null)
+      const clientSecret = typeof data?.client_secret === 'string' ? data.client_secret : null
 
-      setSubmitSuccess('Agendamento criado com sucesso! Redirecionando…')
-
-      window.setTimeout(() => {
-        const target = appointmentId
-          ? `/dashboard/agendamentos?novo=${encodeURIComponent(appointmentId)}`
-          : '/dashboard/agendamentos'
-        router.push(target)
-      }, 600)
+      if (clientSecret) {
+        setIsSummaryOpen(false)
+        router.push(
+          `/checkout?client_secret=${encodeURIComponent(clientSecret)}&appointment_id=${encodeURIComponent(appointmentId)}`,
+        )
+      } else {
+        throw new Error('Resposta inválida do servidor ao iniciar o checkout.')
+      }
     } catch (error) {
-      console.error('Erro ao criar agendamento', error)
+      console.error('Erro ao iniciar pagamento do agendamento', error)
       const message =
         error instanceof Error
           ? error.message
-          : 'Erro inesperado ao criar o agendamento. Tente novamente.'
-      setSubmitError(message)
+          : 'Erro inesperado ao iniciar o checkout. Tente novamente.'
+      setSummaryError(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleSummaryClose() {
+    if (isSubmitting) return
+
+    setSummaryError(null)
+    setIsSubmitting(true)
+
+    try {
+      const session = await ensureSession()
+      const appointmentId = await ensureAppointment(session)
+      setIsSummaryOpen(false)
+      router.push(`/dashboard/agendamentos?novo=${encodeURIComponent(appointmentId)}`)
+    } catch (error) {
+      console.error('Erro ao finalizar agendamento sem pagamento', error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Erro inesperado ao concluir o agendamento. Tente novamente.'
+      setSummaryError(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -996,6 +1122,67 @@ export default function NewAppointmentExperience() {
           </div>
         </div>
       </footer>
+      <div
+        className={styles.modal}
+        data-open={isSummaryOpen ? 'true' : 'false'}
+        aria-hidden={isSummaryOpen ? 'false' : 'true'}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="summary-title"
+      >
+        <div className={styles.modalBackdrop} aria-hidden="true" />
+        <div className={styles.modalContent} role="document">
+          <h2 className={styles.modalTitle} id="summary-title">
+            Resumo do agendamento
+          </h2>
+          <div className={styles.modalBody}>
+            <div className={styles.modalLine}>
+              <span>Procedimento</span>
+              <strong>{summaryProcedure}</strong>
+            </div>
+            <div className={styles.modalLine}>
+              <span>Data</span>
+              <strong>{selectedDate ? formatIsoDateToBR(selectedDate) : '—'}</strong>
+            </div>
+            <div className={styles.modalLine}>
+              <span>Horário</span>
+              <strong>{selectedSlot ?? '—'}</strong>
+            </div>
+            <div className={styles.modalLine}>
+              <span>Valor total</span>
+              <strong>R$ {toBRLCurrency(computed.total)}</strong>
+            </div>
+            <div className={`${styles.modalLine} ${styles.modalLineHighlight}`}>
+              <span>Valor do sinal (online)</span>
+              <strong>R$ {toBRLCurrency(computed.deposit)}</strong>
+            </div>
+            {summaryError && <div className={styles.modalError}>{summaryError}</div>}
+          </div>
+          <div className={styles.modalFooter}>
+            <button
+              ref={payNowButtonRef}
+              type="button"
+              className={styles.cta}
+              disabled={isSubmitting}
+              onClick={() => {
+                void handlePayNow()
+              }}
+            >
+              {isSubmitting ? 'Processando…' : 'Pagar agora'}
+            </button>
+            <button
+              type="button"
+              className={styles.modalClose}
+              disabled={isSubmitting}
+              onClick={() => {
+                void handleSummaryClose()
+              }}
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

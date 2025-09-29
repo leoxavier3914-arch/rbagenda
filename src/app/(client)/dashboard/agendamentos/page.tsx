@@ -26,6 +26,19 @@ const statusLabels: Record<string, string> = {
   completed: 'Finalizado',
 }
 
+const knownStatusKeys = new Set(Object.keys(statusLabels))
+
+const normalizeStatusValue = (status: string | null | undefined) => {
+  if (typeof status !== 'string') return 'pending'
+  const trimmed = status.trim()
+  if (!trimmed) return 'pending'
+  const normalized = trimmed.toLowerCase()
+  if (knownStatusKeys.has(normalized)) {
+    return normalized
+  }
+  return trimmed
+}
+
 const CANCEL_THRESHOLD_HOURS = Number(process.env.NEXT_PUBLIC_DEFAULT_REMARCA_HOURS ?? 24)
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -194,7 +207,7 @@ const normalizeAppointment = (
     serviceId: record.service_id ?? null,
     startsAt: record.starts_at,
     endsAt: record.ends_at ?? null,
-    status: record.status,
+    status: normalizeStatusValue(record.status),
     serviceType,
     serviceTechnique,
     totalValue,

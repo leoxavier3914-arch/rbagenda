@@ -78,7 +78,6 @@ export async function cancelExpiredPendingAppointments(
     .from('appointments')
     .select('id, deposit_cents, valor_sinal')
     .eq('status', 'pending')
-    .or('deposit_cents.gt.0,valor_sinal.gt.0')
     .lte('created_at', threshold)
     .order('created_at', { ascending: true })
     .limit(batchSize)
@@ -112,7 +111,10 @@ export async function cancelExpiredPendingAppointments(
 
   const toCancel = appts.filter((appt) => {
     const deposit = resolveDepositCents(appt.deposit_cents, appt.valor_sinal)
-    if (!Number.isFinite(deposit) || deposit <= 0) return false
+    if (!Number.isFinite(deposit) || deposit <= 0) {
+      return true
+    }
+
     const paid = totalsMap.get(appt.id) ?? 0
     return paid < deposit
   })

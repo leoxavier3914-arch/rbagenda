@@ -7,6 +7,7 @@ import { Inter } from 'next/font/google'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 import styles from './appointments.module.css'
+import calendarStyles from '../novo-agendamento/newAppointment.module.css'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -70,7 +71,16 @@ const hoursUntil = (iso: string) => {
   return (starts - Date.now()) / 3_600_000
 }
 
-type ServiceShape = { name?: string | null } | null
+type ServiceTypeShape = { name?: string | null } | null
+
+type ServiceAssignmentShape = {
+  service_types?: ServiceTypeShape | ServiceTypeShape[] | null
+} | null
+
+type ServiceShape = {
+  name?: string | null
+  service_type_assignments?: ServiceAssignmentShape | ServiceAssignmentShape[] | null
+} | null
 
 type AppointmentRecord = {
   id: string
@@ -117,31 +127,38 @@ type SlotsResponse = {
   slots?: string[]
 }
 
-const extractServiceName = (services?: ServiceShape | ServiceShape[]) => {
-  if (!services) return null
-  if (Array.isArray(services)) {
-    const first = services[0]
-    if (first && typeof first === 'object') return first.name ?? null
-    return null
-  }
-  return services?.name ?? null
+type CalendarDayEntry = {
+  iso: string
+  day: string
+  isDisabled: boolean
+  state: 'available' | 'disabled'
+  isOutsideCurrentMonth: boolean
 }
 
-const splitServiceTitle = (fullName: string | null): [string, string | null] => {
-  if (!fullName) return ['Serviço', null]
-  const separators = [' - ', ' – ', ' — ', ': ']
-  for (const sep of separators) {
-    if (fullName.includes(sep)) {
-      const [first, second] = fullName.split(sep)
-      return [first.trim() || 'Serviço', (second ?? '').trim() || null]
-    }
+const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
+  if (Array.isArray(value)) return value
+  if (value === null || value === undefined) return []
+  return [value]
+}
+
+const extractServiceDetails = (
+  services?: ServiceShape | ServiceShape[],
+): { serviceName: string | null; techniqueName: string | null } => {
+  const [service] = toArray(services).filter(
+    (item): item is Exclude<ServiceShape, null> => Boolean(item) && typeof item === 'object',
+  )
+  const rawServiceName = typeof service?.name === 'string' ? service.name.trim() : ''
+  const assignments = toArray(service?.service_type_assignments)
+
+  const techniqueName = assignments
+    .flatMap((assignment) => toArray(assignment?.service_types))
+    .map((type) => (typeof type?.name === 'string' ? type.name.trim() : ''))
+    .find((name) => name.length > 0)
+
+  return {
+    serviceName: rawServiceName.length > 0 ? rawServiceName : null,
+    techniqueName: techniqueName && techniqueName.length > 0 ? techniqueName : null,
   }
-  const trimmed = fullName.trim()
-  if (!trimmed) return ['Serviço', null]
-  const words = trimmed.split(/\s+/)
-  if (words.length >= 4) return [words.slice(0, 2).join(' '), words.slice(2).join(' ')]
-  if (words.length >= 2) return [words[0], words.slice(1).join(' ')]
-  return [trimmed, null]
 }
 
 const normalizeAppointment = (
@@ -156,8 +173,9 @@ const normalizeAppointment = (
   const depositValue = Math.max(0, rawDeposit) / 100
   const paidValue = Math.max(0, rawPaid) / 100
 
-  const serviceName = extractServiceName(record.services)
-  const [serviceType, serviceTechnique] = splitServiceTitle(serviceName)
+  const { serviceName, techniqueName } = extractServiceDetails(record.services)
+  const serviceType = serviceName ?? 'Serviço'
+  const serviceTechnique = techniqueName
 
   return {
     id: record.id,
@@ -350,24 +368,46 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointment.id])
 
-  const calendarCells = useMemo(() => {
-    const cells: { key: string; iso: string | null; label: string; disabled: boolean }[] = []
+  const calendarHeaderDays = useMemo(() => {
+    const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+    const startWeekday = firstDay.getDay()
+    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+    return Array.from({ length: 7 }, (_, index) => labels[(startWeekday + index) % 7])
+  }, [currentMonth])
+
+  const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear()
     const month = currentMonth.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const offset = firstDay.getDay()
-    for (let i = 0; i < offset; i += 1) {
-      cells.push({ key: `pad-${month}-${i}`, iso: null, label: '', disabled: true })
-    }
     const totalDays = new Date(year, month + 1, 0).getDate()
+
+    const dayEntries: CalendarDayEntry[] = []
+
     for (let day = 1; day <= totalDays; day += 1) {
       const date = new Date(year, month, day)
       date.setHours(0, 0, 0, 0)
       const iso = toIsoDate(date)
-      const disabled = date <= today
-      cells.push({ key: iso, iso, label: String(day), disabled })
+      const isDisabled = date <= today
+      dayEntries.push({
+        iso,
+        day: String(day),
+        isDisabled,
+        state: isDisabled ? 'disabled' : 'available',
+        isOutsideCurrentMonth: false,
+      })
     }
-    return cells
+
+    const trailingSpacers = (7 - (dayEntries.length % 7)) % 7
+    for (let index = 1; index <= trailingSpacers; index += 1) {
+      dayEntries.push({
+        iso: `trailing-${year}-${month}-${index}`,
+        day: '',
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
+
+    return { dayEntries }
   }, [currentMonth, today])
 
   async function loadSlots(iso: string) {
@@ -433,7 +473,7 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
   )
 
   const handleDayClick = (iso: string | null, disabled: boolean) => {
-    if (!iso || disabled) return
+    if (!iso || disabled || iso.length !== 10) return
     setSelectedDate(iso)
     void loadSlots(iso)
   }
@@ -486,44 +526,50 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
       <div className={`${styles.modalContent} ${styles.modalEdit}`} role="dialog" aria-modal="true">
         <h2 className={styles.modalTitle}>Alterar data e horário</h2>
 
-        <div className={styles.calHead}>
-          <button type="button" className={styles.btnNav} onClick={goToPreviousMonth} aria-label="Mês anterior">
+        <div className={calendarStyles.calHead}>
+          <button
+            type="button"
+            className={calendarStyles.btn}
+            onClick={goToPreviousMonth}
+            aria-label="Mês anterior"
+          >
             ‹
           </button>
-          <div className={styles.calTitle}>{monthTitle}</div>
-          <button type="button" className={styles.btnNav} onClick={goToNextMonth} aria-label="Próximo mês">
+          <div className={calendarStyles.calTitle}>{monthTitle}</div>
+          <button
+            type="button"
+            className={calendarStyles.btn}
+            onClick={goToNextMonth}
+            aria-label="Próximo mês"
+          >
             ›
           </button>
         </div>
 
-        <div className={`${styles.grid} ${styles.gridDow}`} aria-hidden="true">
-          <div>D</div>
-          <div>S</div>
-          <div>T</div>
-          <div>Q</div>
-          <div>Q</div>
-          <div>S</div>
-          <div>S</div>
+        <div className={calendarStyles.grid} aria-hidden="true">
+          {calendarHeaderDays.map((label, index) => (
+            <div key={`dow-${index}`} className={calendarStyles.dow}>
+              {label}
+            </div>
+          ))}
         </div>
 
-        <div className={styles.grid}>
-          {calendarCells.map((cell) =>
-            cell.iso ? (
-              <button
-                key={cell.key}
-                type="button"
-                className={styles.day}
-                data-selected={selectedDate === cell.iso}
-                aria-disabled={cell.disabled}
-                disabled={cell.disabled}
-                onClick={() => handleDayClick(cell.iso, cell.disabled)}
-              >
-                {cell.label}
-              </button>
-            ) : (
-              <div key={cell.key} className={styles.dayPlaceholder} aria-hidden="true" />
-            ),
-          )}
+        <div className={calendarStyles.grid}>
+          {calendarDays.dayEntries.map((entry) => (
+            <button
+              key={entry.iso}
+              type="button"
+              className={calendarStyles.day}
+              data-state={entry.state}
+              data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
+              data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}
+              aria-disabled={entry.isDisabled}
+              disabled={entry.isDisabled}
+              onClick={() => handleDayClick(entry.iso, entry.isDisabled || entry.isOutsideCurrentMonth)}
+            >
+              {entry.day}
+            </button>
+          ))}
         </div>
 
         <div className={styles.label}>Horários disponíveis</div>
@@ -598,7 +644,7 @@ export default function MyAppointments() {
         const { data, error: fetchError } = await supabase
           .from('appointments')
           .select(
-            'id, starts_at, ends_at, status, total_cents, deposit_cents, valor_sinal, preco_total, services(name), service_id',
+            'id, starts_at, ends_at, status, total_cents, deposit_cents, valor_sinal, preco_total, services(name, service_type_assignments(service_types(name))), service_id',
           )
           .eq('customer_id', session.user.id)
           .order('starts_at', { ascending: true })
@@ -827,10 +873,9 @@ export default function MyAppointments() {
 
                 <div className={styles.cardBody}>
                   <div className={styles.line}>
-                    <strong>Data:</strong> {formatDate(appointment.startsAt)}{' '}
-                    <span className={styles.dot} aria-hidden="true">
-                      •
-                    </span>{' '}
+                    <strong>Data:</strong> {formatDate(appointment.startsAt)}
+                  </div>
+                  <div className={styles.line}>
                     <strong>Horário:</strong> {formatTime(appointment.startsAt)}
                   </div>
                   <div className={styles.line}>

@@ -2,13 +2,13 @@ import { getSupabaseAdmin } from './db'
 
 const supabaseAdmin = getSupabaseAdmin()
 
-type PendingAppointment = {
+export type PendingAppointment = {
   id: string
   deposit_cents: number | string | null
   valor_sinal: number | string | null
 }
 
-type PaymentTotal = {
+export type PaymentTotal = {
   appointment_id: string
   paid_cents: number | string | null
 }
@@ -49,6 +49,31 @@ const resolveDepositCents = (
   }
 
   return 0
+}
+
+export function determinePendingAppointmentsToCancel(
+  appointments: PendingAppointment[],
+  totals: PaymentTotal[],
+) {
+  if (!appointments.length) return [] as PendingAppointment[]
+
+  const totalsMap = new Map<string, number>()
+  for (const tot of totals ?? []) {
+    const paid = parseNumber(tot.paid_cents)
+    if (paid !== null && Number.isFinite(paid)) {
+      totalsMap.set(tot.appointment_id, Math.max(0, Math.round(paid)))
+    }
+  }
+
+  return appointments.filter((appt) => {
+    const deposit = resolveDepositCents(appt.deposit_cents, appt.valor_sinal)
+    if (!Number.isFinite(deposit) || deposit <= 0) {
+      return true
+    }
+
+    const paid = totalsMap.get(appt.id) ?? 0
+    return paid < deposit
+  })
 }
 
 export async function finalizePastAppointments(graceHours = 3) {
@@ -101,23 +126,7 @@ export async function cancelExpiredPendingAppointments(
     throw totalsError
   }
 
-  const totalsMap = new Map<string, number>()
-  for (const tot of totals ?? []) {
-    const paid = parseNumber(tot.paid_cents)
-    if (paid !== null && Number.isFinite(paid)) {
-      totalsMap.set(tot.appointment_id, Math.max(0, Math.round(paid)))
-    }
-  }
-
-  const toCancel = appts.filter((appt) => {
-    const deposit = resolveDepositCents(appt.deposit_cents, appt.valor_sinal)
-    if (!Number.isFinite(deposit) || deposit <= 0) {
-      return true
-    }
-
-    const paid = totalsMap.get(appt.id) ?? 0
-    return paid < deposit
-  })
+  const toCancel = determinePendingAppointmentsToCancel(appts, totals ?? [])
 
   if (!toCancel.length) return 0
 

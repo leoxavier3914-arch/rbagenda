@@ -96,6 +96,7 @@ type ServiceAssignmentShape = {
 } | null
 
 type ServiceShape = {
+  id?: string | null
   name?: string | null
   service_type_assignments?: ServiceAssignmentShape | ServiceAssignmentShape[] | null
 } | null
@@ -163,21 +164,27 @@ const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
 
 const extractServiceDetails = (
   services?: ServiceShape | ServiceShape[],
-): { typeName: string | null; techniqueName: string | null } => {
-  const [service] = toArray(services).filter(
+  preferredServiceId?: string | null,
+): { serviceName: string | null; techniqueName: string | null } => {
+  const candidates = toArray(services).filter(
     (item): item is Exclude<ServiceShape, null> => Boolean(item) && typeof item === 'object',
   )
-  const rawTechniqueName = typeof service?.name === 'string' ? service.name.trim() : ''
+  const normalizedPreferredId = preferredServiceId?.toString().trim()
+  const service =
+    (normalizedPreferredId
+      ? candidates.find((item) => item?.id?.toString().trim() === normalizedPreferredId)
+      : undefined) ?? candidates[0]
+  const rawServiceName = typeof service?.name === 'string' ? service.name.trim() : ''
   const assignments = toArray(service?.service_type_assignments)
 
-  const typeName = assignments
+  const techniqueName = assignments
     .flatMap((assignment) => toArray(assignment?.service_types))
     .map((type) => (typeof type?.name === 'string' ? type.name.trim() : ''))
     .find((name) => name.length > 0)
 
   return {
-    typeName: typeName && typeName.length > 0 ? typeName : null,
-    techniqueName: rawTechniqueName.length > 0 ? rawTechniqueName : null,
+    serviceName: rawServiceName.length > 0 ? rawServiceName : null,
+    techniqueName: techniqueName && techniqueName.length > 0 ? techniqueName : null,
   }
 }
 
@@ -193,14 +200,14 @@ const normalizeAppointment = (
   const depositValue = Math.max(0, rawDeposit) / 100
   const paidValue = Math.max(0, rawPaid) / 100
 
-  const { typeName, techniqueName } = extractServiceDetails(record.services)
+  const { serviceName, techniqueName } = extractServiceDetails(record.services, record.service_id ?? null)
 
-  const serviceType = techniqueName ?? typeName ?? 'Serviço'
-  const shouldShowTypeAsSecondary =
-    Boolean(typeName) &&
+  const serviceType = serviceName ?? techniqueName ?? 'Serviço'
+  const shouldShowTechniqueAsSecondary =
+    Boolean(serviceName) &&
     Boolean(techniqueName) &&
-    typeName!.localeCompare(techniqueName!, 'pt-BR', { sensitivity: 'base' }) !== 0
-  const serviceTechnique = shouldShowTypeAsSecondary ? typeName : null
+    serviceName!.localeCompare(techniqueName!, 'pt-BR', { sensitivity: 'base' }) !== 0
+  const serviceTechnique = shouldShowTechniqueAsSecondary ? techniqueName : null
 
   return {
     id: record.id,
@@ -764,7 +771,7 @@ export default function MyAppointments() {
         const { data, error: fetchError } = await supabase
           .from('appointments')
           .select(
-            'id, starts_at, ends_at, status, total_cents, deposit_cents, valor_sinal, preco_total, services(name, service_type_assignments(service_types(name))), service_id',
+            'id, starts_at, ends_at, status, total_cents, deposit_cents, valor_sinal, preco_total, services(id, name, service_type_assignments(service_types(name))), service_id',
           )
           .eq('customer_id', session.user.id)
           .order('starts_at', { ascending: true })

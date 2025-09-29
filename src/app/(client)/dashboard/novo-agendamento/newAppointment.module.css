@@ -540,25 +540,129 @@
   flex-wrap: wrap;
 }
 
-.modalClose {
-  appearance: none;
-  border: 1px solid var(--stroke);
+.payLaterCta {
   background: #fff;
-  color: var(--ink);
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  color: var(--brand);
+  border: 1px solid var(--brand);
+  box-shadow: 0 10px 20px rgba(31, 138, 112, 0.15);
 }
 
-.modalClose:hover:not(:disabled) {
-  background: #f4f3f0;
+.payLaterCta:hover:not(:disabled) {
+  background: #f4f9f6;
 }
 
-.modalClose:disabled {
+.payLaterCta:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+.noticeModal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.noticeModal[data-open='true'] {
+  display: flex;
+}
+
+.noticeBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.noticeContent {
+  position: relative;
+  background: var(--card-surface, #fff);
+  border-radius: 20px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+  width: 85%;
+  max-width: 320px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1;
+  animation: noticeFadeIn 0.3s ease;
+}
+
+.noticeIcon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 4px;
+  background: var(--brand-2, #c3dac5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noticeTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.noticeText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink, #1e1e1e);
+  line-height: 1.5;
+}
+
+.noticeText strong {
+  color: var(--brand);
+}
+
+.noticeError {
+  font-size: 13px;
+  color: #c24b4b;
+  line-height: 1.4;
+}
+
+.noticeButton {
+  appearance: none;
+  border: 0;
+  background: var(--brand);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 5px 14px rgba(31, 138, 112, 0.25);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.noticeButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.noticeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes noticeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modalError {

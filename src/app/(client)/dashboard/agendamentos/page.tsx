@@ -800,12 +800,13 @@ export default function MyAppointments() {
         ) : appointments.length === 0 ? (
           <div className={styles.empty}>Você ainda não tem agendamentos cadastrados.</div>
         ) : (
-          appointments.map((appointment) => {
-            const statusLabel = statusLabels[appointment.status] ?? appointment.status
-            const statusClass =
-              styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
-              styles.statusDefault
-            const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
+          <div className={styles.cards}>
+            {appointments.map((appointment) => {
+              const statusLabel = statusLabels[appointment.status] ?? appointment.status
+              const statusClass =
+                styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
+                styles.statusDefault
+              const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
             const showPay = canShowPay(appointment)
             const showCancel = canShowCancel(appointment.status)
             const showEdit = canShowEdit(appointment)
@@ -882,7 +883,8 @@ export default function MyAppointments() {
                 {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
               </article>
             )
-          })
+          })}
+          </div>
         )}
       </div>
 

@@ -6,8 +6,12 @@ import { Inter } from 'next/font/google'
 
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
+import {
+  buildAvailabilityData,
+  DEFAULT_FALLBACK_BUFFER_MINUTES,
+  type AvailabilityAppointment,
+} from '@/lib/availability'
 import styles from './appointments.module.css'
-import calendarStyles from '../novo-agendamento/newAppointment.module.css'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -132,9 +136,11 @@ type CalendarDayEntry = {
   iso: string
   day: string
   isDisabled: boolean
-  state: 'available' | 'disabled'
+  state: 'available' | 'booked' | 'full' | 'mine' | 'disabled'
   isOutsideCurrentMonth: boolean
 }
+
+type AvailabilitySnapshot = ReturnType<typeof buildAvailabilityData>
 
 const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
   if (Array.isArray(value)) return value
@@ -144,21 +150,21 @@ const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
 
 const extractServiceDetails = (
   services?: ServiceShape | ServiceShape[],
-): { serviceName: string | null; techniqueName: string | null } => {
+): { typeName: string | null; techniqueName: string | null } => {
   const [service] = toArray(services).filter(
     (item): item is Exclude<ServiceShape, null> => Boolean(item) && typeof item === 'object',
   )
-  const rawServiceName = typeof service?.name === 'string' ? service.name.trim() : ''
+  const rawTechniqueName = typeof service?.name === 'string' ? service.name.trim() : ''
   const assignments = toArray(service?.service_type_assignments)
 
-  const techniqueName = assignments
+  const typeName = assignments
     .flatMap((assignment) => toArray(assignment?.service_types))
     .map((type) => (typeof type?.name === 'string' ? type.name.trim() : ''))
     .find((name) => name.length > 0)
 
   return {
-    serviceName: rawServiceName.length > 0 ? rawServiceName : null,
-    techniqueName: techniqueName && techniqueName.length > 0 ? techniqueName : null,
+    typeName: typeName && typeName.length > 0 ? typeName : null,
+    techniqueName: rawTechniqueName.length > 0 ? rawTechniqueName : null,
   }
 }
 
@@ -174,8 +180,8 @@ const normalizeAppointment = (
   const depositValue = Math.max(0, rawDeposit) / 100
   const paidValue = Math.max(0, rawPaid) / 100
 
-  const { serviceName, techniqueName } = extractServiceDetails(record.services)
-  const serviceType = serviceName ?? 'Serviço'
+  const { typeName, techniqueName } = extractServiceDetails(record.services)
+  const serviceType = typeName ?? 'Serviço'
   const serviceTechnique = techniqueName
 
   return {
@@ -359,15 +365,90 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [availability, setAvailability] = useState<AvailabilitySnapshot | null>(null)
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false)
+  const appointmentIsoDay = useMemo(() => appointment.startsAt.slice(0, 10), [appointment.startsAt])
 
   useEffect(() => {
-    const iso = appointment.startsAt.slice(0, 10)
     if (hoursUntil(appointment.startsAt) >= CANCEL_THRESHOLD_HOURS) {
-      setSelectedDate(iso)
-      void loadSlots(iso)
+      setSelectedDate(appointmentIsoDay)
+      void loadSlots(appointmentIsoDay)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointment.id])
+  }, [appointment.id, appointmentIsoDay])
+
+  useEffect(() => {
+    let active = true
+
+    const loadAvailability = async () => {
+      if (!appointment.serviceId) {
+        if (active) {
+          setAvailability(null)
+          setAvailabilityError(null)
+          setIsLoadingAvailability(false)
+        }
+        return
+      }
+
+      if (active) {
+        setIsLoadingAvailability(true)
+        setAvailabilityError(null)
+      }
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+
+        const session = sessionData.session
+        if (!session?.user?.id) {
+          window.location.href = '/login'
+          return
+        }
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const limit = new Date(today)
+        limit.setDate(limit.getDate() + 60)
+
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('id, scheduled_at, starts_at, ends_at, status, customer_id, services(buffer_min)')
+          .eq('service_id', appointment.serviceId)
+          .gte('starts_at', today.toISOString())
+          .lte('starts_at', limit.toISOString())
+          .in('status', ['pending', 'reserved', 'confirmed'])
+          .returns<AvailabilityAppointment[]>()
+
+        if (error) throw error
+
+        if (!active) return
+
+        const computed = buildAvailabilityData(data ?? [], session.user.id, {
+          fallbackBufferMinutes: DEFAULT_FALLBACK_BUFFER_MINUTES,
+        })
+        setAvailability(computed)
+      } catch (err) {
+        console.error('Failed to load availability for reschedule modal', err)
+        if (active) {
+          setAvailability(null)
+          setAvailabilityError(
+            'Não foi possível carregar a disponibilidade. Alguns dias podem não refletir a ocupação real.',
+          )
+        }
+      } finally {
+        if (active) {
+          setIsLoadingAvailability(false)
+        }
+      }
+    }
+
+    void loadAvailability()
+
+    return () => {
+      active = false
+    }
+  }, [appointment.serviceId])
 
   const calendarHeaderDays = useMemo(() => {
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
@@ -387,12 +468,26 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
       const date = new Date(year, month, day)
       date.setHours(0, 0, 0, 0)
       const iso = toIsoDate(date)
-      const isDisabled = date <= today
+
+      let state: CalendarDayEntry['state'] = 'available'
+      if (availability) {
+        if (availability.myDays.has(iso)) state = 'mine'
+        else if (availability.bookedDays.has(iso)) state = 'full'
+        else if (availability.partiallyBookedDays.has(iso)) state = 'booked'
+        else if (availability.availableDays.has(iso)) state = 'available'
+      }
+      if (iso === appointmentIsoDay) {
+        state = 'mine'
+      }
+
+      const isPastOrToday = date <= today
+      const isDisabled = isPastOrToday || state === 'full'
+
       dayEntries.push({
         iso,
         day: String(day),
         isDisabled,
-        state: isDisabled ? 'disabled' : 'available',
+        state,
         isOutsideCurrentMonth: false,
       })
     }
@@ -409,7 +504,7 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
     }
 
     return { dayEntries }
-  }, [currentMonth, today])
+  }, [appointmentIsoDay, availability, currentMonth, today])
 
   async function loadSlots(iso: string) {
     if (!appointment.serviceId) {
@@ -527,19 +622,19 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
       <div className={`${styles.modalContent} ${styles.modalEdit}`} role="dialog" aria-modal="true">
         <h2 className={styles.modalTitle}>Alterar data e horário</h2>
 
-        <div className={calendarStyles.calHead}>
+        <div className={styles.calHead}>
           <button
             type="button"
-            className={calendarStyles.btn}
+            className={styles.btnNav}
             onClick={goToPreviousMonth}
             aria-label="Mês anterior"
           >
             ‹
           </button>
-          <div className={calendarStyles.calTitle}>{monthTitle}</div>
+          <div className={styles.calTitle}>{monthTitle}</div>
           <button
             type="button"
-            className={calendarStyles.btn}
+            className={styles.btnNav}
             onClick={goToNextMonth}
             aria-label="Próximo mês"
           >
@@ -547,20 +642,26 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
           </button>
         </div>
 
-        <div className={calendarStyles.grid} aria-hidden="true">
+        {isLoadingAvailability ? (
+          <div className={styles.meta}>Carregando disponibilidade…</div>
+        ) : availabilityError ? (
+          <div className={styles.meta}>{availabilityError}</div>
+        ) : null}
+
+        <div className={styles.grid} aria-hidden="true">
           {calendarHeaderDays.map((label, index) => (
-            <div key={`dow-${index}`} className={calendarStyles.dow}>
+            <div key={`dow-${index}`} className={styles.gridDow}>
               {label}
             </div>
           ))}
         </div>
 
-        <div className={calendarStyles.grid}>
+        <div className={styles.grid}>
           {calendarDays.dayEntries.map((entry) => (
             <button
               key={entry.iso}
               type="button"
-              className={calendarStyles.day}
+              className={styles.day}
               data-state={entry.state}
               data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
               data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}

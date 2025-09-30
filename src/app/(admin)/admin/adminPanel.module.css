@@ -97,8 +97,8 @@
 .menuOverlay {
   position: fixed;
   inset: 0;
-  background: transparent;
-  backdrop-filter: none;
+  background: rgba(15, 48, 35, 0.28);
+  backdrop-filter: blur(6px);
   z-index: 30;
 }
 
@@ -110,20 +110,20 @@
 
 .sidebar {
   position: fixed;
-  inset: 0 0 auto auto;
+  inset: 0 auto auto 0;
   width: min(320px, 90vw);
   height: 100vh;
   height: 100dvh;
   padding: clamp(24px, 6vw, 32px);
   background: rgba(255, 255, 255, 0.9);
-  border-left: 1px solid rgba(27, 94, 74, 0.12);
+  border-right: 1px solid rgba(27, 94, 74, 0.12);
   box-shadow: 0 30px 60px rgba(27, 94, 74, 0.15);
   backdrop-filter: blur(24px);
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 4vw, 32px);
-  transform: translateX(105%);
-  transition: transform 0.3s ease;
+  transform: translateX(-105%);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 40;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

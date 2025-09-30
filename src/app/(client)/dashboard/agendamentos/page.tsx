@@ -281,7 +281,7 @@ const depositStatusLabel = (depositValue: number, paidValue: number) => {
   return 'aguardando'
 }
 
-const canShowCancel = (status: string) => !['pending', 'canceled', 'completed'].includes(status)
+const canShowCancel = (status: string) => !['canceled', 'completed'].includes(status)
 
 const canShowPay = (appointment: NormalizedAppointment) => {
   if (appointment.depositValue <= 0) return false
@@ -289,7 +289,10 @@ const canShowPay = (appointment: NormalizedAppointment) => {
   return Math.round(appointment.paidValue * 100) < Math.round(appointment.depositValue * 100)
 }
 
-const canShowEdit = (appointment: NormalizedAppointment) => appointment.status === 'pending'
+const canShowEdit = (appointment: NormalizedAppointment) => {
+  if (!['pending', 'reserved'].includes(appointment.status)) return false
+  return hoursUntil(appointment.startsAt) >= CANCEL_THRESHOLD_HOURS
+}
 
 type ConfirmCancelModalProps = {
   dialog: CancelDialogState

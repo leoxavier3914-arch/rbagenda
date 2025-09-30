@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Inter } from 'next/font/google'
-
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 import {
@@ -12,11 +10,6 @@ import {
   type AvailabilityAppointment,
 } from '@/lib/availability'
 import styles from './appointments.module.css'
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
-})
 
 const statusLabels: Record<string, string> = {
   pending: 'Pendente',
@@ -1017,7 +1010,7 @@ export default function MyAppointments() {
   }
 
   return (
-    <main className={`${inter.className} ${styles.page}`}>
+    <main className={styles.page}>
       <div className={styles.shell}>
         <h1 className={styles.title}>Meus agendamentos</h1>
         <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>

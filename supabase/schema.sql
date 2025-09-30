@@ -17,7 +17,7 @@ $$;
 -- Perfis (mapeia usuários do Auth)
 create table if not exists profiles (
   id uuid primary key, -- igual a auth.uid()
-  role text not null default 'client' check (role in ('client','admin')),
+  role text not null default 'client' check (role in ('client','admin','adminmaster')),
   full_name text,
   email text,
   whatsapp text,
@@ -30,8 +30,10 @@ create table if not exists branches (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   timezone text not null default 'America/Sao_Paulo',
+  owner_id uuid references profiles(id) on delete set null,
   created_at timestamptz not null default now()
 );
+create index if not exists branches_owner_id_idx on branches(owner_id);
 create table if not exists service_types (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete set null,
@@ -198,8 +200,10 @@ for each row execute function set_updated_at();
 alter table system_announcements enable row level security;
 alter table platform_policies enable row level security;
 
+
 drop policy if exists system_announcements_adminmaster_rw on system_announcements;
 create policy system_announcements_adminmaster_rw on system_announcements for all using (
+
   exists (
     select 1
     from public.profiles p
@@ -215,8 +219,10 @@ create policy system_announcements_adminmaster_rw on system_announcements for al
   )
 );
 
+
 drop policy if exists platform_policies_adminmaster_rw on platform_policies;
 create policy platform_policies_adminmaster_rw on platform_policies for all using (
+
   exists (
     select 1
     from public.profiles p
@@ -264,7 +270,7 @@ for each row execute function sync_paid_full();
 -- RLS básica (clientes veem só o que é deles; admin vê tudo)
 alter table profiles enable row level security;
 alter table appointments enable row level security;
-create or replace function is_admin(uid uuid)
+create or replace function public.is_admin(uid uuid)
 returns boolean
 language plpgsql
 stable
@@ -275,7 +281,7 @@ declare
   result boolean;
 begin
   execute 'select exists(' ||
-          'select 1 from public.profiles where id = $1 and role = ''admin'''
+          'select 1 from public.profiles where id = $1 and role in (''admin'',''adminmaster'')'
           ')'
     into result
     using uid;
@@ -284,17 +290,17 @@ begin
 end;
 $$;
 
-grant execute on function is_admin(uuid) to public;
+grant execute on function public.is_admin(uuid) to public;
 
 create policy if not exists profiles_self on profiles for select using (
-  auth.uid() = id or is_admin(auth.uid())
+  auth.uid() = id or public.is_admin(auth.uid())
 );
 create policy if not exists profiles_self_insert on profiles for insert with check (
-  auth.uid() = id or is_admin(auth.uid())
+  auth.uid() = id or public.is_admin(auth.uid())
 );
 create policy if not exists appt_select on appointments for select using (
-  customer_id = auth.uid() or is_admin(auth.uid())
+  customer_id = auth.uid() or public.is_admin(auth.uid())
 );
 create policy if not exists appt_insert on appointments for insert with check (
-  customer_id = auth.uid() or is_admin(auth.uid())
+  customer_id = auth.uid() or public.is_admin(auth.uid())
 );

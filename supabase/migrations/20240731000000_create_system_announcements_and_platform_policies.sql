@@ -55,6 +55,7 @@ FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 ALTER TABLE public.system_announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.platform_policies ENABLE ROW LEVEL SECURITY;
 
+
 DROP POLICY IF EXISTS system_announcements_adminmaster_rw ON public.system_announcements;
 CREATE POLICY system_announcements_adminmaster_rw
   ON public.system_announcements
@@ -75,6 +76,7 @@ CREATE POLICY system_announcements_adminmaster_rw
         AND p.role = 'adminmaster'
     )
   );
+
 
 DROP POLICY IF EXISTS platform_policies_adminmaster_rw ON public.platform_policies;
 CREATE POLICY platform_policies_adminmaster_rw

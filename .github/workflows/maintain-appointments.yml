@@ -1,12 +1,14 @@
 name: Maintain Supabase appointments
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  schedule:  
+    - cron: "*/15 * * * *"   # executa a cada 15 minutos (UTC)
+ 
   workflow_dispatch:
 
 jobs:
   invoke-cron:
+ 
     runs-on: ubuntu-latest
     steps:
       - name: Call Supabase Edge Function

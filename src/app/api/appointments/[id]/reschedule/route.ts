@@ -44,8 +44,9 @@ export async function POST(
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
 
-  if (appointment.status !== 'pending') {
-    return NextResponse.json({ error: 'apenas agendamentos pendentes podem ser alterados' }, { status: 400 })
+  const allowedStatuses = new Set(['pending', 'reserved'])
+  if (!allowedStatuses.has(appointment.status)) {
+    return NextResponse.json({ error: 'apenas agendamentos pendentes ou reservados podem ser alterados' }, { status: 400 })
   }
 
   const now = Date.now()

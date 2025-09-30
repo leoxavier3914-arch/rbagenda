@@ -17,7 +17,7 @@ $$;
 -- Perfis (mapeia usuários do Auth)
 create table if not exists profiles (
   id uuid primary key, -- igual a auth.uid()
-  role text not null default 'client' check (role in ('client','admin')),
+  role text not null default 'client' check (role in ('client','admin','adminmaster')),
   full_name text,
   email text,
   whatsapp text,
@@ -189,7 +189,7 @@ for each row execute function sync_paid_full();
 -- RLS básica (clientes veem só o que é deles; admin vê tudo)
 alter table profiles enable row level security;
 alter table appointments enable row level security;
-create or replace function is_admin(uid uuid)
+create or replace function public.is_admin(uid uuid)
 returns boolean
 language plpgsql
 stable
@@ -200,7 +200,7 @@ declare
   result boolean;
 begin
   execute 'select exists(' ||
-          'select 1 from public.profiles where id = $1 and role = ''admin'''
+          'select 1 from public.profiles where id = $1 and role in (''admin'',''adminmaster'')'
           ')'
     into result
     using uid;
@@ -209,17 +209,17 @@ begin
 end;
 $$;
 
-grant execute on function is_admin(uuid) to public;
+grant execute on function public.is_admin(uuid) to public;
 
 create policy if not exists profiles_self on profiles for select using (
-  auth.uid() = id or is_admin(auth.uid())
+  auth.uid() = id or public.is_admin(auth.uid())
 );
 create policy if not exists profiles_self_insert on profiles for insert with check (
-  auth.uid() = id or is_admin(auth.uid())
+  auth.uid() = id or public.is_admin(auth.uid())
 );
 create policy if not exists appt_select on appointments for select using (
-  customer_id = auth.uid() or is_admin(auth.uid())
+  customer_id = auth.uid() or public.is_admin(auth.uid())
 );
 create policy if not exists appt_insert on appointments for insert with check (
-  customer_id = auth.uid() or is_admin(auth.uid())
+  customer_id = auth.uid() or public.is_admin(auth.uid())
 );

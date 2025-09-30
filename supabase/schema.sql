@@ -162,6 +162,81 @@ create table if not exists reminders (
   last_error text
 );
 create index if not exists reminders_sched_idx on reminders(scheduled_at) where status='pending';
+-- Comunicação e políticas da plataforma
+create table if not exists system_announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  message text,
+  audience text,
+  status text,
+  publish_at timestamptz,
+  created_at timestamptz not null default now(),
+  created_by uuid references profiles(id) on delete set null
+);
+
+create table if not exists platform_policies (
+  id uuid primary key default gen_random_uuid(),
+  name text unique not null,
+  value jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create or replace function set_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_platform_policies_updated_at on platform_policies;
+create trigger trg_platform_policies_updated_at
+before update on platform_policies
+for each row execute function set_updated_at();
+
+alter table system_announcements enable row level security;
+alter table platform_policies enable row level security;
+
+drop policy if exists system_announcements_adminmaster_rw on system_announcements;
+create policy system_announcements_adminmaster_rw on system_announcements for all using (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role = 'adminmaster'
+  )
+) with check (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role = 'adminmaster'
+  )
+);
+
+drop policy if exists platform_policies_adminmaster_rw on platform_policies;
+create policy platform_policies_adminmaster_rw on platform_policies for all using (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role = 'adminmaster'
+  )
+) with check (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role = 'adminmaster'
+  )
+);
+
+insert into platform_policies (name, value)
+values
+  ('booking_rules', '{}'::jsonb),
+  ('integrations', '{}'::jsonb)
+on conflict (name) do nothing;
 -- View de totais pagos
 create or replace view appointment_payment_totals as
 select

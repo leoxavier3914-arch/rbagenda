@@ -30,8 +30,10 @@ create table if not exists branches (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   timezone text not null default 'America/Sao_Paulo',
+  owner_id uuid references profiles(id) on delete set null,
   created_at timestamptz not null default now()
 );
+create index if not exists branches_owner_id_idx on branches(owner_id);
 create table if not exists service_types (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete set null,

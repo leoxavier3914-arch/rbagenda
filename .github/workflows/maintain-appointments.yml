@@ -1,19 +1,21 @@
 name: Maintain Supabase appointments
 
 on:
-  schedule:
+  schedule:  
     - cron: "*/15 * * * *"   # executa a cada 15 minutos (UTC)
+ 
   workflow_dispatch:
 
 jobs:
   invoke-cron:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Call Supabase Edge Function
-      env:
-        SUPABASE_FUNCTION_URL: ${{ secrets.SUPABASE_FUNCTION_URL }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      run: |
-        curl -sSf -X POST "$SUPABASE_FUNCTION_URL" \
-          -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-          -H "Content-Type: application/json"
+ 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase Edge Function
+        env:
+          SUPABASE_FUNCTION_URL: ${{ secrets.SUPABASE_FUNCTION_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -sSf -X POST "$SUPABASE_FUNCTION_URL" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json"

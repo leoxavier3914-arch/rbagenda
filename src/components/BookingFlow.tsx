@@ -85,7 +85,7 @@ export default function BookingFlow(){
 
         const nextStaff = typeof d?.staff_id === 'string' ? d.staff_id : null
         const slotList = Array.isArray(d?.slots)
-          ? d.slots.filter((value): value is string => typeof value === 'string')
+          ? d.slots.filter((value: unknown): value is string => typeof value === 'string')
           : []
 
         setStaffId(nextStaff)

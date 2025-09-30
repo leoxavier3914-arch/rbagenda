@@ -200,7 +200,10 @@ for each row execute function set_updated_at();
 alter table system_announcements enable row level security;
 alter table platform_policies enable row level security;
 
-create policy if not exists system_announcements_adminmaster_rw on system_announcements for all using (
+
+drop policy if exists system_announcements_adminmaster_rw on system_announcements;
+create policy system_announcements_adminmaster_rw on system_announcements for all using (
+
   exists (
     select 1
     from public.profiles p
@@ -216,7 +219,10 @@ create policy if not exists system_announcements_adminmaster_rw on system_announ
   )
 );
 
-create policy if not exists platform_policies_adminmaster_rw on platform_policies for all using (
+
+drop policy if exists platform_policies_adminmaster_rw on platform_policies;
+create policy platform_policies_adminmaster_rw on platform_policies for all using (
+
   exists (
     select 1
     from public.profiles p

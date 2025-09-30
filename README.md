@@ -42,6 +42,20 @@ Cadastre no painel do Stripe um endpoint apontando para `https://SEU-DOMINIO/api
 
 Use o segredo configurado no Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado.
 
+### Agendador de rotinas (cron)
+
+Para que agendamentos com opção "pagar depois" sejam automaticamente cancelados após 2 h sem pagamento e para finalizar agendamentos passados, configure um job agendado no Supabase Scheduler apontando para a função Edge `cron-maintain-appointments` incluída neste repositório.
+
+1. Certifique-se de ter o [Supabase CLI](https://supabase.com/docs/guides/cli) instalado e faça login no projeto (`supabase login`).
+2. Implante a função executando:
+   ```bash
+   supabase functions deploy cron-maintain-appointments --project-ref <seu-projeto>
+   ```
+3. No painel do Supabase, crie um **Scheduled Function** com frequência de 15 minutos apontando para `cron-maintain-appointments`.
+4. Defina as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no ambiente da função (em `Functions > cron-maintain-appointments > Settings`).
+
+A função lê diretamente as tabelas `appointments` e `appointment_payment_totals` usando a service role e replica a lógica de `src/lib/appointments.ts`, finalizando compromissos passados e cancelando pendentes sem sinal pago dentro do Supabase.
+
 ## Scripts disponíveis
 
 - `npm run dev`: inicia o servidor de desenvolvimento com Turbopack.

@@ -42,6 +42,10 @@ Cadastre no painel do Stripe um endpoint apontando para `https://SEU-DOMINIO/api
 
 Use o segredo configurado no Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado.
 
+### Agendador de rotinas (cron)
+
+Para que agendamentos com opção "pagar depois" sejam automaticamente cancelados após 2 h sem pagamento e para finalizar agendamentos passados, configure um job agendado no provedor de hospedagem. Em implantações na Vercel, o arquivo `vercel.json` incluído no projeto registra um cron que chama `GET /api/cron/appointments` a cada 15 minutos. Certifique-se de que as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` estejam definidas no ambiente da Vercel para que a rotina tenha permissão de atualizar os registros no Supabase.
+
 ## Scripts disponíveis
 
 - `npm run dev`: inicia o servidor de desenvolvimento com Turbopack.

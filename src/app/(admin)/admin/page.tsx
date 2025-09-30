@@ -515,6 +515,50 @@ export default function Admin() {
     }
   }, [isMenuOpen])
 
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMenuOpen])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const mediaQuery = window.matchMedia('(min-width: 1024px)')
+
+    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    handleChange(mediaQuery)
+
+    const listener = (event: MediaQueryListEvent) => handleChange(event)
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', listener)
+      return () => mediaQuery.removeEventListener('change', listener)
+    }
+
+    mediaQuery.addListener(listener)
+    return () => mediaQuery.removeListener(listener)
+  }, [])
+
   const handleSignOut = useCallback(async () => {
     if (signingOut) return
 

@@ -128,26 +128,32 @@ export default function AuthHeader() {
   return (
     <>
       <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6">
-        <div className="pointer-events-none mx-auto flex w-full max-w-5xl items-center justify-between">
-          <div className="pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.78)] text-2xl font-semibold text-[var(--brand-forest)] shadow-[var(--shadow-soft)] backdrop-blur-md transition hover:bg-[rgba(255,255,255,0.95)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.6)]"
-              aria-label="Abrir menu de navegação"
-            >
-              ☰
-            </button>
-          </div>
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-[rgba(47,109,79,0.22)] bg-[rgba(255,255,255,0.78)] px-4 py-2.5 text-[var(--brand-forest)] shadow-[var(--shadow-soft)] backdrop-blur-xl">
+          <Link
+            href={role === "admin" ? "/admin" : "/dashboard"}
+            className="flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold uppercase tracking-[0.2em] text-[rgba(47,109,79,0.9)] transition hover:text-[var(--brand-forest-dark)]"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(47,109,79,0.2)] bg-white/70 text-base font-bold">
+              RB
+            </span>
+            Agenda
+          </Link>
 
-          <div className="pointer-events-auto hidden rounded-full border border-[rgba(47,109,79,0.2)] bg-[rgba(255,255,255,0.85)] px-4 py-2 text-sm font-medium uppercase tracking-[0.18em] text-[rgba(47,109,79,0.85)] shadow-[var(--shadow-soft)] backdrop-blur-md sm:flex">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            aria-expanded={isMenuOpen}
+            className="inline-flex items-center gap-2 rounded-full border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.92)] px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[rgba(47,109,79,0.85)] shadow-[var(--shadow-soft)] backdrop-blur-lg transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.6)]"
+            aria-label="Abrir menu de navegação"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(47,109,79,0.12)] text-lg leading-none">☰</span>
             Menu
-          </div>
+          </button>
         </div>
       </header>
 
       <div
-        className={`fixed inset-0 z-30 bg-[rgba(13,27,20,0.5)] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-30 bg-[rgba(13,27,20,0.6)] backdrop-blur-sm transition-opacity duration-300 ${
           isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={() => setIsMenuOpen(false)}
@@ -155,27 +161,35 @@ export default function AuthHeader() {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] transform border-r border-[rgba(255,255,255,0.32)] bg-[rgba(47,109,79,0.28)] shadow-[0_24px_60px_-20px_rgba(25,55,38,0.6)] backdrop-blur-2xl transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-full max-w-[min(420px,92vw)] flex-col overflow-hidden border-r border-[rgba(255,255,255,0.25)] bg-[rgba(33,68,51,0.7)] shadow-[0_32px_80px_-30px_rgba(15,31,23,0.65)] backdrop-blur-2xl transition-transform duration-300 ease-out sm:inset-y-4 sm:left-6 sm:rounded-[32px] sm:border sm:border-white/30 ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        role="dialog"
+        aria-modal="true"
       >
-        <div className="relative h-full px-6 pb-10 pt-20">
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(false)}
-            className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(255,255,255,0.7)] text-xl font-semibold text-[rgba(47,109,79,0.8)] shadow-[0_10px_30px_rgba(15,31,23,0.25)] transition hover:bg-[var(--brand-forest)] hover:text-[var(--brand-cream)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,255,255,0.7)]"
-            aria-label="Fechar menu"
-          >
-            ×
-          </button>
+        <div className="relative flex h-full flex-col overflow-hidden">
+          <div className="flex items-start justify-between px-6 pb-4 pt-8 sm:px-8">
+            <div className="space-y-2 text-white">
+              <span className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+                Navegação
+              </span>
+              <p className="text-2xl font-semibold leading-tight">Escolha onde quer ir</p>
+              <p className="text-sm text-white/70">
+                Explore as páginas do painel com um toque. O menu funciona tanto no desktop quanto no celular.
+              </p>
+            </div>
 
-          <div className="mb-8">
-            <span className="inline-flex items-center rounded-full border border-[rgba(255,255,255,0.4)] bg-[rgba(255,255,255,0.22)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/80">
-              Navegação
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="ml-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-xl font-semibold text-white shadow-[0_10px_30px_rgba(15,31,23,0.35)] transition hover:bg-white/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+              aria-label="Fechar menu"
+            >
+              ×
+            </button>
           </div>
 
-          <nav className="flex flex-col gap-2">
+          <nav className="flex flex-1 flex-col gap-2 overflow-y-auto px-6 pb-10 sm:px-8">
             {navigationLinks.map((link) => {
               const isActive = link.exact
                 ? pathname === link.href
@@ -186,14 +200,14 @@ export default function AuthHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-colors ${
+                  className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-base font-medium tracking-wide transition-colors ${
                     isActive
-                      ? "border border-white/40 bg-white/30 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
-                      : "border border-transparent text-white/90 hover:bg-white/15"
+                      ? "border border-white/40 bg-white/25 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                      : "border border-transparent text-white/90 hover:border-white/20 hover:bg-white/10"
                   } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70`}
                 >
                   <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white transition ${
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white transition ${
                       isActive
                         ? "shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
                         : "group-hover:bg-white/25"
@@ -201,7 +215,12 @@ export default function AuthHeader() {
                   >
                     {getLinkIcon(link.href)}
                   </span>
-                  <span>{link.label}</span>
+                  <div className="flex flex-col">
+                    <span>{link.label}</span>
+                    <span className="text-xs font-normal uppercase tracking-[0.28em] text-white/60">
+                      {role === "admin" ? "Painel" : "Conta"}
+                    </span>
+                  </div>
                 </Link>
               );
             })}

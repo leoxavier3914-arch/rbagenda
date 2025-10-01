@@ -14,12 +14,13 @@
   min-height: 100vh;
   color: var(--text);
   background: none;
+  padding: 32px 0 48px;
 }
 
-.wrap {
-  max-width: 1050px;
-  margin: 0 auto;
-  padding: 32px 16px 48px;
+.checkoutShell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .backButton {

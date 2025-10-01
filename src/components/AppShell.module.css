@@ -1,0 +1,244 @@
+.wrapper {
+  --shell-fg: #f7f4ef;
+  --shell-stroke: rgba(255, 255, 255, 0.14);
+  --shell-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  --shell-blur: 20px;
+  background: linear-gradient(160deg, #0c1813, #163529, #28523e);
+  color: var(--shell-fg);
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.hamburger {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--shell-stroke);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 1001;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.hamburger:active {
+  transform: scale(0.96);
+}
+
+.bars {
+  position: relative;
+  width: 22px;
+  height: 14px;
+  display: block;
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--shell-fg);
+  border-radius: 2px;
+  transition: transform 260ms ease, opacity 260ms ease, top 260ms ease;
+}
+
+.bar:nth-child(1) {
+  top: 0;
+}
+
+.bar:nth-child(2) {
+  top: 6px;
+}
+
+.bar:nth-child(3) {
+  top: 12px;
+}
+
+.hamburger[aria-expanded="true"] .bar:nth-child(1) {
+  top: 6px;
+  transform: rotate(45deg);
+}
+
+.hamburger[aria-expanded="true"] .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger[aria-expanded="true"] .bar:nth-child(3) {
+  top: 6px;
+  transform: rotate(-45deg);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.48);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms ease;
+  z-index: 1000;
+}
+
+.overlayActive {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(var(--shell-blur));
+  border-right: 1px solid var(--shell-stroke);
+  box-shadow: var(--shell-shadow);
+  transform: translateX(-110%);
+  transition: transform 260ms ease;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarActive {
+  transform: translateX(0);
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  background: rgba(15, 25, 20, 0.4);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profileName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.profileSub {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.diamondIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.divider {
+  height: 1px;
+  margin: 6px 12px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.menu {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.itemActive {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #0f1d17;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.content {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  padding: 96px 24px 56px;
+  color: var(--brand-ink);
+}
+
+.contentInner {
+  margin: 0 auto;
+  width: min(100%, 1120px);
+}
+
+@media (min-width: 1024px) {
+  .hamburger {
+    top: 20px;
+    left: 24px;
+  }
+
+  .sidebar {
+    width: 280px;
+  }
+
+  .content {
+    padding: 120px 48px 72px;
+  }
+
+  .contentInner {
+    width: min(100%, 1180px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .contentInner {
+    width: min(100%, 1240px);
+  }
+}

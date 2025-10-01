@@ -217,6 +217,12 @@
   width: min(100%, 1120px);
 }
 
+@media (max-width: 600px) {
+  .content {
+    padding-inline: 12px;
+  }
+}
+
 @media (min-width: 1024px) {
   .hamburger {
     top: 20px;

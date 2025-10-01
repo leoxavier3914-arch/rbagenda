@@ -112,7 +112,7 @@
   display: grid;
   width: 100%;
   gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .tipoPill {
@@ -123,7 +123,7 @@
   display: grid;
   width: 100%;
   gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .techniquePill {
@@ -736,10 +736,6 @@
 
   .pills {
     gap: 6px;
-  }
-
-  .tipoPills {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .pill {

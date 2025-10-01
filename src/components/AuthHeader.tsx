@@ -122,7 +122,7 @@ export default function AuthHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <Link
           href={role === "admin" ? "/admin" : "/dashboard"}
           className="flex items-center gap-2 text-lg font-semibold text-emerald-900 transition hover:text-emerald-700"
@@ -139,12 +139,34 @@ export default function AuthHeader() {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-full border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 md:hidden"
+          className="inline-flex h-11 w-11 flex-col items-center justify-center gap-1 rounded-full border border-emerald-200 text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 md:hidden"
           onClick={() => setIsMobileOpen((open) => !open)}
           aria-expanded={isMobileOpen}
           aria-controls="mobile-menu"
         >
-          {isMobileOpen ? "Fechar" : "Menu"}
+          <span className="sr-only">{isMobileOpen ? "Fechar menu" : "Abrir menu"}</span>
+          <span
+            aria-hidden
+            className={`${
+              isMobileOpen
+                ? "translate-y-[7px] rotate-45 opacity-80"
+                : "-translate-y-[6px]"
+            } block h-0.5 w-6 origin-center rounded-full bg-emerald-700 transition-transform duration-200 ease-out`}
+          />
+          <span
+            aria-hidden
+            className={`${
+              isMobileOpen ? "opacity-0" : "opacity-80"
+            } block h-0.5 w-6 rounded-full bg-emerald-700 transition-opacity duration-200 ease-out`}
+          />
+          <span
+            aria-hidden
+            className={`${
+              isMobileOpen
+                ? "-translate-y-[7px] -rotate-45 opacity-80"
+                : "translate-y-[6px]"
+            } block h-0.5 w-6 origin-center rounded-full bg-emerald-700 transition-transform duration-200 ease-out`}
+          />
         </button>
       </div>
 

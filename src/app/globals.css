@@ -21,12 +21,8 @@
 
   body {
     min-height: 100vh;
-    background-color: var(--brand-sand);
-    background-image:
-      radial-gradient(circle at 0% 0%, rgba(var(--brand-primary-rgb), 0.18) 0, transparent 52%),
-      radial-gradient(circle at 100% 0%, rgba(var(--brand-light-rgb), 0.24) 0, transparent 48%),
-      linear-gradient(135deg, rgba(var(--brand-primary-rgb), 0.08) 0%, rgba(255, 255, 255, 0.45) 100%);
-    color: var(--brand-ink);
+    background: linear-gradient(160deg, #0c1813, #163529, #28523e);
+    color: #f7f4ef;
     font-family: "Inter", "Geist", "Geist Sans", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -69,6 +65,7 @@
     padding: 1.5rem;
     box-shadow: var(--shadow-soft);
     position: relative;
+    color: var(--brand-ink);
   }
 
   .card::after {
@@ -95,6 +92,7 @@
         rgba(var(--brand-light-rgb), 0.6)
       );
     padding: 1.5rem;
+    color: var(--brand-ink);
   }
 
   .btn-primary {

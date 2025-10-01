@@ -1,14 +1,12 @@
 .wrapper {
-  --shell-fg: #f7f4ef;
   --shell-stroke: rgba(255, 255, 255, 0.14);
   --shell-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
   --shell-blur: 20px;
-  background: linear-gradient(160deg, #0c1813, #163529, #28523e);
-  color: var(--shell-fg);
   min-height: 100vh;
   width: 100%;
   position: relative;
   overflow-x: hidden;
+  color: inherit;
 }
 
 .hamburger {
@@ -48,7 +46,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--shell-fg);
+  background: #f7f4ef;
   border-radius: 2px;
   transition: transform 260ms ease, opacity 260ms ease, top 260ms ease;
 }
@@ -210,7 +208,7 @@
   min-height: 100vh;
   width: 100%;
   padding: 96px 24px 56px;
-  color: var(--brand-ink);
+  color: inherit;
 }
 
 .contentInner {

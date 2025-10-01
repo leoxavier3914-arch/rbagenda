@@ -19,6 +19,12 @@
     --radius-card: 28px;
   }
 
+  html,
+  body {
+    overflow-x: clip;
+    overflow-x: hidden;
+  }
+
   body {
     min-height: 100vh;
     background: linear-gradient(160deg, #0c1813, #163529, #28523e);

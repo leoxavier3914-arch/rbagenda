@@ -14,12 +14,13 @@ if (!serviceRoleKey) {
   throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
 }
 
-// @ts-ignore: Remote import resolved at runtime by the Deno edge runtime
-const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0')
+const { createClient } = (await import(
+  'https://esm.sh/@supabase/supabase-js@2.45.0'
+)) as typeof import('https://esm.sh/@supabase/supabase-js@2.45.0')
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false },
-}) as any
+})
 
 export type PendingAppointment = {
   id: string

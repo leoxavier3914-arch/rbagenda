@@ -194,7 +194,7 @@ export default function Dashboard() {
     .toUpperCase()
 
   return (
-    <main className="flex flex-col items-center gap-6 px-4 py-10">
+    <main className="flex flex-col items-center gap-6 px-6 py-10 sm:px-10">
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-2xl font-semibold uppercase text-white shadow-xl sm:h-32 sm:w-32 sm:border-[6px] sm:text-3xl">
           {initials}
@@ -207,120 +207,122 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
-      <section className="flex w-full max-w-xl flex-col items-center gap-6">
-        <div className="card w-full space-y-5">
-          <div className="space-y-1 text-left">
-            <span className="badge">Dados pessoais</span>
-            <p className="text-sm text-[color:rgba(31,45,40,0.7)]">
-              Atualize seu nome, contato e senha. Essas informações são utilizadas para personalizar sua experiência no estúdio.
-            </p>
-          </div>
-          {loading ? (
-            <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.7)]">Carregando…</div>
-          ) : (
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="fullName">
-                  Nome completo
-                </label>
-                <input
-                  id="fullName"
-                  className="input-field"
-                  value={fullName}
-                  onChange={event => setFullName(event.target.value)}
-                  disabled={saving}
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
-                  E-mail
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className="input-field"
-                  value={email}
-                  onChange={event => setEmail(event.target.value)}
-                  disabled={saving}
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="whatsapp">
-                  Celular
-                </label>
-                <input
-                  id="whatsapp"
-                  className="input-field"
-                  value={whatsapp}
-                  onChange={event => setWhatsapp(event.target.value)}
-                  disabled={saving}
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="birthDate">
-                  Data de nascimento
-                </label>
-                <input
-                  id="birthDate"
-                  type="date"
-                  className="input-field"
-                  value={birthDate}
-                  onChange={event => setBirthDate(event.target.value)}
-                  disabled={saving}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
-                  Nova senha
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  className="input-field"
-                  value={password}
-                  onChange={event => setPassword(event.target.value)}
-                  disabled={saving}
-                  placeholder="Deixe em branco para manter a atual"
-                  minLength={6}
-                />
-              </div>
-              {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-                  {error}
+      <div className="w-full max-w-3xl px-2 sm:px-4">
+        <section className="flex w-full flex-col items-center gap-6">
+          <div className="card w-full space-y-5">
+            <div className="space-y-1 text-left">
+              <span className="badge">Dados pessoais</span>
+              <p className="text-sm text-[color:rgba(31,45,40,0.7)]">
+                Atualize seu nome, contato e senha. Essas informações são utilizadas para personalizar sua experiência no estúdio.
+              </p>
+            </div>
+            {loading ? (
+              <div className="surface-muted text-center text-sm text-[color:rgba(31,45,40,0.7)]">Carregando…</div>
+            ) : (
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="fullName">
+                    Nome completo
+                  </label>
+                  <input
+                    id="fullName"
+                    className="input-field"
+                    value={fullName}
+                    onChange={event => setFullName(event.target.value)}
+                    disabled={saving}
+                    required
+                  />
                 </div>
-              ) : null}
-              {success ? (
-                <div className="rounded-2xl border border-[color:rgba(47,109,79,0.3)] bg-[color:rgba(247,242,231,0.7)] px-4 py-3 text-sm text-[#2f6d4f]">
-                  {success}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
+                    E-mail
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    className="input-field"
+                    value={email}
+                    onChange={event => setEmail(event.target.value)}
+                    disabled={saving}
+                    required
+                  />
                 </div>
-              ) : null}
-              <button type="submit" className="btn-primary w-full" disabled={saving}>
-                {saving ? 'Salvando…' : 'Salvar alterações'}
-              </button>
-            </form>
-          )}
-        </div>
-        <div className="card w-full space-y-4 text-center">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-[#1f2d28]">Encerrar sessão</h2>
-            <p className="text-sm text-[color:rgba(31,45,40,0.8)]">
-              Finalize sua sessão com segurança quando terminar de atualizar seus dados ou revisar seus agendamentos.
-            </p>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="whatsapp">
+                    Celular
+                  </label>
+                  <input
+                    id="whatsapp"
+                    className="input-field"
+                    value={whatsapp}
+                    onChange={event => setWhatsapp(event.target.value)}
+                    disabled={saving}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="birthDate">
+                    Data de nascimento
+                  </label>
+                  <input
+                    id="birthDate"
+                    type="date"
+                    className="input-field"
+                    value={birthDate}
+                    onChange={event => setBirthDate(event.target.value)}
+                    disabled={saving}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
+                    Nova senha
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    className="input-field"
+                    value={password}
+                    onChange={event => setPassword(event.target.value)}
+                    disabled={saving}
+                    placeholder="Deixe em branco para manter a atual"
+                    minLength={6}
+                  />
+                </div>
+                {error ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                ) : null}
+                {success ? (
+                  <div className="rounded-2xl border border-[color:rgba(47,109,79,0.3)] bg-[color:rgba(247,242,231,0.7)] px-4 py-3 text-sm text-[#2f6d4f]">
+                    {success}
+                  </div>
+                ) : null}
+                <button type="submit" className="btn-primary w-full" disabled={saving}>
+                  {saving ? 'Salvando…' : 'Salvar alterações'}
+                </button>
+              </form>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="btn-secondary w-full justify-center"
-          >
-            {signingOut ? 'Saindo…' : 'Sair da conta'}
-          </button>
-          {signOutError ? <p className="text-xs text-red-600">{signOutError}</p> : null}
-        </div>
-      </section>
+          <div className="card w-full space-y-4 text-center">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-[#1f2d28]">Encerrar sessão</h2>
+              <p className="text-sm text-[color:rgba(31,45,40,0.8)]">
+                Finalize sua sessão com segurança quando terminar de atualizar seus dados ou revisar seus agendamentos.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="btn-secondary w-full justify-center"
+            >
+              {signingOut ? 'Saindo…' : 'Sair da conta'}
+            </button>
+            {signOutError ? <p className="text-xs text-red-600">{signOutError}</p> : null}
+          </div>
+        </section>
+      </div>
     </main>
   )
 }

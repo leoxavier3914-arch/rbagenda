@@ -217,7 +217,7 @@ export default function BookingFlow(){
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="mx-auto w-full max-w-[820px]">
       <div className="card space-y-6">
         <div className="space-y-1">
           <span className="badge">Novo agendamento</span>

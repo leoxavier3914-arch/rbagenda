@@ -31,15 +31,18 @@
 }
 
 .shell {
-  max-width: 680px;
+  max-width: 740px;
   margin: 0 auto;
   padding: clamp(24px, 6vw, 40px);
   width: 100%;
   box-sizing: border-box;
-  background: linear-gradient(145deg, var(--card-surface), rgba(var(--brand-rgb), 0.14));
-  border: 1px solid var(--stroke);
+  background: rgba(15, 25, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-xl);
-  box-shadow: 0 30px 80px -40px rgba(12, 46, 35, 0.6);
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: rgba(247, 244, 239, 0.92);
 }
 
 .title {
@@ -53,7 +56,7 @@
 
 .subtitle {
   font-size: 15px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.72);
   margin: 0 0 20px;
   text-align: center;
 }
@@ -71,6 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  color: var(--ink);
 }
 
 .card::after {

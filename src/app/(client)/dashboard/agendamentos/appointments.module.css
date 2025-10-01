@@ -1,10 +1,10 @@
 :root {
-  --appointments-bg: rgba(251, 250, 247, 0.75);
-  --appointments-surface: rgba(255, 255, 255, 0.38);
-  --appointments-surface-strong: rgba(255, 255, 255, 0.52);
+  --appointments-bg: rgba(251, 250, 247, 0.92);
+  --appointments-surface: rgba(255, 255, 255, 0.9);
+  --appointments-surface-strong: rgba(255, 255, 255, 0.96);
   --appointments-ink: #16372e;
   --appointments-muted: rgba(22, 55, 46, 0.72);
-  --appointments-line: rgba(255, 255, 255, 0.42);
+  --appointments-line: rgba(255, 255, 255, 0.62);
   --appointments-brand: #1f8a70;
   --appointments-brand-rgb: 31, 138, 112;
   --appointments-ok: #1f8a70;
@@ -57,7 +57,6 @@
   text-align: center;
   font-size: 15px;
   line-height: 1.55;
-  backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow: 0 18px 40px -28px rgba(12, 46, 35, 0.55);
 }
@@ -86,7 +85,6 @@
   box-shadow: var(--appointments-shadow);
   margin-bottom: 24px;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  backdrop-filter: blur(26px);
 }
 
 .card:last-of-type {
@@ -148,7 +146,6 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
@@ -224,7 +221,6 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  backdrop-filter: blur(16px);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(var(--appointments-brand-rgb), 0.18));
   color: var(--appointments-ink);
 }
@@ -287,7 +283,6 @@
   position: absolute;
   inset: 0;
   background: rgba(12, 38, 30, 0.55);
-  backdrop-filter: blur(6px);
 }
 
 .modalContent {
@@ -302,7 +297,6 @@
   animation: fadeIn 0.25s ease;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.32);
-  backdrop-filter: blur(24px);
 }
 
 .modalWarning {
@@ -420,7 +414,6 @@
   color: var(--appointments-ink);
   font-weight: 600;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  backdrop-filter: blur(14px);
 }
 
 .btnNav:hover {
@@ -457,7 +450,6 @@
   place-items: center;
   font-size: 13px;
   font-weight: 600;
-  backdrop-filter: blur(14px);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
@@ -563,7 +555,6 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
   max-width: 100%;
   white-space: nowrap;
-  backdrop-filter: blur(14px);
   color: var(--appointments-ink);
 }
 
@@ -587,7 +578,6 @@
   left: 0;
   right: 0;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(var(--appointments-brand-rgb), 0.15));
-  backdrop-filter: blur(18px);
   border-top: 1px solid rgba(255, 255, 255, 0.32);
   margin-top: auto;
   align-self: stretch;

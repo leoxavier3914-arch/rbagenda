@@ -73,7 +73,7 @@ export default function AuthHeader() {
 
   if (navigationLinks.length === 0) {
     return (
-      <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4 text-sm text-emerald-900">
           <span className="h-5 w-24 animate-pulse rounded-full bg-emerald-100" aria-hidden />
           <span className="h-5 w-12 animate-pulse rounded-full bg-emerald-100" aria-hidden />
@@ -121,7 +121,7 @@ export default function AuthHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
         <Link
           href={role === "admin" ? "/admin" : "/dashboard"}

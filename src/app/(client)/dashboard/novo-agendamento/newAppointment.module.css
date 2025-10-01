@@ -1,13 +1,13 @@
 :global(:root) {
   --bg-page: #fbfaf7;
-  --card-surface: rgba(255, 255, 255, 0.42);
-  --card-surface-strong: rgba(255, 255, 255, 0.58);
+  --card-surface: rgba(255, 255, 255, 0.9);
+  --card-surface-strong: rgba(255, 255, 255, 0.96);
   --ink: #16372e;
   --muted: rgba(22, 55, 46, 0.7);
   --brand: #1f8a70;
   --brand-rgb: 31, 138, 112;
   --brand-soft: rgba(227, 242, 237, 0.55);
-  --stroke: rgba(255, 255, 255, 0.45);
+  --stroke: rgba(255, 255, 255, 0.65);
   --ok: #1f8a70;
   --warn: #d1a13b;
   --info: #2e6bd9;
@@ -40,7 +40,6 @@
   border: 1px solid var(--stroke);
   border-radius: var(--radius-xl);
   box-shadow: 0 30px 80px -40px rgba(12, 46, 35, 0.6);
-  backdrop-filter: blur(24px);
 }
 
 .title {
@@ -72,7 +71,6 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  backdrop-filter: blur(24px);
 }
 
 .card::after {
@@ -141,7 +139,6 @@
     border-color 0.2s ease, color 0.2s ease;
   user-select: none;
   max-width: 100%;
-  backdrop-filter: blur(18px);
 }
 
 .pill:hover {
@@ -165,7 +162,6 @@
   border-radius: 18px;
   padding: 14px 18px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(var(--brand-rgb), 0.12));
-  backdrop-filter: blur(20px);
   box-shadow: 0 24px 70px -42px rgba(12, 46, 35, 0.55);
 }
 
@@ -243,7 +239,6 @@
   font-weight: 600;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   color: var(--ink);
-  backdrop-filter: blur(16px);
   box-shadow: 0 20px 60px -40px rgba(12, 46, 35, 0.55);
 }
 
@@ -264,7 +259,6 @@
   color: var(--ink);
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-  backdrop-filter: blur(16px);
 }
 
 .viewMoreButton:hover {
@@ -299,7 +293,6 @@
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease,
     background-color 0.15s ease;
-  backdrop-filter: blur(16px);
   color: var(--ink);
 }
 
@@ -341,7 +334,6 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 10px;
-  backdrop-filter: blur(12px);
 }
 
 .legendItem {
@@ -402,7 +394,6 @@
     background-color 0.15s ease;
   max-width: 100%;
   white-space: nowrap;
-  backdrop-filter: blur(18px);
   color: var(--ink);
 }
 
@@ -426,7 +417,6 @@
   left: 0;
   right: 0;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(var(--brand-rgb), 0.16));
-  backdrop-filter: blur(18px);
   border-top: 1px solid rgba(255, 255, 255, 0.32);
   margin-top: auto;
   align-self: stretch;
@@ -485,7 +475,6 @@
   box-shadow: 0 38px 80px -36px rgba(var(--brand-rgb), 0.6);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
-  backdrop-filter: blur(18px);
 }
 
 .cta:hover:not(:disabled) {
@@ -542,7 +531,6 @@
   position: absolute;
   inset: 0;
   background: rgba(12, 38, 30, 0.55);
-  backdrop-filter: blur(6px);
 }
 
 .modalContent {
@@ -557,7 +545,6 @@
   gap: 16px;
   z-index: 1;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(24px);
 }
 
 .modalTitle {
@@ -638,7 +625,6 @@
   position: absolute;
   inset: 0;
   background: rgba(12, 38, 30, 0.45);
-  backdrop-filter: blur(6px);
 }
 
 .noticeContent {
@@ -656,7 +642,6 @@
   z-index: 1;
   animation: noticeFadeIn 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(22px);
 }
 
 .noticeIcon {
@@ -709,7 +694,6 @@
   box-shadow: 0 26px 60px -30px rgba(var(--brand-rgb), 0.6);
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
-  backdrop-filter: blur(18px);
 }
 
 .noticeButton:hover:not(:disabled) {

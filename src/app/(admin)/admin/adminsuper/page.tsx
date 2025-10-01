@@ -35,7 +35,7 @@ type BranchWithOwner = {
   created_at: string
 }
 
-type ProfileRole = 'client' | 'admin' | 'adminmaster'
+type ProfileRole = 'client' | 'admin' | 'adminsuper' | 'adminmaster'
 
 type Profile = {
   id: string
@@ -211,7 +211,8 @@ export default function AdminMaster(): ReactElement {
         throw new Error('Não foi possível verificar suas permissões. Tente novamente.')
       }
 
-      if (profile?.role !== 'adminmaster') {
+      const userRole = profile?.role ?? null
+      if (userRole !== 'adminsuper' && userRole !== 'adminmaster') {
         setStatus('idle')
         router.replace('/dashboard')
         return
@@ -405,7 +406,10 @@ export default function AdminMaster(): ReactElement {
   const isLoading = status !== 'ready' && !error
 
   const adminUsers = useMemo(() => profiles.filter((profile) => profile.role === 'admin'), [profiles])
-  const masterUsers = useMemo(() => profiles.filter((profile) => profile.role === 'adminmaster'), [profiles])
+  const masterUsers = useMemo(
+    () => profiles.filter((profile) => profile.role === 'adminmaster' || profile.role === 'adminsuper'),
+    [profiles],
+  )
   const clientUsers = useMemo(() => profiles.filter((profile) => profile.role === 'client'), [profiles])
 
   const appointmentsThisMonth = useMemo(() => {
@@ -904,7 +908,7 @@ export default function AdminMaster(): ReactElement {
       <section className={styles.dashboardSection}>
         <div className={glassCardClass}>
           <div className={styles.heroIntro}>
-            <span className={badgeClass}>Admin master</span>
+            <span className={badgeClass}>Admin super</span>
             <h2 className={styles.heroTitle}>Comando total da operação SaaS</h2>
             <p className={styles.heroSubtitle}>{headerDescription}</p>
           </div>
@@ -1263,7 +1267,7 @@ export default function AdminMaster(): ReactElement {
                       >
                         <option value="client">Cliente</option>
                         <option value="admin">Admin</option>
-                        <option value="adminmaster">Admin master</option>
+                        <option value="adminmaster">Admin super</option>
                       </select>
                     </td>
                     <td className={styles.tableCell}>
@@ -1680,7 +1684,7 @@ export default function AdminMaster(): ReactElement {
           </button>
           <div className={styles.topBarTitleGroup}>
             <span className={styles.sidebarEyebrow}>Painel</span>
-            <span className={styles.sidebarTitle}>Admin master</span>
+            <span className={styles.sidebarTitle}>Admin super</span>
           </div>
         </div>
 
@@ -1694,7 +1698,7 @@ export default function AdminMaster(): ReactElement {
           <div className={styles.sidebarHeader}>
             <div className={styles.sidebarTitleGroup}>
               <span className={styles.sidebarEyebrow}>Painel</span>
-              <h1 className={styles.sidebarTitle}>Admin master</h1>
+              <h1 className={styles.sidebarTitle}>Admin super</h1>
             </div>
             <button
               type="button"

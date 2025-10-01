@@ -23,8 +23,15 @@ export default function Login(){
         .eq('id', session.user.id)
         .maybeSingle()
 
-      const role = profile?.role === 'admin' ? 'admin' : 'client'
-      router.replace(role === 'admin' ? '/admin' : '/dashboard')
+      const databaseRole = profile?.role ?? 'client'
+      const role =
+        databaseRole === 'admin'
+          ? 'admin'
+          : databaseRole === 'adminsuper' || databaseRole === 'adminmaster'
+            ? 'adminsuper'
+            : 'client'
+
+      router.replace(role === 'admin' ? '/admin' : role === 'adminsuper' ? '/admin/adminsuper' : '/dashboard')
     } catch {
       router.replace('/dashboard')
     }

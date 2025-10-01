@@ -9,7 +9,7 @@ type Profile = {
   whatsapp: string | null
   email: string | null
   birth_date: string | null
-  role?: 'admin' | 'client'
+  role?: 'admin' | 'adminsuper' | 'client'
 }
 
 export default function Dashboard() {
@@ -68,12 +68,19 @@ export default function Dashboard() {
         return
       }
 
+      const role =
+        me?.role === 'admin'
+          ? 'admin'
+          : me?.role === 'adminsuper' || me?.role === 'adminmaster'
+            ? 'adminsuper'
+            : 'client'
+
       const resolvedProfile: Profile = {
         full_name: me?.full_name ?? null,
         whatsapp: me?.whatsapp ?? null,
         email: me?.email ?? currentSession.user.email ?? null,
         birth_date: me?.birth_date ?? null,
-        role: me?.role ?? 'client'
+        role,
       }
 
       setProfile(resolvedProfile)

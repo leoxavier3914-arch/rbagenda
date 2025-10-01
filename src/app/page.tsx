@@ -4,8 +4,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BookingFlow from '@/components/BookingFlow'
 import { supabase } from '@/lib/db'
-import AuthHeader from '@/components/AuthHeader'
 import type { Session } from '@supabase/supabase-js'
+
+import AppShell from '@/components/AppShell'
+
+type ResolvedRole = 'admin' | 'adminsuper' | 'client' | null
 
 export default function Home(){
   const router = useRouter()
@@ -16,7 +19,7 @@ export default function Home(){
     router.replace(path)
   }, [router])
 
-  const resolveRole = useCallback(async (session: Session | null) => {
+  const resolveRole = useCallback(async (session: Session | null): Promise<ResolvedRole> => {
     if (!session?.user?.id) return null
 
     try {
@@ -28,7 +31,10 @@ export default function Home(){
 
       if (error) throw error
 
-      return data?.role === 'admin' ? 'admin' : 'client'
+      if (data?.role === 'admin') return 'admin'
+      if (data?.role === 'adminsuper' || data?.role === 'adminmaster') return 'adminsuper'
+
+      return 'client'
     } catch (error) {
       console.error('Erro ao carregar perfil do usuário', error)
       return null
@@ -51,6 +57,8 @@ export default function Home(){
 
       if (role === 'admin') {
         setAccess('admin')
+      } else if (role === 'adminsuper') {
+        redirectTo('/admin/adminsuper')
       } else {
         redirectTo('/dashboard/novo-agendamento')
       }
@@ -92,22 +100,19 @@ export default function Home(){
   }
 
   return (
-    <div className="relative flex min-h-screen flex-1 flex-col">
-      <AuthHeader />
-      <main className="relative mx-auto w-full max-w-5xl flex-1 px-6 py-12">
-        <div className="mx-auto max-w-3xl space-y-8 text-center">
-          <div className="space-y-3">
-            <span className="badge mx-auto">Painel administrativo</span>
-            <h1 className="text-3xl font-semibold text-[#1f2d28] sm:text-4xl">
-              Gerencie sua agenda com leveza
-            </h1>
-            <p className="mx-auto max-w-2xl text-base text-[color:rgba(31,45,40,0.7)]">
-              Visualize horários disponíveis, confirme agendamentos e ofereça uma experiência acolhedora para as suas clientes.
-            </p>
-          </div>
-          <BookingFlow />
+    <AppShell>
+      <div className="mx-auto w-full max-w-4xl space-y-10 text-center">
+        <div className="space-y-3">
+          <span className="badge mx-auto">Painel administrativo</span>
+          <h1 className="text-3xl font-semibold text-[#1f2d28] sm:text-4xl">
+            Gerencie sua agenda com leveza
+          </h1>
+          <p className="mx-auto max-w-2xl text-base text-[color:rgba(31,45,40,0.7)]">
+            Visualize horários disponíveis, confirme agendamentos e ofereça uma experiência acolhedora para as suas clientes.
+          </p>
         </div>
-      </main>
-    </div>
+        <BookingFlow />
+      </div>
+    </AppShell>
   )
 }

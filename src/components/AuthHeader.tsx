@@ -11,8 +11,22 @@ type NavLink = {
   exact?: boolean;
 };
 
+type RoleState = {
+  role: "admin" | "client";
+  isLoading: boolean;
+};
+
+const defaultLinks: NavLink[] = [
+  { href: "/dashboard", label: "Meu perfil", exact: true },
+  { href: "/dashboard/novo-agendamento", label: "Novo agendamento" },
+  { href: "/dashboard/agendamentos", label: "Meus agendamentos" },
+];
+
 export default function AuthHeader() {
-  const [role, setRole] = useState<"loading" | "admin" | "client">("loading");
+  const [roleState, setRoleState] = useState<RoleState>({
+    role: "client",
+    isLoading: true,
+  });
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -20,24 +34,33 @@ export default function AuthHeader() {
     let active = true;
 
     const loadRole = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!active) return;
 
-      const session = data.session;
-      if (!session?.user?.id) {
-        setRole("client");
-        return;
+        const session = data.session;
+        if (!session?.user?.id) {
+          setRoleState({ role: "client", isLoading: false });
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (!active) return;
+
+        setRoleState({
+          role: profile?.role === "admin" ? "admin" : "client",
+          isLoading: false,
+        });
+      } catch (error) {
+        console.error("Falha ao carregar o papel do usuário", error);
+        if (!active) return;
+        setRoleState({ role: "client", isLoading: false });
       }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      if (!active) return;
-
-      setRole(profile?.role === "admin" ? "admin" : "client");
     };
 
     void loadRole();
@@ -52,7 +75,7 @@ export default function AuthHeader() {
   }, [pathname]);
 
   const navigationLinks = useMemo<NavLink[]>(() => {
-    if (role === "admin") {
+    if (roleState.role === "admin") {
       return [
         { href: "/admin", label: "Administração", exact: true },
         { href: "/dashboard/novo-agendamento", label: "Novo agendamento" },
@@ -60,27 +83,8 @@ export default function AuthHeader() {
       ];
     }
 
-    if (role === "client") {
-      return [
-        { href: "/dashboard", label: "Meu perfil", exact: true },
-        { href: "/dashboard/novo-agendamento", label: "Novo agendamento" },
-        { href: "/dashboard/agendamentos", label: "Meus agendamentos" },
-      ];
-    }
-
-    return [];
-  }, [role]);
-
-  if (navigationLinks.length === 0) {
-    return (
-      <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4 text-sm text-emerald-900">
-          <span className="h-5 w-24 animate-pulse rounded-full bg-emerald-100" aria-hidden />
-          <span className="h-5 w-12 animate-pulse rounded-full bg-emerald-100" aria-hidden />
-        </div>
-      </header>
-    );
-  }
+    return defaultLinks;
+  }, [roleState.role]);
 
   const renderLink = (link: NavLink, isMobile = false) => {
     const isActive = link.exact
@@ -124,7 +128,7 @@ export default function AuthHeader() {
     <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <Link
-          href={role === "admin" ? "/admin" : "/dashboard"}
+          href={roleState.role === "admin" ? "/admin" : "/dashboard"}
           className="flex items-center gap-2 text-lg font-semibold text-emerald-900 transition hover:text-emerald-700"
         >
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold uppercase tracking-[0.15em] text-white">
@@ -133,7 +137,12 @@ export default function AuthHeader() {
           <span className="hidden sm:inline">Agenda de Cílios</span>
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex" aria-label="Navegação principal">
+        <nav
+          className={`hidden items-center gap-2 md:flex ${
+            roleState.isLoading ? "animate-pulse" : ""
+          }`}
+          aria-label="Navegação principal"
+        >
           {navigationLinks.map((link) => renderLink(link))}
         </nav>
 

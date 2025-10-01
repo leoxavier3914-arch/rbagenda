@@ -9,6 +9,8 @@ import {
   DEFAULT_FALLBACK_BUFFER_MINUTES,
   type AvailabilityAppointment,
 } from '@/lib/availability'
+import FlowShell from '@/components/FlowShell'
+
 import styles from './appointments.module.css'
 
 const statusLabels: Record<string, string> = {
@@ -1014,7 +1016,7 @@ export default function MyAppointments() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.shell}>
+      <FlowShell className={styles.shellExtras}>
         <h1 className={styles.title}>Meus agendamentos</h1>
         <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>
 
@@ -1108,7 +1110,7 @@ export default function MyAppointments() {
             )
           })
         )}
-      </div>
+      </FlowShell>
 
       <ConfirmCancelModal
         dialog={cancelDialog}

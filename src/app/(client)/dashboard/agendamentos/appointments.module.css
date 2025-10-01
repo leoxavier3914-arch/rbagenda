@@ -18,14 +18,10 @@
 .page {
   min-height: 100vh;
   background: transparent;
-  padding: 48px 16px 80px;
-  display: flex;
-  justify-content: center;
+  padding: 48px 0 80px;
 }
 
-.shell {
-  width: 100%;
-  max-width: 760px;
+.shellExtras {
   display: flex;
   flex-direction: column;
   gap: 24px;

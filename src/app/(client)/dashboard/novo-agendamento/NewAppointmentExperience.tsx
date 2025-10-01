@@ -12,6 +12,8 @@ import {
   formatDateToIsoDay,
 } from '@/lib/availability'
 
+import FlowShell from '@/components/FlowShell'
+
 import styles from './newAppointment.module.css'
 
 type ServiceTechnique = {
@@ -774,7 +776,7 @@ export default function NewAppointmentExperience() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.shell}>
+      <FlowShell className={styles.shellExtras}>
         <h1 className={styles.title}>Novo agendamento</h1>
         <p className={styles.subtitle}>
           Escolha a técnica e o tipo de serviço, além da data e horário. O preço, tempo e sinal atualizam automaticamente.
@@ -1038,7 +1040,7 @@ export default function NewAppointmentExperience() {
         </section>
 
         <div className={styles.bottomSpacer} />
-      </div>
+      </FlowShell>
 
       <footer className={styles.summary}>
         <div className={styles.summaryInner}>

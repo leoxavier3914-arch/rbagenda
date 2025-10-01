@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
+import FlowShell from './FlowShell'
+
 type Service = {
   id: string
   name: string
@@ -217,7 +219,7 @@ export default function BookingFlow(){
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <FlowShell>
       <div className="card space-y-6">
         <div className="space-y-1">
           <span className="badge">Novo agendamento</span>
@@ -327,6 +329,6 @@ export default function BookingFlow(){
           </div>
         )}
       </div>
-    </div>
+    </FlowShell>
   )
 }

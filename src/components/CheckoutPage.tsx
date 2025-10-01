@@ -16,6 +16,8 @@ import type {
 import { useEffect, useMemo, useState } from 'react'
 
 import { stripePromise } from '@/lib/stripeClient'
+
+import FlowShell from './FlowShell'
 import styles from './CheckoutPage.module.css'
 
 type CheckoutPageProps = {
@@ -85,7 +87,7 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
 
   return (
     <div className={styles.page}>
-      <div className={styles.wrap}>
+      <FlowShell className={styles.checkoutShell}>
         {errorMessage && <div className={styles.errorBanner}>{errorMessage}</div>}
 
         {hasCheckout && elementsOptions && stripePromise && (
@@ -99,7 +101,7 @@ export default function CheckoutPage({ clientSecret, appointmentId }: CheckoutPa
             ← Voltar
           </button>
         </div>
-      </div>
+      </FlowShell>
     </div>
   )
 }

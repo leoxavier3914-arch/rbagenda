@@ -62,13 +62,12 @@
     border: 1px solid var(--brand-border);
     background: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.78),
-        rgba(var(--brand-light-rgb), 0.52)
+        rgba(255, 255, 255, 0.92),
+        rgba(var(--brand-light-rgb), 0.78)
       );
     background-clip: padding-box;
     padding: 1.5rem;
     box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(22px);
     position: relative;
   }
 
@@ -89,14 +88,13 @@
 
   .surface-muted {
     border-radius: var(--radius-card);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     background: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.65),
-        rgba(var(--brand-light-rgb), 0.4)
+        rgba(255, 255, 255, 0.85),
+        rgba(var(--brand-light-rgb), 0.6)
       );
     padding: 1.5rem;
-    backdrop-filter: blur(20px);
   }
 
   .btn-primary {
@@ -115,7 +113,6 @@
     font-weight: 600;
     color: white;
     box-shadow: 0 16px 30px -18px rgba(var(--brand-primary-rgb), 0.75);
-    backdrop-filter: blur(18px);
     transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
   }
 
@@ -146,15 +143,14 @@
     border: 1px solid rgba(var(--brand-primary-rgb), 0.25);
     background: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.65),
-        rgba(var(--brand-light-rgb), 0.35)
+        rgba(255, 255, 255, 0.85),
+        rgba(var(--brand-light-rgb), 0.55)
       );
     padding: 0.625rem 1.25rem;
     font-size: 0.9375rem;
     font-weight: 600;
     color: rgba(var(--brand-primary-rgb), 0.92);
     box-shadow: 0 16px 35px -24px rgba(var(--brand-primary-rgb), 0.7);
-    backdrop-filter: blur(16px);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
       color 0.2s ease;
   }

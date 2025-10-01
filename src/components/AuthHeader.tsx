@@ -140,7 +140,7 @@ export default function AuthHeader() {
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-expanded={isMenuOpen}
-            className="inline-flex items-center gap-3 rounded-2xl border border-white/30 bg-[rgba(33,68,51,0.76)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_20px_40px_-20px_rgba(15,31,23,0.75)] backdrop-blur-xl transition hover:bg-[rgba(33,68,51,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+            className="inline-flex items-center gap-3 rounded-2xl border border-white/40 bg-[rgba(31,138,112,0.82)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_24px_60px_-24px_rgba(21,75,60,0.75)] backdrop-blur-2xl transition hover:bg-[rgba(31,138,112,0.95)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,255,255,0.7)]"
             aria-label="Abrir menu de navegação"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-lg leading-none">
@@ -152,7 +152,7 @@ export default function AuthHeader() {
       </header>
 
       <div
-        className={`fixed inset-0 z-30 bg-[rgba(13,27,20,0.6)] backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-30 bg-[rgba(12,38,30,0.55)] backdrop-blur-md transition-opacity duration-300 ${
           isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={() => setIsMenuOpen(false)}
@@ -160,7 +160,7 @@ export default function AuthHeader() {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-full max-w-[min(420px,92vw)] flex-col overflow-hidden border-r border-[rgba(255,255,255,0.25)] bg-[rgba(33,68,51,0.7)] shadow-[0_32px_80px_-30px_rgba(15,31,23,0.65)] backdrop-blur-2xl transition-transform duration-300 ease-out sm:inset-y-4 sm:left-6 sm:rounded-[32px] sm:border sm:border-white/30 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-full max-w-[min(420px,92vw)] flex-col overflow-hidden border-r border-[rgba(255,255,255,0.32)] bg-[rgba(31,138,112,0.32)] shadow-[0_40px_90px_-32px_rgba(12,46,35,0.65)] backdrop-blur-2xl transition-transform duration-300 ease-out sm:inset-y-4 sm:left-6 sm:rounded-[32px] sm:border sm:border-[rgba(255,255,255,0.38)] ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
@@ -169,7 +169,7 @@ export default function AuthHeader() {
         <div className="relative flex h-full flex-col overflow-hidden">
           <div className="flex items-start justify-between px-6 pb-4 pt-8 sm:px-8">
             <div className="space-y-2 text-white">
-              <span className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+              <span className="inline-flex items-center rounded-full border border-white/35 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                 Navegação
               </span>
               <p className="text-2xl font-semibold leading-tight">Escolha onde quer ir</p>
@@ -181,7 +181,7 @@ export default function AuthHeader() {
             <button
               type="button"
               onClick={() => setIsMenuOpen(false)}
-              className="ml-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-xl font-semibold text-white shadow-[0_10px_30px_rgba(15,31,23,0.35)] transition hover:bg-white/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+              className="ml-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-xl font-semibold text-white shadow-[0_20px_40px_-18px_rgba(12,46,35,0.45)] transition hover:bg-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
               aria-label="Fechar menu"
             >
               ×
@@ -201,14 +201,14 @@ export default function AuthHeader() {
                   onClick={() => setIsMenuOpen(false)}
                   className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-base font-medium tracking-wide transition-colors ${
                     isActive
-                      ? "border border-white/40 bg-white/25 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
-                      : "border border-transparent text-white/90 hover:border-white/20 hover:bg-white/10"
+                      ? "border border-[rgba(255,255,255,0.45)] bg-[rgba(31,138,112,0.4)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                      : "border border-transparent text-white/85 hover:border-white/25 hover:bg-[rgba(255,255,255,0.08)]"
                   } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70`}
                 >
                   <span
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white transition ${
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-white/15 text-white transition ${
                       isActive
-                        ? "shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+                        ? "shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] bg-[rgba(31,138,112,0.45)]"
                         : "group-hover:bg-white/25"
                     }`}
                   >

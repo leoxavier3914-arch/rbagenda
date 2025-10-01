@@ -200,8 +200,8 @@ export default function Dashboard() {
           {initials}
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-[#1f2d28] sm:text-4xl">{resolvedName}</h1>
-          <p className="muted-text max-w-xl">
+          <h1 className="text-3xl font-semibold text-white sm:text-4xl">{resolvedName}</h1>
+          <p className="max-w-xl text-white/80">
             Gerencie suas informações pessoais e ajuste seus dados de contato sempre que desejar. Suas preferências ficam salvas
             automaticamente.
           </p>

@@ -282,12 +282,12 @@
 .modalBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(12, 38, 30, 0.55);
+  background: rgba(12, 38, 30, 0.7);
 }
 
 .modalContent {
   position: relative;
-  background: linear-gradient(155deg, var(--appointments-surface-strong), rgba(var(--appointments-brand-rgb), 0.14));
+  background: linear-gradient(155deg, #ffffff, #e3f2ed);
   border-radius: 24px;
   box-shadow: 0 38px 80px -32px rgba(12, 46, 35, 0.65);
   padding: 28px 26px;
@@ -296,15 +296,15 @@
   text-align: center;
   animation: fadeIn 0.25s ease;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  border: 1px solid #d4e6de;
 }
 
 .modalWarning {
-  border-color: rgba(209, 161, 59, 0.25);
+  border-color: #d1a13b;
 }
 
 .modalSuccess {
-  border-color: rgba(var(--appointments-brand-rgb), 0.28);
+  border-color: #1f8a70;
 }
 
 .modalEdit {
@@ -321,19 +321,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid #d4e6de;
+  background: linear-gradient(135deg, #e3f2ed, #ffffff);
   color: var(--appointments-ink);
 }
 
 .iconWrapWarning {
-  background: rgba(209, 161, 59, 0.18);
-  border-color: rgba(209, 161, 59, 0.4);
+  background: #f7e3bf;
+  border-color: #d1a13b;
 }
 
 .iconWrapSuccess {
-  background: rgba(var(--appointments-brand-rgb), 0.18);
-  border-color: rgba(var(--appointments-brand-rgb), 0.4);
+  background: #d4eee5;
+  border-color: #1f8a70;
 }
 
 .modalTitle {
@@ -354,10 +354,10 @@
   margin: 0 0 14px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(201, 75, 75, 0.14), rgba(255, 255, 255, 0.24));
+  background: linear-gradient(135deg, #f7d6d6, #ffffff);
   color: var(--appointments-cancel);
   font-size: 13px;
-  border: 1px solid rgba(201, 75, 75, 0.3);
+  border: 1px solid #c94b4b;
 }
 
 .btnRow {

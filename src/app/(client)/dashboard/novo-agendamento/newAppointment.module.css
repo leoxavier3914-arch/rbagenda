@@ -530,12 +530,12 @@
 .modalBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(12, 38, 30, 0.55);
+  background: rgba(12, 38, 30, 0.7);
 }
 
 .modalContent {
   position: relative;
-  background: linear-gradient(145deg, var(--card-surface-strong), rgba(var(--brand-rgb), 0.18));
+  background: linear-gradient(145deg, #ffffff, #dcefe9);
   border-radius: 26px;
   padding: 26px;
   box-shadow: 0 40px 90px -32px rgba(12, 46, 35, 0.65);
@@ -544,7 +544,7 @@
   flex-direction: column;
   gap: 16px;
   z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid #d0e4dc;
 }
 
 .modalTitle {
@@ -575,11 +575,11 @@
 }
 
 .modalLineHighlight {
-  background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.15), rgba(255, 255, 255, 0.28));
+  background: linear-gradient(135deg, #dcefe9, #f7fbf9);
   padding: 12px 16px;
   border-radius: 16px;
   color: var(--brand);
-  border: 1px solid rgba(var(--brand-rgb), 0.3);
+  border: 1px solid #9fd0c0;
 }
 
 .modalFooter {
@@ -590,14 +590,14 @@
 }
 
 .payLaterCta {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(var(--brand-rgb), 0.2));
+  background: linear-gradient(135deg, #ffffff, #dcefe9);
   color: var(--brand);
-  border: 1px solid rgba(var(--brand-rgb), 0.45);
+  border: 1px solid #8cc6b4;
   box-shadow: 0 24px 60px -38px rgba(var(--brand-rgb), 0.45);
 }
 
 .payLaterCta:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.18), rgba(255, 255, 255, 0.85));
+  background: linear-gradient(135deg, #dcefe9, #ffffff);
 }
 
 .payLaterCta:disabled {
@@ -621,15 +621,16 @@
   display: flex;
 }
 
+
 .noticeBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(12, 38, 30, 0.45);
+  background: rgba(12, 38, 30, 0.6);
 }
 
 .noticeContent {
   position: relative;
-  background: linear-gradient(145deg, var(--card-surface-strong), rgba(var(--brand-rgb), 0.16));
+  background: linear-gradient(145deg, #ffffff, #e3f3ed);
   border-radius: 24px;
   padding: 24px 22px;
   box-shadow: 0 36px 80px -32px rgba(12, 46, 35, 0.55);
@@ -641,21 +642,21 @@
   gap: 12px;
   z-index: 1;
   animation: noticeFadeIn 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid #d2e8df;
 }
 
 .noticeIcon {
   width: 56px;
   height: 56px;
   margin: 0 auto 4px;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.22), rgba(255, 255, 255, 0.4));
+  background: linear-gradient(135deg, #cde8df, #ffffff);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--brand);
-  border: 1px solid rgba(var(--brand-rgb), 0.3);
-  box-shadow: 0 18px 30px -20px rgba(var(--brand-rgb), 0.55);
+  border: 1px solid #8cc6b4;
+  box-shadow: 0 18px 30px -20px rgba(var(--brand-rgb), 0.45);
 }
 
 .noticeTitle {

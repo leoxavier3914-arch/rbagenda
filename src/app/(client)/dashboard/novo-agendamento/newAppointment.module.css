@@ -31,6 +31,7 @@
 }
 
 .shellExtras {
+  --flow-shell-max-width: min(100%, 1120px);
   padding-block: clamp(24px, 6vw, 40px);
   background: rgba(15, 25, 20, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -39,6 +40,18 @@
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   color: rgba(247, 244, 239, 0.92);
+}
+
+@media (min-width: 1024px) {
+  .shellExtras {
+    --flow-shell-max-width: min(100%, 1180px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .shellExtras {
+    --flow-shell-max-width: min(100%, 1240px);
+  }
 }
 
 .title {

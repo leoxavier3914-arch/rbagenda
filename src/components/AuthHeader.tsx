@@ -127,26 +127,25 @@ export default function AuthHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-[rgba(47,109,79,0.22)] bg-[rgba(255,255,255,0.78)] px-4 py-2.5 text-[var(--brand-forest)] shadow-[var(--shadow-soft)] backdrop-blur-xl">
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-between px-4 pt-4 sm:px-6">
+        <div className="pointer-events-auto">
           <Link
             href={role === "admin" ? "/admin" : "/dashboard"}
-            className="flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold uppercase tracking-[0.2em] text-[rgba(47,109,79,0.9)] transition hover:text-[var(--brand-forest-dark)]"
+            className="sr-only"
           >
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(47,109,79,0.2)] bg-white/70 text-base font-bold">
-              RB
-            </span>
-            Agenda
+            Voltar para a página inicial do painel
           </Link>
 
           <button
             type="button"
             onClick={() => setIsMenuOpen(true)}
             aria-expanded={isMenuOpen}
-            className="inline-flex items-center gap-2 rounded-full border border-[rgba(47,109,79,0.25)] bg-[rgba(255,255,255,0.92)] px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[rgba(47,109,79,0.85)] shadow-[var(--shadow-soft)] backdrop-blur-lg transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(149,181,155,0.6)]"
+            className="inline-flex items-center gap-3 rounded-2xl border border-white/30 bg-[rgba(33,68,51,0.76)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_20px_40px_-20px_rgba(15,31,23,0.75)] backdrop-blur-xl transition hover:bg-[rgba(33,68,51,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
             aria-label="Abrir menu de navegação"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(47,109,79,0.12)] text-lg leading-none">☰</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-lg leading-none">
+              ☰
+            </span>
             Menu
           </button>
         </div>

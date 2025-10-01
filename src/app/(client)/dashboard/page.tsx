@@ -196,7 +196,7 @@ export default function Dashboard() {
   return (
     <main className="flex flex-col items-center gap-6 px-4 py-10">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-3xl font-semibold uppercase text-white shadow-xl">
+        <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-2xl font-semibold uppercase text-white shadow-xl sm:h-32 sm:w-32 sm:border-[6px] sm:text-3xl">
           {initials}
         </div>
         <div className="space-y-2">

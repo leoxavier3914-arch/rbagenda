@@ -74,6 +74,18 @@ export default function AuthHeader() {
     setIsMobileOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!isMobileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileOpen]);
+
   const navigationLinks = useMemo<NavLink[]>(() => {
     if (roleState.role === "admin") {
       return [
@@ -125,72 +137,119 @@ export default function AuthHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <Link
-          href={roleState.role === "admin" ? "/admin" : "/dashboard"}
-          className="flex items-center gap-2 text-lg font-semibold text-emerald-900 transition hover:text-emerald-700"
-        >
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold uppercase tracking-[0.15em] text-white">
-            AC
-          </span>
-          <span className="hidden sm:inline">Agenda de Cílios</span>
-        </Link>
+    <>
+      <header className="sticky top-0 z-30 border-b border-emerald-100 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
+          <Link
+            href={roleState.role === "admin" ? "/admin" : "/dashboard"}
+            className="flex items-center gap-2 text-lg font-semibold text-emerald-900 transition hover:text-emerald-700"
+          >
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold uppercase tracking-[0.15em] text-white">
+              AC
+            </span>
+            <span className="hidden sm:inline">Agenda de Cílios</span>
+          </Link>
 
-        <nav
-          className={`hidden items-center gap-2 md:flex ${
-            roleState.isLoading ? "animate-pulse" : ""
-          }`}
-          aria-label="Navegação principal"
-        >
-          {navigationLinks.map((link) => renderLink(link))}
-        </nav>
+          <nav
+            className={`hidden items-center gap-2 md:flex ${
+              roleState.isLoading ? "animate-pulse" : ""
+            }`}
+            aria-label="Navegação principal"
+          >
+            {navigationLinks.map((link) => renderLink(link))}
+          </nav>
 
-        <button
-          type="button"
-          className="inline-flex h-11 w-11 flex-col items-center justify-center gap-1 rounded-full border border-emerald-200 text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 md:hidden"
-          onClick={() => setIsMobileOpen((open) => !open)}
-          aria-expanded={isMobileOpen}
-          aria-controls="mobile-menu"
-        >
-          <span className="sr-only">{isMobileOpen ? "Fechar menu" : "Abrir menu"}</span>
-          <span
-            aria-hidden
-            className={`${
-              isMobileOpen
-                ? "translate-y-[7px] rotate-45 opacity-80"
-                : "-translate-y-[6px]"
-            } block h-0.5 w-6 origin-center rounded-full bg-emerald-700 transition-transform duration-200 ease-out`}
-          />
-          <span
-            aria-hidden
-            className={`${
-              isMobileOpen ? "opacity-0" : "opacity-80"
-            } block h-0.5 w-6 rounded-full bg-emerald-700 transition-opacity duration-200 ease-out`}
-          />
-          <span
-            aria-hidden
-            className={`${
-              isMobileOpen
-                ? "-translate-y-[7px] -rotate-45 opacity-80"
-                : "translate-y-[6px]"
-            } block h-0.5 w-6 origin-center rounded-full bg-emerald-700 transition-transform duration-200 ease-out`}
-          />
-        </button>
-      </div>
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 flex-col items-center justify-center gap-1 rounded-full border border-emerald-200 text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 md:hidden"
+            onClick={() => setIsMobileOpen((open) => !open)}
+            aria-expanded={isMobileOpen}
+            aria-controls="mobile-sidebar"
+          >
+            <span className="sr-only">{isMobileOpen ? "Fechar menu" : "Abrir menu"}</span>
+            <span
+              aria-hidden
+              className={`${
+                isMobileOpen
+                  ? "translate-y-[7px] rotate-45 opacity-80"
+                  : "-translate-y-[6px]"
+              } block h-0.5 w-6 origin-center rounded-full bg-emerald-700 transition-transform duration-200 ease-out`}
+            />
+            <span
+              aria-hidden
+              className={`${
+                isMobileOpen ? "opacity-0" : "opacity-80"
+              } block h-0.5 w-6 rounded-full bg-emerald-700 transition-opacity duration-200 ease-out`}
+            />
+            <span
+              aria-hidden
+              className={`${
+                isMobileOpen
+                  ? "-translate-y-[7px] -rotate-45 opacity-80"
+                  : "translate-y-[6px]"
+              } block h-0.5 w-6 origin-center rounded-full bg-emerald-700 transition-transform duration-200 ease-out`}
+            />
+          </button>
+        </div>
+      </header>
 
       <div
-        id="mobile-menu"
         className={`${
-          isMobileOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        } grid transition-all duration-200 ease-out md:hidden`}
+          isMobileOpen ? "pointer-events-auto" : "pointer-events-none"
+        } fixed inset-0 z-40 md:hidden`}
       >
-        <div className="overflow-hidden border-t border-emerald-100 bg-white/95 px-6 py-3">
-          <nav className="flex flex-col gap-1" aria-label="Navegação móvel">
+        <button
+          type="button"
+          aria-hidden
+          tabIndex={-1}
+          className={`${
+            isMobileOpen ? "opacity-100" : "opacity-0"
+          } absolute inset-0 h-full w-full bg-emerald-950/40 transition-opacity duration-200 ease-out`}
+          onClick={() => setIsMobileOpen(false)}
+        />
+
+        <aside
+          id="mobile-sidebar"
+          className={`${
+            isMobileOpen ? "translate-x-0" : "-translate-x-full"
+          } absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col gap-4 border-r border-emerald-100 bg-white/95 px-6 py-6 shadow-xl transition-transform duration-200 ease-out`}
+          aria-label="Menu móvel"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href={roleState.role === "admin" ? "/admin" : "/dashboard"}
+              className="flex items-center gap-2 text-lg font-semibold text-emerald-900 transition hover:text-emerald-700"
+            >
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold uppercase tracking-[0.15em] text-white">
+                AC
+              </span>
+              <span>Agenda de Cílios</span>
+            </Link>
+
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-200 text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              <span className="sr-only">Fechar menu</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="h-5 w-5"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m6 6 12 12M6 18 18 6" />
+              </svg>
+            </button>
+          </div>
+
+          <nav className="flex flex-1 flex-col gap-1" aria-label="Navegação móvel">
             {navigationLinks.map((link) => renderLink(link, true))}
           </nav>
-        </div>
+        </aside>
       </div>
-    </header>
+    </>
   );
 }

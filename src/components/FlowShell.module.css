@@ -5,3 +5,9 @@
   padding-inline: clamp(16px, 6vw, 24px);
   box-sizing: border-box;
 }
+
+@media (max-width: 600px) {
+  .shell {
+    padding-inline: 12px;
+  }
+}

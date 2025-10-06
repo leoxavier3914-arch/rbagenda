@@ -44,8 +44,11 @@
 
 .page {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset-block: 0;
+  left: 50%;
+  width: min(100%, var(--flow-shell-max-width, 1024px));
+  border-radius: var(--radius-xl);
+  transform: translateX(-50%);
   background: linear-gradient(150deg, var(--card-surface), rgba(8, 18, 14, 0.72));
   border: 1px solid var(--stroke);
   box-shadow: 0 42px 88px -48px rgba(0, 0, 0, 0.68);

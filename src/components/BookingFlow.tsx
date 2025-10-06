@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
@@ -28,6 +28,24 @@ export default function BookingFlow(){
   const [slotsError,setSlotsError]=useState<string|null>(null)
   const [isCreating,setIsCreating]=useState(false)
   const [isProcessingPayment,setIsProcessingPayment]=useState(false)
+
+  const timeFormatter = useMemo(
+    () => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    []
+  )
+
+  const formattedSlots = useMemo(
+    () =>
+      slots.map((value) => {
+        const parsed = new Date(value)
+        const label = Number.isNaN(parsed.getTime())
+          ? value
+          : timeFormatter.format(parsed)
+
+        return { value, label }
+      }),
+    [slots, timeFormatter]
+  )
   const router = useRouter()
 
   useEffect(()=>{
@@ -288,20 +306,20 @@ export default function BookingFlow(){
               </div>
             ) : slots.length>0 ? (
               <div className="grid gap-2 sm:grid-cols-3">
-                {slots.map((s) => {
-                  const isSelected = slot === s
+                {formattedSlots.map(({ value, label }) => {
+                  const isSelected = slot === value
                   return (
                     <button
-                      key={s}
+                      key={value}
                       type="button"
-                      onClick={() => setSlot(s)}
+                      onClick={() => setSlot(value)}
                       className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                         isSelected
                           ? 'border-[color:#2f6d4f] bg-[#2f6d4f] text-[#f7f2e7] shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]'
                           : 'border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.7)] text-[#1f2d28] hover:border-[#2f6d4f] hover:bg-[#f7f2e7]'
                       }`}
                     >
-                      {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {label}
                     </button>
                   )
                 })}

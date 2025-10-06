@@ -1001,8 +1001,13 @@
     gap: 14px;
   }
 
-  .summaryItem,
+  .summaryItem {
+    flex: 1 1 calc(50% - 7px);
+    min-width: min(180px, calc(50% - 7px));
+  }
+
   .summaryItemFull {
+    flex-basis: 100%;
     min-width: 100%;
   }
 

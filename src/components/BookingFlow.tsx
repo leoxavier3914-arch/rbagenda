@@ -20,6 +20,7 @@ export default function BookingFlow(){
   const [serviceId,setServiceId]=useState('')
   const [date,setDate]=useState('')
   const [slots,setSlots]=useState<string[]>([])
+  const [isLoadingSlots,setIsLoadingSlots]=useState(false)
   const [slot,setSlot]=useState('')
   const [staffId,setStaffId]=useState<string|null>(null)
   const [apptId,setApptId]=useState('')
@@ -65,13 +66,14 @@ export default function BookingFlow(){
       setSlot('')
       setStaffId(null)
       setSlotsError(null)
+      setIsLoadingSlots(false)
       return
     }
 
     const controller = new AbortController()
 
     async function loadSlots(){
-      setSlots([])
+      setIsLoadingSlots(true)
       setSlot('')
       setStaffId(null)
       setSlotsError(null)
@@ -98,6 +100,10 @@ export default function BookingFlow(){
         setStaffId(null)
         setSlots([])
         setSlotsError('Não foi possível carregar os horários disponíveis. Atualize a página ou selecione outra data.')
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingSlots(false)
+        }
       }
     }
 
@@ -105,6 +111,7 @@ export default function BookingFlow(){
 
     return () => {
       controller.abort()
+      setIsLoadingSlots(false)
     }
   },[serviceId,date])
 
@@ -267,35 +274,46 @@ export default function BookingFlow(){
           <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
             {slotsError}
           </div>
-        ) : slots.length>0 ? (
+        ) : (
           <div className="space-y-3">
             <span className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]">Horário</span>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {slots.map((s) => {
-                const isSelected = slot === s
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSlot(s)}
-                    className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                      isSelected
-                        ? 'border-[color:#2f6d4f] bg-[#2f6d4f] text-[#f7f2e7] shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]'
-                        : 'border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.7)] text-[#1f2d28] hover:border-[#2f6d4f] hover:bg-[#f7f2e7]'
-                    }`}
-                  >
-                    {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </button>
-                )
-              })}
-            </div>
+            {isLoadingSlots ? (
+              <div className="grid gap-2 sm:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-11 animate-pulse rounded-2xl border border-[color:rgba(230,217,195,0.45)] bg-[color:rgba(255,255,255,0.6)]"
+                  />
+                ))}
+              </div>
+            ) : slots.length>0 ? (
+              <div className="grid gap-2 sm:grid-cols-3">
+                {slots.map((s) => {
+                  const isSelected = slot === s
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSlot(s)}
+                      className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                        isSelected
+                          ? 'border-[color:#2f6d4f] bg-[#2f6d4f] text-[#f7f2e7] shadow-[0_20px_45px_-20px_rgba(35,82,58,0.35)]'
+                          : 'border-[color:rgba(230,217,195,0.6)] bg-[color:rgba(255,255,255,0.7)] text-[#1f2d28] hover:border-[#2f6d4f] hover:bg-[#f7f2e7]'
+                      }`}
+                    >
+                      {new Date(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              serviceId && date && (
+                <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.7)]">
+                  Nenhum horário disponível para esta data. Escolha outra data para continuar.
+                </div>
+              )
+            )}
           </div>
-        ) : (
-          serviceId && date && (
-            <div className="surface-muted text-sm text-[color:rgba(31,45,40,0.7)]">
-              Nenhum horário disponível para esta data. Escolha outra data para continuar.
-            </div>
-          )
         )}
         {!apptId ? (
           <button

@@ -2,12 +2,12 @@
   width: 100%;
   max-width: var(--flow-shell-max-width, 1024px);
   margin-inline: auto;
-  padding-inline: clamp(16px, 6vw, 24px);
+  padding-inline: var(--flow-shell-inline-padding, clamp(16px, 6vw, 24px));
   box-sizing: border-box;
 }
 
 @media (max-width: 600px) {
   .shell {
-    padding-inline: 12px;
+    padding-inline: var(--flow-shell-inline-padding-mobile, 12px);
   }
 }

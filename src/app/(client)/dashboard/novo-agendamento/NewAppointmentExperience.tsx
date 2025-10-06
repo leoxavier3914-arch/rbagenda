@@ -557,13 +557,34 @@ export default function NewAppointmentExperience() {
     year,
   ])
 
+  const busyIntervalsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return []
+
+    const raw = availability.busyIntervals[selectedDate] ?? []
+
+    return raw
+      .map(({ start, end }) => {
+        const busyStart = new Date(start)
+        const busyEnd = new Date(end)
+        if (Number.isNaN(busyStart.getTime()) || Number.isNaN(busyEnd.getTime())) {
+          return null
+        }
+        return { start: busyStart, end: busyEnd }
+      })
+      .filter((interval): interval is { start: Date; end: Date } => interval !== null)
+  }, [availability.busyIntervals, selectedDate])
+
+  const bookedSlots = useMemo(() => {
+    if (!selectedDate) return new Set<string>()
+    return new Set(availability.bookedSlots[selectedDate] ?? [])
+  }, [availability.bookedSlots, selectedDate])
+
   const slots = useMemo(() => {
     if (!selectedDate || !canInteract || !selectedService) return []
 
     const durationMinutes = selectedService.duration_min
     if (!durationMinutes) return []
 
-    const busy = availability.busyIntervals[selectedDate] ?? []
     const template = availability.daySlots[selectedDate] ?? DEFAULT_SLOT_TEMPLATE
 
     const closing = combineDateAndTime(selectedDate, WORK_DAY_END)
@@ -584,20 +605,19 @@ export default function NewAppointmentExperience() {
         return false
       }
 
-      const overlaps = busy.some(({ start, end }) => {
-        const busyStart = new Date(start)
-        const busyEnd = new Date(end)
-        if (Number.isNaN(busyStart.getTime()) || Number.isNaN(busyEnd.getTime())) {
-          return false
-        }
-        return slotEnd > busyStart && slotStart < busyEnd
-      })
+      const overlaps = busyIntervalsForSelectedDate.some(({ start, end }) => slotEnd > start && slotStart < end)
 
       return !overlaps
     })
-  }, [availability.busyIntervals, availability.daySlots, canInteract, now, selectedDate, selectedService, serviceBufferMinutes])
-
-  const bookedSlots = useMemo(() => new Set<string>(), [])
+  }, [
+    availability.daySlots,
+    busyIntervalsForSelectedDate,
+    canInteract,
+    now,
+    selectedDate,
+    selectedService,
+    serviceBufferMinutes,
+  ])
 
   useEffect(() => {
     if (!selectedSlot) return

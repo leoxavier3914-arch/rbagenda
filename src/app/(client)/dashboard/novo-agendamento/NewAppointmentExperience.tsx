@@ -487,13 +487,7 @@ export default function NewAppointmentExperience() {
     !isLoadingAvailability &&
     !availabilityError
 
-  const calendarHeaderDays = useMemo(() => {
-    const firstDay = new Date(year, month, 1)
-    const startWeekday = firstDay.getDay()
-    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
-
-    return Array.from({ length: 7 }, (_, index) => labels[(startWeekday + index) % 7])
-  }, [month, year])
+  const calendarHeaderDays = useMemo(() => ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'], [])
 
   const calendarDays = useMemo(() => {
     const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -508,6 +502,18 @@ export default function NewAppointmentExperience() {
       state: string
       isOutsideCurrentMonth: boolean
     }> = []
+
+    const monthStartWeekday = new Date(year, month, 1).getDay()
+
+    for (let index = 0; index < monthStartWeekday; index += 1) {
+      dayEntries.push({
+        iso: `leading-${year}-${month}-${index}`,
+        day: '',
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = new Date(year, month, day)

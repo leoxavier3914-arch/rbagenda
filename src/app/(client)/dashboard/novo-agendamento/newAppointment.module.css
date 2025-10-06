@@ -30,6 +30,17 @@
   position: relative;
 }
 
+.hero {
+  width: 100%;
+  max-width: 860px;
+  margin: clamp(28px, 6vw, 56px) auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
 .shellExtras {
   --flow-shell-max-width: min(100%, 1200px);
   padding-block: clamp(24px, 6vw, 40px);
@@ -40,6 +51,7 @@
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   color: var(--ink);
+  margin-top: clamp(20px, 5vw, 48px);
 }
 
 @media (min-width: 1024px) {
@@ -55,20 +67,44 @@
 }
 
 .title {
-  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 750;
   letter-spacing: 0.2px;
-  margin: 8px 0 6px;
+  margin: 0;
   text-align: center;
   color: var(--ink);
   text-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
 }
 
 .subtitle {
-  font-size: 15px;
+  font-size: clamp(1rem, 2.4vw, 1.28rem);
   color: var(--muted);
-  margin: 0 0 20px;
+  margin: 0;
   text-align: center;
+  line-height: 1.6;
+  max-width: min(640px, 90vw);
+}
+
+@keyframes cardRevealIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.cardReveal {
+  opacity: 0;
+  transform: translateY(28px);
+  animation: cardRevealIn 0.6s ease forwards;
+  animation-fill-mode: both;
+  animation-delay: 0.08s;
 }
 
 .card {
@@ -457,6 +493,12 @@
   width: 100%;
   margin-inline: calc(-1 * var(--page-inline-padding));
   padding-inline: var(--page-inline-padding);
+}
+
+.summaryReveal {
+  animation: cardRevealIn 0.6s ease forwards;
+  animation-delay: 0.12s;
+  animation-fill-mode: both;
 }
 
 .summaryInner {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
 
@@ -15,6 +15,8 @@ import {
 import FlowShell from '@/components/FlowShell'
 
 import styles from './newAppointment.module.css'
+
+type CustomCSSProperties = CSSProperties & Record<`--${string}`, string | number>
 
 type ServiceTechnique = {
   id: string
@@ -117,6 +119,35 @@ export default function NewAppointmentExperience() {
   const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null)
   const payNowButtonRef = useRef<HTMLButtonElement | null>(null)
   const payLaterNoticeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const shellWrapperRef = useRef<HTMLDivElement | null>(null)
+
+  const [pageHeight, setPageHeight] = useState(0)
+
+  useEffect(() => {
+    const wrapper = shellWrapperRef.current
+    if (!wrapper) return
+
+    const updateHeight = () => {
+      const nextHeight = wrapper.getBoundingClientRect().height
+      setPageHeight((previous) => (Math.abs(previous - nextHeight) > 0.5 ? nextHeight : previous))
+    }
+
+    updateHeight()
+
+    if (typeof window === 'undefined' || typeof window.ResizeObserver === 'undefined') {
+      return
+    }
+
+    const observer = new window.ResizeObserver(() => {
+      updateHeight()
+    })
+
+    observer.observe(wrapper)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -784,10 +815,12 @@ export default function NewAppointmentExperience() {
     }
   }
 
+  const shellStyle: CustomCSSProperties | undefined =
+    pageHeight > 0 ? { '--page-height': `${pageHeight}px`, '--page-opacity': '1' } : undefined
+
   return (
     <div className={styles.screen}>
-      <div className={styles.shellWrapper}>
-        <div className={styles.page} aria-hidden />
+      <div className={styles.shellWrapper} ref={shellWrapperRef} style={shellStyle}>
 
         <FlowShell className={styles.shellExtras}>
           <header className={styles.hero}>

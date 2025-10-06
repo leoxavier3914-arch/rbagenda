@@ -784,295 +784,297 @@ export default function NewAppointmentExperience() {
 
   return (
     <div className={styles.screen}>
-      <header className={styles.hero}>
-        <h1 className={styles.title}>Novo agendamento</h1>
-        <p className={styles.subtitle}>
-          Escolha a técnica e o tipo de serviço, além da data e horário. O preço, tempo e sinal
-          atualizam automaticamente.
-        </p>
-      </header>
+      <div className={styles.experience}>
+        <header className={styles.hero}>
+          <h1 className={styles.title}>Novo agendamento</h1>
+          <p className={styles.subtitle}>
+            Escolha a técnica e o tipo de serviço, além da data e horário. O preço, tempo e sinal
+            atualizam automaticamente.
+          </p>
+        </header>
 
-      <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
-        <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
-        {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-        {catalogStatus === 'loading' && !catalogError && (
-          <div className={`${styles.status} ${styles.statusInfo}`}>Carregando serviços…</div>
-        )}
-        {catalogStatus === 'ready' && availableTypes.length === 0 && (
-          <div className={styles.meta}>Nenhum tipo de serviço disponível no momento.</div>
-        )}
-        {catalogStatus === 'ready' && availableTypes.length > 0 && (
-          <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
-            {availableTypes.map((type) => (
-              <button
-                key={type.id}
-                type="button"
-                className={`${styles.pill} ${styles.tipoPill}`}
-                data-active={selectedTypeId === type.id}
-                onClick={() => handleTypeSelect(type.id)}
-              >
-                {type.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+        <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
+          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
+          {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+          {catalogStatus === 'loading' && !catalogError && (
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando serviços…</div>
+          )}
+          {catalogStatus === 'ready' && availableTypes.length === 0 && (
+            <div className={styles.meta}>Nenhum tipo de serviço disponível no momento.</div>
+          )}
+          {catalogStatus === 'ready' && availableTypes.length > 0 && (
+            <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
+              {availableTypes.map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={`${styles.pill} ${styles.tipoPill}`}
+                  data-active={selectedTypeId === type.id}
+                  onClick={() => handleTypeSelect(type.id)}
+                >
+                  {type.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
 
-      {selectedType ? (
-        <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tecnica-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
-          {catalogStatus === 'ready' && selectedType.services.length > 0 ? (
-            <>
-              <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
-                {visibleServices.map((service) => (
+        {selectedType ? (
+          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tecnica-card">
+            <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
+            {catalogStatus === 'ready' && selectedType.services.length > 0 ? (
+              <>
+                <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
+                  {visibleServices.map((service) => (
+                    <button
+                      key={service.id}
+                      type="button"
+                      className={`${styles.pill} ${styles.techniquePill}`}
+                      data-active={selectedServiceId === service.id}
+                      onClick={() => handleTechniqueSelect(service.id)}
+                    >
+                      {service.name}
+                    </button>
+                  ))}
+                </div>
+                {!showAllTechniques && selectedType.services.length > 6 && (
                   <button
-                    key={service.id}
                     type="button"
-                    className={`${styles.pill} ${styles.techniquePill}`}
-                    data-active={selectedServiceId === service.id}
-                    onClick={() => handleTechniqueSelect(service.id)}
+                    className={styles.viewMoreButton}
+                    onClick={() => setShowAllTechniques(true)}
                   >
-                    {service.name}
+                    Ver mais
+                  </button>
+                )}
+              </>
+            ) : catalogStatus === 'ready' ? (
+              <div className={`${styles.meta} ${styles.labelCentered}`}>
+                Nenhuma técnica disponível para este tipo no momento.
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {selectedService ? (
+          <>
+            <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="extras-card">
+              <div className={`${styles.label} ${styles.labelCentered}`}>Detalhes do serviço</div>
+              <div className={styles.spacer} />
+
+              <div className={styles.row}>
+                <div className={styles.col}>
+                  <div className={styles.optRow}>
+                    <div className={styles.left}>
+                      <div className={styles.icon} aria-hidden="true">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"
+                            stroke="#1f8a70"
+                            strokeWidth="1.6"
+                          />
+                          <circle cx="12" cy="12" r="3" stroke="#1f8a70" strokeWidth="1.6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.optTitle}>Alongamento seguro</div>
+                        <div className={styles.meta}>Isolamento e cola adequada para durabilidade</div>
+                      </div>
+                    </div>
+                    <div className={styles.meta}>incluído</div>
+                  </div>
+                </div>
+                <div className={styles.col}>
+                  <div className={styles.optRow}>
+                    <div className={styles.left}>
+                      <div className={styles.icon} aria-hidden="true">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle cx="12" cy="12" r="9" stroke="#1f8a70" strokeWidth="1.6" />
+                          <path
+                            d="M12 7v5l3 2"
+                            stroke="#1f8a70"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.optTitle}>Duração estimada</div>
+                        <div className={styles.meta}>{minutesToText(computed.durationMinutes)}</div>
+                      </div>
+                    </div>
+                    <div className={styles.meta} />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="data-card">
+              <div className={`${styles.label} ${styles.labelCentered}`}>Data &amp; horário</div>
+
+              {availabilityError && (
+                <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>
+              )}
+
+              {!availabilityError && isLoadingAvailability && (
+                <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
+              )}
+
+              <div className={styles.calHead}>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  aria-label="Mês anterior"
+                  onClick={goToPreviousMonth}
+                >
+                  ‹
+                </button>
+                <div className={styles.calTitle} id="cal-title">
+                  {monthTitle}
+                </div>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  aria-label="Próximo mês"
+                  onClick={goToNextMonth}
+                >
+                  ›
+                </button>
+              </div>
+
+              <div className={styles.grid} aria-hidden="true">
+                {calendarHeaderDays.map((label, index) => (
+                  <div key={`dow-${index}`} className={styles.dow}>
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.grid}>
+                {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
+                  <button
+                    key={iso}
+                    type="button"
+                    className={styles.day}
+                    data-state={state}
+                    data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+                    data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
+                    aria-disabled={isDisabled}
+                    disabled={isDisabled}
+                    onClick={() => handleDaySelect(iso, isDisabled)}
+                  >
+                    {day}
                   </button>
                 ))}
               </div>
-              {!showAllTechniques && selectedType.services.length > 6 && (
-                <button
-                  type="button"
-                  className={styles.viewMoreButton}
-                  onClick={() => setShowAllTechniques(true)}
-                >
-                  Ver mais
-                </button>
-              )}
-            </>
-          ) : catalogStatus === 'ready' ? (
-            <div className={`${styles.meta} ${styles.labelCentered}`}>
-              Nenhuma técnica disponível para este tipo no momento.
-            </div>
-          ) : null}
-        </section>
-      ) : null}
 
-      {selectedService ? (
-        <>
-          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="extras-card">
-            <div className={`${styles.label} ${styles.labelCentered}`}>Detalhes do serviço</div>
-            <div className={styles.spacer} />
+              <div className={styles.legend}>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.dot} ${styles.dotAvail}`} /> Disponível
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.dot} ${styles.dotBooked}`} /> Parcialmente agendado
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.dot} ${styles.dotMine}`} /> Meus agendamentos
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
+                </div>
+              </div>
 
-            <div className={styles.row}>
-              <div className={styles.col}>
-                <div className={styles.optRow}>
-                  <div className={styles.left}>
-                    <div className={styles.icon} aria-hidden="true">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"
-                          stroke="#1f8a70"
-                          strokeWidth="1.6"
-                        />
-                        <circle cx="12" cy="12" r="3" stroke="#1f8a70" strokeWidth="1.6" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className={styles.optTitle}>Alongamento seguro</div>
-                      <div className={styles.meta}>Isolamento e cola adequada para durabilidade</div>
-                    </div>
+              <div className={styles.spacerSmall} />
+              <div className={styles.label}>Horários</div>
+              <div className={styles.slots}>
+                {availabilityError ? (
+                  <div className={`${styles.status} ${styles.statusError}`}>
+                    Não foi possível carregar os horários.
                   </div>
-                  <div className={styles.meta}>incluído</div>
-                </div>
-              </div>
-              <div className={styles.col}>
-                <div className={styles.optRow}>
-                  <div className={styles.left}>
-                    <div className={styles.icon} aria-hidden="true">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <circle cx="12" cy="12" r="9" stroke="#1f8a70" strokeWidth="1.6" />
-                        <path
-                          d="M12 7v5l3 2"
-                          stroke="#1f8a70"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className={styles.optTitle}>Duração estimada</div>
-                      <div className={styles.meta}>{minutesToText(computed.durationMinutes)}</div>
-                    </div>
+                ) : isLoadingAvailability ? (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>
+                    Carregando horários disponíveis…
                   </div>
-                  <div className={styles.meta} />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="data-card">
-            <div className={`${styles.label} ${styles.labelCentered}`}>Data &amp; horário</div>
-
-            {availabilityError && (
-              <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>
-            )}
-
-            {!availabilityError && isLoadingAvailability && (
-              <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
-            )}
-
-            <div className={styles.calHead}>
-              <button
-                type="button"
-                className={styles.btn}
-                aria-label="Mês anterior"
-                onClick={goToPreviousMonth}
-              >
-                ‹
-              </button>
-              <div className={styles.calTitle} id="cal-title">
-                {monthTitle}
-              </div>
-              <button
-                type="button"
-                className={styles.btn}
-                aria-label="Próximo mês"
-                onClick={goToNextMonth}
-              >
-                ›
-              </button>
-            </div>
-
-            <div className={styles.grid} aria-hidden="true">
-              {calendarHeaderDays.map((label, index) => (
-                <div key={`dow-${index}`} className={styles.dow}>
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.grid}>
-              {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
-                <button
-                  key={iso}
-                  type="button"
-                  className={styles.day}
-                  data-state={state}
-                  data-selected={!isOutsideCurrentMonth && selectedDate === iso}
-                  data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
-                  aria-disabled={isDisabled}
-                  disabled={isDisabled}
-                  onClick={() => handleDaySelect(iso, isDisabled)}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-
-            <div className={styles.legend}>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotAvail}`} /> Disponível
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotBooked}`} /> Parcialmente agendado
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotMine}`} /> Meus agendamentos
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
-              </div>
-            </div>
-
-            <div className={styles.spacerSmall} />
-            <div className={styles.label}>Horários</div>
-            <div className={styles.slots}>
-              {availabilityError ? (
-                <div className={`${styles.status} ${styles.statusError}`}>
-                  Não foi possível carregar os horários.
-                </div>
-              ) : isLoadingAvailability ? (
-                <div className={`${styles.status} ${styles.statusInfo}`}>
-                  Carregando horários disponíveis…
-                </div>
-              ) : selectedDate ? (
-                slots.length > 0 ? (
-                  slots.map((slotValue) => {
-                    const disabled = bookedSlots.has(slotValue)
-                    return (
-                      <button
-                        key={slotValue}
-                        type="button"
-                        className={styles.slot}
-                        aria-disabled={disabled}
-                        data-selected={selectedSlot === slotValue}
-                        disabled={disabled}
-                        onClick={() => handleSlotSelect(slotValue, disabled)}
-                      >
-                        {slotValue}
-                      </button>
-                    )
-                  })
+                ) : selectedDate ? (
+                  slots.length > 0 ? (
+                    slots.map((slotValue) => {
+                      const disabled = bookedSlots.has(slotValue)
+                      return (
+                        <button
+                          key={slotValue}
+                          type="button"
+                          className={styles.slot}
+                          aria-disabled={disabled}
+                          data-selected={selectedSlot === slotValue}
+                          disabled={disabled}
+                          onClick={() => handleSlotSelect(slotValue, disabled)}
+                        >
+                          {slotValue}
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div className={styles.meta}>Sem horários para este dia.</div>
+                  )
                 ) : (
-                  <div className={styles.meta}>Sem horários para este dia.</div>
-                )
-              ) : (
-                <div className={styles.meta}>Selecione um dia disponível para ver horários.</div>
-              )}
-            </div>
-          </section>
+                  <div className={styles.meta}>Selecione um dia disponível para ver horários.</div>
+                )}
+              </div>
+            </section>
 
-          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="regras">
-            <div className={styles.label}>Regras rápidas</div>
-            <ul className={styles.rules}>
-              <li>Manutenção: até 21 dias e com pelo menos 40% de fios.</li>
-              <li>Reaplicação: quando não atende às regras de manutenção.</li>
-              <li>Sinal para confirmar o horário. Saldo no dia.</li>
-            </ul>
-          </section>
-        </>
-      ) : null}
+            <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="regras">
+              <div className={styles.label}>Regras rápidas</div>
+              <ul className={styles.rules}>
+                <li>Manutenção: até 21 dias e com pelo menos 40% de fios.</li>
+                <li>Reaplicação: quando não atende às regras de manutenção.</li>
+                <li>Sinal para confirmar o horário. Saldo no dia.</li>
+              </ul>
+            </section>
+          </>
+        ) : null}
 
-      {shouldRenderSummary && (
-        <footer className={`${styles.summary} ${styles.summaryReveal}`}>
-          <div className={styles.summaryInner}>
-            <div className={styles.grow}>
-              <div className={styles.meta}>{computed.escolha}</div>
-              <div className={styles.price}>R$ {toBRLCurrency(computed.total)}</div>
-              <div className={styles.meta}>Sinal: R$ {toBRLCurrency(computed.deposit)}</div>
-              <div className={styles.meta}>{computed.quando}</div>
+        {shouldRenderSummary && (
+          <footer className={`${styles.summary} ${styles.summaryReveal}`}>
+            <div className={styles.summaryInner}>
+              <div className={styles.grow}>
+                <div className={styles.meta}>{computed.escolha}</div>
+                <div className={styles.price}>R$ {toBRLCurrency(computed.total)}</div>
+                <div className={styles.meta}>Sinal: R$ {toBRLCurrency(computed.deposit)}</div>
+                <div className={styles.meta}>{computed.quando}</div>
+              </div>
+              <div className={styles.actions}>
+                {shouldShowContinueButton && (
+                  <button
+                    type="button"
+                    className={styles.cta}
+                    disabled={!isReadyToContinue}
+                    onClick={() => {
+                      void handleContinue()
+                    }}
+                  >
+                    {isSubmitting ? 'Salvando…' : 'Continuar'}
+                  </button>
+                )}
+                {submitError && <div className={`${styles.status} ${styles.statusError}`}>{submitError}</div>}
+                {submitSuccess && <div className={`${styles.status} ${styles.statusSuccess}`}>{submitSuccess}</div>}
+              </div>
             </div>
-            <div className={styles.actions}>
-              {shouldShowContinueButton && (
-                <button
-                  type="button"
-                  className={styles.cta}
-                  disabled={!isReadyToContinue}
-                  onClick={() => {
-                    void handleContinue()
-                  }}
-                >
-                  {isSubmitting ? 'Salvando…' : 'Continuar'}
-                </button>
-              )}
-              {submitError && <div className={`${styles.status} ${styles.statusError}`}>{submitError}</div>}
-              {submitSuccess && <div className={`${styles.status} ${styles.statusSuccess}`}>{submitSuccess}</div>}
-            </div>
-          </div>
-        </footer>
-      )}
+          </footer>
+        )}
+      </div>
       <div
         className={styles.modal}
         data-open={isSummaryOpen ? 'true' : 'false'}

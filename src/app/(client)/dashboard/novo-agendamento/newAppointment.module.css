@@ -44,9 +44,10 @@
 
 .page {
   position: absolute;
-  inset-block: 0;
+  top: 0;
   left: 50%;
   width: min(100%, var(--flow-shell-max-width, 1024px));
+  height: var(--page-height, 0px);
   border-radius: var(--radius-xl);
   transform: translateX(-50%);
   background: linear-gradient(150deg, var(--card-surface), rgba(8, 18, 14, 0.72));
@@ -57,6 +58,8 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  opacity: var(--page-opacity, 0);
+  transition: height 0.35s ease, opacity 0.3s ease;
 }
 
 .page::after {

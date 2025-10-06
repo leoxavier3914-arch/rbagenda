@@ -493,17 +493,17 @@ export default function NewAppointmentExperience() {
   return (
     <div className={styles.screen}>
     <div className={styles.experience}>
-        <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
+        <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tecnica-card">
+          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
           {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
           {catalogStatus === 'loading' && !catalogError && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando serviços…</div>
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando técnicas…</div>
           )}
           {catalogStatus === 'ready' && availableTypes.length === 0 && (
-            <div className={styles.meta}>Nenhum tipo de serviço disponível no momento.</div>
+            <div className={styles.meta}>Nenhuma técnica disponível no momento.</div>
           )}
           {catalogStatus === 'ready' && availableTypes.length > 0 && (
-            <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
+            <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Técnica">
               {availableTypes.map((type) => (
                 <button
                   key={type.id}
@@ -520,11 +520,11 @@ export default function NewAppointmentExperience() {
         </section>
 
         {selectedType ? (
-          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tecnica-card">
-            <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
+          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
+            <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
             {catalogStatus === 'ready' && selectedType.services.length > 0 ? (
               <>
-                <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
+                <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Tipo">
                   {visibleServices.map((service) => (
                     <button
                       key={service.id}
@@ -549,7 +549,7 @@ export default function NewAppointmentExperience() {
               </>
             ) : catalogStatus === 'ready' ? (
               <div className={`${styles.meta} ${styles.labelCentered}`}>
-                Nenhuma técnica disponível para este tipo no momento.
+                Nenhum tipo disponível para esta técnica no momento.
               </div>
             ) : null}
           </section>

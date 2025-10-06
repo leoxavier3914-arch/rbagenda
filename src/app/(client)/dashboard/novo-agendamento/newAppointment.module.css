@@ -17,7 +17,7 @@
   --page-inline-padding: clamp(8px, 4vw, 20px);
 }
 
-.page {
+.screen {
   min-height: 100vh;
   background: var(--bg-page);
   color: var(--ink);
@@ -25,6 +25,7 @@
   flex-direction: column;
   align-items: center;
   padding-inline: var(--page-inline-padding);
+  padding-bottom: clamp(48px, 12vw, 120px);
   width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -41,27 +42,45 @@
   text-align: center;
 }
 
-.shellExtras {
+.flowShell {
   --flow-shell-max-width: min(100%, 1200px);
+  position: relative;
+  width: 100%;
+  max-width: var(--flow-shell-max-width);
+  margin: clamp(20px, 5vw, 48px) auto 0;
   padding-block: clamp(24px, 6vw, 40px);
+  border-radius: var(--radius-xl);
+  color: var(--ink);
+  isolation: isolate;
+}
+
+.flowShell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: linear-gradient(145deg, var(--card-surface-strong), rgba(10, 20, 16, 0.78));
   border: 1px solid var(--stroke);
-  border-radius: var(--radius-xl);
   box-shadow: 0 45px 95px -42px rgba(0, 0, 0, 0.68);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
-  color: var(--ink);
-  margin-top: clamp(20px, 5vw, 48px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.flowShell > * {
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 1024px) {
-  .shellExtras {
+  .flowShell {
     --flow-shell-max-width: min(100%, 1320px);
   }
 }
 
 @media (min-width: 1280px) {
-  .shellExtras {
+  .flowShell {
     --flow-shell-max-width: min(100%, 1400px);
   }
 }

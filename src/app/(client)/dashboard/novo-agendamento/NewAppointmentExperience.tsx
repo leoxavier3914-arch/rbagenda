@@ -785,7 +785,7 @@ export default function NewAppointmentExperience() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.screen}>
       <header className={styles.hero}>
         <h1 className={styles.title}>Novo agendamento</h1>
         <p className={styles.subtitle}>
@@ -793,7 +793,7 @@ export default function NewAppointmentExperience() {
         </p>
       </header>
 
-      <FlowShell className={styles.shellExtras}>
+      <FlowShell className={styles.flowShell}>
         <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
           {catalogError && (

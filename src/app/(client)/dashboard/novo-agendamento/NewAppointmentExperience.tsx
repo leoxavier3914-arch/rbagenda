@@ -785,7 +785,7 @@ export default function NewAppointmentExperience() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.screen}>
       <header className={styles.hero}>
         <h1 className={styles.title}>Novo agendamento</h1>
         <p className={styles.subtitle}>
@@ -793,7 +793,10 @@ export default function NewAppointmentExperience() {
         </p>
       </header>
 
-      <FlowShell className={styles.shellExtras}>
+      <div className={styles.shellWrapper}>
+        <div className={styles.page} aria-hidden />
+
+        <FlowShell className={styles.shellExtras}>
         <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
           <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
           {catalogError && (
@@ -1059,6 +1062,7 @@ export default function NewAppointmentExperience() {
 
         <div className={styles.bottomSpacer} />
       </FlowShell>
+      </div>
 
       {shouldRenderSummary && (
         <footer className={`${styles.summary} ${styles.summaryReveal}`}>

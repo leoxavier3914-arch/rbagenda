@@ -820,9 +820,7 @@ export default function NewAppointmentExperience() {
 
   return (
     <div className={styles.screen}>
-      <div className={styles.shellWrapper} ref={shellWrapperRef}>
-        <div className={styles.page} aria-hidden style={pageStyle} />
-
+      <div className={styles.shellWrapper} ref={shellWrapperRef} style={pageStyle}>
         <FlowShell className={styles.shellExtras}>
           <header className={styles.hero}>
             <h1 className={styles.title}>Novo agendamento</h1>

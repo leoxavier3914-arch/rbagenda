@@ -33,6 +33,8 @@
 
 .shellWrapper {
   --flow-shell-max-width: min(100%, 1200px);
+  --page-height: 0px;
+  --page-opacity: 0;
   position: relative;
   width: 100%;
   max-width: var(--flow-shell-max-width);
@@ -42,33 +44,32 @@
   border-radius: var(--radius-xl);
 }
 
-.page {
+.shellWrapper::before,
+.shellWrapper::after {
+  content: "";
   position: absolute;
   top: 0;
   left: 50%;
   width: min(100%, var(--flow-shell-max-width, 1024px));
-  height: var(--page-height, 0px);
+  height: var(--page-height);
   border-radius: var(--radius-xl);
   transform: translateX(-50%);
+  pointer-events: none;
+  opacity: var(--page-opacity);
+  transition: height 0.35s ease, opacity 0.3s ease;
+  z-index: 0;
+}
+
+.shellWrapper::before {
   background: linear-gradient(150deg, var(--card-surface), rgba(8, 18, 14, 0.72));
   border: 1px solid var(--stroke);
   box-shadow: 0 42px 88px -48px rgba(0, 0, 0, 0.68);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-  opacity: var(--page-opacity, 0);
-  transition: height 0.35s ease, opacity 0.3s ease;
 }
 
-.page::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
+.shellWrapper::after {
   border: 1px solid rgba(255, 255, 255, 0.16);
-  pointer-events: none;
 }
 
 .hero {

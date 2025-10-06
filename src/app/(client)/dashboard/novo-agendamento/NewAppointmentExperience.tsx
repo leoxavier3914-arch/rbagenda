@@ -61,7 +61,7 @@ type ServiceTypeAssignment = {
   services?: ServiceTechnique | ServiceTechnique[] | null
 }
 
-type ServiceTypeEntry = {
+type TechniqueEntry = {
   id: string
   name: string
   slug: string | null
@@ -69,6 +69,18 @@ type ServiceTypeEntry = {
   order_index: number
   active: boolean
   services: ServiceTechnique[]
+}
+
+type TechniqueSummary = {
+  id: string
+  name: string
+  slug: string | null
+  description: string | null
+  order_index: number
+}
+
+type ServiceOption = ServiceTechnique & {
+  techniques: TechniqueSummary[]
 }
 
 type LoadedAppointment = Parameters<typeof buildAvailabilityData>[0][number]
@@ -101,11 +113,11 @@ export default function NewAppointmentExperience() {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
 
-  const [serviceTypes, setServiceTypes] = useState<ServiceTypeEntry[]>([])
+  const [techniqueCatalog, setTechniqueCatalog] = useState<TechniqueEntry[]>([])
   const [catalogStatus, setCatalogStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [catalogError, setCatalogError] = useState<string | null>(null)
-  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null)
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
+  const [selectedTechniqueId, setSelectedTechniqueId] = useState<string | null>(null)
   const [showAllTechniques, setShowAllTechniques] = useState(false)
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -122,8 +134,8 @@ export default function NewAppointmentExperience() {
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
 
-  const lastTypeIdRef = useRef<string | null>(null)
   const lastServiceIdRef = useRef<string | null>(null)
+  const lastTechniqueIdRef = useRef<string | null>(null)
   const lastDateRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -203,19 +215,19 @@ export default function NewAppointmentExperience() {
             active: entry.active !== false,
             services,
           }
-        }) satisfies ServiceTypeEntry[]
+        }) satisfies TechniqueEntry[]
 
         normalized.sort(
           (a, b) =>
             a.order_index - b.order_index || a.name.localeCompare(b.name, 'pt-BR')
         )
 
-        setServiceTypes(normalized)
+        setTechniqueCatalog(normalized)
         setCatalogStatus('ready')
       } catch (error) {
         console.error('Erro ao carregar serviços', error)
         if (!active) return
-        setServiceTypes([])
+        setTechniqueCatalog([])
         setCatalogStatus('error')
         setCatalogError('Não foi possível carregar os serviços disponíveis. Tente novamente mais tarde.')
       }
@@ -285,75 +297,89 @@ export default function NewAppointmentExperience() {
     }
   }, [])
 
-  const availableTypes = useMemo(
-    () => serviceTypes.filter((type) => type.services.length > 0),
-    [serviceTypes],
+  const techniqueMap = useMemo(() => {
+    const map = new Map<string, TechniqueEntry>()
+    techniqueCatalog.forEach((technique) => {
+      map.set(technique.id, technique)
+    })
+    return map
+  }, [techniqueCatalog])
+
+  const serviceOptions = useMemo<ServiceOption[]>(() => {
+    const grouped = new Map<
+      string,
+      { service: ServiceTechnique; techniques: Map<string, TechniqueSummary> }
+    >()
+
+    techniqueCatalog.forEach((technique) => {
+      const techniqueSummary: TechniqueSummary = {
+        id: technique.id,
+        name: technique.name,
+        slug: technique.slug,
+        description: technique.description,
+        order_index: technique.order_index,
+      }
+
+      technique.services.forEach((service) => {
+        const existing = grouped.get(service.id)
+        if (!existing) {
+          grouped.set(service.id, {
+            service,
+            techniques: new Map([[techniqueSummary.id, techniqueSummary]]),
+          })
+          return
+        }
+
+        if (!existing.techniques.has(techniqueSummary.id)) {
+          existing.techniques.set(techniqueSummary.id, techniqueSummary)
+        }
+      })
+    })
+
+    return Array.from(grouped.values())
+      .map(({ service, techniques }) => ({
+        ...service,
+        techniques: Array.from(techniques.values()).sort((a, b) => {
+          const orderDiff = a.order_index - b.order_index
+          if (orderDiff !== 0) return orderDiff
+          return a.name.localeCompare(b.name, 'pt-BR')
+        }),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  }, [techniqueCatalog])
+
+  const availableServices = useMemo(
+    () => serviceOptions.filter((service) => service.techniques.length > 0),
+    [serviceOptions],
   )
 
   useEffect(() => {
     if (catalogStatus !== 'ready') return
 
-    if (availableTypes.length === 0) {
-      setSelectedTypeId(null)
+    if (availableServices.length === 0) {
+      setSelectedServiceId(null)
       return
     }
 
-    if (selectedTypeId && !availableTypes.some((type) => type.id === selectedTypeId)) {
-      setSelectedTypeId(null)
+    if (selectedServiceId && !availableServices.some((service) => service.id === selectedServiceId)) {
+      setSelectedServiceId(null)
     }
-  }, [availableTypes, catalogStatus, selectedTypeId])
+  }, [availableServices, catalogStatus, selectedServiceId])
 
-  const selectedType = useMemo(
-    () => availableTypes.find((type) => type.id === selectedTypeId) ?? null,
-    [availableTypes, selectedTypeId],
+  const selectedService = useMemo(
+    () => availableServices.find((service) => service.id === selectedServiceId) ?? null,
+    [availableServices, selectedServiceId],
   )
 
-  const visibleServices = useMemo(() => {
-    if (!selectedType) return []
-    if (showAllTechniques) return selectedType.services
-    return selectedType.services.slice(0, 6)
-  }, [selectedType, showAllTechniques])
+  const visibleTechniques = useMemo(() => {
+    if (!selectedService) return []
+    if (showAllTechniques) return selectedService.techniques
+    return selectedService.techniques.slice(0, 6)
+  }, [selectedService, showAllTechniques])
 
   useEffect(() => {
     setShowAllTechniques(false)
-  }, [selectedTypeId])
-
-  useEffect(() => {
-    if (!selectedType) {
-      lastTypeIdRef.current = null
-      return
-    }
-
-    if (lastTypeIdRef.current === selectedType.id) return
-    lastTypeIdRef.current = selectedType.id
-    scrollElementIntoView(techniqueCardRef.current)
-  }, [selectedType])
-
-  useEffect(() => {
-    if (!selectedType) {
-      if (selectedServiceId !== null) {
-        setSelectedServiceId(null)
-      }
-      return
-    }
-
-    const activeServices = selectedType.services
-    if (activeServices.length === 0) {
-      if (selectedServiceId !== null) {
-        setSelectedServiceId(null)
-      }
-      return
-    }
-
-    if (selectedServiceId && !activeServices.some((svc) => svc.id === selectedServiceId)) {
-      setSelectedServiceId(null)
-    }
-  }, [selectedServiceId, selectedType])
-
-  const selectedService = useMemo(
-    () => selectedType?.services.find((svc) => svc.id === selectedServiceId) ?? null,
-    [selectedServiceId, selectedType],
-  )
+  }, [selectedServiceId])
 
   useEffect(() => {
     if (!selectedService) {
@@ -363,12 +389,62 @@ export default function NewAppointmentExperience() {
 
     if (lastServiceIdRef.current === selectedService.id) return
     lastServiceIdRef.current = selectedService.id
-    scrollElementIntoView(dateCardRef.current)
+    scrollElementIntoView(techniqueCardRef.current)
   }, [selectedService])
 
   useEffect(() => {
+    if (!selectedService) {
+      if (selectedTechniqueId !== null) {
+        setSelectedTechniqueId(null)
+      }
+      return
+    }
+
+    const activeTechniques = selectedService.techniques
+    if (activeTechniques.length === 0) {
+      if (selectedTechniqueId !== null) {
+        setSelectedTechniqueId(null)
+      }
+      return
+    }
+
+    if (selectedTechniqueId && !activeTechniques.some((tech) => tech.id === selectedTechniqueId)) {
+      setSelectedTechniqueId(null)
+    }
+  }, [selectedService, selectedTechniqueId])
+
+  const selectedTechnique = useMemo(() => {
+    if (!selectedTechniqueId) return null
+
+    const withinService = selectedService?.techniques.find((tech) => tech.id === selectedTechniqueId)
+    if (withinService) return withinService
+
+    const fallback = techniqueMap.get(selectedTechniqueId)
+    if (!fallback) return null
+
+    return {
+      id: fallback.id,
+      name: fallback.name,
+      slug: fallback.slug,
+      description: fallback.description,
+      order_index: fallback.order_index,
+    }
+  }, [selectedService, selectedTechniqueId, techniqueMap])
+
+  useEffect(() => {
+    if (!selectedTechnique) {
+      lastTechniqueIdRef.current = null
+      return
+    }
+
+    if (lastTechniqueIdRef.current === selectedTechnique.id) return
+    lastTechniqueIdRef.current = selectedTechnique.id
+    scrollElementIntoView(dateCardRef.current)
+  }, [selectedTechnique])
+
+  useEffect(() => {
     setSelectedSlot(null)
-  }, [selectedServiceId])
+  }, [selectedTechniqueId])
 
   useEffect(() => {
     if (!selectedDate) {
@@ -407,6 +483,7 @@ export default function NewAppointmentExperience() {
   const canInteract =
     catalogStatus === 'ready' &&
     !!selectedService &&
+    !!selectedTechnique &&
     !isLoadingAvailability &&
     !availabilityError
 
@@ -552,23 +629,23 @@ export default function NewAppointmentExperience() {
     setSelectedSlot(slotValue)
   }
 
-  function handleTypeSelect(typeId: string) {
-    if (typeId === selectedTypeId) return
-    setSelectedTypeId(typeId)
-    setSelectedServiceId(null)
+  function handleServiceSelect(serviceId: string) {
+    if (serviceId === selectedServiceId) return
+    setSelectedServiceId(serviceId)
+    setSelectedTechniqueId(null)
     setSelectedDate(null)
     setSelectedSlot(null)
   }
 
-  function handleTechniqueSelect(serviceId: string) {
-    if (serviceId === selectedServiceId) return
-    setSelectedServiceId(serviceId)
+  function handleTechniqueSelect(techniqueId: string) {
+    if (techniqueId === selectedTechniqueId) return
+    setSelectedTechniqueId(techniqueId)
     setSelectedDate(null)
     setSelectedSlot(null)
   }
 
   const summaryData = useMemo(() => {
-    if (!selectedType || !selectedService || !selectedDate || !selectedSlot) return null
+    if (!selectedService || !selectedTechnique || !selectedDate || !selectedSlot) return null
 
     const appointmentDate =
       combineDateAndTime(selectedDate, selectedSlot) ?? new Date(`${selectedDate}T00:00:00`)
@@ -578,22 +655,22 @@ export default function NewAppointmentExperience() {
       : 0
 
     return {
-      typeId: selectedType.id,
-      typeName: selectedType.name,
-      techniqueId: selectedService.id,
-      techniqueName: selectedService.name,
+      typeId: selectedService.id,
+      typeName: selectedService.name,
+      techniqueId: selectedTechnique.id,
+      techniqueName: selectedTechnique.name,
       priceLabel: currencyFormatter.format(priceValue),
       durationLabel: formatDuration(selectedService.duration_min),
       dateLabel: dateFormatter.format(appointmentDate),
       timeLabel: selectedSlot,
       payload: {
-        typeId: selectedType.id,
+        typeId: selectedTechnique.id,
         serviceId: selectedService.id,
         date: selectedDate,
         slot: selectedSlot,
       },
     }
-  }, [selectedDate, selectedService, selectedSlot, selectedType])
+  }, [selectedDate, selectedService, selectedSlot, selectedTechnique])
 
   const handleContinue = useCallback(() => {
     if (!summaryData) return
@@ -620,49 +697,49 @@ export default function NewAppointmentExperience() {
           {catalogStatus === 'loading' && !catalogError && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
           )}
-          {catalogStatus === 'ready' && availableTypes.length === 0 && (
+          {catalogStatus === 'ready' && availableServices.length === 0 && (
             <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
           )}
-          {catalogStatus === 'ready' && availableTypes.length > 0 && (
+          {catalogStatus === 'ready' && availableServices.length > 0 && (
             <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
-              {availableTypes.map((type) => (
+              {availableServices.map((service) => (
                 <button
-                  key={type.id}
+                  key={service.id}
                   type="button"
                   className={`${styles.pill} ${styles.tipoPill}`}
-                  data-active={selectedTypeId === type.id}
-                  onClick={() => handleTypeSelect(type.id)}
+                  data-active={selectedServiceId === service.id}
+                  onClick={() => handleServiceSelect(service.id)}
                 >
-                  {type.name}
+                  {service.name}
                 </button>
               ))}
             </div>
           )}
         </section>
 
-        {selectedType ? (
+        {selectedService ? (
           <section
             ref={techniqueCardRef}
             className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
             id="tecnica-card"
           >
             <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
-            {catalogStatus === 'ready' && selectedType.services.length > 0 ? (
+            {catalogStatus === 'ready' && selectedService.techniques.length > 0 ? (
               <>
                 <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
-                  {visibleServices.map((service) => (
+                  {visibleTechniques.map((technique) => (
                     <button
-                      key={service.id}
+                      key={technique.id}
                       type="button"
                       className={`${styles.pill} ${styles.techniquePill}`}
-                      data-active={selectedServiceId === service.id}
-                      onClick={() => handleTechniqueSelect(service.id)}
+                      data-active={selectedTechniqueId === technique.id}
+                      onClick={() => handleTechniqueSelect(technique.id)}
                     >
-                      {service.name}
+                      {technique.name}
                     </button>
                   ))}
                 </div>
-                {!showAllTechniques && selectedType.services.length > 6 && (
+                {!showAllTechniques && selectedService.techniques.length > 6 && (
                   <button
                     type="button"
                     className={styles.viewMoreButton}
@@ -680,7 +757,7 @@ export default function NewAppointmentExperience() {
           </section>
         ) : null}
 
-        {selectedService ? (
+        {selectedTechnique ? (
           <section
             ref={dateCardRef}
             className={`${styles.card} ${styles.section} ${styles.cardReveal}`}

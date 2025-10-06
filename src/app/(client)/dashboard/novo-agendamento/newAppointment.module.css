@@ -20,8 +20,8 @@
 
 .screen {
   min-height: 100vh;
-  background: var(--bg-page);
-  color: var(--ink);
+  background: transparent;
+  color: inherit;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,13 +34,7 @@
 
 .experience {
   position: relative;
-  background: linear-gradient(150deg, var(--card-surface), rgba(8, 18, 14, 0.72));
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 42px 88px -48px rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: clamp(24px, 6vw, 48px);
+  padding: 0;
   width: min(100%, 960px);
   margin-inline: auto;
   box-sizing: border-box;
@@ -50,12 +44,7 @@
 }
 
 .experience::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  pointer-events: none;
+  content: none;
 }
 
 .hero {

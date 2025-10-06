@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { supabase } from '@/lib/db'
 import {
@@ -11,6 +11,40 @@ import {
 } from '@/lib/availability'
 
 import styles from './newAppointment.module.css'
+
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
+
+const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+})
+
+function formatDuration(minutes: number) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '0 min'
+  const hours = Math.floor(minutes / 60)
+  const remaining = minutes % 60
+  const parts: string[] = []
+  if (hours > 0) parts.push(`${hours}h`)
+  if (remaining > 0) parts.push(`${remaining} min`)
+  return parts.join(' ')
+}
+
+function scrollElementIntoView(element: HTMLElement | null) {
+  if (!element) return
+
+  const rect = element.getBoundingClientRect()
+  const absoluteTop = rect.top + window.scrollY
+  const offset = absoluteTop - window.innerHeight / 2 + rect.height / 2
+
+  window.scrollTo({
+    top: Math.max(0, offset),
+    behavior: 'smooth',
+  })
+}
 
 type ServiceTechnique = {
   id: string
@@ -81,6 +115,16 @@ export default function NewAppointmentExperience() {
   const [userId, setUserId] = useState<string | null>(null)
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+
+  const typeCardRef = useRef<HTMLDivElement | null>(null)
+  const techniqueCardRef = useRef<HTMLDivElement | null>(null)
+  const dateCardRef = useRef<HTMLDivElement | null>(null)
+  const slotsContainerRef = useRef<HTMLDivElement | null>(null)
+  const summaryRef = useRef<HTMLDivElement | null>(null)
+
+  const lastTypeIdRef = useRef<string | null>(null)
+  const lastServiceIdRef = useRef<string | null>(null)
+  const lastDateRef = useRef<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -276,6 +320,17 @@ export default function NewAppointmentExperience() {
 
   useEffect(() => {
     if (!selectedType) {
+      lastTypeIdRef.current = null
+      return
+    }
+
+    if (lastTypeIdRef.current === selectedType.id) return
+    lastTypeIdRef.current = selectedType.id
+    scrollElementIntoView(techniqueCardRef.current)
+  }, [selectedType])
+
+  useEffect(() => {
+    if (!selectedType) {
       if (selectedServiceId !== null) {
         setSelectedServiceId(null)
       }
@@ -301,8 +356,30 @@ export default function NewAppointmentExperience() {
   )
 
   useEffect(() => {
+    if (!selectedService) {
+      lastServiceIdRef.current = null
+      return
+    }
+
+    if (lastServiceIdRef.current === selectedService.id) return
+    lastServiceIdRef.current = selectedService.id
+    scrollElementIntoView(dateCardRef.current)
+  }, [selectedService])
+
+  useEffect(() => {
     setSelectedSlot(null)
   }, [selectedServiceId])
+
+  useEffect(() => {
+    if (!selectedDate) {
+      lastDateRef.current = null
+      return
+    }
+
+    if (lastDateRef.current === selectedDate) return
+    lastDateRef.current = selectedDate
+    scrollElementIntoView(slotsContainerRef.current)
+  }, [selectedDate])
 
   const availability = useMemo(
     () =>
@@ -490,20 +567,64 @@ export default function NewAppointmentExperience() {
     setSelectedSlot(null)
   }
 
+  const summaryData = useMemo(() => {
+    if (!selectedType || !selectedService || !selectedDate || !selectedSlot) return null
+
+    const appointmentDate =
+      combineDateAndTime(selectedDate, selectedSlot) ?? new Date(`${selectedDate}T00:00:00`)
+
+    const priceValue = Number.isFinite(selectedService.price_cents)
+      ? selectedService.price_cents / 100
+      : 0
+
+    return {
+      typeId: selectedType.id,
+      typeName: selectedType.name,
+      techniqueId: selectedService.id,
+      techniqueName: selectedService.name,
+      priceLabel: currencyFormatter.format(priceValue),
+      durationLabel: formatDuration(selectedService.duration_min),
+      dateLabel: dateFormatter.format(appointmentDate),
+      timeLabel: selectedSlot,
+      payload: {
+        typeId: selectedType.id,
+        serviceId: selectedService.id,
+        date: selectedDate,
+        slot: selectedSlot,
+      },
+    }
+  }, [selectedDate, selectedService, selectedSlot, selectedType])
+
+  const handleContinue = useCallback(() => {
+    if (!summaryData) return
+
+    window.dispatchEvent(
+      new CustomEvent('new-appointment:continue', {
+        detail: summaryData.payload,
+      }),
+    )
+  }, [summaryData])
+
+  const hasSummary = !!summaryData
+
   return (
-    <div className={styles.screen}>
-    <div className={styles.experience}>
-        <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tecnica-card">
-          <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
+    <div className={styles.screen} data-has-summary={hasSummary ? 'true' : 'false'}>
+      <div className={styles.experience}>
+        <section
+          ref={typeCardRef}
+          className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+          id="tipo-card"
+        >
+          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
           {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
           {catalogStatus === 'loading' && !catalogError && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando técnicas…</div>
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
           )}
           {catalogStatus === 'ready' && availableTypes.length === 0 && (
-            <div className={styles.meta}>Nenhuma técnica disponível no momento.</div>
+            <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
           )}
           {catalogStatus === 'ready' && availableTypes.length > 0 && (
-            <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Técnica">
+            <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
               {availableTypes.map((type) => (
                 <button
                   key={type.id}
@@ -520,11 +641,15 @@ export default function NewAppointmentExperience() {
         </section>
 
         {selectedType ? (
-          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="tipo-card">
-            <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
+          <section
+            ref={techniqueCardRef}
+            className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+            id="tecnica-card"
+          >
+            <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
             {catalogStatus === 'ready' && selectedType.services.length > 0 ? (
               <>
-                <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Tipo">
+                <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
                   {visibleServices.map((service) => (
                     <button
                       key={service.id}
@@ -549,14 +674,18 @@ export default function NewAppointmentExperience() {
               </>
             ) : catalogStatus === 'ready' ? (
               <div className={`${styles.meta} ${styles.labelCentered}`}>
-                Nenhum tipo disponível para esta técnica no momento.
+                Nenhuma técnica disponível para este tipo no momento.
               </div>
             ) : null}
           </section>
         ) : null}
 
         {selectedService ? (
-          <section className={`${styles.card} ${styles.section} ${styles.cardReveal}`} id="data-card">
+          <section
+            ref={dateCardRef}
+            className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+            id="data-card"
+          >
             <div className={`${styles.label} ${styles.labelCentered}`}>Data &amp; horário</div>
 
             {availabilityError && (
@@ -635,7 +764,7 @@ export default function NewAppointmentExperience() {
 
             <div className={styles.spacerSmall} />
             <div className={styles.label}>Horários</div>
-            <div className={styles.slots}>
+            <div ref={slotsContainerRef} className={styles.slots}>
               {availabilityError ? (
                 <div className={`${styles.status} ${styles.statusError}`}>
                   Não foi possível carregar os horários.
@@ -672,6 +801,39 @@ export default function NewAppointmentExperience() {
           </section>
         ) : null}
       </div>
+      {summaryData ? (
+        <div className={styles.summaryBarContainer} data-visible="true" ref={summaryRef}>
+          <div className={styles.summaryBar}>
+            <div className={styles.summaryInfo}>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Tipo</span>
+                <span className={styles.summaryItemValue}>{summaryData.typeName}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Técnica</span>
+                <span className={styles.summaryItemValue}>{summaryData.techniqueName}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Valor</span>
+                <span className={styles.summaryItemValue}>{summaryData.priceLabel}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Duração</span>
+                <span className={styles.summaryItemValue}>{summaryData.durationLabel}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Horário</span>
+                <span className={styles.summaryItemValue}>
+                  {summaryData.dateLabel} às {summaryData.timeLabel}
+                </span>
+              </div>
+            </div>
+            <button type="button" className={styles.summaryAction} onClick={handleContinue}>
+              Continuar
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

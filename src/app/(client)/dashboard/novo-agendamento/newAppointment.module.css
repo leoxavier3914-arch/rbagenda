@@ -17,6 +17,7 @@
   --page-inline-padding: clamp(8px, 4vw, 20px);
 }
 
+
 .screen {
   min-height: 100vh;
   background: var(--bg-page);
@@ -25,51 +26,11 @@
   flex-direction: column;
   align-items: center;
   padding-inline: var(--page-inline-padding);
-  padding-bottom: clamp(48px, 12vw, 120px);
+  padding-block: clamp(32px, 8vw, 64px) clamp(48px, 12vw, 120px);
   width: 100%;
   box-sizing: border-box;
   position: relative;
-}
-
-.shellWrapper {
-  --flow-shell-max-width: min(100%, 1200px);
-  --page-height: 0px;
-  --page-opacity: 0;
-  position: relative;
-  width: 100%;
-  max-width: var(--flow-shell-max-width);
-  margin: clamp(20px, 5vw, 48px) auto 0;
-  display: flex;
-  justify-content: center;
-  border-radius: var(--radius-xl);
-}
-
-.shellWrapper::before,
-.shellWrapper::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: min(100%, var(--flow-shell-max-width, 1024px));
-  height: var(--page-height);
-  border-radius: var(--radius-xl);
-  transform: translateX(-50%);
-  pointer-events: none;
-  opacity: var(--page-opacity);
-  transition: height 0.35s ease, opacity 0.3s ease;
-  z-index: 0;
-}
-
-.shellWrapper::before {
-  background: linear-gradient(150deg, var(--card-surface), rgba(8, 18, 14, 0.72));
-  border: 1px solid var(--stroke);
-  box-shadow: 0 42px 88px -48px rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-}
-
-.shellWrapper::after {
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  gap: clamp(20px, 5vw, 36px);
 }
 
 .hero {
@@ -83,26 +44,9 @@
   text-align: center;
 }
 
-.shellExtras {
-  position: relative;
-  z-index: 1;
-  padding-block: clamp(24px, 6vw, 40px);
-  width: 100%;
-  border-radius: var(--radius-xl);
-  color: var(--ink);
-  --flow-shell-inline-padding: 0px;
-  --flow-shell-inline-padding-mobile: 0px;
-}
-
 @media (min-width: 1024px) {
-  .shellWrapper {
-    --flow-shell-max-width: min(100%, 1320px);
-  }
-}
-
-@media (min-width: 1280px) {
-  .shellWrapper {
-    --flow-shell-max-width: min(100%, 1400px);
+  .screen {
+    gap: clamp(24px, 4vw, 48px);
   }
 }
 
@@ -157,7 +101,8 @@
   -webkit-backdrop-filter: blur(18px);
   padding: 20px;
   overflow: hidden;
-  width: 100%;
+  width: min(100%, 900px);
+  margin-inline: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -623,10 +568,6 @@
 
 .spacerSmall {
   height: 12px;
-}
-
-.bottomSpacer {
-  height: 100px;
 }
 
 .modal {

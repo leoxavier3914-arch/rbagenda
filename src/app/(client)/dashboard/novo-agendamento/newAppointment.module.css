@@ -405,6 +405,13 @@
   color: var(--muted);
 }
 
+.calendarDivider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
+  margin-top: 18px;
+}
+
 .dot {
   width: 12px;
   height: 12px;
@@ -438,6 +445,14 @@
   flex-wrap: wrap;
   margin-top: 10px;
   width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.slots .status,
+.slots .meta {
+  width: 100%;
+  text-align: center;
 }
 
 .slot {
@@ -890,26 +905,41 @@
   box-shadow: 0 32px 90px -38px rgba(0, 0, 0, 0.75);
   padding: clamp(16px, 4vw, 24px);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(12px, 4vw, 20px);
+  text-align: center;
+  gap: clamp(16px, 4vw, 24px);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   pointer-events: auto;
 }
 
-.summaryInfo {
+.summaryContent {
   display: flex;
-  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 4vw, 20px);
+  width: 100%;
+}
+
+.summaryRow {
+  display: flex;
   flex-wrap: wrap;
-  gap: clamp(12px, 3vw, 20px);
+  justify-content: center;
+  gap: clamp(16px, 6vw, 32px);
+  width: 100%;
 }
 
 .summaryItem {
   display: flex;
   flex-direction: column;
-  min-width: clamp(120px, 26vw, 180px);
+  align-items: center;
+  min-width: clamp(140px, 32vw, 220px);
   gap: 4px;
+}
+
+.summaryItemFull {
+  min-width: clamp(200px, 60vw, 320px);
 }
 
 .summaryItemLabel {
@@ -917,6 +947,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(247, 244, 239, 0.6);
+  text-align: center;
 }
 
 .summaryItemValue {
@@ -924,6 +955,7 @@
   font-weight: 650;
   color: var(--ink);
   white-space: pre-wrap;
+  text-align: center;
 }
 
 .summaryAction {
@@ -936,8 +968,8 @@
   padding: 12px 28px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  min-width: clamp(140px, 24vw, 200px);
-  justify-self: flex-end;
+  width: min(240px, 60%);
+  align-self: center;
 }
 
 .summaryAction:hover {
@@ -956,15 +988,21 @@
   }
 
   .summaryBar {
-    flex-direction: column;
     align-items: stretch;
   }
 
-  .summaryInfo {
-    flex-direction: column;
+  .summaryContent {
+    align-items: stretch;
+    gap: 18px;
   }
 
-  .summaryItem {
+  .summaryRow {
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .summaryItem,
+  .summaryItemFull {
     min-width: 100%;
   }
 

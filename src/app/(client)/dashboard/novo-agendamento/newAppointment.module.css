@@ -46,19 +46,29 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(145deg, var(--card-surface-strong), rgba(10, 20, 16, 0.78));
+  background: linear-gradient(150deg, var(--card-surface), rgba(8, 18, 14, 0.72));
   border: 1px solid var(--stroke);
-  box-shadow: 0 45px 95px -42px rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 42px 88px -48px rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
+}
+
+.page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  pointer-events: none;
 }
 
 .hero {
   width: 100%;
   max-width: 860px;
-  margin: clamp(28px, 6vw, 56px) auto 0;
+  margin: 0 auto clamp(20px, 6vw, 48px);
   display: flex;
   flex-direction: column;
   align-items: center;

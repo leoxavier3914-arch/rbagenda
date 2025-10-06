@@ -33,6 +33,55 @@ function formatDuration(minutes: number) {
   return parts.join(' ')
 }
 
+const prefersReducedMotion =
+  typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false
+
+let scrollAnimationFrame: number | null = null
+
+function easeOutCubic(progress: number) {
+  return 1 - Math.pow(1 - progress, 3)
+}
+
+function smoothScrollTo(target: number, duration = 650) {
+  if (scrollAnimationFrame !== null) {
+    cancelAnimationFrame(scrollAnimationFrame)
+    scrollAnimationFrame = null
+  }
+
+  const startY = window.scrollY
+  const distance = target - startY
+
+  if (Math.abs(distance) < 1) {
+    window.scrollTo({ top: target })
+    return
+  }
+
+  if (prefersReducedMotion) {
+    window.scrollTo({ top: target })
+    return
+  }
+
+  const startTime = performance.now()
+
+  const step = () => {
+    const elapsed = performance.now() - startTime
+    const progress = Math.min(1, elapsed / duration)
+    const eased = easeOutCubic(progress)
+
+    window.scrollTo({ top: startY + distance * eased })
+
+    if (progress < 1) {
+      scrollAnimationFrame = requestAnimationFrame(step)
+    } else {
+      scrollAnimationFrame = null
+    }
+  }
+
+  scrollAnimationFrame = requestAnimationFrame(step)
+}
+
 function scrollElementIntoView(element: HTMLElement | null) {
   if (!element) return
 
@@ -40,10 +89,7 @@ function scrollElementIntoView(element: HTMLElement | null) {
   const absoluteTop = rect.top + window.scrollY
   const offset = absoluteTop - window.innerHeight / 2 + rect.height / 2
 
-  window.scrollTo({
-    top: Math.max(0, offset),
-    behavior: 'smooth',
-  })
+  smoothScrollTo(Math.max(0, offset))
 }
 
 type ServiceTechnique = {

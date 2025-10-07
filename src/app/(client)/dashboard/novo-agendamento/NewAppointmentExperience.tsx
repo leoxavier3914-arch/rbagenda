@@ -48,7 +48,7 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function smoothScrollTo(target: number, duration = 850) {
+function smoothScrollTo(target: number, duration = 950) {
   if (scrollAnimationFrame !== null) {
     cancelAnimationFrame(scrollAnimationFrame)
     scrollAnimationFrame = null
@@ -79,8 +79,8 @@ function smoothScrollTo(target: number, duration = 850) {
   }
 
   const adjustedDuration = Math.min(
-    1600,
-    Math.max(700, duration, absoluteDistance * 0.9),
+    2000,
+    Math.max(900, duration, absoluteDistance * 1.1),
   )
 
   const startTime = performance.now()
@@ -840,6 +840,7 @@ export default function NewAppointmentExperience() {
   }, [summaryData])
 
   const hasSummary = !!summaryData
+  const shouldShowTimeCard = Boolean(selectedTechnique && selectedDate)
 
   return (
     <div className={styles.screen} data-has-summary={hasSummary ? 'true' : 'false'}>
@@ -917,10 +918,10 @@ export default function NewAppointmentExperience() {
         {selectedTechnique ? (
           <>
             <section
-            ref={dateCardRef}
-            className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
-            id="data-card"
-          >
+              ref={dateCardRef}
+              className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+              id="data-card"
+            >
             <div className={`${styles.label} ${styles.labelCentered}`}>Data</div>
 
             {!availabilityError && isLoadingAvailability && (
@@ -995,24 +996,30 @@ export default function NewAppointmentExperience() {
 
             <div className={styles.calendarDivider} aria-hidden="true" />
 
+            {!selectedDate && (
+              <div className={`${styles.meta} ${styles.dateHint}`}>
+                Escolha um dia disponível para liberar os horários.
+              </div>
+            )}
           </section>
 
-          <section
-            className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
-            id="time-card"
-          >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
-            <div ref={slotsContainerRef} className={styles.slots}>
-              {availabilityError ? (
-                <div className={`${styles.status} ${styles.statusError}`}>
-                  Não foi possível carregar os horários.
-                </div>
-              ) : isLoadingAvailability ? (
-                <div className={`${styles.status} ${styles.statusInfo}`}>
-                  Carregando horários disponíveis…
-                </div>
-              ) : selectedDate ? (
-                slots.length > 0 ? (
+          {shouldShowTimeCard ? (
+            <section
+              className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+              id="time-card"
+              data-visible={shouldShowTimeCard ? 'true' : 'false'}
+            >
+              <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
+              <div ref={slotsContainerRef} className={styles.slots}>
+                {availabilityError ? (
+                  <div className={`${styles.status} ${styles.statusError}`}>
+                    Não foi possível carregar os horários.
+                  </div>
+                ) : isLoadingAvailability ? (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>
+                    Carregando horários disponíveis…
+                  </div>
+                ) : slots.length > 0 ? (
                   slots.map((slotValue) => {
                     const disabled = bookedSlots.has(slotValue)
                     return (
@@ -1031,12 +1038,10 @@ export default function NewAppointmentExperience() {
                   })
                 ) : (
                   <div className={styles.meta}>Sem horários para este dia.</div>
-                )
-              ) : (
-                <div className={styles.meta}>Selecione um dia disponível para ver horários.</div>
-              )}
-            </div>
-          </section>
+                )}
+              </div>
+            </section>
+          ) : null}
 
           </>
         ) : null}

@@ -33,148 +33,23 @@ function formatDuration(minutes: number) {
   return parts.join(' ')
 }
 
-let fallbackAnimationFrame: number | null = null
-
-function easeInOutQuad(progress: number) {
-  if (progress < 0.5) {
-    return 2 * progress * progress
-  }
-  return 1 - Math.pow(-2 * progress + 2, 2) / 2
-}
-
 function prefersReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function cancelFallbackScroll() {
-  if (fallbackAnimationFrame !== null) {
-    cancelAnimationFrame(fallbackAnimationFrame)
-    fallbackAnimationFrame = null
-  }
-}
+function gentlyCenterCard(element: HTMLElement | null) {
+  if (!element || typeof window === 'undefined') return
 
-function smoothScrollTo(target: number) {
-  if (Math.abs(target - window.scrollY) < 1) {
-    window.scrollTo({ top: target })
-    return
-  }
+  const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
 
-  if (prefersReducedMotion()) {
-    cancelFallbackScroll()
-    window.scrollTo({ top: target })
-    return
-  }
-
-  const supportsNativeSmoothScroll =
-    typeof document !== 'undefined' &&
-    document.documentElement?.style?.scrollBehavior !== undefined
-
-  if (supportsNativeSmoothScroll) {
-    cancelFallbackScroll()
-    window.scrollTo({ top: target, behavior: 'smooth' })
-    return
-  }
-
-  cancelFallbackScroll()
-
-  const startY = window.scrollY
-  const distance = target - startY
-  const absoluteDistance = Math.abs(distance)
-  const duration = Math.min(600, Math.max(250, absoluteDistance / 1.5))
-  const startTime = performance.now()
-
-  const step = () => {
-    const elapsed = performance.now() - startTime
-    const progress = Math.min(1, elapsed / duration)
-    const eased = easeInOutQuad(progress)
-
-    window.scrollTo({ top: startY + distance * eased })
-
-    if (progress < 1) {
-      fallbackAnimationFrame = requestAnimationFrame(step)
-    } else {
-      fallbackAnimationFrame = null
-    }
-  }
-
-  fallbackAnimationFrame = requestAnimationFrame(step)
-}
-
-function scrollElementIntoView(element: HTMLElement | null) {
-  if (!element) return
-
-  const performScroll = () => {
-    if (!element.isConnected) return
-
+  window.requestAnimationFrame(() => {
     const rect = element.getBoundingClientRect()
     const viewportHeight = window.innerHeight || 0
-    const absoluteTop = rect.top + window.scrollY
-    const offset = absoluteTop - viewportHeight / 2 + rect.height / 2
-    const target = Math.max(0, offset)
-    const distance = Math.abs(target - window.scrollY)
+    const target = Math.max(0, rect.top + window.scrollY - viewportHeight / 2 + rect.height / 2)
 
-    if (distance < 4) return
-
-    smoothScrollTo(target)
-  }
-
-  const ensureRendered = () => {
-    let frame = 0
-
-    const waitForSettled = () => {
-      if (!element.isConnected) return
-      if (frame >= 3) {
-        performScroll()
-        return
-      }
-      frame += 1
-      requestAnimationFrame(waitForSettled)
-    }
-
-    requestAnimationFrame(waitForSettled)
-  }
-
-  const rect = element.getBoundingClientRect()
-  if (rect.height > 0 && rect.width > 0) {
-    ensureRendered()
-    return
-  }
-
-  if (typeof ResizeObserver !== 'undefined') {
-    let timeoutId: number | null = null
-    const observer = new ResizeObserver(() => {
-      if (!element.isConnected) {
-        observer.disconnect()
-        if (timeoutId !== null) {
-          window.clearTimeout(timeoutId)
-        }
-        return
-      }
-
-      const { height, width } = element.getBoundingClientRect()
-      if (height === 0 || width === 0) {
-        return
-      }
-
-      observer.disconnect()
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId)
-      }
-      ensureRendered()
-    })
-
-    observer.observe(element)
-
-    timeoutId = window.setTimeout(() => {
-      observer.disconnect()
-      ensureRendered()
-    }, 400)
-
-    return
-  }
-
-  ensureRendered()
+    window.scrollTo({ top: target, behavior })
+  })
 }
 
 type ServiceTechnique = {
@@ -265,10 +140,6 @@ export default function NewAppointmentExperience() {
   const dateCardRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
-
-  const lastServiceIdRef = useRef<string | null>(null)
-  const lastTechniqueIdRef = useRef<string | null>(null)
-  const lastDateRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -535,17 +406,6 @@ export default function NewAppointmentExperience() {
 
   useEffect(() => {
     if (!selectedService) {
-      lastServiceIdRef.current = null
-      return
-    }
-
-    if (lastServiceIdRef.current === selectedService.id) return
-    lastServiceIdRef.current = selectedService.id
-    scrollElementIntoView(techniqueCardRef.current)
-  }, [selectedService])
-
-  useEffect(() => {
-    if (!selectedService) {
       if (selectedTechniqueId !== null) {
         setSelectedTechniqueId(null)
       }
@@ -584,30 +444,8 @@ export default function NewAppointmentExperience() {
   }, [selectedService, selectedTechniqueId, techniqueMap])
 
   useEffect(() => {
-    if (!selectedTechnique) {
-      lastTechniqueIdRef.current = null
-      return
-    }
-
-    if (lastTechniqueIdRef.current === selectedTechnique.id) return
-    lastTechniqueIdRef.current = selectedTechnique.id
-    scrollElementIntoView(dateCardRef.current)
-  }, [selectedTechnique])
-
-  useEffect(() => {
     setSelectedSlot(null)
   }, [selectedTechniqueId])
-
-  useEffect(() => {
-    if (!selectedDate) {
-      lastDateRef.current = null
-      return
-    }
-
-    if (lastDateRef.current === selectedDate) return
-    lastDateRef.current = selectedDate
-    scrollElementIntoView(slotsContainerRef.current)
-  }, [selectedDate])
 
   const availability = useMemo(
     () =>
@@ -794,11 +632,27 @@ export default function NewAppointmentExperience() {
     if (disabled || !canInteract) return
     setSelectedDate(dayIso)
     setSelectedSlot(null)
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        gentlyCenterCard(slotsContainerRef.current)
+      })
+    } else {
+      gentlyCenterCard(slotsContainerRef.current)
+    }
   }
 
   function handleSlotSelect(slotValue: string, disabled: boolean) {
     if (disabled || !canInteract) return
     setSelectedSlot(slotValue)
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        gentlyCenterCard(summaryRef.current)
+      })
+    } else {
+      gentlyCenterCard(summaryRef.current)
+    }
   }
 
   function handleServiceSelect(serviceId: string) {
@@ -808,13 +662,7 @@ export default function NewAppointmentExperience() {
     setSelectedDate(null)
     setSelectedSlot(null)
 
-    if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
-        scrollElementIntoView(techniqueCardRef.current)
-      })
-    } else {
-      scrollElementIntoView(techniqueCardRef.current)
-    }
+    gentlyCenterCard(techniqueCardRef.current)
   }
 
   function handleTechniqueSelect(techniqueId: string) {
@@ -823,13 +671,7 @@ export default function NewAppointmentExperience() {
     setSelectedDate(null)
     setSelectedSlot(null)
 
-    if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
-        scrollElementIntoView(dateCardRef.current)
-      })
-    } else {
-      scrollElementIntoView(dateCardRef.current)
-    }
+    gentlyCenterCard(dateCardRef.current)
   }
 
   const summaryData = useMemo(() => {

@@ -1005,7 +1005,7 @@ export default function NewAppointmentExperience() {
 
           {shouldShowTimeCard ? (
             <section
-              className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+              className={`${styles.card} ${styles.section} ${styles.cardReveal} ${styles.timeCard}`}
               id="time-card"
               data-visible={shouldShowTimeCard ? 'true' : 'false'}
             >

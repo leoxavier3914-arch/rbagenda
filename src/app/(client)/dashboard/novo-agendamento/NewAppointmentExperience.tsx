@@ -113,11 +113,6 @@ function scrollElementIntoView(element: HTMLElement | null) {
 
     if (distance < 4) return
 
-    const fullyVisible =
-      rect.top >= 0 && rect.bottom <= viewportHeight && rect.height <= viewportHeight
-
-    if (fullyVisible) return
-
     smoothScrollTo(target)
   }
 
@@ -809,6 +804,14 @@ export default function NewAppointmentExperience() {
     setSelectedTechniqueId(null)
     setSelectedDate(null)
     setSelectedSlot(null)
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        scrollElementIntoView(techniqueCardRef.current)
+      })
+    } else {
+      scrollElementIntoView(techniqueCardRef.current)
+    }
   }
 
   function handleTechniqueSelect(techniqueId: string) {

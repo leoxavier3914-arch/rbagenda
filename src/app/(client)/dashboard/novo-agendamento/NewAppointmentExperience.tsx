@@ -33,11 +33,19 @@ function formatDuration(minutes: number) {
   return parts.join(' ')
 }
 
-let scrollAnimationFrame: number | null = null
+type ScrollAnimationState = {
+  frameId: number
+  target: number
+  startY: number
+  startTime: number
+  duration: number
+} | null
 
-const SCROLL_MIN_DURATION = 900
-const SCROLL_MAX_DURATION = 2200
-const SCROLL_SPEED_PX_PER_MS = 0.55
+let scrollAnimation: ScrollAnimationState = null
+
+const SCROLL_MIN_DURATION = 1200
+const SCROLL_MAX_DURATION = 3000
+const SCROLL_SPEED_PX_PER_MS = 0.35
 
 function easeInOutCubic(progress: number) {
   if (progress < 0.5) {
@@ -53,9 +61,13 @@ function prefersReducedMotion() {
 }
 
 function smoothScrollTo(target: number, duration?: number) {
-  if (scrollAnimationFrame !== null) {
-    cancelAnimationFrame(scrollAnimationFrame)
-    scrollAnimationFrame = null
+  if (scrollAnimation) {
+    if (Math.abs(scrollAnimation.target - target) < 4) {
+      return
+    }
+
+    cancelAnimationFrame(scrollAnimation.frameId)
+    scrollAnimation = null
   }
 
   const startY = window.scrollY
@@ -89,13 +101,25 @@ function smoothScrollTo(target: number, duration?: number) {
     window.scrollTo({ top: startY + distance * eased })
 
     if (progress < 1) {
-      scrollAnimationFrame = requestAnimationFrame(step)
+      scrollAnimation = {
+        frameId: requestAnimationFrame(step),
+        target,
+        startY,
+        startTime,
+        duration: computedDuration,
+      }
     } else {
-      scrollAnimationFrame = null
+      scrollAnimation = null
     }
   }
 
-  scrollAnimationFrame = requestAnimationFrame(step)
+  scrollAnimation = {
+    frameId: requestAnimationFrame(step),
+    target,
+    startY,
+    startTime,
+    duration: computedDuration,
+  }
 }
 
 function scrollElementIntoView(element: HTMLElement | null) {

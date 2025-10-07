@@ -15,6 +15,8 @@
   --radius-xl: 22px;
   --space: 14px;
   --page-inline-padding: clamp(8px, 4vw, 20px);
+  --card-motion-duration: 0.85s;
+  --card-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 
@@ -44,11 +46,54 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: clamp(24px, 6vw, 40px);
+  --experience-gap: clamp(24px, 6vw, 40px);
+  gap: 0;
 }
+
 
 .experience::after {
   content: none;
+}
+
+.cardSection {
+  width: 100%;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows var(--card-motion-duration) var(--card-motion-ease),
+    opacity var(--card-motion-duration) var(--card-motion-ease),
+    transform var(--card-motion-duration) var(--card-motion-ease),
+    margin-top var(--card-motion-duration) var(--card-motion-ease);
+  opacity: 0;
+  transform: translate3d(0, 36px, 0);
+  pointer-events: none;
+  visibility: hidden;
+  will-change: opacity, transform;
+}
+
+.cardSection > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cardSection[data-visible='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.cardSection[data-visible='false'] > * {
+  pointer-events: none;
+}
+
+.cardSection[data-visible='true'] {
+  margin-top: var(--experience-gap);
+}
+
+.cardSection[data-visible='true']:first-of-type {
+  margin-top: 0;
 }
 
 .hero {
@@ -81,33 +126,35 @@
   max-width: min(640px, 90vw);
 }
 
-@keyframes cardRevealIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 28px, 0);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
 .cardReveal {
   opacity: 0;
   transform: translate3d(0, 28px, 0);
-  animation: cardRevealIn 0.6s ease forwards;
-  animation-fill-mode: both;
-  animation-delay: 0.08s;
-  will-change: transform, opacity;
+  transition: opacity var(--card-motion-duration) var(--card-motion-ease),
+    transform var(--card-motion-duration) var(--card-motion-ease);
+  will-change: opacity, transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cardReveal {
-    animation: none;
+    transition: none;
     opacity: 1;
     transform: none;
   }
+
+  .cardSection {
+    transition: none;
+    transform: none;
+  }
+}
+
+.cardSection[data-visible='true'] > .cardReveal {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.cardSection[data-visible='false'] > .cardReveal {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
 }
 
 .card {

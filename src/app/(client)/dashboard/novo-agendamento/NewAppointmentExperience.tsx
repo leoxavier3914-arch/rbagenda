@@ -35,6 +35,10 @@ function formatDuration(minutes: number) {
 
 let scrollAnimationFrame: number | null = null
 
+const SCROLL_MIN_DURATION = 900
+const SCROLL_MAX_DURATION = 2200
+const SCROLL_SPEED_PX_PER_MS = 0.55
+
 function easeInOutCubic(progress: number) {
   if (progress < 0.5) {
     return 4 * progress * progress * progress
@@ -48,7 +52,7 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function smoothScrollTo(target: number, duration = 950) {
+function smoothScrollTo(target: number, duration?: number) {
   if (scrollAnimationFrame !== null) {
     cancelAnimationFrame(scrollAnimationFrame)
     scrollAnimationFrame = null
@@ -68,26 +72,18 @@ function smoothScrollTo(target: number, duration = 950) {
     return
   }
 
-  const canUseNativeSmooth =
-    typeof document !== 'undefined' &&
-    !!document.documentElement &&
-    'scrollBehavior' in document.documentElement.style
-
-  if (canUseNativeSmooth) {
-    window.scrollTo({ top: target, behavior: 'smooth' })
-    return
-  }
-
-  const adjustedDuration = Math.min(
-    2000,
-    Math.max(900, duration, absoluteDistance * 1.1),
-  )
+  const computedDuration =
+    duration ??
+    Math.max(
+      SCROLL_MIN_DURATION,
+      Math.min(SCROLL_MAX_DURATION, absoluteDistance / SCROLL_SPEED_PX_PER_MS),
+    )
 
   const startTime = performance.now()
 
   const step = () => {
     const elapsed = performance.now() - startTime
-    const progress = Math.min(1, elapsed / adjustedDuration)
+    const progress = Math.min(1, elapsed / computedDuration)
     const eased = easeInOutCubic(progress)
 
     window.scrollTo({ top: startY + distance * eased })
@@ -122,7 +118,7 @@ function scrollElementIntoView(element: HTMLElement | null) {
 
     if (fullyVisible) return
 
-    smoothScrollTo(target, 1000)
+    smoothScrollTo(target)
   }
 
   const ensureRendered = () => {
@@ -840,6 +836,8 @@ export default function NewAppointmentExperience() {
   }, [summaryData])
 
   const hasSummary = !!summaryData
+  const shouldShowTechniqueCard = Boolean(selectedService)
+  const shouldShowDateCard = Boolean(selectedTechnique)
   const shouldShowTimeCard = Boolean(selectedTechnique && selectedDate)
 
   return (
@@ -847,42 +845,48 @@ export default function NewAppointmentExperience() {
       <div className={styles.experience}>
         <section
           ref={typeCardRef}
-          className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+          className={styles.cardSection}
+          data-visible="true"
           id="tipo-card"
+          aria-hidden="false"
         >
-          <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
-          {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-          {catalogStatus === 'loading' && !catalogError && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
-          )}
-          {catalogStatus === 'ready' && availableServices.length === 0 && (
-            <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
-          )}
-          {catalogStatus === 'ready' && availableServices.length > 0 && (
-            <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
-              {availableServices.map((service) => (
-                <button
-                  key={service.id}
-                  type="button"
-                  className={`${styles.pill} ${styles.tipoPill}`}
-                  data-active={selectedServiceId === service.id}
-                  onClick={() => handleServiceSelect(service.id)}
-                >
-                  {service.name}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className={`${styles.card} ${styles.cardReveal}`}>
+            <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
+            {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+            {catalogStatus === 'loading' && !catalogError && (
+              <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
+            )}
+            {catalogStatus === 'ready' && availableServices.length === 0 && (
+              <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
+            )}
+            {catalogStatus === 'ready' && availableServices.length > 0 && (
+              <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
+                {availableServices.map((service) => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    className={`${styles.pill} ${styles.tipoPill}`}
+                    data-active={selectedServiceId === service.id}
+                    onClick={() => handleServiceSelect(service.id)}
+                  >
+                    {service.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
-        {selectedService ? (
-          <section
-            ref={techniqueCardRef}
-            className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
-            id="tecnica-card"
-          >
+        <section
+          ref={techniqueCardRef}
+          className={styles.cardSection}
+          data-visible={shouldShowTechniqueCard ? 'true' : 'false'}
+          id="tecnica-card"
+          aria-hidden={shouldShowTechniqueCard ? 'false' : 'true'}
+        >
+          <div className={`${styles.card} ${styles.cardReveal}`}>
             <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
-            {catalogStatus === 'ready' && selectedService.techniques.length > 0 ? (
+            {catalogStatus === 'ready' && selectedService && selectedService.techniques.length > 0 ? (
               <>
                 <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
                   {visibleTechniques.map((technique) => (
@@ -907,22 +911,23 @@ export default function NewAppointmentExperience() {
                   </button>
                 )}
               </>
-            ) : catalogStatus === 'ready' ? (
+            ) : catalogStatus === 'ready' && selectedService ? (
               <div className={`${styles.meta} ${styles.labelCentered}`}>
                 Nenhuma técnica disponível para este tipo no momento.
               </div>
             ) : null}
-          </section>
-        ) : null}
+          </div>
+        </section>
 
-        {selectedTechnique ? (
-          <>
-            <section
-              ref={dateCardRef}
-              className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
-              id="data-card"
-            >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Data</div>
+        <section
+          ref={dateCardRef}
+          className={styles.cardSection}
+          data-visible={shouldShowDateCard ? 'true' : 'false'}
+          id="data-card"
+          aria-hidden={shouldShowDateCard ? 'false' : 'true'}
+        >
+          <div className={`${styles.card} ${styles.cardReveal}`}>
+            <div className={`${styles.label} ${styles.labelCentered}`}>Dia</div>
 
             {!availabilityError && isLoadingAvailability && (
               <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
@@ -1001,50 +1006,49 @@ export default function NewAppointmentExperience() {
                 Escolha um dia disponível para liberar os horários.
               </div>
             )}
-          </section>
+          </div>
+        </section>
 
-          {shouldShowTimeCard ? (
-            <section
-              className={`${styles.card} ${styles.section} ${styles.cardReveal} ${styles.timeCard}`}
-              id="time-card"
-              data-visible={shouldShowTimeCard ? 'true' : 'false'}
-            >
-              <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
-              <div ref={slotsContainerRef} className={styles.slots}>
-                {availabilityError ? (
-                  <div className={`${styles.status} ${styles.statusError}`}>
-                    Não foi possível carregar os horários.
-                  </div>
-                ) : isLoadingAvailability ? (
-                  <div className={`${styles.status} ${styles.statusInfo}`}>
-                    Carregando horários disponíveis…
-                  </div>
-                ) : slots.length > 0 ? (
-                  slots.map((slotValue) => {
-                    const disabled = bookedSlots.has(slotValue)
-                    return (
-                      <button
-                        key={slotValue}
-                        type="button"
-                        className={styles.slot}
-                        aria-disabled={disabled}
-                        data-selected={selectedSlot === slotValue}
-                        disabled={disabled}
-                        onClick={() => handleSlotSelect(slotValue, disabled)}
-                      >
-                        {slotValue}
-                      </button>
-                    )
-                  })
-                ) : (
-                  <div className={styles.meta}>Sem horários para este dia.</div>
-                )}
-              </div>
-            </section>
-          ) : null}
-
-          </>
-        ) : null}
+        <section
+          className={styles.cardSection}
+          data-visible={shouldShowTimeCard ? 'true' : 'false'}
+          id="time-card"
+          aria-hidden={shouldShowTimeCard ? 'false' : 'true'}
+        >
+          <div className={`${styles.card} ${styles.cardReveal} ${styles.timeCard}`}>
+            <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
+            <div ref={slotsContainerRef} className={styles.slots}>
+              {availabilityError ? (
+                <div className={`${styles.status} ${styles.statusError}`}>
+                  Não foi possível carregar os horários.
+                </div>
+              ) : isLoadingAvailability ? (
+                <div className={`${styles.status} ${styles.statusInfo}`}>
+                  Carregando horários disponíveis…
+                </div>
+              ) : slots.length > 0 ? (
+                slots.map((slotValue) => {
+                  const disabled = bookedSlots.has(slotValue)
+                  return (
+                    <button
+                      key={slotValue}
+                      type="button"
+                      className={styles.slot}
+                      aria-disabled={disabled}
+                      data-selected={selectedSlot === slotValue}
+                      disabled={disabled}
+                      onClick={() => handleSlotSelect(slotValue, disabled)}
+                    >
+                      {slotValue}
+                    </button>
+                  )
+                })
+              ) : (
+                <div className={styles.meta}>Sem horários para este dia.</div>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
       {summaryData ? (
         <div className={styles.summaryBarContainer} data-visible="true" ref={summaryRef}>

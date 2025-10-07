@@ -255,6 +255,7 @@ export default function NewAppointmentExperience() {
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [isTypeCardVisible, setIsTypeCardVisible] = useState(false)
 
   const [appointments, setAppointments] = useState<LoadedAppointment[]>([])
   const [userId, setUserId] = useState<string | null>(null)
@@ -270,6 +271,26 @@ export default function NewAppointmentExperience() {
   const lastServiceIdRef = useRef<string | null>(null)
   const lastTechniqueIdRef = useRef<string | null>(null)
   const lastDateRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setIsTypeCardVisible(true)
+      return
+    }
+
+    if (typeof window === 'undefined') {
+      setIsTypeCardVisible(true)
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsTypeCardVisible(true)
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -795,6 +816,14 @@ export default function NewAppointmentExperience() {
     setSelectedTechniqueId(techniqueId)
     setSelectedDate(null)
     setSelectedSlot(null)
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        scrollElementIntoView(dateCardRef.current)
+      })
+    } else {
+      scrollElementIntoView(dateCardRef.current)
+    }
   }
 
   const summaryData = useMemo(() => {
@@ -846,9 +875,9 @@ export default function NewAppointmentExperience() {
         <section
           ref={typeCardRef}
           className={styles.cardSection}
-          data-visible="true"
+          data-visible={isTypeCardVisible ? 'true' : 'false'}
           id="tipo-card"
-          aria-hidden="false"
+          aria-hidden={isTypeCardVisible ? 'false' : 'true'}
         >
           <div className={`${styles.card} ${styles.cardReveal}`}>
             <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>

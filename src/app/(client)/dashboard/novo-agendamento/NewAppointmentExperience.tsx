@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { supabase } from '@/lib/db'
 import {
@@ -9,6 +10,7 @@ import {
   buildAvailabilityData,
   formatDateToIsoDay,
 } from '@/lib/availability'
+import { stripePromise } from '@/lib/stripeClient'
 
 import styles from './newAppointment.module.css'
 
@@ -167,6 +169,26 @@ type ServiceOption = ServiceTechnique & {
 
 type LoadedAppointment = Parameters<typeof buildAvailabilityData>[0][number]
 
+type SummarySnapshot = {
+  typeId: string
+  typeName: string
+  techniqueId: string
+  techniqueName: string
+  priceLabel: string
+  priceCents: number
+  depositLabel: string
+  depositCents: number
+  durationLabel: string
+  dateLabel: string
+  timeLabel: string
+  payload: {
+    typeId: string
+    serviceId: string
+    date: string
+    slot: string
+  }
+}
+
 function normalizeNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
@@ -219,6 +241,22 @@ export default function NewAppointmentExperience() {
   const dateCardRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
+
+  const router = useRouter()
+  const [summarySnapshot, setSummarySnapshot] = useState<SummarySnapshot | null>(null)
+  const [appointmentId, setAppointmentId] = useState<string | null>(null)
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
+  const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [modalError, setModalError] = useState<string | null>(null)
+  const [actionMessage, setActionMessage] = useState<
+    { kind: 'success' | 'error'; text: string } | null
+  >(null)
+
+  const closeSummaryModal = useCallback(() => {
+    setIsSummaryModalOpen(false)
+    setModalError(null)
+  }, [])
 
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -895,6 +933,13 @@ export default function NewAppointmentExperience() {
     const priceValue = Number.isFinite(selectedService.price_cents)
       ? selectedService.price_cents / 100
       : 0
+    const priceCents = Number.isFinite(selectedService.price_cents)
+      ? selectedService.price_cents
+      : Math.round(priceValue * 100)
+    const depositCents = Number.isFinite(selectedService.deposit_cents)
+      ? Math.max(0, selectedService.deposit_cents)
+      : 0
+    const depositValue = depositCents / 100
 
     return {
       typeId: selectedService.id,
@@ -902,6 +947,9 @@ export default function NewAppointmentExperience() {
       techniqueId: selectedTechnique.id,
       techniqueName: selectedTechnique.name,
       priceLabel: currencyFormatter.format(priceValue),
+      priceCents,
+      depositLabel: currencyFormatter.format(depositValue),
+      depositCents,
       durationLabel: formatDuration(selectedService.duration_min),
       dateLabel: dateFormatter.format(appointmentDate),
       timeLabel: selectedSlot,
@@ -914,17 +962,220 @@ export default function NewAppointmentExperience() {
     }
   }, [selectedDate, selectedService, selectedSlot, selectedTechnique])
 
-  const handleContinue = useCallback(() => {
+  useEffect(() => {
+    setAppointmentId(null)
+    setSummarySnapshot(null)
+    setModalError(null)
+    setIsSummaryModalOpen(false)
+    setIsProcessingPayment(false)
+    setActionMessage(null)
+  }, [selectedServiceId, selectedTechniqueId, selectedDate, selectedSlot])
+
+  const ensureSession = useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) {
+      throw new Error('Não foi possível validar sua sessão. Faça login novamente.')
+    }
+
+    const session = data.session
+    if (!session) {
+      router.replace('/login')
+      throw new Error('Faça login para continuar.')
+    }
+
+    return session
+  }, [router])
+
+  const isCurrentSelectionBooked = useMemo(() => {
+    if (!summaryData || !summarySnapshot || !appointmentId) return false
+
+    return (
+      summarySnapshot.payload.serviceId === summaryData.payload.serviceId &&
+      summarySnapshot.payload.typeId === summaryData.payload.typeId &&
+      summarySnapshot.payload.date === summaryData.payload.date &&
+      summarySnapshot.payload.slot === summaryData.payload.slot
+    )
+  }, [appointmentId, summaryData, summarySnapshot])
+
+  const handleContinue = useCallback(async () => {
     if (!summaryData) return
 
-    window.dispatchEvent(
-      new CustomEvent('new-appointment:continue', {
-        detail: summaryData.payload,
-      }),
-    )
-  }, [summaryData])
+    setModalError(null)
+
+    if (isCurrentSelectionBooked) {
+      setIsSummaryModalOpen(true)
+      return
+    }
+
+    if (isCreatingAppointment) return
+
+    const currentSummary = summaryData
+    setIsCreatingAppointment(true)
+    setActionMessage(null)
+
+    try {
+      const scheduledDate = combineDateAndTime(
+        currentSummary.payload.date,
+        currentSummary.payload.slot,
+      )
+      if (!scheduledDate) {
+        throw new Error('Horário selecionado inválido. Escolha outro horário.')
+      }
+
+      const session = await ensureSession()
+
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          service_id: currentSummary.payload.serviceId,
+          service_type_id: currentSummary.payload.typeId,
+          scheduled_at: scheduledDate.toISOString(),
+        }),
+      })
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        const message =
+          typeof payload?.error === 'string'
+            ? payload.error
+            : typeof payload?.message === 'string'
+            ? payload.message
+            : 'Não foi possível criar o agendamento. Tente novamente.'
+        throw new Error(message)
+      }
+
+      const responseData = await res.json().catch(() => null)
+      const newAppointmentId =
+        typeof responseData?.appointment_id === 'string'
+          ? responseData.appointment_id
+          : null
+
+      if (!newAppointmentId) {
+        throw new Error('Resposta inválida ao criar o agendamento. Tente novamente.')
+      }
+
+      setAppointmentId(newAppointmentId)
+      setSummarySnapshot({
+        ...currentSummary,
+        payload: { ...currentSummary.payload },
+      })
+      setActionMessage({
+        kind: 'success',
+        text: `Agendamento criado para ${currentSummary.dateLabel} às ${currentSummary.timeLabel}. ID ${newAppointmentId}.`,
+      })
+      setIsSummaryModalOpen(true)
+    } catch (error) {
+      console.error('Erro ao criar agendamento', error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível criar o agendamento. Tente novamente.'
+      setActionMessage({ kind: 'error', text: message })
+    } finally {
+      setIsCreatingAppointment(false)
+    }
+  }, [
+    ensureSession,
+    isCreatingAppointment,
+    isCurrentSelectionBooked,
+    summaryData,
+  ])
+
+  const handlePayDeposit = useCallback(async () => {
+    if (!summarySnapshot || summarySnapshot.depositCents <= 0) {
+      setModalError('Este agendamento não possui sinal disponível para pagamento.')
+      return
+    }
+
+    if (!appointmentId) {
+      setModalError('Crie um agendamento antes de iniciar o pagamento.')
+      return
+    }
+
+    if (!stripePromise) {
+      setModalError('Checkout indisponível. Verifique a configuração do Stripe.')
+      return
+    }
+
+    setModalError(null)
+    setIsProcessingPayment(true)
+
+    try {
+      const session = await ensureSession()
+
+      const res = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ appointment_id: appointmentId, mode: 'deposit' }),
+      })
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        const message =
+          typeof payload?.error === 'string'
+            ? payload.error
+            : 'Não foi possível iniciar o checkout.'
+        setModalError(message)
+        return
+      }
+
+      const payload = await res.json().catch(() => null)
+      const clientSecret =
+        typeof payload?.client_secret === 'string' ? payload.client_secret : null
+
+      if (!clientSecret) {
+        setModalError('Resposta inválida do servidor ao iniciar o checkout.')
+        return
+      }
+
+      closeSummaryModal()
+      router.push(
+        `/checkout?client_secret=${encodeURIComponent(clientSecret)}&appointment_id=${encodeURIComponent(appointmentId)}`,
+      )
+    } catch (error) {
+      console.error('Erro ao iniciar o checkout', error)
+      setModalError('Erro inesperado ao iniciar o checkout.')
+    } finally {
+      setIsProcessingPayment(false)
+    }
+  }, [appointmentId, closeSummaryModal, ensureSession, router, summarySnapshot])
+
+  const handlePayLater = useCallback(() => {
+    closeSummaryModal()
+  }, [closeSummaryModal])
+
+  useEffect(() => {
+    if (!isSummaryModalOpen) return
+    if (typeof window === 'undefined') return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeSummaryModal()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [closeSummaryModal, isSummaryModalOpen])
 
   const hasSummary = !!summaryData
+  const continueButtonLabel = isCreatingAppointment
+    ? 'Criando agendamento…'
+    : isCurrentSelectionBooked
+    ? 'Ver resumo'
+    : 'Continuar'
+  const continueButtonDisabled = !summaryData || isCreatingAppointment
+  const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
   const shouldShowTechniqueCard = Boolean(selectedService)
   const shouldShowDateCard = Boolean(selectedTechnique)
   const shouldShowTimeCard = Boolean(selectedTechnique && selectedDate)
@@ -1142,7 +1393,11 @@ export default function NewAppointmentExperience() {
         </section>
       </div>
       {summaryData ? (
-        <div className={styles.summaryBarContainer} data-visible="true" ref={summaryRef}>
+        <div
+          className={styles.summaryBarContainer}
+          data-visible={hasSummary ? 'true' : 'false'}
+          ref={summaryRef}
+        >
           <div className={styles.summaryBar}>
             <div className={styles.summaryContent}>
               <div className={styles.summaryItem}>
@@ -1168,9 +1423,103 @@ export default function NewAppointmentExperience() {
                 </span>
               </div>
             </div>
-            <button type="button" className={styles.summaryAction} onClick={handleContinue}>
-              Continuar
+            {actionMessage ? (
+              <div className={styles.summaryFeedback}>
+                <div
+                  className={`${styles.status} ${
+                    actionMessage.kind === 'success'
+                      ? styles.statusSuccess
+                      : styles.statusError
+                  }`}
+                >
+                  {actionMessage.text}
+                </div>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              className={styles.summaryAction}
+              onClick={handleContinue}
+              disabled={continueButtonDisabled}
+            >
+              {continueButtonLabel}
             </button>
+          </div>
+        </div>
+      ) : null}
+      {summarySnapshot ? (
+        <div
+          className={styles.modal}
+          data-open={isSummaryModalOpen ? 'true' : 'false'}
+          aria-hidden={isSummaryModalOpen ? 'false' : 'true'}
+        >
+          <div className={styles.modalBackdrop} onClick={handlePayLater} aria-hidden="true" />
+          <div
+            className={styles.modalContent}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appointment-summary-title"
+          >
+            <h2 id="appointment-summary-title" className={styles.modalTitle}>
+              Resumo do agendamento
+            </h2>
+            <div className={styles.modalBody}>
+              <div className={styles.modalLine}>
+                <span>Tipo</span>
+                <strong>{summarySnapshot.typeName}</strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Técnica</span>
+                <strong>{summarySnapshot.techniqueName}</strong>
+              </div>
+              <div className={`${styles.modalLine} ${styles.modalLineHighlight}`}>
+                <span>Horário</span>
+                <strong>
+                  {summarySnapshot.dateLabel} às {summarySnapshot.timeLabel}
+                </strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Duração</span>
+                <strong>{summarySnapshot.durationLabel}</strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Valor</span>
+                <strong>{summarySnapshot.priceLabel}</strong>
+              </div>
+              {summarySnapshot.depositCents > 0 ? (
+                <div className={styles.modalLine}>
+                  <span>Sinal</span>
+                  <strong>{summarySnapshot.depositLabel}</strong>
+                </div>
+              ) : null}
+            </div>
+            {appointmentId ? (
+              <div className={styles.meta}>ID do agendamento: {appointmentId}</div>
+            ) : null}
+            {!depositAvailable && (
+              <div className={`${styles.status} ${styles.statusInfo}`}>
+                Este agendamento não possui sinal para pagamento online.
+              </div>
+            )}
+            {modalError ? <div className={styles.modalError}>{modalError}</div> : null}
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.cta}
+                onClick={handlePayDeposit}
+                disabled={!depositAvailable || isProcessingPayment}
+              >
+                {isProcessingPayment ? 'Abrindo checkout…' : 'Pagar sinal agora'}
+              </button>
+              <button
+                type="button"
+                className={`${styles.cta} ${styles.payLaterCta}`}
+                onClick={handlePayLater}
+                disabled={isProcessingPayment}
+              >
+                Pagar depois
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

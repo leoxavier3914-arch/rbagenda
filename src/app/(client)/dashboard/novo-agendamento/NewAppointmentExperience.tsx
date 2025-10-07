@@ -1145,33 +1145,27 @@ export default function NewAppointmentExperience() {
         <div className={styles.summaryBarContainer} data-visible="true" ref={summaryRef}>
           <div className={styles.summaryBar}>
             <div className={styles.summaryContent}>
-              <div className={styles.summaryRow}>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryItemLabel}>Tipo</span>
-                  <span className={styles.summaryItemValue}>{summaryData.typeName}</span>
-                </div>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryItemLabel}>Técnica</span>
-                  <span className={styles.summaryItemValue}>{summaryData.techniqueName}</span>
-                </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Tipo</span>
+                <span className={styles.summaryItemValue}>{summaryData.typeName}</span>
               </div>
-              <div className={styles.summaryRow}>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryItemLabel}>Valor</span>
-                  <span className={styles.summaryItemValue}>{summaryData.priceLabel}</span>
-                </div>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryItemLabel}>Duração</span>
-                  <span className={styles.summaryItemValue}>{summaryData.durationLabel}</span>
-                </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Técnica</span>
+                <span className={styles.summaryItemValue}>{summaryData.techniqueName}</span>
               </div>
-              <div className={styles.summaryRow}>
-                <div className={`${styles.summaryItem} ${styles.summaryItemFull}`}>
-                  <span className={styles.summaryItemLabel}>Horário</span>
-                  <span className={styles.summaryItemValue}>
-                    {summaryData.dateLabel} às {summaryData.timeLabel}
-                  </span>
-                </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Valor</span>
+                <span className={styles.summaryItemValue}>{summaryData.priceLabel}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryItemLabel}>Duração</span>
+                <span className={styles.summaryItemValue}>{summaryData.durationLabel}</span>
+              </div>
+              <div className={`${styles.summaryItem} ${styles.summaryItemFull}`}>
+                <span className={styles.summaryItemLabel}>Horário</span>
+                <span className={styles.summaryItemValue}>
+                  {summaryData.dateLabel} às {summaryData.timeLabel}
+                </span>
               </div>
             </div>
             <button type="button" className={styles.summaryAction} onClick={handleContinue}>

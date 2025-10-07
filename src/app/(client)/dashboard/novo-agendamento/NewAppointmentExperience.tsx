@@ -249,6 +249,7 @@ export default function NewAppointmentExperience() {
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
+  const [isPayLaterNoticeOpen, setIsPayLaterNoticeOpen] = useState(false)
   const [actionMessage, setActionMessage] = useState<
     { kind: 'success' | 'error'; text: string } | null
   >(null)
@@ -257,6 +258,10 @@ export default function NewAppointmentExperience() {
     setIsSummaryModalOpen(false)
     setModalError(null)
   }, [])
+
+  const handleDismissSummaryModal = useCallback(() => {
+    closeSummaryModal()
+  }, [closeSummaryModal])
 
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -969,6 +974,7 @@ export default function NewAppointmentExperience() {
     setIsSummaryModalOpen(false)
     setIsProcessingPayment(false)
     setActionMessage(null)
+    setIsPayLaterNoticeOpen(false)
   }, [selectedServiceId, selectedTechniqueId, selectedDate, selectedSlot])
 
   const ensureSession = useCallback(async () => {
@@ -1149,7 +1155,17 @@ export default function NewAppointmentExperience() {
 
   const handlePayLater = useCallback(() => {
     closeSummaryModal()
-  }, [closeSummaryModal])
+    setIsPayLaterNoticeOpen(true)
+  }, [closeSummaryModal, setIsPayLaterNoticeOpen])
+
+  const handleClosePayLaterNotice = useCallback(() => {
+    setIsPayLaterNoticeOpen(false)
+  }, [setIsPayLaterNoticeOpen])
+
+  const handleConfirmPayLaterNotice = useCallback(() => {
+    setIsPayLaterNoticeOpen(false)
+    router.push('/dashboard/agendamentos')
+  }, [router, setIsPayLaterNoticeOpen])
 
   useEffect(() => {
     if (!isSummaryModalOpen) return
@@ -1167,6 +1183,23 @@ export default function NewAppointmentExperience() {
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [closeSummaryModal, isSummaryModalOpen])
+
+  useEffect(() => {
+    if (!isPayLaterNoticeOpen) return
+    if (typeof window === 'undefined') return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setIsPayLaterNoticeOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isPayLaterNoticeOpen, setIsPayLaterNoticeOpen])
 
   const hasSummary = !!summaryData
   const continueButtonLabel = isCreatingAppointment
@@ -1453,7 +1486,7 @@ export default function NewAppointmentExperience() {
           data-open={isSummaryModalOpen ? 'true' : 'false'}
           aria-hidden={isSummaryModalOpen ? 'false' : 'true'}
         >
-          <div className={styles.modalBackdrop} onClick={handlePayLater} aria-hidden="true" />
+          <div className={styles.modalBackdrop} onClick={handleDismissSummaryModal} aria-hidden="true" />
           <div
             className={styles.modalContent}
             role="dialog"
@@ -1523,6 +1556,47 @@ export default function NewAppointmentExperience() {
           </div>
         </div>
       ) : null}
+      <div
+        className={styles.noticeModal}
+        data-open={isPayLaterNoticeOpen ? 'true' : 'false'}
+        aria-hidden={isPayLaterNoticeOpen ? 'false' : 'true'}
+      >
+        <div
+          className={styles.noticeBackdrop}
+          onClick={handleClosePayLaterNotice}
+          aria-hidden="true"
+        />
+        <div
+          className={styles.noticeContent}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pay-later-notice-title"
+        >
+          <div className={styles.noticeIcon} aria-hidden="true">
+            ⏳
+          </div>
+          <h2 id="pay-later-notice-title" className={styles.noticeTitle}>
+            Aguardando pagamento
+          </h2>
+          <p className={styles.noticeText}>
+            Seu agendamento foi criado com sucesso!
+            <br />
+            <br />
+            O <strong>pagamento do sinal</strong> deve ser realizado em até <strong>2 horas</strong>{' '}
+            para que o horário seja reservado.
+            <br />
+            <br />
+            Após esse prazo, o agendamento será <strong>cancelado automaticamente</strong>.
+          </p>
+          <button
+            type="button"
+            className={styles.noticeButton}
+            onClick={handleConfirmPayLaterNotice}
+          >
+            Ok
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

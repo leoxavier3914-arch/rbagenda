@@ -60,7 +60,6 @@
   display: grid;
   grid-template-rows: 0fr;
   transition:
-    grid-template-rows var(--card-motion-duration) var(--card-motion-ease),
     opacity var(--card-motion-duration) var(--card-motion-ease),
     transform var(--card-motion-duration) var(--card-motion-ease),
     margin-top var(--card-motion-duration) var(--card-motion-ease);

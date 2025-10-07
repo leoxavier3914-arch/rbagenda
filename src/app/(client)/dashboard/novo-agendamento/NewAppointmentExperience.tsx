@@ -40,8 +40,12 @@ const prefersReducedMotion =
 
 let scrollAnimationFrame: number | null = null
 
-function easeOutCubic(progress: number) {
-  return 1 - Math.pow(1 - progress, 3)
+function easeInOutCubic(progress: number) {
+  if (progress < 0.5) {
+    return 4 * progress * progress * progress
+  }
+  const adjustment = -2 * progress + 2
+  return 1 - Math.pow(adjustment, 3) / 2
 }
 
 function smoothScrollTo(target: number, duration = 650) {
@@ -52,8 +56,13 @@ function smoothScrollTo(target: number, duration = 650) {
 
   const startY = window.scrollY
   const distance = target - startY
+  const absoluteDistance = Math.abs(distance)
+  const adjustedDuration = Math.min(
+    1200,
+    Math.max(550, duration, absoluteDistance * 0.6),
+  )
 
-  if (Math.abs(distance) < 1) {
+  if (absoluteDistance < 1) {
     window.scrollTo({ top: target })
     return
   }
@@ -67,8 +76,8 @@ function smoothScrollTo(target: number, duration = 650) {
 
   const step = () => {
     const elapsed = performance.now() - startTime
-    const progress = Math.min(1, elapsed / duration)
-    const eased = easeOutCubic(progress)
+    const progress = Math.min(1, elapsed / adjustedDuration)
+    const eased = easeInOutCubic(progress)
 
     window.scrollTo({ top: startY + distance * eased })
 

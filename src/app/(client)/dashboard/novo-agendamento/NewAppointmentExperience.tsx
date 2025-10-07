@@ -129,6 +129,9 @@ export default function NewAppointmentExperience() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [isTypeCardVisible, setIsTypeCardVisible] = useState(false)
+  const [pendingScrollTarget, setPendingScrollTarget] = useState<
+    'technique' | 'date' | null
+  >(null)
 
   const [appointments, setAppointments] = useState<LoadedAppointment[]>([])
   const [userId, setUserId] = useState<string | null>(null)
@@ -695,6 +698,86 @@ export default function NewAppointmentExperience() {
     }
   }, [selectedDate, slots])
 
+  useEffect(() => {
+    if (!pendingScrollTarget) return
+
+    const techniqueVisible = Boolean(selectedService)
+    const dateVisible = Boolean(selectedTechnique)
+
+    const targetRef =
+      pendingScrollTarget === 'technique' ? techniqueCardRef : dateCardRef
+    const shouldShow =
+      pendingScrollTarget === 'technique' ? techniqueVisible : dateVisible
+
+    if (!shouldShow) return
+
+    const element = targetRef.current
+    if (!element) {
+      setPendingScrollTarget(null)
+      return
+    }
+
+    let cancelled = false
+    let frameId: number | null = null
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let transitionHandler: (() => void) | null = null
+
+    const clearTimers = () => {
+      if (frameId !== null && typeof window !== 'undefined') {
+        window.cancelAnimationFrame(frameId)
+        frameId = null
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+    }
+
+    const finishScroll = () => {
+      if (cancelled) return
+      gentlyCenterCard(element)
+      setPendingScrollTarget(null)
+    }
+
+    const scheduleScroll = () => {
+      if (cancelled) return
+
+      if (typeof window === 'undefined') {
+        finishScroll()
+        return
+      }
+
+      clearTimers()
+      frameId = window.requestAnimationFrame(() => {
+        timeoutId = setTimeout(() => {
+          finishScroll()
+        }, 120)
+      })
+    }
+
+    if (element.offsetHeight > 0) {
+      scheduleScroll()
+    } else {
+      transitionHandler = () => {
+        if (!transitionHandler) return
+        element.removeEventListener('transitionend', transitionHandler)
+        transitionHandler = null
+        scheduleScroll()
+      }
+
+      element.addEventListener('transitionend', transitionHandler)
+    }
+
+    return () => {
+      cancelled = true
+      clearTimers()
+      if (transitionHandler) {
+        element.removeEventListener('transitionend', transitionHandler)
+        transitionHandler = null
+      }
+    }
+  }, [pendingScrollTarget, selectedService, selectedTechnique])
+
   function handleSlotSelect(slotValue: string, disabled: boolean) {
     if (disabled || !canInteract) return
     setSelectedSlot(slotValue)
@@ -715,7 +798,7 @@ export default function NewAppointmentExperience() {
     setSelectedDate(null)
     setSelectedSlot(null)
 
-    gentlyCenterCard(techniqueCardRef.current)
+    setPendingScrollTarget('technique')
   }
 
   function handleTechniqueSelect(techniqueId: string) {
@@ -724,7 +807,7 @@ export default function NewAppointmentExperience() {
     setSelectedDate(null)
     setSelectedSlot(null)
 
-    gentlyCenterCard(dateCardRef.current)
+    setPendingScrollTarget('date')
   }
 
   const summaryData = useMemo(() => {

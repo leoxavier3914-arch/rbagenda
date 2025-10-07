@@ -33,11 +33,6 @@ function formatDuration(minutes: number) {
   return parts.join(' ')
 }
 
-const prefersReducedMotion =
-  typeof window !== 'undefined' && window.matchMedia
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false
-
 let scrollAnimationFrame: number | null = null
 
 function easeInOutCubic(progress: number) {
@@ -46,6 +41,11 @@ function easeInOutCubic(progress: number) {
   }
   const adjustment = -2 * progress + 2
   return 1 - Math.pow(adjustment, 3) / 2
+}
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 function smoothScrollTo(target: number, duration = 850) {
@@ -57,20 +57,31 @@ function smoothScrollTo(target: number, duration = 850) {
   const startY = window.scrollY
   const distance = target - startY
   const absoluteDistance = Math.abs(distance)
-  const adjustedDuration = Math.min(
-    1600,
-    Math.max(700, duration, absoluteDistance * 0.9),
-  )
 
   if (absoluteDistance < 1) {
     window.scrollTo({ top: target })
     return
   }
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion()) {
     window.scrollTo({ top: target })
     return
   }
+
+  const canUseNativeSmooth =
+    typeof document !== 'undefined' &&
+    !!document.documentElement &&
+    'scrollBehavior' in document.documentElement.style
+
+  if (canUseNativeSmooth) {
+    window.scrollTo({ top: target, behavior: 'smooth' })
+    return
+  }
+
+  const adjustedDuration = Math.min(
+    1600,
+    Math.max(700, duration, absoluteDistance * 0.9),
+  )
 
   const startTime = performance.now()
 
@@ -98,16 +109,36 @@ function scrollElementIntoView(element: HTMLElement | null) {
     if (!element.isConnected) return
 
     const rect = element.getBoundingClientRect()
+    const viewportHeight = window.innerHeight || 0
     const absoluteTop = rect.top + window.scrollY
-    const offset = absoluteTop - window.innerHeight / 2 + rect.height / 2
+    const offset = absoluteTop - viewportHeight / 2 + rect.height / 2
+    const target = Math.max(0, offset)
+    const distance = Math.abs(target - window.scrollY)
 
-    smoothScrollTo(Math.max(0, offset))
+    if (distance < 4) return
+
+    const fullyVisible =
+      rect.top >= 0 && rect.bottom <= viewportHeight && rect.height <= viewportHeight
+
+    if (fullyVisible) return
+
+    smoothScrollTo(target, 1000)
   }
 
   const ensureRendered = () => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(performScroll)
-    })
+    let frame = 0
+
+    const waitForSettled = () => {
+      if (!element.isConnected) return
+      if (frame >= 3) {
+        performScroll()
+        return
+      }
+      frame += 1
+      requestAnimationFrame(waitForSettled)
+    }
+
+    requestAnimationFrame(waitForSettled)
   }
 
   const rect = element.getBoundingClientRect()

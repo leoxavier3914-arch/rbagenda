@@ -33,26 +33,13 @@ function formatDuration(minutes: number) {
   return parts.join(' ')
 }
 
-type ScrollAnimationState = {
-  frameId: number
-  target: number
-  startY: number
-  startTime: number
-  duration: number
-} | null
+let fallbackAnimationFrame: number | null = null
 
-let scrollAnimation: ScrollAnimationState = null
-
-const SCROLL_MIN_DURATION = 1200
-const SCROLL_MAX_DURATION = 3000
-const SCROLL_SPEED_PX_PER_MS = 0.35
-
-function easeInOutCubic(progress: number) {
+function easeInOutQuad(progress: number) {
   if (progress < 0.5) {
-    return 4 * progress * progress * progress
+    return 2 * progress * progress
   }
-  const adjustment = -2 * progress + 2
-  return 1 - Math.pow(adjustment, 3) / 2
+  return 1 - Math.pow(-2 * progress + 2, 2) / 2
 }
 
 function prefersReducedMotion() {
@@ -60,66 +47,58 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function smoothScrollTo(target: number, duration?: number) {
-  if (scrollAnimation) {
-    if (Math.abs(scrollAnimation.target - target) < 4) {
-      return
-    }
-
-    cancelAnimationFrame(scrollAnimation.frameId)
-    scrollAnimation = null
+function cancelFallbackScroll() {
+  if (fallbackAnimationFrame !== null) {
+    cancelAnimationFrame(fallbackAnimationFrame)
+    fallbackAnimationFrame = null
   }
+}
 
-  const startY = window.scrollY
-  const distance = target - startY
-  const absoluteDistance = Math.abs(distance)
-
-  if (absoluteDistance < 1) {
+function smoothScrollTo(target: number) {
+  if (Math.abs(target - window.scrollY) < 1) {
     window.scrollTo({ top: target })
     return
   }
 
   if (prefersReducedMotion()) {
+    cancelFallbackScroll()
     window.scrollTo({ top: target })
     return
   }
 
-  const computedDuration =
-    duration ??
-    Math.max(
-      SCROLL_MIN_DURATION,
-      Math.min(SCROLL_MAX_DURATION, absoluteDistance / SCROLL_SPEED_PX_PER_MS),
-    )
+  const supportsNativeSmoothScroll =
+    typeof document !== 'undefined' &&
+    document.documentElement?.style?.scrollBehavior !== undefined
 
+  if (supportsNativeSmoothScroll) {
+    cancelFallbackScroll()
+    window.scrollTo({ top: target, behavior: 'smooth' })
+    return
+  }
+
+  cancelFallbackScroll()
+
+  const startY = window.scrollY
+  const distance = target - startY
+  const absoluteDistance = Math.abs(distance)
+  const duration = Math.min(600, Math.max(250, absoluteDistance / 1.5))
   const startTime = performance.now()
 
   const step = () => {
     const elapsed = performance.now() - startTime
-    const progress = Math.min(1, elapsed / computedDuration)
-    const eased = easeInOutCubic(progress)
+    const progress = Math.min(1, elapsed / duration)
+    const eased = easeInOutQuad(progress)
 
     window.scrollTo({ top: startY + distance * eased })
 
     if (progress < 1) {
-      scrollAnimation = {
-        frameId: requestAnimationFrame(step),
-        target,
-        startY,
-        startTime,
-        duration: computedDuration,
-      }
+      fallbackAnimationFrame = requestAnimationFrame(step)
     } else {
-      scrollAnimation = null
+      fallbackAnimationFrame = null
     }
   }
 
-  scrollAnimation = {
-    frameId: requestAnimationFrame(step),
-    target,
-    startY,
-    startTime,
-    duration: computedDuration,
-  }
+  fallbackAnimationFrame = requestAnimationFrame(step)
 }
 
 function scrollElementIntoView(element: HTMLElement | null) {

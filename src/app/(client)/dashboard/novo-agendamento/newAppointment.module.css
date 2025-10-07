@@ -70,6 +70,11 @@
   will-change: opacity, transform;
 }
 
+.cardSection[data-kind='type'],
+.cardSection[data-kind='technique'] {
+  --card-motion-duration: 1.4s;
+}
+
 .cardSection > * {
   min-height: 0;
   overflow: hidden;

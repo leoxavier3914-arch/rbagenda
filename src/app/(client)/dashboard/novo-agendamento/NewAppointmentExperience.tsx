@@ -38,18 +38,94 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function gentlyCenterCard(element: HTMLElement | null) {
+const CARD_SCROLL_DURATION_MS = 900
+const MAX_LAYOUT_CHECKS = 12
+
+function easeInOutCubic(t: number) {
+  if (t <= 0) return 0
+  if (t >= 1) return 1
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
+function waitForElementLayout(element: HTMLElement): Promise<void> {
+  if (typeof window === 'undefined') {
+    return Promise.resolve()
+  }
+
+  return new Promise((resolve) => {
+    let attempts = 0
+
+    const check = () => {
+      if (!element.isConnected) {
+        if (attempts >= MAX_LAYOUT_CHECKS) {
+          resolve()
+          return
+        }
+      }
+
+      const rect = element.getBoundingClientRect()
+      const isReady = rect.width > 0 && rect.height > 0
+
+      if (isReady || attempts >= MAX_LAYOUT_CHECKS) {
+        resolve()
+        return
+      }
+
+      attempts += 1
+      window.requestAnimationFrame(check)
+    }
+
+    check()
+  })
+}
+
+function animateWindowScroll(start: number, target: number, duration: number) {
+  if (duration <= 0) {
+    window.scrollTo({ top: target, behavior: 'auto' })
+    return
+  }
+
+  const distance = target - start
+  if (Math.abs(distance) < 1) {
+    window.scrollTo({ top: target, behavior: 'auto' })
+    return
+  }
+
+  const startTime = performance.now()
+
+  const step = (currentTime: number) => {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(1, elapsed / duration)
+    const eased = easeInOutCubic(progress)
+    const nextPosition = start + distance * eased
+
+    window.scrollTo({ top: nextPosition, behavior: 'auto' })
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step)
+    }
+  }
+
+  window.requestAnimationFrame(step)
+}
+
+async function gentlyCenterCard(element: HTMLElement | null) {
   if (!element || typeof window === 'undefined') return
 
-  const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
+  await waitForElementLayout(element)
 
-  window.requestAnimationFrame(() => {
-    const rect = element.getBoundingClientRect()
-    const viewportHeight = window.innerHeight || 0
-    const target = Math.max(0, rect.top + window.scrollY - viewportHeight / 2 + rect.height / 2)
+  const rect = element.getBoundingClientRect()
+  const viewportHeight = window.innerHeight || 0
+  const target = Math.max(0, rect.top + window.scrollY - viewportHeight / 2 + rect.height / 2)
 
-    window.scrollTo({ top: target, behavior })
-  })
+  if (prefersReducedMotion()) {
+    window.scrollTo({ top: target, behavior: 'auto' })
+    return
+  }
+
+  animateWindowScroll(window.scrollY, target, CARD_SCROLL_DURATION_MS)
 }
 
 type ServiceTechnique = {
@@ -661,7 +737,7 @@ export default function NewAppointmentExperience() {
       if (cancelled) return
 
       if (typeof window === 'undefined') {
-        gentlyCenterCard(container)
+        void gentlyCenterCard(container)
         return
       }
 
@@ -669,9 +745,9 @@ export default function NewAppointmentExperience() {
       frameId = window.requestAnimationFrame(() => {
         timeoutId = setTimeout(() => {
           if (!cancelled) {
-            gentlyCenterCard(slotsContainerRef.current)
+            void gentlyCenterCard(slotsContainerRef.current)
           }
-        }, 120)
+        }, 200)
       })
     }
 
@@ -735,7 +811,7 @@ export default function NewAppointmentExperience() {
 
     const finishScroll = () => {
       if (cancelled) return
-      gentlyCenterCard(element)
+      void gentlyCenterCard(element)
       setPendingScrollTarget(null)
     }
 
@@ -751,7 +827,7 @@ export default function NewAppointmentExperience() {
       frameId = window.requestAnimationFrame(() => {
         timeoutId = setTimeout(() => {
           finishScroll()
-        }, 120)
+        }, 200)
       })
     }
 
@@ -784,10 +860,10 @@ export default function NewAppointmentExperience() {
 
     if (typeof window !== 'undefined') {
       window.requestAnimationFrame(() => {
-        gentlyCenterCard(summaryRef.current)
+        void gentlyCenterCard(summaryRef.current)
       })
     } else {
-      gentlyCenterCard(summaryRef.current)
+      void gentlyCenterCard(summaryRef.current)
     }
   }
 
@@ -859,6 +935,7 @@ export default function NewAppointmentExperience() {
         <section
           ref={typeCardRef}
           className={styles.cardSection}
+          data-kind="type"
           data-visible={isTypeCardVisible ? 'true' : 'false'}
           id="tipo-card"
           aria-hidden={isTypeCardVisible ? 'false' : 'true'}
@@ -893,6 +970,7 @@ export default function NewAppointmentExperience() {
         <section
           ref={techniqueCardRef}
           className={styles.cardSection}
+          data-kind="technique"
           data-visible={shouldShowTechniqueCard ? 'true' : 'false'}
           id="tecnica-card"
           aria-hidden={shouldShowTechniqueCard ? 'false' : 'true'}

@@ -15,6 +15,27 @@ type Service = {
   deposit_cents: number
 }
 
+type SlotCacheEntry = {
+  slots: string[]
+  staffId: string | null
+  fetchedAt: number
+}
+
+const SLOT_CACHE_TTL = 2 * 60 * 1000 // 2 minutos
+const PREFETCH_SERVICE_LIMIT = 2
+const PREFETCH_DAY_COUNT = 3
+
+const formatISODate = (date: Date) => date.toISOString().slice(0, 10)
+
+const buildUpcomingDates = (count: number) => {
+  const today = new Date()
+  return Array.from({ length: count }, (_, index) => {
+    const next = new Date(today)
+    next.setDate(today.getDate() + index)
+    return formatISODate(next)
+  })
+}
+
 export default function BookingFlow(){
   const [services,setServices]=useState<Service[]>([])
   const [serviceId,setServiceId]=useState('')
@@ -29,6 +50,7 @@ export default function BookingFlow(){
   const [isCreating,setIsCreating]=useState(false)
   const [isProcessingPayment,setIsProcessingPayment]=useState(false)
   const scheduleSectionRef = useRef<HTMLDivElement | null>(null)
+  const slotCacheRef = useRef<Map<string, SlotCacheEntry>>(new Map())
 
   const timeFormatter = useMemo(
     () => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -91,6 +113,57 @@ export default function BookingFlow(){
     target.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [date])
 
+  const makeCacheKey = useCallback((service: string, selectedDate: string) => `${service}::${selectedDate}`, [])
+
+  const getCachedSlots = useCallback(
+    (service: string, selectedDate: string) => {
+      const key = makeCacheKey(service, selectedDate)
+      const cached = slotCacheRef.current.get(key)
+      if (!cached) return null
+
+      if (Date.now() - cached.fetchedAt > SLOT_CACHE_TTL) {
+        slotCacheRef.current.delete(key)
+        return null
+      }
+
+      return cached
+    },
+    [makeCacheKey]
+  )
+
+  const storeSlotsInCache = useCallback(
+    (service: string, selectedDate: string, payload: { slots: string[]; staffId: string | null }) => {
+      const key = makeCacheKey(service, selectedDate)
+      slotCacheRef.current.set(key, { ...payload, fetchedAt: Date.now() })
+    },
+    [makeCacheKey]
+  )
+
+  const fetchSlotsFor = useCallback(
+    async (service: string, selectedDate: string, signal: AbortSignal) => {
+      const params = new URLSearchParams({ service_id: service, date: selectedDate })
+      const res = await fetch(`/api/slots?${params.toString()}`, { signal })
+      if (!res.ok) {
+        throw new Error(`Falha ao carregar horários: ${res.status}`)
+      }
+
+      const d = await res.json().catch(() => null)
+      if (signal.aborted) {
+        return { slots: [], staffId: null }
+      }
+
+      const nextStaff = typeof d?.staff_id === 'string' ? d.staff_id : null
+      const slotList = Array.isArray(d?.slots)
+        ? d.slots.filter((value: unknown): value is string => typeof value === 'string')
+        : []
+
+      storeSlotsInCache(service, selectedDate, { slots: slotList, staffId: nextStaff })
+
+      return { slots: slotList, staffId: nextStaff }
+    },
+    [storeSlotsInCache]
+  )
+
   useEffect(() => {
     if (!serviceId || !date) {
       setSlots([])
@@ -101,46 +174,67 @@ export default function BookingFlow(){
       return
     }
 
-    setSlots([])
     setSlot('')
-    setStaffId(null)
     setSlotsError(null)
-    setIsLoadingSlots(true)
-  }, [serviceId, date])
+
+    const cached = getCachedSlots(serviceId, date)
+    if (cached) {
+      setSlots(cached.slots)
+      setStaffId(cached.staffId)
+      setIsLoadingSlots(false)
+    } else {
+      setSlots([])
+      setStaffId(null)
+      setIsLoadingSlots(true)
+    }
+  }, [serviceId, date, getCachedSlots])
 
   useEffect(()=>{
     if(!deferredServiceId || !deferredDate){
       return
     }
 
+    const cached = getCachedSlots(deferredServiceId, deferredDate)
+    if (cached) {
+      // Já temos os dados atualizados em cache; não precisamos buscar novamente.
+      return
+    }
+
     const controller = new AbortController()
+    let isActive = true
+
+    if (serviceId === deferredServiceId && date === deferredDate) {
+      setIsLoadingSlots(true)
+    }
 
     async function loadSlots(){
       try {
-        const params = new URLSearchParams({ service_id: deferredServiceId, date: deferredDate })
-        const res = await fetch(`/api/slots?${params.toString()}`, { signal: controller.signal })
-        if (!res.ok) {
-          throw new Error(`Falha ao carregar horários: ${res.status}`)
+        const { slots: slotList, staffId: nextStaff } = await fetchSlotsFor(
+          deferredServiceId,
+          deferredDate,
+          controller.signal
+        )
+
+        if (!isActive || controller.signal.aborted) {
+          return
         }
-        const d = await res.json().catch(() => null)
-        if (controller.signal.aborted) return
 
-        const nextStaff = typeof d?.staff_id === 'string' ? d.staff_id : null
-        const slotList = Array.isArray(d?.slots)
-          ? d.slots.filter((value: unknown): value is string => typeof value === 'string')
-          : []
-
-        setStaffId(nextStaff)
-        setSlots(slotList)
-        setSlotsError(null)
+        if (serviceId === deferredServiceId && date === deferredDate) {
+          setStaffId(nextStaff)
+          setSlots(slotList)
+          setSlotsError(null)
+        }
       } catch (err) {
-        if (controller.signal.aborted) return
+        if (controller.signal.aborted || !isActive) return
         console.error('Erro ao carregar horários disponíveis', err)
-        setStaffId(null)
-        setSlots([])
-        setSlotsError('Não foi possível carregar os horários disponíveis. Atualize a página ou selecione outra data.')
+        if (serviceId === deferredServiceId && date === deferredDate) {
+          setStaffId(null)
+          setSlots([])
+          setSlotsError('Não foi possível carregar os horários disponíveis. Atualize a página ou selecione outra data.')
+        }
       } finally {
-        if (!controller.signal.aborted) {
+        if (!isActive || controller.signal.aborted) return
+        if (serviceId === deferredServiceId && date === deferredDate) {
           setIsLoadingSlots(false)
         }
       }
@@ -149,9 +243,38 @@ export default function BookingFlow(){
     void loadSlots()
 
     return () => {
+      isActive = false
       controller.abort()
     }
-  },[deferredServiceId,deferredDate])
+  },[deferredServiceId,deferredDate,serviceId,date,fetchSlotsFor,getCachedSlots])
+
+  useEffect(() => {
+    if (services.length === 0) return
+
+    const servicePool = services.slice(0, PREFETCH_SERVICE_LIMIT)
+    const datesToPrefetch = buildUpcomingDates(PREFETCH_DAY_COUNT)
+    const controllers: AbortController[] = []
+
+    for (const service of servicePool) {
+      for (const upcomingDate of datesToPrefetch) {
+        if (getCachedSlots(service.id, upcomingDate)) {
+          continue
+        }
+
+        const controller = new AbortController()
+        controllers.push(controller)
+
+        void fetchSlotsFor(service.id, upcomingDate, controller.signal).catch((err) => {
+          if (controller.signal.aborted) return
+          console.error('Erro ao pré-carregar horários disponíveis', err)
+        })
+      }
+    }
+
+    return () => {
+      controllers.forEach((controller) => controller.abort())
+    }
+  }, [services, fetchSlotsFor, getCachedSlots])
 
   const ensureSession = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession()

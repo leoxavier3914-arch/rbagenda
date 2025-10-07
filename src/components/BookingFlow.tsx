@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
@@ -28,6 +28,7 @@ export default function BookingFlow(){
   const [slotsError,setSlotsError]=useState<string|null>(null)
   const [isCreating,setIsCreating]=useState(false)
   const [isProcessingPayment,setIsProcessingPayment]=useState(false)
+  const scheduleSectionRef = useRef<HTMLDivElement | null>(null)
 
   const timeFormatter = useMemo(
     () => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -80,6 +81,15 @@ export default function BookingFlow(){
 
   const deferredServiceId = useDeferredValue(serviceId)
   const deferredDate = useDeferredValue(date)
+
+  useEffect(() => {
+    if (!date) return
+
+    const target = scheduleSectionRef.current
+    if (!target) return
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [date])
 
   useEffect(() => {
     if (!serviceId || !date) {
@@ -303,7 +313,7 @@ export default function BookingFlow(){
             {slotsError}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div ref={scheduleSectionRef} className="space-y-3">
             <span className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]">Horário</span>
             {isLoadingSlots ? (
               <div className="grid gap-2 sm:grid-cols-3">

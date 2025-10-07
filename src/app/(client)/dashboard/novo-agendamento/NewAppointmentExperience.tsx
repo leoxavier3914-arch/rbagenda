@@ -915,16 +915,13 @@ export default function NewAppointmentExperience() {
         ) : null}
 
         {selectedTechnique ? (
-          <section
+          <>
+            <section
             ref={dateCardRef}
             className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
             id="data-card"
           >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Data &amp; horário</div>
-
-            {availabilityError && (
-              <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>
-            )}
+            <div className={`${styles.label} ${styles.labelCentered}`}>Data</div>
 
             {!availabilityError && isLoadingAvailability && (
               <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
@@ -998,7 +995,12 @@ export default function NewAppointmentExperience() {
 
             <div className={styles.calendarDivider} aria-hidden="true" />
 
-            <div className={styles.spacerSmall} />
+          </section>
+
+          <section
+            className={`${styles.card} ${styles.section} ${styles.cardReveal}`}
+            id="time-card"
+          >
             <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
             <div ref={slotsContainerRef} className={styles.slots}>
               {availabilityError ? (
@@ -1035,6 +1037,8 @@ export default function NewAppointmentExperience() {
               )}
             </div>
           </section>
+
+          </>
         ) : null}
       </div>
       {summaryData ? (

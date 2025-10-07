@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 
 import { supabase } from '@/lib/db'
 import {
@@ -38,17 +38,66 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
+let activeScrollFrame: number | null = null
+
+function stopActiveScrollAnimation() {
+  if (typeof window === 'undefined') return
+  if (activeScrollFrame !== null) {
+    window.cancelAnimationFrame(activeScrollFrame)
+    activeScrollFrame = null
+  }
+}
+
+function animateScrollTo(target: number, duration = 700) {
+  if (typeof window === 'undefined') return
+
+  const start = window.scrollY || 0
+  const distance = target - start
+  if (Math.abs(distance) < 1) return
+
+  const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
+  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
+
+  stopActiveScrollAnimation()
+
+  const step = (timestamp: number) => {
+    const now = Number.isFinite(timestamp)
+      ? timestamp
+      : typeof performance !== 'undefined'
+      ? performance.now()
+      : Date.now()
+
+    const elapsed = now - startTime
+    const progress = Math.min(1, elapsed / duration)
+    const eased = easeOutCubic(progress)
+
+    window.scrollTo({ top: start + distance * eased, behavior: 'auto' })
+
+    if (progress < 1) {
+      activeScrollFrame = window.requestAnimationFrame(step)
+    } else {
+      activeScrollFrame = null
+    }
+  }
+
+  activeScrollFrame = window.requestAnimationFrame(step)
+}
+
 function gentlyCenterCard(element: HTMLElement | null) {
   if (!element || typeof window === 'undefined') return
-
-  const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
 
   window.requestAnimationFrame(() => {
     const rect = element.getBoundingClientRect()
     const viewportHeight = window.innerHeight || 0
     const target = Math.max(0, rect.top + window.scrollY - viewportHeight / 2 + rect.height / 2)
 
-    window.scrollTo({ top: target, behavior })
+    if (prefersReducedMotion()) {
+      stopActiveScrollAnimation()
+      window.scrollTo({ top: target, behavior: 'auto' })
+      return
+    }
+
+    animateScrollTo(target)
   })
 }
 
@@ -134,6 +183,8 @@ export default function NewAppointmentExperience() {
   const [userId, setUserId] = useState<string | null>(null)
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+
+  const [, startUiTransition] = useTransition()
 
   const typeCardRef = useRef<HTMLDivElement | null>(null)
   const techniqueCardRef = useRef<HTMLDivElement | null>(null)
@@ -630,8 +681,10 @@ export default function NewAppointmentExperience() {
 
   function handleDaySelect(dayIso: string, disabled: boolean) {
     if (disabled || !canInteract) return
-    setSelectedDate(dayIso)
-    setSelectedSlot(null)
+    startUiTransition(() => {
+      setSelectedDate(dayIso)
+      setSelectedSlot(null)
+    })
 
     if (typeof window !== 'undefined') {
       window.requestAnimationFrame(() => {
@@ -644,7 +697,9 @@ export default function NewAppointmentExperience() {
 
   function handleSlotSelect(slotValue: string, disabled: boolean) {
     if (disabled || !canInteract) return
-    setSelectedSlot(slotValue)
+    startUiTransition(() => {
+      setSelectedSlot(slotValue)
+    })
 
     if (typeof window !== 'undefined') {
       window.requestAnimationFrame(() => {
@@ -657,19 +712,23 @@ export default function NewAppointmentExperience() {
 
   function handleServiceSelect(serviceId: string) {
     if (serviceId === selectedServiceId) return
-    setSelectedServiceId(serviceId)
-    setSelectedTechniqueId(null)
-    setSelectedDate(null)
-    setSelectedSlot(null)
+    startUiTransition(() => {
+      setSelectedServiceId(serviceId)
+      setSelectedTechniqueId(null)
+      setSelectedDate(null)
+      setSelectedSlot(null)
+    })
 
     gentlyCenterCard(techniqueCardRef.current)
   }
 
   function handleTechniqueSelect(techniqueId: string) {
     if (techniqueId === selectedTechniqueId) return
-    setSelectedTechniqueId(techniqueId)
-    setSelectedDate(null)
-    setSelectedSlot(null)
+    startUiTransition(() => {
+      setSelectedTechniqueId(techniqueId)
+      setSelectedDate(null)
+      setSelectedSlot(null)
+    })
 
     gentlyCenterCard(dateCardRef.current)
   }

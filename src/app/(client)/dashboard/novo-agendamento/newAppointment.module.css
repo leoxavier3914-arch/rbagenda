@@ -252,6 +252,11 @@
   color: var(--muted);
 }
 
+.dateHint {
+  text-align: center;
+  margin-top: 6px;
+}
+
 .status {
   font-size: 12px;
   color: var(--muted);

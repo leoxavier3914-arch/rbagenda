@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
@@ -78,8 +78,11 @@ export default function BookingFlow(){
     }
   },[])
 
-  useEffect(()=>{
-    if(!serviceId || !date){
+  const deferredServiceId = useDeferredValue(serviceId)
+  const deferredDate = useDeferredValue(date)
+
+  useEffect(() => {
+    if (!serviceId || !date) {
       setSlots([])
       setSlot('')
       setStaffId(null)
@@ -88,16 +91,23 @@ export default function BookingFlow(){
       return
     }
 
+    setSlots([])
+    setSlot('')
+    setStaffId(null)
+    setSlotsError(null)
+    setIsLoadingSlots(true)
+  }, [serviceId, date])
+
+  useEffect(()=>{
+    if(!deferredServiceId || !deferredDate){
+      return
+    }
+
     const controller = new AbortController()
 
     async function loadSlots(){
-      setIsLoadingSlots(true)
-      setSlot('')
-      setStaffId(null)
-      setSlotsError(null)
-
       try {
-        const params = new URLSearchParams({ service_id: serviceId, date })
+        const params = new URLSearchParams({ service_id: deferredServiceId, date: deferredDate })
         const res = await fetch(`/api/slots?${params.toString()}`, { signal: controller.signal })
         if (!res.ok) {
           throw new Error(`Falha ao carregar horários: ${res.status}`)
@@ -112,6 +122,7 @@ export default function BookingFlow(){
 
         setStaffId(nextStaff)
         setSlots(slotList)
+        setSlotsError(null)
       } catch (err) {
         if (controller.signal.aborted) return
         console.error('Erro ao carregar horários disponíveis', err)
@@ -129,9 +140,8 @@ export default function BookingFlow(){
 
     return () => {
       controller.abort()
-      setIsLoadingSlots(false)
     }
-  },[serviceId,date])
+  },[deferredServiceId,deferredDate])
 
   const ensureSession = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession()

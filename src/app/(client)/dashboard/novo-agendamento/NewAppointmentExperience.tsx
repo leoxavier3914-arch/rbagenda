@@ -632,15 +632,68 @@ export default function NewAppointmentExperience() {
     if (disabled || !canInteract) return
     setSelectedDate(dayIso)
     setSelectedSlot(null)
-
-    if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
-        gentlyCenterCard(slotsContainerRef.current)
-      })
-    } else {
-      gentlyCenterCard(slotsContainerRef.current)
-    }
   }
+
+  useEffect(() => {
+    if (!selectedDate) return
+
+    const container = slotsContainerRef.current
+    if (!container) return
+
+    let cancelled = false
+    let frameId: number | null = null
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let transitionHandler: (() => void) | null = null
+
+    const clearTimers = () => {
+      if (frameId !== null && typeof window !== 'undefined') {
+        window.cancelAnimationFrame(frameId)
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+      }
+    }
+
+    const scheduleScroll = () => {
+      if (cancelled) return
+
+      if (typeof window === 'undefined') {
+        gentlyCenterCard(container)
+        return
+      }
+
+      clearTimers()
+      frameId = window.requestAnimationFrame(() => {
+        timeoutId = setTimeout(() => {
+          if (!cancelled) {
+            gentlyCenterCard(slotsContainerRef.current)
+          }
+        }, 120)
+      })
+    }
+
+    if (container.offsetHeight > 0) {
+      scheduleScroll()
+    } else {
+      transitionHandler = () => {
+        if (!transitionHandler) return
+        container.removeEventListener('transitionend', transitionHandler)
+        transitionHandler = null
+        scheduleScroll()
+      }
+
+      container.addEventListener('transitionend', transitionHandler)
+    }
+
+    return () => {
+      cancelled = true
+      clearTimers()
+      if (transitionHandler) {
+        container.removeEventListener('transitionend', transitionHandler)
+        transitionHandler = null
+      }
+    }
+  }, [selectedDate, slots])
 
   function handleSlotSelect(slotValue: string, disabled: boolean) {
     if (disabled || !canInteract) return

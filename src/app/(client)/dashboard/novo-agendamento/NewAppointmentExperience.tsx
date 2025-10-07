@@ -48,7 +48,7 @@ function easeInOutCubic(progress: number) {
   return 1 - Math.pow(adjustment, 3) / 2
 }
 
-function smoothScrollTo(target: number, duration = 650) {
+function smoothScrollTo(target: number, duration = 850) {
   if (scrollAnimationFrame !== null) {
     cancelAnimationFrame(scrollAnimationFrame)
     scrollAnimationFrame = null
@@ -58,8 +58,8 @@ function smoothScrollTo(target: number, duration = 650) {
   const distance = target - startY
   const absoluteDistance = Math.abs(distance)
   const adjustedDuration = Math.min(
-    1200,
-    Math.max(550, duration, absoluteDistance * 0.6),
+    1600,
+    Math.max(700, duration, absoluteDistance * 0.9),
   )
 
   if (absoluteDistance < 1) {

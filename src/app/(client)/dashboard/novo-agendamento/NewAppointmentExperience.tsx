@@ -85,11 +85,62 @@ function smoothScrollTo(target: number, duration = 650) {
 function scrollElementIntoView(element: HTMLElement | null) {
   if (!element) return
 
-  const rect = element.getBoundingClientRect()
-  const absoluteTop = rect.top + window.scrollY
-  const offset = absoluteTop - window.innerHeight / 2 + rect.height / 2
+  const performScroll = () => {
+    if (!element.isConnected) return
 
-  smoothScrollTo(Math.max(0, offset))
+    const rect = element.getBoundingClientRect()
+    const absoluteTop = rect.top + window.scrollY
+    const offset = absoluteTop - window.innerHeight / 2 + rect.height / 2
+
+    smoothScrollTo(Math.max(0, offset))
+  }
+
+  const ensureRendered = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(performScroll)
+    })
+  }
+
+  const rect = element.getBoundingClientRect()
+  if (rect.height > 0 && rect.width > 0) {
+    ensureRendered()
+    return
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    let timeoutId: number | null = null
+    const observer = new ResizeObserver(() => {
+      if (!element.isConnected) {
+        observer.disconnect()
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId)
+        }
+        return
+      }
+
+      const { height, width } = element.getBoundingClientRect()
+      if (height === 0 || width === 0) {
+        return
+      }
+
+      observer.disconnect()
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+      ensureRendered()
+    })
+
+    observer.observe(element)
+
+    timeoutId = window.setTimeout(() => {
+      observer.disconnect()
+      ensureRendered()
+    }, 400)
+
+    return
+  }
+
+  ensureRendered()
 }
 
 type ServiceTechnique = {

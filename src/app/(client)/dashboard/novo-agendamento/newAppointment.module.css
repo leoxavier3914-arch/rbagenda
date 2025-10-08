@@ -43,7 +43,6 @@
 
 .experience {
   position: relative;
-  padding: clamp(28px, 6vw, 42px) clamp(18px, 5vw, 32px);
   width: min(100%, 960px);
   margin-inline: auto;
   box-sizing: border-box;
@@ -51,30 +50,15 @@
   flex-direction: column;
   --experience-gap: clamp(24px, 6vw, 40px);
   gap: 0;
-  border-radius: calc(var(--radius-xl) + 8px);
-}
-
-.experience::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-      160deg,
-      rgba(255, 255, 255, 0.14),
-      rgba(15, 36, 29, 0.26)
-    );
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: var(--menu-shadow);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  pointer-events: none;
-  z-index: 0;
 }
 
 .experience > * {
   position: relative;
   z-index: 1;
+}
+
+.experience > .hero {
+  margin-bottom: var(--experience-gap);
 }
 
 .cardSection {

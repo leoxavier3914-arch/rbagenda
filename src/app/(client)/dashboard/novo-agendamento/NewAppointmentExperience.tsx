@@ -40,94 +40,58 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-const CARD_SCROLL_DURATION_MS = 900
-const MAX_LAYOUT_CHECKS = 12
-
-function easeInOutCubic(t: number) {
-  if (t <= 0) return 0
-  if (t >= 1) return 1
-  return t < 0.5
-    ? 4 * t * t * t
-    : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
-function waitForElementLayout(element: HTMLElement): Promise<void> {
-  if (typeof window === 'undefined') {
-    return Promise.resolve()
+function scrollElementIntoViewWhenReady(
+  element: HTMLElement | null,
+  options?: { onScroll?: () => void },
+) {
+  if (!element || typeof window === 'undefined') {
+    options?.onScroll?.()
+    return () => {}
   }
 
-  return new Promise((resolve) => {
-    let attempts = 0
-
-    const check = () => {
-      if (!element.isConnected) {
-        if (attempts >= MAX_LAYOUT_CHECKS) {
-          resolve()
-          return
-        }
-      }
-
-      const rect = element.getBoundingClientRect()
-      const isReady = rect.width > 0 && rect.height > 0
-
-      if (isReady || attempts >= MAX_LAYOUT_CHECKS) {
-        resolve()
-        return
-      }
-
-      attempts += 1
-      window.requestAnimationFrame(check)
+  const runOnce = (() => {
+    let hasRun = false
+    return () => {
+      if (hasRun) return
+      hasRun = true
+      element.scrollIntoView({
+        block: 'center',
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      })
+      options?.onScroll?.()
     }
+  })()
 
-    check()
+  const hasLayout = () => {
+    const rect = element.getBoundingClientRect()
+    return rect.height > 0
+  }
+
+  if (hasLayout()) {
+    runOnce()
+    return () => {}
+  }
+
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(() => {
+      if (hasLayout()) {
+        observer.disconnect()
+        runOnce()
+      }
+    })
+    observer.observe(element)
+    return () => {
+      observer.disconnect()
+    }
+  }
+
+  const frameId = window.requestAnimationFrame(() => {
+    runOnce()
   })
-}
 
-function animateWindowScroll(start: number, target: number, duration: number) {
-  if (duration <= 0) {
-    window.scrollTo({ top: target, behavior: 'auto' })
-    return
+  return () => {
+    window.cancelAnimationFrame(frameId)
   }
-
-  const distance = target - start
-  if (Math.abs(distance) < 1) {
-    window.scrollTo({ top: target, behavior: 'auto' })
-    return
-  }
-
-  const startTime = performance.now()
-
-  const step = (currentTime: number) => {
-    const elapsed = currentTime - startTime
-    const progress = Math.min(1, elapsed / duration)
-    const eased = easeInOutCubic(progress)
-    const nextPosition = start + distance * eased
-
-    window.scrollTo({ top: nextPosition, behavior: 'auto' })
-
-    if (progress < 1) {
-      window.requestAnimationFrame(step)
-    }
-  }
-
-  window.requestAnimationFrame(step)
-}
-
-async function gentlyCenterCard(element: HTMLElement | null) {
-  if (!element || typeof window === 'undefined') return
-
-  await waitForElementLayout(element)
-
-  const rect = element.getBoundingClientRect()
-  const viewportHeight = window.innerHeight || 0
-  const target = Math.max(0, rect.top + window.scrollY - viewportHeight / 2 + rect.height / 2)
-
-  if (prefersReducedMotion()) {
-    window.scrollTo({ top: target, behavior: 'auto' })
-    return
-  }
-
-  animateWindowScroll(window.scrollY, target, CARD_SCROLL_DURATION_MS)
 }
 
 type ServiceTechnique = {
@@ -762,59 +726,7 @@ export default function NewAppointmentExperience() {
     const container = slotsContainerRef.current
     if (!container) return
 
-    let cancelled = false
-    let frameId: number | null = null
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
-    let transitionHandler: (() => void) | null = null
-
-    const clearTimers = () => {
-      if (frameId !== null && typeof window !== 'undefined') {
-        window.cancelAnimationFrame(frameId)
-      }
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId)
-      }
-    }
-
-    const scheduleScroll = () => {
-      if (cancelled) return
-
-      if (typeof window === 'undefined') {
-        void gentlyCenterCard(container)
-        return
-      }
-
-      clearTimers()
-      frameId = window.requestAnimationFrame(() => {
-        timeoutId = setTimeout(() => {
-          if (!cancelled) {
-            void gentlyCenterCard(slotsContainerRef.current)
-          }
-        }, 200)
-      })
-    }
-
-    if (container.offsetHeight > 0) {
-      scheduleScroll()
-    } else {
-      transitionHandler = () => {
-        if (!transitionHandler) return
-        container.removeEventListener('transitionend', transitionHandler)
-        transitionHandler = null
-        scheduleScroll()
-      }
-
-      container.addEventListener('transitionend', transitionHandler)
-    }
-
-    return () => {
-      cancelled = true
-      clearTimers()
-      if (transitionHandler) {
-        container.removeEventListener('transitionend', transitionHandler)
-        transitionHandler = null
-      }
-    }
+    return scrollElementIntoViewWhenReady(container)
   }, [selectedDate, slots])
 
   useEffect(() => {
@@ -836,78 +748,16 @@ export default function NewAppointmentExperience() {
       return
     }
 
-    let cancelled = false
-    let frameId: number | null = null
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
-    let transitionHandler: (() => void) | null = null
-
-    const clearTimers = () => {
-      if (frameId !== null && typeof window !== 'undefined') {
-        window.cancelAnimationFrame(frameId)
-        frameId = null
-      }
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId)
-        timeoutId = null
-      }
-    }
-
-    const finishScroll = () => {
-      if (cancelled) return
-      void gentlyCenterCard(element)
-      setPendingScrollTarget(null)
-    }
-
-    const scheduleScroll = () => {
-      if (cancelled) return
-
-      if (typeof window === 'undefined') {
-        finishScroll()
-        return
-      }
-
-      clearTimers()
-      frameId = window.requestAnimationFrame(() => {
-        timeoutId = setTimeout(() => {
-          finishScroll()
-        }, 200)
-      })
-    }
-
-    if (element.offsetHeight > 0) {
-      scheduleScroll()
-    } else {
-      transitionHandler = () => {
-        if (!transitionHandler) return
-        element.removeEventListener('transitionend', transitionHandler)
-        transitionHandler = null
-        scheduleScroll()
-      }
-
-      element.addEventListener('transitionend', transitionHandler)
-    }
-
-    return () => {
-      cancelled = true
-      clearTimers()
-      if (transitionHandler) {
-        element.removeEventListener('transitionend', transitionHandler)
-        transitionHandler = null
-      }
-    }
+    return scrollElementIntoViewWhenReady(element, {
+      onScroll: () => setPendingScrollTarget(null),
+    })
   }, [pendingScrollTarget, selectedService, selectedTechnique])
 
   function handleSlotSelect(slotValue: string, disabled: boolean) {
     if (disabled || !canInteract) return
     setSelectedSlot(slotValue)
 
-    if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
-        void gentlyCenterCard(summaryRef.current)
-      })
-    } else {
-      void gentlyCenterCard(summaryRef.current)
-    }
+    scrollElementIntoViewWhenReady(summaryRef.current)
   }
 
   function handleServiceSelect(serviceId: string) {

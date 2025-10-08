@@ -1680,29 +1680,37 @@ export default function NewAppointmentExperience() {
           aria-modal="true"
           aria-labelledby="pay-later-notice-title"
         >
-          <div className={styles.noticeIcon} aria-hidden="true">
-            ⏳
+          <div className={styles.noticeBadge}>Sinal pendente</div>
+          <div className={styles.noticeHeader}>
+            <div className={styles.noticeIcon} aria-hidden="true">
+              ⏳
+            </div>
+            <div>
+              <h2 id="pay-later-notice-title" className={styles.noticeTitle}>
+                Pagamento pendente
+              </h2>
+              <p className={styles.noticeSubtitle}>Seu agendamento foi criado com sucesso.</p>
+            </div>
           </div>
-          <h2 id="pay-later-notice-title" className={styles.noticeTitle}>
-            Aguardando pagamento
-          </h2>
+          <div className={styles.noticeHighlight} role="status">
+            <span className={styles.noticeHighlightLabel}>Pague o sinal em até</span>
+            <strong className={styles.noticeHighlightValue}>2 horas</strong>
+          </div>
           <p className={styles.noticeText}>
-            Seu agendamento foi criado com sucesso!
-            <br />
-            <br />
-            O <strong>pagamento do sinal</strong> deve ser realizado em até <strong>2 horas</strong>{' '}
-            para que o horário seja reservado.
-            <br />
-            <br />
-            Após esse prazo, o agendamento será <strong>cancelado automaticamente</strong>.
+            Para manter o horário reservado, conclua o pagamento do sinal dentro do prazo.
           </p>
-          <button
-            type="button"
-            className={styles.noticeButton}
-            onClick={handleConfirmPayLaterNotice}
-          >
-            Ok
-          </button>
+          <p className={styles.noticeFootnote}>
+            Após esse período, o agendamento será cancelado automaticamente.
+          </p>
+          <div className={styles.noticeActions}>
+            <button
+              type="button"
+              className={styles.noticeButton}
+              onClick={handleConfirmPayLaterNotice}
+            >
+              Entendi
+            </button>
+          </div>
         </div>
       </div>
     </div>

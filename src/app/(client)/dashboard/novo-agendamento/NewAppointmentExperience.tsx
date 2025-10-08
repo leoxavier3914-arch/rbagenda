@@ -244,6 +244,87 @@ function normalizeNumber(value: unknown): number | null {
 const FALLBACK_BUFFER_MINUTES = DEFAULT_FALLBACK_BUFFER_MINUTES
 const WORK_DAY_END = '18:00'
 
+type ServiceVisualVariant =
+  | 'application'
+  | 'maintenance'
+  | 'reapplication'
+  | 'removal'
+  | 'default'
+
+function getServiceVisualVariant(service: ServiceOption): ServiceVisualVariant {
+  const baseText = `${service.slug ?? ''} ${service.name ?? ''}`.toLowerCase()
+
+  if (baseText.includes('aplic')) return 'application'
+  if (baseText.includes('manut')) return 'maintenance'
+  if (baseText.includes('reaplic')) return 'reapplication'
+  if (baseText.includes('remo')) return 'removal'
+
+  return 'default'
+}
+
+function ServiceTypeIcon({ variant }: { variant: ServiceVisualVariant }) {
+  const iconProps = {
+    width: 48,
+    height: 48,
+    viewBox: '0 0 48 48',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  }
+
+  switch (variant) {
+    case 'application':
+      return (
+        <svg aria-hidden="true" {...iconProps}>
+          <path d="M8 30c4.6-6.4 12.4-11 16-11s11.4 4.6 16 11" />
+          <path d="M16 26.2l-2.6-6.4" />
+          <path d="M21 24.2l-1.2-6.2" />
+          <path d="M27 24.2l1.2-6.2" />
+          <path d="M32 26.2l2.6-6.4" />
+          <path d="M12 34c3.8 3.6 7.9 5.4 12 5.4S32.2 37.6 36 34" />
+        </svg>
+      )
+    case 'maintenance':
+      return (
+        <svg aria-hidden="true" {...iconProps}>
+          <path d="M16 14l20 20" />
+          <path d="M31 13.5l4 4-5 5-4-4" />
+          <path d="M15.2 28.8L11 33l4 4 4.2-4.2" />
+          <path d="M24 21l-9 9" />
+        </svg>
+      )
+    case 'reapplication':
+      return (
+        <svg aria-hidden="true" {...iconProps}>
+          <path d="M24 10s-11 13-11 20a11 11 0 0 0 22 0c0-7-11-20-11-20z" fill="currentColor" opacity={0.14} />
+          <path d="M24 10s-11 13-11 20a11 11 0 0 0 22 0c0-7-11-20-11-20z" />
+          <path d="M24 21v9" />
+          <path d="M20 28c0 2.2 1.8 4 4 4s4-1.8 4-4" />
+        </svg>
+      )
+    case 'removal':
+      return (
+        <svg aria-hidden="true" {...iconProps}>
+          <path d="M31 13H17l-7 7 18 18 7-7V13z" fill="currentColor" opacity={0.12} />
+          <path d="M17 13l18 18" />
+          <path d="M10 20l18 18" />
+          <path d="M25 13h11" />
+          <path d="M17 21l-4-4" />
+        </svg>
+      )
+    default:
+      return (
+        <svg aria-hidden="true" {...iconProps}>
+          <circle cx={24} cy={24} r={11} opacity={0.12} fill="currentColor" />
+          <path d="M24 16v16" />
+          <path d="M32 24H16" />
+        </svg>
+      )
+  }
+}
+
 function combineDateAndTime(dateIso: string, time: string) {
   const [year, month, day] = dateIso.split('-').map(Number)
   const [hour, minute] = time.split(':').map(Number)
@@ -1276,36 +1357,57 @@ export default function NewAppointmentExperience() {
           } as CSSProperties}
         >
           <div
-            className={`${styles.card} ${styles.cardReveal}`}
+            className={`${styles.card} ${styles.cardReveal} ${styles.typeCard}`}
             style={{
               '--card-reveal-delay': !shouldReduceMotion && isTypeCardVisible
                 ? `${CARD_REVEAL_DELAY}ms`
                 : '0s',
             } as CSSProperties}
           >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
-            {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-            {catalogStatus === 'loading' && !catalogError && (
-              <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
-            )}
-            {catalogStatus === 'ready' && availableServices.length === 0 && (
-              <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
-            )}
-            {catalogStatus === 'ready' && availableServices.length > 0 && (
-              <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
-                {availableServices.map((service) => (
-                  <button
-                    key={service.id}
-                    type="button"
-                    className={`${styles.pill} ${styles.tipoPill}`}
-                    data-active={selectedServiceId === service.id}
-                    onClick={() => handleServiceSelect(service.id)}
-                  >
-                    {service.name}
-                  </button>
-                ))}
+            <div className={styles.typeCardLabel}>Tipo</div>
+            {catalogError && (
+              <div className={`${styles.status} ${styles.statusError} ${styles.typeCardStatus}`}>
+                {catalogError}
               </div>
             )}
+            {catalogStatus === 'loading' && !catalogError && (
+              <div className={`${styles.status} ${styles.statusInfo} ${styles.typeCardStatus}`}>
+                Carregando tipos…
+              </div>
+            )}
+            {catalogStatus === 'ready' && availableServices.length === 0 && (
+              <div className={`${styles.meta} ${styles.typeCardStatus}`}>
+                Nenhum tipo disponível no momento.
+              </div>
+            )}
+            {catalogStatus === 'ready' && availableServices.length > 0 && (
+              <div className={styles.typeGrid} role="tablist" aria-label="Tipo">
+                {availableServices.map((service) => {
+                  const variant = getServiceVisualVariant(service)
+                  const isActive = selectedServiceId === service.id
+
+                  return (
+                    <button
+                      key={service.id}
+                      type="button"
+                      className={styles.typeOption}
+                      data-active={isActive ? 'true' : 'false'}
+                      aria-pressed={isActive}
+                      onClick={() => handleServiceSelect(service.id)}
+                    >
+                      <span className={styles.typeOptionIcon}>
+                        <ServiceTypeIcon variant={variant} />
+                      </span>
+                      <span className={styles.typeOptionName}>{service.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            <div className={styles.typeCardBrand} aria-hidden="true">
+              <span>ROMEIKE</span>
+              <span>BEAUTY</span>
+            </div>
           </div>
         </section>
 

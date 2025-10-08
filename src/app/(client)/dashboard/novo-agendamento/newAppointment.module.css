@@ -1,14 +1,13 @@
 :global(:root) {
-  --bg-page: #f8f4ee;
-  --card-surface: rgba(255, 255, 255, 0.35);
-  --card-surface-strong: #d6e8d3;
-  --ink: #2e2e2e;
-  --muted: rgba(46, 46, 46, 0.7);
-  --brand: #88b04b;
-  --brand-rgb: 136, 176, 75;
-  --brand-soft: rgba(214, 232, 211, 0.85);
-  --stroke: rgba(136, 176, 75, 0.35);
-  --ok: #88b04b;
+  --card-surface: rgba(255, 255, 255, 0.45);
+  --card-surface-strong: #efe5d6;
+  --ink: var(--text-primary, #2e2e2e);
+  --muted: var(--text-muted, rgba(46, 46, 46, 0.7));
+  --brand: var(--brand-primary, #88b04b);
+  --brand-rgb: var(--brand-primary-rgb, 136, 176, 75);
+  --brand-soft: rgba(239, 229, 214, 0.85);
+  --stroke: rgba(136, 176, 75, 0.28);
+  --ok: var(--brand-primary, #88b04b);
   --warn: #d4a23a;
   --info: #5a90c5;
   --disabled: rgba(46, 46, 46, 0.2);
@@ -16,16 +15,15 @@
   --page-inline-padding: clamp(8px, 4vw, 20px);
   --card-motion-duration: 0.85s;
   --card-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --menu-surface: rgba(255, 255, 255, 0.35);
-  --menu-surface-strong: rgba(214, 232, 211, 0.85);
-  --menu-border: rgba(136, 176, 75, 0.28);
+  --menu-surface: rgba(255, 255, 255, 0.45);
+  --menu-surface-strong: rgba(239, 229, 214, 0.88);
+  --menu-border: rgba(136, 176, 75, 0.24);
 }
 
 
 .screen {
   min-height: 100vh;
-  background: linear-gradient(180deg, rgba(214, 232, 211, 0.65), rgba(248, 244, 238, 0.85)),
-    var(--bg-page);
+  background: transparent;
   color: var(--ink);
   display: flex;
   flex-direction: column;
@@ -35,52 +33,10 @@
   width: 100%;
   box-sizing: border-box;
   position: relative;
-  overflow: hidden;
-  isolation: isolate;
 }
 
 .screen[data-has-summary='true'] {
   padding-bottom: clamp(140px, 18vw, 220px);
-}
-
-.screen::before,
-.screen::after {
-  content: '';
-  position: absolute;
-  inset: -28%;
-  pointer-events: none;
-  mix-blend-mode: normal;
-  z-index: 0;
-}
-
-.screen::before {
-  background:
-    radial-gradient(circle at 20% 25%, rgba(214, 232, 211, 0.6), transparent 55%),
-    radial-gradient(circle at 75% 30%, rgba(var(--brand-rgb), 0.18), transparent 60%);
-  filter: blur(90px);
-  opacity: 0.4;
-}
-
-.screen::after {
-  inset: -30%;
-  background:
-    linear-gradient(140deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
-    radial-gradient(circle at 60% 70%, rgba(var(--brand-rgb), 0.14), transparent 62%),
-    radial-gradient(circle at 40% 40%, rgba(214, 232, 211, 0.35), transparent 60%);
-  filter: blur(110px);
-  opacity: 0.35;
-  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 96%);
-  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 96%);
-}
-
-.screen[data-has-summary='true']::before,
-.screen[data-has-summary='true']::after {
-  opacity: calc(var(--glow-opacity, 1) * 0.4);
-}
-
-.screen[data-has-summary='false']::before,
-.screen[data-has-summary='false']::after {
-  opacity: calc(var(--glow-opacity, 1) * 0.35);
 }
 
 .experience {

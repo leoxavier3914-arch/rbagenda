@@ -5,17 +5,20 @@
 @layer base {
   :root {
     color-scheme: light;
-    --brand-primary: #1f8a70;
-    --brand-primary-rgb: 31, 138, 112;
-    --brand-light: #e3f2ed;
-    --brand-light-rgb: 227, 242, 237;
+    --bg-page: #f8f4ee;
+    --text-primary: #2e2e2e;
+    --text-muted: rgba(46, 46, 46, 0.68);
+    --brand-primary: #88b04b;
+    --brand-primary-rgb: 136, 176, 75;
+    --brand-light: #f1efe6;
+    --brand-light-rgb: 241, 239, 230;
     --brand-sand: #fbfaf7;
-    --brand-ink: #16372e;
-    --brand-muted: rgba(22, 55, 46, 0.68);
-    --brand-border: rgba(255, 255, 255, 0.35);
-    --brand-border-strong: rgba(31, 138, 112, 0.35);
-    --shadow-soft: 0 22px 60px -30px rgba(15, 64, 51, 0.45);
-    --shadow-hover: 0 28px 70px -30px rgba(15, 64, 51, 0.55);
+    --brand-ink: var(--text-primary);
+    --brand-muted: var(--text-muted);
+    --brand-border: rgba(46, 46, 46, 0.08);
+    --brand-border-strong: rgba(46, 46, 46, 0.18);
+    --shadow-soft: 0 22px 60px -30px rgba(94, 72, 54, 0.28);
+    --shadow-hover: 0 28px 70px -30px rgba(94, 72, 54, 0.35);
     --radius-card: 28px;
   }
 
@@ -27,8 +30,8 @@
 
   body {
     min-height: 100vh;
-    background: linear-gradient(160deg, #0c1813, #163529, #28523e);
-    color: #f7f4ef;
+    background: var(--bg-page);
+    color: var(--text-primary);
     font-family: "Inter", "Geist", "Geist Sans", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
   }

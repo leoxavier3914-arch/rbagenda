@@ -1158,10 +1158,6 @@ export default function NewAppointmentExperience() {
     setIsPayLaterNoticeOpen(true)
   }, [closeSummaryModal, setIsPayLaterNoticeOpen])
 
-  const handleClosePayLaterNotice = useCallback(() => {
-    setIsPayLaterNoticeOpen(false)
-  }, [setIsPayLaterNoticeOpen])
-
   const handleConfirmPayLaterNotice = useCallback(() => {
     setIsPayLaterNoticeOpen(false)
     router.push('/dashboard/agendamentos')
@@ -1191,7 +1187,6 @@ export default function NewAppointmentExperience() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        setIsPayLaterNoticeOpen(false)
       }
     }
 
@@ -1199,7 +1194,7 @@ export default function NewAppointmentExperience() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isPayLaterNoticeOpen, setIsPayLaterNoticeOpen])
+  }, [isPayLaterNoticeOpen])
 
   const hasSummary = !!summaryData
   const continueButtonLabel = isCreatingAppointment
@@ -1561,11 +1556,7 @@ export default function NewAppointmentExperience() {
         data-open={isPayLaterNoticeOpen ? 'true' : 'false'}
         aria-hidden={isPayLaterNoticeOpen ? 'false' : 'true'}
       >
-        <div
-          className={styles.noticeBackdrop}
-          onClick={handleClosePayLaterNotice}
-          aria-hidden="true"
-        />
+        <div className={styles.noticeBackdrop} aria-hidden="true" />
         <div
           className={styles.noticeContent}
           role="dialog"

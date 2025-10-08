@@ -771,10 +771,11 @@
   text-align: center;
 }
 
+
 .cta {
   appearance: none;
-  border: 0;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.92), rgba(255, 255, 255, 0.9));
+  border: 1px solid #4f6b2a;
+  background: var(--brand);
   color: var(--ink);
   padding: 14px 22px;
   border-radius: 999px;
@@ -986,10 +987,11 @@
 
 .noticeHeader {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  text-align: left;
+  gap: 6px;
+  text-align: center;
 }
 
 .noticeIcon {
@@ -1016,12 +1018,14 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--ink);
+  text-align: center;
 }
 
 .noticeSubtitle {
   margin: 4px 0 0;
   font-size: 14px;
   color: var(--muted);
+  text-align: center;
 }
 
 .noticeHighlight {
@@ -1081,8 +1085,8 @@
 
 .noticeButton {
   appearance: none;
-  border: 0;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.9), rgba(255, 255, 255, 0.9));
+  border: 1px solid #4f6b2a;
+  background: var(--brand);
   color: var(--ink);
   padding: 10px 18px;
   border-radius: 999px;

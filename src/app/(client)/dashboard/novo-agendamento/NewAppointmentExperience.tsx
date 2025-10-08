@@ -1617,7 +1617,7 @@ export default function NewAppointmentExperience() {
                 <span>Técnica</span>
                 <strong>{summarySnapshot.techniqueName}</strong>
               </div>
-              <div className={`${styles.modalLine} ${styles.modalLineHighlight}`}>
+              <div className={styles.modalLine}>
                 <span>Horário</span>
                 <strong>
                   {summarySnapshot.dateLabel} às {summarySnapshot.timeLabel}
@@ -1638,9 +1638,6 @@ export default function NewAppointmentExperience() {
                 </div>
               ) : null}
             </div>
-            {appointmentId ? (
-              <div className={styles.meta}>ID do agendamento: {appointmentId}</div>
-            ) : null}
             {!depositAvailable && (
               <div className={`${styles.status} ${styles.statusInfo}`}>
                 Este agendamento não possui sinal para pagamento online.
@@ -1665,6 +1662,7 @@ export default function NewAppointmentExperience() {
                 Pagar depois
               </button>
             </div>
+            {appointmentId ? <div className={styles.meta}>id: {appointmentId}</div> : null}
           </div>
         </div>
       ) : null}
@@ -1682,15 +1680,10 @@ export default function NewAppointmentExperience() {
         >
           <div className={styles.noticeBadge}>Sinal pendente</div>
           <div className={styles.noticeHeader}>
-            <div className={styles.noticeIcon} aria-hidden="true">
-              ⏳
-            </div>
-            <div>
-              <h2 id="pay-later-notice-title" className={styles.noticeTitle}>
-                Pagamento pendente
-              </h2>
-              <p className={styles.noticeSubtitle}>Seu agendamento foi criado com sucesso.</p>
-            </div>
+            <h2 id="pay-later-notice-title" className={styles.noticeTitle}>
+              Pagamento pendente
+            </h2>
+            <p className={styles.noticeSubtitle}>Seu agendamento foi criado com sucesso.</p>
           </div>
           <div className={styles.noticeHighlight} role="status">
             <span className={styles.noticeHighlightLabel}>Pague o sinal em até</span>

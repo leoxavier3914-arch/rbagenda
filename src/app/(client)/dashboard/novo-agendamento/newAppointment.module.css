@@ -17,8 +17,8 @@
   --page-inline-padding: clamp(8px, 4vw, 20px);
   --card-motion-duration: 0.85s;
   --card-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --menu-surface: rgba(255, 255, 255, 0.08);
-  --menu-surface-strong: rgba(255, 255, 255, 0.16);
+  --menu-surface: rgba(255, 255, 255, 0.1);
+  --menu-surface-strong: rgba(255, 255, 255, 0.1);
   --menu-shadow: 0 44px 96px -42px rgba(7, 19, 15, 0.75);
 }
 

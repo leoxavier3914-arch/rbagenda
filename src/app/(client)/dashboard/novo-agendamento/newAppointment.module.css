@@ -729,9 +729,7 @@
 .modalBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(7, 19, 15, 0.68);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.48);
 }
 
 .modalContent {
@@ -836,9 +834,7 @@
 .noticeBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(7, 19, 15, 0.62);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.48);
 }
 
 .noticeContent {

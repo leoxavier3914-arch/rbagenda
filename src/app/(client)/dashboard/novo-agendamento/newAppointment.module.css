@@ -730,6 +730,8 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .modalContent {
@@ -835,6 +837,8 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .noticeContent {

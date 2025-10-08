@@ -12,14 +12,13 @@
   --warn: #d1a13b;
   --info: #4a8de6;
   --disabled: rgba(247, 244, 239, 0.35);
-  --radius-xl: 24px;
   --space: 14px;
   --page-inline-padding: clamp(8px, 4vw, 20px);
   --card-motion-duration: 0.85s;
   --card-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --menu-surface: rgba(255, 255, 255, 0.1);
-  --menu-surface-strong: rgba(255, 255, 255, 0.1);
-  --menu-shadow: 0 44px 96px -42px rgba(7, 19, 15, 0.75);
+  --menu-surface: rgba(255, 255, 255, 0.08);
+  --menu-surface-strong: rgba(255, 255, 255, 0.08);
+  --menu-border: rgba(255, 255, 255, 0.12);
 }
 
 
@@ -170,11 +169,11 @@
 .card {
   position: relative;
   background: var(--menu-surface);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--menu-shadow);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  border: 1px solid var(--menu-border);
+  border-radius: 12px;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   padding: clamp(18px, 5vw, 24px);
   overflow: hidden;
   width: 100%;

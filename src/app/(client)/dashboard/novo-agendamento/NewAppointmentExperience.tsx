@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { supabase } from '@/lib/db'
@@ -41,6 +42,15 @@ function prefersReducedMotion() {
 }
 
 const CARD_SCROLL_DURATION_MS = 900
+const CARD_REVEAL_DELAY = 650
+const TITLE_SPARKLE_PRESETS = [
+  { left: 6, delay: 0, duration: 1900, size: 7, horizontal: -12 },
+  { left: 22, delay: 180, duration: 2100, size: 9, horizontal: 6 },
+  { left: 38, delay: 320, duration: 2000, size: 6, horizontal: -4 },
+  { left: 56, delay: 120, duration: 2200, size: 8, horizontal: 10 },
+  { left: 74, delay: 260, duration: 2050, size: 7, horizontal: -6 },
+  { left: 88, delay: 420, duration: 2150, size: 9, horizontal: 8 },
+]
 const MAX_LAYOUT_CHECKS = 12
 
 function easeInOutCubic(t: number) {
@@ -128,6 +138,61 @@ async function gentlyCenterCard(element: HTMLElement | null) {
   }
 
   animateWindowScroll(window.scrollY, target, CARD_SCROLL_DURATION_MS)
+}
+
+type SectionTitleProps = {
+  text: string
+  isVisible: boolean
+  id: string
+  delayMs?: number
+}
+
+type SparkleStyle = CSSProperties & {
+  '--sparkle-left': string
+  '--sparkle-delay': string
+  '--sparkle-duration': string
+  '--sparkle-size': string
+  '--sparkle-horizontal': string
+}
+type SectionTitleWrapperStyle = CSSProperties & { '--title-delay': string }
+
+function SectionTitle({ text, isVisible, id, delayMs = 0 }: SectionTitleProps) {
+  const sparkleStyles = useMemo<SparkleStyle[]>(
+    () =>
+      TITLE_SPARKLE_PRESETS.map(
+        (preset) =>
+          ({
+            '--sparkle-left': `${preset.left}%`,
+            '--sparkle-delay': `${preset.delay}ms`,
+            '--sparkle-duration': `${preset.duration}ms`,
+            '--sparkle-size': `${preset.size}px`,
+            '--sparkle-horizontal': `${preset.horizontal ?? 0}px`,
+          }) satisfies SparkleStyle,
+      ),
+    [],
+  )
+
+  const wrapperStyle = useMemo<SectionTitleWrapperStyle>(
+    () => ({ '--title-delay': `${delayMs}ms` }) satisfies SectionTitleWrapperStyle,
+    [delayMs],
+  )
+
+  return (
+    <div
+      className={styles.sectionTitleWrapper}
+      data-visible={isVisible ? 'true' : 'false'}
+      style={wrapperStyle}
+    >
+      <h2 id={id} className={styles.sectionTitle}>
+        {text}
+      </h2>
+      <div className={styles.sparkleLayer} aria-hidden="true">
+        {sparkleStyles.map((sparkleStyle, index) => (
+          <span key={`sparkle-${id}-${index}`} className={styles.sparkle} style={sparkleStyle} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 type ServiceTechnique = {
@@ -226,6 +291,7 @@ export default function NewAppointmentExperience() {
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [shouldReduceMotion, setShouldReduceMotion] = useState(false)
   const [isTypeCardVisible, setIsTypeCardVisible] = useState(false)
   const [pendingScrollTarget, setPendingScrollTarget] = useState<
     'technique' | 'date' | null
@@ -265,6 +331,7 @@ export default function NewAppointmentExperience() {
 
   useEffect(() => {
     if (prefersReducedMotion()) {
+      setShouldReduceMotion(true)
       setIsTypeCardVisible(true)
       return
     }
@@ -1211,6 +1278,11 @@ export default function NewAppointmentExperience() {
   return (
     <div className={styles.screen} data-has-summary={hasSummary ? 'true' : 'false'}>
       <div className={styles.experience}>
+        <SectionTitle
+          text="Escolha seu Procedimento:"
+          isVisible={isTypeCardVisible}
+          id="titulo-procedimento"
+        />
         <section
           ref={typeCardRef}
           className={styles.cardSection}
@@ -1218,8 +1290,21 @@ export default function NewAppointmentExperience() {
           data-visible={isTypeCardVisible ? 'true' : 'false'}
           id="tipo-card"
           aria-hidden={isTypeCardVisible ? 'false' : 'true'}
+          aria-labelledby="titulo-procedimento"
+          style={{
+            '--card-motion-delay': !shouldReduceMotion && isTypeCardVisible
+              ? `${CARD_REVEAL_DELAY}ms`
+              : '0s',
+          } as CSSProperties}
         >
-          <div className={`${styles.card} ${styles.cardReveal}`}>
+          <div
+            className={`${styles.card} ${styles.cardReveal}`}
+            style={{
+              '--card-reveal-delay': !shouldReduceMotion && isTypeCardVisible
+                ? `${CARD_REVEAL_DELAY}ms`
+                : '0s',
+            } as CSSProperties}
+          >
             <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
             {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
             {catalogStatus === 'loading' && !catalogError && (
@@ -1246,6 +1331,11 @@ export default function NewAppointmentExperience() {
           </div>
         </section>
 
+        <SectionTitle
+          text="Escolha sua Técnica"
+          isVisible={shouldShowTechniqueCard}
+          id="titulo-tecnica"
+        />
         <section
           ref={techniqueCardRef}
           className={styles.cardSection}
@@ -1253,8 +1343,21 @@ export default function NewAppointmentExperience() {
           data-visible={shouldShowTechniqueCard ? 'true' : 'false'}
           id="tecnica-card"
           aria-hidden={shouldShowTechniqueCard ? 'false' : 'true'}
+          aria-labelledby="titulo-tecnica"
+          style={{
+            '--card-motion-delay': !shouldReduceMotion && shouldShowTechniqueCard
+              ? `${CARD_REVEAL_DELAY}ms`
+              : '0s',
+          } as CSSProperties}
         >
-          <div className={`${styles.card} ${styles.cardReveal}`}>
+          <div
+            className={`${styles.card} ${styles.cardReveal}`}
+            style={{
+              '--card-reveal-delay': !shouldReduceMotion && shouldShowTechniqueCard
+                ? `${CARD_REVEAL_DELAY}ms`
+                : '0s',
+            } as CSSProperties}
+          >
             <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
             {catalogStatus === 'ready' && selectedService && selectedService.techniques.length > 0 ? (
               <>
@@ -1289,14 +1392,32 @@ export default function NewAppointmentExperience() {
           </div>
         </section>
 
+        <SectionTitle
+          text="Escolha o Dia"
+          isVisible={shouldShowDateCard}
+          id="titulo-dia"
+        />
         <section
           ref={dateCardRef}
           className={styles.cardSection}
           data-visible={shouldShowDateCard ? 'true' : 'false'}
           id="data-card"
           aria-hidden={shouldShowDateCard ? 'false' : 'true'}
+          aria-labelledby="titulo-dia"
+          style={{
+            '--card-motion-delay': !shouldReduceMotion && shouldShowDateCard
+              ? `${CARD_REVEAL_DELAY}ms`
+              : '0s',
+          } as CSSProperties}
         >
-          <div className={`${styles.card} ${styles.cardReveal}`}>
+          <div
+            className={`${styles.card} ${styles.cardReveal}`}
+            style={{
+              '--card-reveal-delay': !shouldReduceMotion && shouldShowDateCard
+                ? `${CARD_REVEAL_DELAY}ms`
+                : '0s',
+            } as CSSProperties}
+          >
             <div className={`${styles.label} ${styles.labelCentered}`}>Dia</div>
 
             {!availabilityError && isLoadingAvailability && (
@@ -1379,13 +1500,31 @@ export default function NewAppointmentExperience() {
           </div>
         </section>
 
+        <SectionTitle
+          text="Escolha o Horário"
+          isVisible={shouldShowTimeCard}
+          id="titulo-horario"
+        />
         <section
           className={styles.cardSection}
           data-visible={shouldShowTimeCard ? 'true' : 'false'}
           id="time-card"
           aria-hidden={shouldShowTimeCard ? 'false' : 'true'}
+          aria-labelledby="titulo-horario"
+          style={{
+            '--card-motion-delay': !shouldReduceMotion && shouldShowTimeCard
+              ? `${CARD_REVEAL_DELAY}ms`
+              : '0s',
+          } as CSSProperties}
         >
-          <div className={`${styles.card} ${styles.cardReveal} ${styles.timeCard}`}>
+          <div
+            className={`${styles.card} ${styles.cardReveal} ${styles.timeCard}`}
+            style={{
+              '--card-reveal-delay': !shouldReduceMotion && shouldShowTimeCard
+                ? `${CARD_REVEAL_DELAY}ms`
+                : '0s',
+            } as CSSProperties}
+          >
             <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
             <div ref={slotsContainerRef} className={styles.slots}>
               {availabilityError ? (

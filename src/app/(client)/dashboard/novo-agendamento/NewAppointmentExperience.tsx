@@ -43,14 +43,6 @@ function prefersReducedMotion() {
 
 const CARD_SCROLL_DURATION_MS = 900
 const CARD_REVEAL_DELAY = 650
-const TITLE_SPARKLE_PRESETS = [
-  { left: 6, delay: 0, duration: 1900, size: 7, horizontal: -12 },
-  { left: 22, delay: 180, duration: 2100, size: 9, horizontal: 6 },
-  { left: 38, delay: 320, duration: 2000, size: 6, horizontal: -4 },
-  { left: 56, delay: 120, duration: 2200, size: 8, horizontal: 10 },
-  { left: 74, delay: 260, duration: 2050, size: 7, horizontal: -6 },
-  { left: 88, delay: 420, duration: 2150, size: 9, horizontal: 8 },
-]
 const MAX_LAYOUT_CHECKS = 12
 
 function easeInOutCubic(t: number) {
@@ -147,30 +139,10 @@ type SectionTitleProps = {
   delayMs?: number
 }
 
-type SparkleStyle = CSSProperties & {
-  '--sparkle-left': string
-  '--sparkle-delay': string
-  '--sparkle-duration': string
-  '--sparkle-size': string
-  '--sparkle-horizontal': string
-}
 type SectionTitleWrapperStyle = CSSProperties & { '--title-delay': string }
 
 function SectionTitle({ text, isVisible, id, delayMs = 0 }: SectionTitleProps) {
-  const sparkleStyles = useMemo<SparkleStyle[]>(
-    () =>
-      TITLE_SPARKLE_PRESETS.map(
-        (preset) =>
-          ({
-            '--sparkle-left': `${preset.left}%`,
-            '--sparkle-delay': `${preset.delay}ms`,
-            '--sparkle-duration': `${preset.duration}ms`,
-            '--sparkle-size': `${preset.size}px`,
-            '--sparkle-horizontal': `${preset.horizontal ?? 0}px`,
-          }) satisfies SparkleStyle,
-      ),
-    [],
-  )
+  const characters = useMemo(() => Array.from(text), [text])
 
   const wrapperStyle = useMemo<SectionTitleWrapperStyle>(
     () => ({ '--title-delay': `${delayMs}ms` }) satisfies SectionTitleWrapperStyle,
@@ -184,13 +156,19 @@ function SectionTitle({ text, isVisible, id, delayMs = 0 }: SectionTitleProps) {
       style={wrapperStyle}
     >
       <h2 id={id} className={styles.sectionTitle}>
-        {text}
+        <span aria-hidden="true" className={styles.titleVisual}>
+          {characters.map((char, index) => (
+            <span
+              key={`title-char-${id}-${index}`}
+              className={styles.titleChar}
+              style={{ '--char-index': `${index}` } as CSSProperties}
+            >
+              {char === ' ' ? '\u00A0' : char}
+            </span>
+          ))}
+        </span>
+        <span className={styles.titleHidden}>{text}</span>
       </h2>
-      <div className={styles.sparkleLayer} aria-hidden="true">
-        {sparkleStyles.map((sparkleStyle, index) => (
-          <span key={`sparkle-${id}-${index}`} className={styles.sparkle} style={sparkleStyle} />
-        ))}
-      </div>
     </div>
   )
 }

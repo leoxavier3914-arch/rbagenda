@@ -1287,300 +1287,310 @@ export default function NewAppointmentExperience() {
   return (
     <div className={styles.screen} data-has-summary={hasSummary ? 'true' : 'false'}>
       <div className={styles.experience}>
-        <SectionTitle
-          lead="Escolha"
-          accent="seu"
-          tail=" Procedimento:"
-          isVisible={isTypeCardVisible}
-          id="titulo-procedimento"
-        />
-        <section
-          ref={typeCardRef}
-          className={styles.cardSection}
-          data-kind="type"
-          data-visible={isTypeCardVisible ? 'true' : 'false'}
-          id="tipo-card"
-          aria-hidden={isTypeCardVisible ? 'false' : 'true'}
-          aria-labelledby="titulo-procedimento"
-          style={{
-            '--card-motion-delay': !shouldReduceMotion && isTypeCardVisible
-              ? `${CARD_REVEAL_DELAY}ms`
-              : '0s',
-          } as CSSProperties}
-        >
-          <div
-            className={`${styles.card} ${styles.cardReveal}`}
-            style={{
-              '--card-reveal-delay': !shouldReduceMotion && isTypeCardVisible
-                ? `${CARD_REVEAL_DELAY}ms`
-                : '0s',
-            } as CSSProperties}
-          >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
-            {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-            {catalogStatus === 'loading' && !catalogError && (
-              <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
-            )}
-            {catalogStatus === 'ready' && availableServices.length === 0 && (
-              <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
-            )}
-            {catalogStatus === 'ready' && availableServices.length > 0 && (
-              <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
-                {availableServices.map((service) => (
-                  <button
-                    key={service.id}
-                    type="button"
-                    className={`${styles.pill} ${styles.tipoPill}`}
-                    data-active={selectedServiceId === service.id}
-                    onClick={() => handleServiceSelect(service.id)}
-                  >
-                    <span className={styles.pillIcon} aria-hidden="true">
-                      <LashIcon />
-                    </span>
-                    <span className={styles.pillLabel}>{service.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        <SectionTitle
-          lead="Escolha"
-          accent="sua"
-          tail=" Técnica:"
-          isVisible={shouldShowTechniqueCard}
-          id="titulo-tecnica"
-        />
-        <section
-          ref={techniqueCardRef}
-          className={styles.cardSection}
-          data-kind="technique"
-          data-visible={shouldShowTechniqueCard ? 'true' : 'false'}
-          id="tecnica-card"
-          aria-hidden={shouldShowTechniqueCard ? 'false' : 'true'}
-          aria-labelledby="titulo-tecnica"
-          style={{
-            '--card-motion-delay': !shouldReduceMotion && shouldShowTechniqueCard
-              ? `${CARD_REVEAL_DELAY}ms`
-              : '0s',
-          } as CSSProperties}
-        >
-          <div
-            className={`${styles.card} ${styles.cardReveal}`}
-            style={{
-              '--card-reveal-delay': !shouldReduceMotion && shouldShowTechniqueCard
-                ? `${CARD_REVEAL_DELAY}ms`
-                : '0s',
-            } as CSSProperties}
-          >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
-            {catalogStatus === 'ready' && selectedService && selectedService.techniques.length > 0 ? (
-              <>
-                <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
-                {visibleTechniques.map((technique) => (
-                  <button
-                    key={technique.id}
-                    type="button"
-                    className={`${styles.pill} ${styles.techniquePill}`}
-                    data-active={selectedTechniqueId === technique.id}
-                    onClick={() => handleTechniqueSelect(technique.id)}
-                  >
-                    <span className={styles.pillIcon} aria-hidden="true">
-                      <LashIcon />
-                    </span>
-                    <span className={styles.pillLabel}>{technique.name}</span>
-                  </button>
-                ))}
-              </div>
-                {!showAllTechniques && selectedService.techniques.length > 6 && (
-                  <button
-                    type="button"
-                    className={styles.viewMoreButton}
-                    onClick={() => setShowAllTechniques(true)}
-                  >
-                    Ver mais
-                  </button>
+        <div className={styles.primaryGrid}>
+          <div className={styles.cardGroup}>
+            <SectionTitle
+              lead="Escolha"
+              accent="seu"
+              tail=" Procedimento:"
+              isVisible={isTypeCardVisible}
+              id="titulo-procedimento"
+            />
+            <section
+              ref={typeCardRef}
+              className={styles.cardSection}
+              data-kind="type"
+              data-visible={isTypeCardVisible ? 'true' : 'false'}
+              id="tipo-card"
+              aria-hidden={isTypeCardVisible ? 'false' : 'true'}
+              aria-labelledby="titulo-procedimento"
+              style={{
+                '--card-motion-delay': !shouldReduceMotion && isTypeCardVisible
+                  ? `${CARD_REVEAL_DELAY}ms`
+                  : '0s',
+              } as CSSProperties}
+            >
+              <div
+                className={`${styles.card} ${styles.cardReveal}`}
+                style={{
+                  '--card-reveal-delay': !shouldReduceMotion && isTypeCardVisible
+                    ? `${CARD_REVEAL_DELAY}ms`
+                    : '0s',
+                } as CSSProperties}
+              >
+                <div className={`${styles.label} ${styles.labelCentered}`}>Tipo</div>
+                {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+                {catalogStatus === 'loading' && !catalogError && (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
                 )}
-              </>
-            ) : catalogStatus === 'ready' && selectedService ? (
-              <div className={`${styles.meta} ${styles.labelCentered}`}>
-                Nenhuma técnica disponível para este tipo no momento.
+                {catalogStatus === 'ready' && availableServices.length === 0 && (
+                  <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
+                )}
+                {catalogStatus === 'ready' && availableServices.length > 0 && (
+                  <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
+                    {availableServices.map((service) => (
+                      <button
+                        key={service.id}
+                        type="button"
+                        className={`${styles.pill} ${styles.tipoPill}`}
+                        data-active={selectedServiceId === service.id}
+                        onClick={() => handleServiceSelect(service.id)}
+                      >
+                        <span className={styles.pillIcon} aria-hidden="true">
+                          <LashIcon />
+                        </span>
+                        <span className={styles.pillLabel}>{service.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : null}
+            </section>
           </div>
-        </section>
 
-        <SectionTitle
-          lead="Escolha"
-          accent="o"
-          tail=" Dia:"
-          isVisible={shouldShowDateCard}
-          id="titulo-dia"
-        />
-        <section
-          ref={dateCardRef}
-          className={styles.cardSection}
-          data-visible={shouldShowDateCard ? 'true' : 'false'}
-          id="data-card"
-          aria-hidden={shouldShowDateCard ? 'false' : 'true'}
-          aria-labelledby="titulo-dia"
-          style={{
-            '--card-motion-delay': !shouldReduceMotion && shouldShowDateCard
-              ? `${CARD_REVEAL_DELAY}ms`
-              : '0s',
-          } as CSSProperties}
-        >
-          <div
-            className={`${styles.card} ${styles.cardReveal}`}
-            style={{
-              '--card-reveal-delay': !shouldReduceMotion && shouldShowDateCard
-                ? `${CARD_REVEAL_DELAY}ms`
-                : '0s',
-            } as CSSProperties}
-          >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Dia</div>
-
-            {!availabilityError && isLoadingAvailability && (
-              <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
-            )}
-
-            <div className={styles.calHead}>
-              <button
-                type="button"
-                className={styles.btn}
-                aria-label="Mês anterior"
-                onClick={goToPreviousMonth}
+          <div className={styles.cardGroup}>
+            <SectionTitle
+              lead="Escolha"
+              accent="sua"
+              tail=" Técnica:"
+              isVisible={shouldShowTechniqueCard}
+              id="titulo-tecnica"
+            />
+            <section
+              ref={techniqueCardRef}
+              className={styles.cardSection}
+              data-kind="technique"
+              data-visible={shouldShowTechniqueCard ? 'true' : 'false'}
+              id="tecnica-card"
+              aria-hidden={shouldShowTechniqueCard ? 'false' : 'true'}
+              aria-labelledby="titulo-tecnica"
+              style={{
+                '--card-motion-delay': !shouldReduceMotion && shouldShowTechniqueCard
+                  ? `${CARD_REVEAL_DELAY}ms`
+                  : '0s',
+              } as CSSProperties}
+            >
+              <div
+                className={`${styles.card} ${styles.cardReveal}`}
+                style={{
+                  '--card-reveal-delay': !shouldReduceMotion && shouldShowTechniqueCard
+                    ? `${CARD_REVEAL_DELAY}ms`
+                    : '0s',
+                } as CSSProperties}
               >
-                ‹
-              </button>
-              <div className={styles.calTitle} id="cal-title">
-                {monthTitle}
+                <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
+                {catalogStatus === 'ready' && selectedService && selectedService.techniques.length > 0 ? (
+                  <>
+                    <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
+                      {visibleTechniques.map((technique) => (
+                        <button
+                          key={technique.id}
+                          type="button"
+                          className={`${styles.pill} ${styles.techniquePill}`}
+                          data-active={selectedTechniqueId === technique.id}
+                          onClick={() => handleTechniqueSelect(technique.id)}
+                        >
+                          <span className={styles.pillIcon} aria-hidden="true">
+                            <LashIcon />
+                          </span>
+                          <span className={styles.pillLabel}>{technique.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {!showAllTechniques && selectedService.techniques.length > 6 && (
+                      <button
+                        type="button"
+                        className={styles.viewMoreButton}
+                        onClick={() => setShowAllTechniques(true)}
+                      >
+                        Ver mais
+                      </button>
+                    )}
+                  </>
+                ) : catalogStatus === 'ready' && selectedService ? (
+                  <div className={`${styles.meta} ${styles.labelCentered}`}>
+                    Nenhuma técnica disponível para este tipo no momento.
+                  </div>
+                ) : null}
               </div>
-              <button
-                type="button"
-                className={styles.btn}
-                aria-label="Próximo mês"
-                onClick={goToNextMonth}
-              >
-                ›
-              </button>
-            </div>
-
-            <div className={styles.grid} aria-hidden="true">
-              {calendarHeaderDays.map((label, index) => (
-                <div key={`dow-${index}`} className={styles.dow}>
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.grid}>
-              {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
-                <button
-                  key={iso}
-                  type="button"
-                  className={styles.day}
-                  data-state={state}
-                  data-selected={!isOutsideCurrentMonth && selectedDate === iso}
-                  data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
-                  aria-disabled={isDisabled}
-                  disabled={isDisabled}
-                  onClick={() => handleDaySelect(iso, isDisabled)}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-
-            <div className={styles.legend}>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotAvail}`} /> Disponível
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotBooked}`} /> Parcial
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotMine}`} /> Meus
-              </div>
-              <div className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
-              </div>
-            </div>
-
-            <div className={styles.calendarDivider} aria-hidden="true" />
-
-            {!selectedDate && (
-              <div className={`${styles.meta} ${styles.dateHint}`}>
-                Escolha um dia disponível para liberar os horários.
-              </div>
-            )}
+            </section>
           </div>
-        </section>
 
-        <SectionTitle
-          lead="Escolha"
-          accent="o"
-          tail=" Horário:"
-          isVisible={shouldShowTimeCard}
-          id="titulo-horario"
-        />
-        <section
-          className={styles.cardSection}
-          data-visible={shouldShowTimeCard ? 'true' : 'false'}
-          id="time-card"
-          aria-hidden={shouldShowTimeCard ? 'false' : 'true'}
-          aria-labelledby="titulo-horario"
-          style={{
-            '--card-motion-delay': !shouldReduceMotion && shouldShowTimeCard
-              ? `${CARD_REVEAL_DELAY}ms`
-              : '0s',
-          } as CSSProperties}
-        >
-          <div
-            className={`${styles.card} ${styles.cardReveal} ${styles.timeCard}`}
-            style={{
-              '--card-reveal-delay': !shouldReduceMotion && shouldShowTimeCard
-                ? `${CARD_REVEAL_DELAY}ms`
-                : '0s',
-            } as CSSProperties}
-          >
-            <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
-            <div ref={slotsContainerRef} className={styles.slots}>
-              {availabilityError ? (
-                <div className={`${styles.status} ${styles.statusError}`}>
-                  Não foi possível carregar os horários.
+          <div className={styles.cardGroup}>
+            <SectionTitle
+              lead="Escolha"
+              accent="o"
+              tail=" Dia:"
+              isVisible={shouldShowDateCard}
+              id="titulo-dia"
+            />
+            <section
+              ref={dateCardRef}
+              className={styles.cardSection}
+              data-visible={shouldShowDateCard ? 'true' : 'false'}
+              id="data-card"
+              aria-hidden={shouldShowDateCard ? 'false' : 'true'}
+              aria-labelledby="titulo-dia"
+              style={{
+                '--card-motion-delay': !shouldReduceMotion && shouldShowDateCard
+                  ? `${CARD_REVEAL_DELAY}ms`
+                  : '0s',
+              } as CSSProperties}
+            >
+              <div
+                className={`${styles.card} ${styles.cardReveal}`}
+                style={{
+                  '--card-reveal-delay': !shouldReduceMotion && shouldShowDateCard
+                    ? `${CARD_REVEAL_DELAY}ms`
+                    : '0s',
+                } as CSSProperties}
+              >
+                <div className={`${styles.label} ${styles.labelCentered}`}>Dia</div>
+
+                {!availabilityError && isLoadingAvailability && (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
+                )}
+
+                <div className={styles.calHead}>
+                  <button
+                    type="button"
+                    className={styles.btn}
+                    aria-label="Mês anterior"
+                    onClick={goToPreviousMonth}
+                  >
+                    ‹
+                  </button>
+                  <div className={styles.calTitle} id="cal-title">
+                    {monthTitle}
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.btn}
+                    aria-label="Próximo mês"
+                    onClick={goToNextMonth}
+                  >
+                    ›
+                  </button>
                 </div>
-              ) : isLoadingAvailability ? (
-                <div className={`${styles.status} ${styles.statusInfo}`}>
-                  Carregando horários disponíveis…
+
+                <div className={styles.grid} aria-hidden="true">
+                  {calendarHeaderDays.map((label, index) => (
+                    <div key={`dow-${index}`} className={styles.dow}>
+                      {label}
+                    </div>
+                  ))}
                 </div>
-              ) : slots.length > 0 ? (
-                slots.map((slotValue) => {
-                  const disabled = bookedSlots.has(slotValue)
-                  return (
+
+                <div className={styles.grid}>
+                  {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
                     <button
-                      key={slotValue}
+                      key={iso}
                       type="button"
-                      className={styles.slot}
-                      aria-disabled={disabled}
-                      data-selected={selectedSlot === slotValue}
-                      disabled={disabled}
-                      onClick={() => handleSlotSelect(slotValue, disabled)}
+                      className={styles.day}
+                      data-state={state}
+                      data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+                      data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
+                      aria-disabled={isDisabled}
+                      disabled={isDisabled}
+                      onClick={() => handleDaySelect(iso, isDisabled)}
                     >
-                      {slotValue}
+                      {day}
                     </button>
-                  )
-                })
-              ) : (
-                <div className={styles.meta}>Sem horários para este dia.</div>
-              )}
-            </div>
+                  ))}
+                </div>
+
+                <div className={styles.legend}>
+                  <div className={styles.legendItem}>
+                    <span className={`${styles.dot} ${styles.dotAvail}`} /> Disponível
+                  </div>
+                  <div className={styles.legendItem}>
+                    <span className={`${styles.dot} ${styles.dotBooked}`} /> Parcial
+                  </div>
+                  <div className={styles.legendItem}>
+                    <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
+                  </div>
+                  <div className={styles.legendItem}>
+                    <span className={`${styles.dot} ${styles.dotMine}`} /> Meus
+                  </div>
+                  <div className={styles.legendItem}>
+                    <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
+                  </div>
+                </div>
+
+                <div className={styles.calendarDivider} aria-hidden="true" />
+
+                {!selectedDate && (
+                  <div className={`${styles.meta} ${styles.dateHint}`}>
+                    Escolha um dia disponível para liberar os horários.
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
-        </section>
+
+          <div className={styles.cardGroup}>
+            <SectionTitle
+              lead="Escolha"
+              accent="o"
+              tail=" Horário:"
+              isVisible={shouldShowTimeCard}
+              id="titulo-horario"
+            />
+            <section
+              className={styles.cardSection}
+              data-visible={shouldShowTimeCard ? 'true' : 'false'}
+              id="time-card"
+              aria-hidden={shouldShowTimeCard ? 'false' : 'true'}
+              aria-labelledby="titulo-horario"
+              style={{
+                '--card-motion-delay': !shouldReduceMotion && shouldShowTimeCard
+                  ? `${CARD_REVEAL_DELAY}ms`
+                  : '0s',
+              } as CSSProperties}
+            >
+              <div
+                className={`${styles.card} ${styles.cardReveal} ${styles.timeCard}`}
+                style={{
+                  '--card-reveal-delay': !shouldReduceMotion && shouldShowTimeCard
+                    ? `${CARD_REVEAL_DELAY}ms`
+                    : '0s',
+                } as CSSProperties}
+              >
+                <div className={`${styles.label} ${styles.labelCentered}`}>Horários</div>
+                <div ref={slotsContainerRef} className={styles.slots}>
+                  {availabilityError ? (
+                    <div className={`${styles.status} ${styles.statusError}`}>
+                      Não foi possível carregar os horários.
+                    </div>
+                  ) : isLoadingAvailability ? (
+                    <div className={`${styles.status} ${styles.statusInfo}`}>
+                      Carregando horários disponíveis…
+                    </div>
+                  ) : slots.length > 0 ? (
+                    slots.map((slotValue) => {
+                      const disabled = bookedSlots.has(slotValue)
+                      return (
+                        <button
+                          key={slotValue}
+                          type="button"
+                          className={styles.slot}
+                          aria-disabled={disabled}
+                          data-selected={selectedSlot === slotValue}
+                          disabled={disabled}
+                          onClick={() => handleSlotSelect(slotValue, disabled)}
+                        >
+                          {slotValue}
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div className={styles.meta}>Sem horários para este dia.</div>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
       {summaryData ? (
         <div

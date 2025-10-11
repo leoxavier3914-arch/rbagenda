@@ -1835,7 +1835,7 @@ export default function ProcedimentoPage() {
       dateLabel,
       timeLabel: selectedSlot,
       payload: {
-        typeId: selectedService.id,
+        typeId: selectedTechnique.id,
         serviceId: selectedService.id,
         date: selectedDate,
         slot: selectedSlot,

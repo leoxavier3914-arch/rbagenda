@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
-import AppShell from "@/components/AppShell";
+import ClientFullScreenLayout from "@/components/ClientFullScreenLayout";
 
 export default function ClientLayout({
   children,
@@ -24,5 +24,5 @@ export default function ClientLayout({
     return <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>;
   }
 
-  return <AppShell>{children}</AppShell>;
+  return <ClientFullScreenLayout>{children}</ClientFullScreenLayout>;
 }

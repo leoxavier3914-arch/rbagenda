@@ -214,7 +214,7 @@ export default function AdminMaster(): ReactElement {
       const userRole = profile?.role ?? null
       if (userRole !== 'adminsuper' && userRole !== 'adminmaster') {
         setStatus('idle')
-        router.replace('/dashboard')
+        router.replace('/meu-perfil')
         return
       }
 

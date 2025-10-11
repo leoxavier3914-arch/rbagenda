@@ -217,6 +217,10 @@
   width: min(100%, 1120px);
 }
 
+.contentNoPadding {
+  padding: 0 !important;
+}
+
 @media (max-width: 600px) {
   .content {
     padding-inline: 12px;

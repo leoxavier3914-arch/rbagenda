@@ -225,7 +225,7 @@ export default function Admin() {
 
       if (profile?.role !== 'admin') {
         setStatus('idle')
-        router.replace('/dashboard')
+        router.replace('/meu-perfil')
         return
       }
 

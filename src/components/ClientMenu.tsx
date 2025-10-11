@@ -251,14 +251,14 @@ export default function ClientMenu({ children }: ClientMenuProps) {
 
   const primaryItems = useMemo<NavItem[]>(
     () => [
-      { href: "/dashboard", label: "Meu perfil", exact: true, icon: <ProfileIcon /> },
+      { href: "/meu-perfil", label: "Meu perfil", exact: true, icon: <ProfileIcon /> },
       {
-        href: "/dashboard/novo-agendamento",
+        href: "/novo-agendamento",
         label: "Novo agendamento",
         icon: <PlusIcon />,
       },
       {
-        href: "/dashboard/agendamentos",
+        href: "/agendamentos",
         label: "Meus agendamentos",
         icon: <CalendarIcon />,
       },
@@ -292,21 +292,17 @@ export default function ClientMenu({ children }: ClientMenuProps) {
 
   const knowledgeItems = useMemo<NavItem[]>(
     () => [
-      {
-        href: "/dashboard/indice",
-        label: "Índice",
-        icon: <MenuIcon />,
-      },
-      { href: "/dashboard/regras", label: "Regras", icon: <MenuIcon /> },
+      { href: "/indice", label: "Índice", icon: <MenuIcon /> },
+      { href: "/regras", label: "Regras", icon: <MenuIcon /> },
     ],
     [],
   );
 
   const supportItems = useMemo<NavItem[]>(
     () => [
-      { href: "/dashboard/suporte", label: "Suporte", icon: <SupportIcon /> },
+      { href: "/suporte", label: "Suporte", icon: <SupportIcon /> },
       {
-        href: "/dashboard/configuracoes",
+        href: "/configuracoes",
         label: "Configurações",
         icon: <SettingsIcon />,
       },

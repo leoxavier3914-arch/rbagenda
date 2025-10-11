@@ -971,7 +971,7 @@ export default function MeuPerfil() {
           display: grid;
           place-items: center;
           justify-content: center;
-          padding: calc(18px + env(safe-area-inset-top)) 18px
+          padding: calc(10px + env(safe-area-inset-top)) 18px
             calc(18px + env(safe-area-inset-bottom));
           position: relative;
         }

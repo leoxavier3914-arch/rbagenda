@@ -1,6 +1,23 @@
 'use client'
 
-import { useEffect } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { supabase } from '@/lib/db'
+import {
+  DEFAULT_FALLBACK_BUFFER_MINUTES,
+  DEFAULT_SLOT_TEMPLATE,
+  buildAvailabilityData,
+  formatDateToIsoDay,
+} from '@/lib/availability'
+import { stripePromise } from '@/lib/stripeClient'
 
 const PROCEDIMENTO_CSS = /* css */ `
 :root{
@@ -179,6 +196,207 @@ body.procedimento-screen .placeholder{
   opacity:.92;
   padding: 24px 8px;
 }
+body.procedimento-screen .status{
+  margin-top:12px;
+  padding:12px 16px;
+  border-radius:16px;
+  background:rgba(255,255,255,.55);
+  border:1px solid rgba(0,0,0,.06);
+  font-size:14px;
+  text-align:center;
+  color:var(--ink);
+}
+body.procedimento-screen .status-info{color:var(--muted)}
+body.procedimento-screen .status-error{color:#a43d3d;background:rgba(255,235,235,.76)}
+body.procedimento-screen .status-success{color:#1b5c3a;background:rgba(220,244,229,.8)}
+body.procedimento-screen .grid.tipo-grid{gap:clamp(12px,2vw,18px)}
+body.procedimento-screen .card[data-active="true"]{
+  box-shadow:0 0 0 2px rgba(99,140,118,.3),0 18px 32px rgba(24,63,46,.18);
+  transform:translateY(-4px);
+}
+body.procedimento-screen .card[data-active="true"] .card-inner span{color:#0f271c}
+body.procedimento-screen .calendar-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:12px;
+  margin-bottom:8px;
+}
+body.procedimento-screen .calendar-nav{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.78);
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  cursor:pointer;
+  transition:transform .2s ease;
+}
+body.procedimento-screen .calendar-nav:disabled{opacity:.4;pointer-events:none}
+body.procedimento-screen .calendar-nav:hover{transform:translateY(-1px)}
+body.procedimento-screen .calendar-title{font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+body.procedimento-screen .calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:6px;
+  margin-top:6px;
+}
+body.procedimento-screen .calendar-day{
+  position:relative;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.08);
+  background:rgba(255,255,255,.78);
+  padding:10px 0;
+  font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+body.procedimento-screen .calendar-day[data-outside-month="true"]{opacity:.25;pointer-events:none}
+body.procedimento-screen .calendar-day[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
+body.procedimento-screen .calendar-day[data-selected="true"]{
+  border-color:rgba(31,98,66,.6);
+  box-shadow:0 0 0 2px rgba(31,98,66,.18);
+  background:linear-gradient(180deg,rgba(217,240,227,.95),rgba(195,230,214,.9));
+}
+body.procedimento-screen .calendar-day[data-state="booked"]{background:rgba(255,221,185,.65)}
+body.procedimento-screen .calendar-day[data-state="full"]{background:rgba(255,198,198,.65)}
+body.procedimento-screen .calendar-day[data-state="mine"]{background:rgba(187,226,205,.75)}
+body.procedimento-screen .calendar-day:hover:not([aria-disabled="true"]){transform:translateY(-2px);box-shadow:0 12px 20px rgba(24,63,46,.12)}
+body.procedimento-screen .calendar-day.calendar-day-header{font-size:12px;font-weight:700;color:var(--muted);background:transparent;border:none;cursor:default;box-shadow:none;padding:0}
+body.procedimento-screen .calendar-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px;font-size:12px;color:var(--muted)}
+body.procedimento-screen .calendar-legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+body.procedimento-screen .dot-available{background:#62a07e}
+body.procedimento-screen .dot-partial{background:#f3a451}
+body.procedimento-screen .dot-full{background:#d96a6a}
+body.procedimento-screen .dot-mine{background:#6fb492}
+body.procedimento-screen .dot-disabled{background:#b8c7be}
+body.procedimento-screen .slots{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0}
+body.procedimento-screen .slot{
+  min-width:86px;
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.8);
+  font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+body.procedimento-screen .slot:hover:not([disabled]){transform:translateY(-2px);box-shadow:0 16px 26px rgba(24,63,46,.14)}
+body.procedimento-screen .slot[data-selected="true"]{
+  background:linear-gradient(180deg,rgba(200,232,212,.95),rgba(178,222,198,.92));
+  border-color:rgba(31,98,66,.5);
+  box-shadow:0 0 0 2px rgba(31,98,66,.18);
+}
+body.procedimento-screen .slot[data-busy="true"]{background:rgba(210,210,210,.5);color:rgba(0,0,0,.45);cursor:not-allowed}
+body.procedimento-screen .continue-button{
+  width:100%;
+  margin-top:18px;
+  padding:14px 18px;
+  border-radius:18px;
+  border:1px solid rgba(0,0,0,.12);
+  background:linear-gradient(180deg,rgba(196,226,207,.9),rgba(169,213,188,.9));
+  font-weight:700;
+  letter-spacing:.08em;
+  cursor:pointer;
+  text-transform:uppercase;
+  color:var(--ink);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+body.procedimento-screen .continue-button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+body.procedimento-screen .continue-button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 18px 28px rgba(24,63,46,.18)}
+body.procedimento-screen .summary-bar{
+  position:sticky;
+  bottom:24px;
+  margin:24px auto 0;
+  width:clamp(320px,92vw,720px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:16px 20px;
+  border-radius:22px;
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow:0 22px 46px rgba(24,63,46,.18);
+  backdrop-filter:blur(12px);
+}
+body.procedimento-screen .summary-bar[data-visible="false"]{opacity:0;pointer-events:none;transform:translateY(12px)}
+body.procedimento-screen .summary-details{display:flex;flex-wrap:wrap;gap:14px 24px;flex:1;align-items:center}
+body.procedimento-screen .summary-item{display:flex;flex-direction:column;min-width:120px}
+body.procedimento-screen .summary-item-full{flex-basis:100%}
+body.procedimento-screen .summary-label{font-size:11px;letter-spacing:.18em;color:var(--muted)}
+body.procedimento-screen .summary-value{font-weight:600;color:var(--ink)}
+body.procedimento-screen .summary-action{
+  border-radius:16px;
+  border:1px solid rgba(0,0,0,.12);
+  background:linear-gradient(180deg,rgba(200,232,212,.95),rgba(176,221,195,.9));
+  padding:12px 20px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+body.procedimento-screen .summary-action:disabled{opacity:.4;cursor:not-allowed}
+body.procedimento-screen .modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  z-index:40;
+}
+body.procedimento-screen .modal[data-open="true"]{display:flex}
+body.procedimento-screen .modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(22,35,28,.42);
+  backdrop-filter:blur(4px);
+}
+body.procedimento-screen .modal-content{
+  position:relative;
+  z-index:1;
+  width:clamp(300px,90vw,420px);
+  background:rgba(255,255,255,.92);
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 24px 60px rgba(24,63,46,.22);
+  border:1px solid rgba(255,255,255,.6);
+}
+body.procedimento-screen .modal-title{margin:0 0 16px;font-size:20px;color:var(--ink)}
+body.procedimento-screen .modal-body{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;font-size:14px;color:var(--ink)}
+body.procedimento-screen .modal-line{display:flex;justify-content:space-between}
+body.procedimento-screen .modal-actions{display:flex;gap:12px;flex-wrap:wrap}
+body.procedimento-screen .modal-button{
+  flex:1 1 140px;
+  border-radius:16px;
+  border:1px solid rgba(0,0,0,.12);
+  padding:12px 16px;
+  background:linear-gradient(180deg,rgba(200,232,212,.95),rgba(176,221,195,.9));
+  font-weight:600;
+  cursor:pointer;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+body.procedimento-screen .modal-button.secondary{background:rgba(255,255,255,.85)}
+body.procedimento-screen .modal-button:disabled{opacity:.4;cursor:not-allowed}
+body.procedimento-screen .view-more{
+  margin-top:12px;
+  align-self:center;
+  padding:10px 18px;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.78);
+  cursor:pointer;
+  font-weight:600;
+  letter-spacing:.08em;
+}
 `
 
 
@@ -193,10 +411,63 @@ type LavaController = {
   reseedAll: () => void
 }
 
-type TechniqueEntry = {
-  key: string
-  label: string
-  icon: string
+type ServiceTechnique = {
+  id: string
+  name: string
+  slug: string | null
+  duration_min: number
+  price_cents: number
+  deposit_cents: number
+  buffer_min: number | null
+  active: boolean
+}
+
+type ServiceTypeAssignment = {
+  services?: ServiceTechnique | ServiceTechnique[] | null
+}
+
+type TechniqueCatalogEntry = {
+  id: string
+  name: string
+  slug: string | null
+  description: string | null
+  order_index: number
+  active: boolean
+  services: ServiceTechnique[]
+}
+
+type TechniqueSummary = {
+  id: string
+  name: string
+  slug: string | null
+  description: string | null
+  order_index: number
+}
+
+type ServiceOption = ServiceTechnique & {
+  techniques: TechniqueSummary[]
+}
+
+type LoadedAppointment = Parameters<typeof buildAvailabilityData>[0][number]
+
+type SummarySnapshot = {
+  typeId: string
+  typeName: string
+  techniqueId: string
+  techniqueName: string
+  priceLabel: string
+  priceCents: number
+  depositLabel: string
+  depositCents: number
+  durationLabel: string
+  dateLabel: string
+  timeLabel: string
+  payload: {
+    typeId: string
+    serviceId: string
+    date: string
+    slot: string
+  }
 }
 
 declare global {
@@ -205,20 +476,6 @@ declare global {
     syncLavaPaletteFromVars?: () => void
   }
 }
-
-const TECHNIQUES: TechniqueEntry[] = [
-  { key: 'classica',   label: 'Clássica (1:1)',    icon: `<path d='M3 12c2.8-3.2 15.2-3.2 18 0'/>` },
-  { key: 'hibrida',    label: 'Híbrida',           icon: `<path d='M4 10c3-2 13-2 16 0M6 14c4-1 8-1 12 0'/>` },
-  { key: 'vol2d',      label: 'Volume 2D',         icon: `<path d='M5 12q7-6 14 0M8 14q3-2 8 0'/>` },
-  { key: 'vol3d',      label: 'Volume 3D',         icon: `<path d='M4 12q8-7 16 0M7 14q5-3 10 0M9 16q3-1 6 0'/>` },
-  { key: 'vol5d',      label: 'Volume 5D',         icon: `<path d='M3 12q9-8 18 0M6 14q7-4 12 0M8 16q5-2 8 0M10 18q3-1 4 0M12 20q1 0 2 0'/>` },
-  { key: 'vol8d',      label: 'Volume 8D',         icon: `<path d='M3 12q9-8 18 0M5 13.5q7-6 14 0M7 15q6-4 10 0M9 16.5q5-3 8 0M11 18q3-2 4 0M6 18.5q4-2 12 0'/>` },
-  { key: 'brasileiro', label: 'Volume Brasileiro', icon: `<path d='M4 11c2-4 14-4 16 0M7 15c4-3 6-3 10 0'/>` },
-  { key: 'foxy',       label: 'Foxy Eyes',         icon: `<path d='M3 12c4-5 14-5 18 0M17 10l4-2M3 14l4 2'/>` },
-  { key: 'anime',      label: 'Anime',             icon: `<path d='M6 11c4-3 8-3 12 0M8 14l2-2m4 2l2-2'/>` },
-]
-
-const TECHNIQUES_PER_PAGE = 4
 
 function escapeRegExp(value: string): string {
   return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
@@ -248,6 +505,56 @@ function rgbaFromHexAlpha(hex: string, alpha: string | number): string {
   return `rgba(${r}, ${g}, ${b}, ${clamped})`
 }
 
+function normalizeNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+function formatDuration(minutes: number) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '0 min'
+  const hours = Math.floor(minutes / 60)
+  const remaining = minutes % 60
+  const parts: string[] = []
+  if (hours > 0) parts.push(`${hours}h`)
+  if (remaining > 0) parts.push(`${remaining} min`)
+  return parts.join(' ')
+}
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function combineDateAndTime(dateIso: string, time: string) {
+  const [year, month, day] = dateIso.split('-').map(Number)
+  const [hour, minute] = time.split(':').map(Number)
+
+  if ([year, month, day, hour, minute].some((value) => Number.isNaN(value))) {
+    return null
+  }
+
+  return new Date(year, (month ?? 1) - 1, day ?? 1, hour ?? 0, minute ?? 0, 0, 0)
+}
+
+function LashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M4 12c3-4 15-4 18 0" />
+      <path d="M7 13.5 6 16" />
+      <path d="M10 14l-.6 2" />
+      <path d="M13.5 14l.6 2" />
+      <path d="M17 13.5l1 2" />
+    </svg>
+  )
+}
+
+const FALLBACK_BUFFER_MINUTES = DEFAULT_FALLBACK_BUFFER_MINUTES
+const WORK_DAY_END = '18:00'
+
 function mixHexColors(colorA: string, colorB: string, ratio: number): string {
   const a = hexToRgb(colorA)
   const b = hexToRgb(colorB)
@@ -258,6 +565,47 @@ function mixHexColors(colorA: string, colorB: string, ratio: number): string {
 }
 
 export default function ProcedimentoPage() {
+  const now = useMemo(() => new Date(), [])
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth())
+  const [techniqueCatalog, setTechniqueCatalog] = useState<TechniqueCatalogEntry[]>([])
+  const [catalogStatus, setCatalogStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
+  const [selectedTechniqueId, setSelectedTechniqueId] = useState<string | null>(null)
+  const [showAllTechniques, setShowAllTechniques] = useState(false)
+  const [appointments, setAppointments] = useState<LoadedAppointment[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(true)
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [summarySnapshot, setSummarySnapshot] = useState<SummarySnapshot | null>(null)
+  const [appointmentId, setAppointmentId] = useState<string | null>(null)
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
+  const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [modalError, setModalError] = useState<string | null>(null)
+  const [isPayLaterNoticeOpen, setIsPayLaterNoticeOpen] = useState(false)
+  const [actionMessage, setActionMessage] = useState<
+    { kind: 'success' | 'error'; text: string } | null
+  >(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [shouldReduceMotion, setShouldReduceMotion] = useState(false)
+  const [isTypeCardVisible, setIsTypeCardVisible] = useState(false)
+  const [pendingScrollTarget, setPendingScrollTarget] = useState<
+    'technique' | 'date' | 'time' | null
+  >(null)
+
+  const router = useRouter()
+
+  const typeSectionRef = useRef<HTMLDivElement | null>(null)
+  const techniqueSectionRef = useRef<HTMLDivElement | null>(null)
+  const dateSectionRef = useRef<HTMLDivElement | null>(null)
+  const timeSectionRef = useRef<HTMLDivElement | null>(null)
+  const slotsContainerRef = useRef<HTMLDivElement | null>(null)
+  const summaryRef = useRef<HTMLDivElement | null>(null)
+
   useEffect(() => {
     const body = document.body
     body.classList.add('procedimento-screen')
@@ -347,9 +695,15 @@ export default function ProcedimentoPage() {
     const sizeCard = document.getElementById('sizeCard') as HTMLInputElement | null
     const sizeLabel = document.getElementById('sizeLabel') as HTMLInputElement | null
 
-    const paletteBtn = document.getElementById('paletteBtn') as HTMLButtonElement | null
-    const palettePanel = document.getElementById('palettePanel') as HTMLDivElement | null
-    const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement | null
+    const paletteBtn = isAdmin
+      ? (document.getElementById('paletteBtn') as HTMLButtonElement | null)
+      : null
+    const palettePanel = isAdmin
+      ? (document.getElementById('palettePanel') as HTMLDivElement | null)
+      : null
+    const saveBtn = isAdmin
+      ? (document.getElementById('saveBtn') as HTMLButtonElement | null)
+      : null
 
     const bubbleDarkValue = bubbleDark?.value ?? '#7aa98a'
     const bubbleLightValue = bubbleLight?.value ?? '#bcd6c3'
@@ -381,9 +735,6 @@ export default function ProcedimentoPage() {
 
     const lavaInstances: LavaInstance[] = []
     lavaController.instances = lavaInstances
-
-    const updatedTechniques = [...TECHNIQUES]
-    let techniquePage = 0
 
     function syncGlassVar() {
       if (!glassColorEl || !glassAlphaEl) return
@@ -725,9 +1076,23 @@ export default function ProcedimentoPage() {
       if (!Number.isNaN(value)) commitVar('--label-size', `${value}px`)
     })
 
-    paletteBtn?.addEventListener('click', () => {
-      palettePanel?.classList.toggle('open')
-    })
+    if (paletteBtn) {
+      const handlePaletteToggle = () => {
+        palettePanel?.classList.toggle('open')
+      }
+      paletteBtn.addEventListener('click', handlePaletteToggle)
+      cleanupFns.push(() => paletteBtn.removeEventListener('click', handlePaletteToggle))
+    }
+
+    if (palettePanel) {
+      const handlePanelClick = (event: MouseEvent) => {
+        if (event.target === palettePanel) {
+          palettePanel.classList.remove('open')
+        }
+      }
+      palettePanel.addEventListener('click', handlePanelClick)
+      cleanupFns.push(() => palettePanel.removeEventListener('click', handlePanelClick))
+    }
 
     const fontUrl = document.getElementById('fontUrl') as HTMLInputElement | null
     const fontFamilyName = document.getElementById('fontFamilyName') as HTMLInputElement | null
@@ -771,97 +1136,24 @@ export default function ProcedimentoPage() {
       }
     })
 
-    saveBtn?.addEventListener('click', () => {
-      const html = '<!doctype html>\n' + document.documentElement.outerHTML
-      const blob = new Blob([html], { type: 'text/html' })
-      const anchor = document.createElement('a')
-      const name = (document.title || 'index').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html'
-      anchor.href = URL.createObjectURL(blob)
-      anchor.download = name
-      document.body.appendChild(anchor)
-      anchor.click()
-      window.setTimeout(() => {
-        URL.revokeObjectURL(anchor.href)
-        anchor.remove()
-      }, 1200)
-    })
-
-    const tipoGrid = document.getElementById('tipoGrid') as HTMLDivElement | null
-    tipoGrid?.addEventListener('click', (event) => {
-      const card = (event.target as HTMLElement).closest<HTMLButtonElement>('.card')
-      if (!card) return
-      const tipo = card.getAttribute('data-tipo')
-      if (tipo) {
-        sessionStorage.setItem('rb_tipo', tipo)
-        document.getElementById('sectionTecnica')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (saveBtn) {
+      const handleSaveClick = () => {
+        const html = '<!doctype html>\n' + document.documentElement.outerHTML
+        const blob = new Blob([html], { type: 'text/html' })
+        const anchor = document.createElement('a')
+        const name = (document.title || 'index').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html'
+        anchor.href = URL.createObjectURL(blob)
+        anchor.download = name
+        document.body.appendChild(anchor)
+        anchor.click()
+        window.setTimeout(() => {
+          URL.revokeObjectURL(anchor.href)
+          anchor.remove()
+        }, 1200)
       }
-    })
-
-    const techGrid = document.getElementById('techGrid') as HTMLDivElement | null
-    const techPrev = document.getElementById('techPrev') as HTMLButtonElement | null
-    const techNext = document.getElementById('techNext') as HTMLButtonElement | null
-    const techDots = document.getElementById('techDots') as HTMLDivElement | null
-
-    function renderTechPage() {
-      if (!techGrid || !techDots) return
-      techGrid.innerHTML = ''
-      const start = techniquePage * TECHNIQUES_PER_PAGE
-      const items = updatedTechniques.slice(start, start + TECHNIQUES_PER_PAGE)
-      items.forEach((tech) => {
-        const button = document.createElement('button')
-        button.type = 'button'
-        button.className = 'card'
-        button.setAttribute('data-tech', tech.key)
-        button.innerHTML = `<div class="card-inner"><svg viewBox="0 0 24 24">${tech.icon}</svg><span>${tech.label}</span></div>`
-        techGrid.appendChild(button)
-      })
-      for (let index = items.length; index < TECHNIQUES_PER_PAGE; index += 1) {
-        const filler = document.createElement('div')
-        filler.className = 'card'
-        filler.style.visibility = 'hidden'
-        techGrid.appendChild(filler)
-      }
-      if (techPrev) techPrev.disabled = techniquePage === 0
-      if (techNext) techNext.disabled = techniquePage === Math.ceil(updatedTechniques.length / TECHNIQUES_PER_PAGE) - 1
-      techDots.innerHTML = ''
-      const pages = Math.ceil(updatedTechniques.length / TECHNIQUES_PER_PAGE)
-      for (let index = 0; index < pages; index += 1) {
-        const dot = document.createElement('div')
-        dot.className = `tech-dot${index === techniquePage ? ' active' : ''}`
-        dot.addEventListener('click', () => {
-          techniquePage = index
-          renderTechPage()
-        })
-        techDots.appendChild(dot)
-      }
+      saveBtn.addEventListener('click', handleSaveClick)
+      cleanupFns.push(() => saveBtn.removeEventListener('click', handleSaveClick))
     }
-
-    techPrev?.addEventListener('click', () => {
-      if (techniquePage > 0) {
-        techniquePage -= 1
-        renderTechPage()
-      }
-    })
-
-    techNext?.addEventListener('click', () => {
-      const pages = Math.ceil(updatedTechniques.length / TECHNIQUES_PER_PAGE)
-      if (techniquePage < pages - 1) {
-        techniquePage += 1
-        renderTechPage()
-      }
-    })
-
-    techGrid?.addEventListener('click', (event) => {
-      const card = (event.target as HTMLElement).closest<HTMLButtonElement>('.card')
-      if (!card || card.style.visibility === 'hidden') return
-      const tech = card.getAttribute('data-tech')
-      if (tech) {
-        sessionStorage.setItem('rb_tecnica', tech)
-        document.getElementById('sectionDia')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    })
-
-    renderTechPage()
 
     function lockGlassHeight() {
       window.requestAnimationFrame(() => {
@@ -907,7 +1199,890 @@ export default function ProcedimentoPage() {
         delete window.syncLavaPaletteFromVars
       }
     }
+  }, [isAdmin])
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setShouldReduceMotion(true)
+      setIsTypeCardVisible(true)
+      return
+    }
+
+    if (typeof window === 'undefined') {
+      setIsTypeCardVisible(true)
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsTypeCardVisible(true)
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
   }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const loadSessionAndProfile = async () => {
+      const { data, error } = await supabase.auth.getSession()
+      if (!active) return
+
+      if (error) {
+        console.error('Erro ao obter sessão', error)
+        setUserId(null)
+        setIsAdmin(false)
+        return
+      }
+
+      const session = data.session
+      if (!session) {
+        window.location.href = '/login'
+        return
+      }
+
+      setUserId(session.user.id)
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      if (!active) return
+
+      if (profileError) {
+        console.error('Erro ao carregar perfil', profileError)
+        setIsAdmin(false)
+        return
+      }
+
+      const role = profile?.role
+      const isAdminRole = role === 'admin' || role === 'adminsuper' || role === 'adminmaster'
+      setIsAdmin(isAdminRole)
+    }
+
+    void loadSessionAndProfile()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const loadCatalog = async () => {
+      setCatalogStatus('loading')
+      setCatalogError(null)
+
+      try {
+        const { data, error } = await supabase
+          .from('service_types')
+          .select(
+            `id, name, slug, description, active, order_index, assignments:service_type_assignments(services:services(id, name, slug, duration_min, price_cents, deposit_cents, buffer_min, active))`,
+          )
+          .eq('active', true)
+          .order('order_index', { ascending: true, nullsFirst: true })
+          .order('name', { ascending: true })
+
+        if (error) throw error
+        if (!active) return
+
+        const normalized = (data ?? []).map((entry) => {
+          const assignments = Array.isArray(entry.assignments)
+            ? entry.assignments
+            : entry.assignments
+            ? [entry.assignments]
+            : []
+
+          const seenServices = new Set<string>()
+          const servicesRaw = assignments.flatMap((assignment: ServiceTypeAssignment) => {
+            const related = assignment?.services
+            const relatedArray = Array.isArray(related)
+              ? related
+              : related
+              ? [related]
+              : []
+
+            return relatedArray.filter((svc): svc is ServiceTechnique => {
+              if (!svc || typeof svc.id !== 'string') return false
+              if (seenServices.has(svc.id)) return false
+              seenServices.add(svc.id)
+              return true
+            })
+          })
+
+          const services = servicesRaw
+            .filter((svc) => svc && svc.active !== false)
+            .map((svc) => {
+              const duration = normalizeNumber(svc?.duration_min) ?? 0
+              const price = normalizeNumber(svc?.price_cents) ?? 0
+              const deposit = normalizeNumber(svc?.deposit_cents) ?? 0
+              const buffer = normalizeNumber(svc?.buffer_min)
+
+              return {
+                id: svc.id,
+                name: svc.name ?? 'Serviço',
+                slug: svc.slug ?? null,
+                duration_min: Math.max(0, Math.round(duration)),
+                price_cents: Math.max(0, Math.round(price)),
+                deposit_cents: Math.max(0, Math.round(deposit)),
+                buffer_min: buffer !== null ? Math.max(0, Math.round(buffer)) : null,
+                active: svc.active !== false,
+              }
+            })
+            .filter((svc) => svc.duration_min > 0)
+            .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+
+          const orderIndex = normalizeNumber(entry.order_index)
+
+          return {
+            id: entry.id,
+            name: entry.name ?? 'Serviço',
+            slug: entry.slug ?? null,
+            description: entry.description ?? null,
+            order_index: orderIndex !== null ? Math.round(orderIndex) : 0,
+            active: entry.active !== false,
+            services,
+          } satisfies TechniqueCatalogEntry
+        })
+
+        normalized.sort(
+          (a, b) =>
+            a.order_index - b.order_index || a.name.localeCompare(b.name, 'pt-BR'),
+        )
+
+        setTechniqueCatalog(normalized)
+        setCatalogStatus('ready')
+      } catch (error) {
+        console.error('Erro ao carregar serviços', error)
+        if (!active) return
+        setTechniqueCatalog([])
+        setCatalogStatus('error')
+        setCatalogError('Não foi possível carregar os serviços disponíveis. Tente novamente mais tarde.')
+      }
+    }
+
+    void loadCatalog()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!userId) return
+
+    let isMounted = true
+
+    async function loadAvailability() {
+      setIsLoadingAvailability(true)
+      setAvailabilityError(null)
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+
+        const session = sessionData.session
+        if (!session?.user?.id) {
+          window.location.href = '/login'
+          return
+        }
+
+        if (!isMounted) return
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const limit = new Date(today)
+        limit.setDate(limit.getDate() + 60)
+
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('id, scheduled_at, starts_at, ends_at, status, customer_id, services(buffer_min)')
+          .gte('starts_at', today.toISOString())
+          .lte('starts_at', limit.toISOString())
+          .in('status', ['pending', 'reserved', 'confirmed'])
+          .order('starts_at', { ascending: true })
+
+        if (error) throw error
+        if (!isMounted) return
+
+        setAppointments(data ?? [])
+      } catch (err) {
+        console.error('Erro ao carregar disponibilidade', err)
+        if (isMounted) {
+          setAvailabilityError('Não foi possível carregar a disponibilidade. Tente novamente mais tarde.')
+          setAppointments([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingAvailability(false)
+        }
+      }
+    }
+
+    void loadAvailability()
+
+    return () => {
+      isMounted = false
+    }
+  }, [userId])
+
+  const techniqueMap = useMemo(() => {
+    const map = new Map<string, TechniqueCatalogEntry>()
+    techniqueCatalog.forEach((technique) => {
+      map.set(technique.id, technique)
+    })
+    return map
+  }, [techniqueCatalog])
+
+  const serviceOptions = useMemo<ServiceOption[]>(() => {
+    const grouped = new Map<
+      string,
+      { service: ServiceTechnique; techniques: Map<string, TechniqueSummary> }
+    >()
+
+    techniqueCatalog.forEach((technique) => {
+      const techniqueSummary: TechniqueSummary = {
+        id: technique.id,
+        name: technique.name,
+        slug: technique.slug,
+        description: technique.description,
+        order_index: technique.order_index,
+      }
+
+      technique.services.forEach((service) => {
+        const existing = grouped.get(service.id)
+        if (!existing) {
+          grouped.set(service.id, {
+            service,
+            techniques: new Map([[techniqueSummary.id, techniqueSummary]]),
+          })
+          return
+        }
+
+        if (!existing.techniques.has(techniqueSummary.id)) {
+          existing.techniques.set(techniqueSummary.id, techniqueSummary)
+        }
+      })
+    })
+
+    return Array.from(grouped.values())
+      .map(({ service, techniques }) => ({
+        ...service,
+        techniques: Array.from(techniques.values()).sort((a, b) => {
+          const orderDiff = a.order_index - b.order_index
+          if (orderDiff !== 0) return orderDiff
+          return a.name.localeCompare(b.name, 'pt-BR')
+        }),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  }, [techniqueCatalog])
+
+  const availableServices = useMemo(
+    () => serviceOptions.filter((service) => service.techniques.length > 0),
+    [serviceOptions],
+  )
+
+  useEffect(() => {
+    if (catalogStatus !== 'ready') return
+
+    if (availableServices.length === 0) {
+      setSelectedServiceId(null)
+      return
+    }
+
+    if (selectedServiceId && !availableServices.some((service) => service.id === selectedServiceId)) {
+      setSelectedServiceId(null)
+    }
+  }, [availableServices, catalogStatus, selectedServiceId])
+
+  const selectedService = useMemo(
+    () => availableServices.find((service) => service.id === selectedServiceId) ?? null,
+    [availableServices, selectedServiceId],
+  )
+
+  const visibleTechniques = useMemo(() => {
+    if (!selectedService) return []
+    if (showAllTechniques) return selectedService.techniques
+    return selectedService.techniques.slice(0, 6)
+  }, [selectedService, showAllTechniques])
+
+  useEffect(() => {
+    setShowAllTechniques(false)
+  }, [selectedServiceId])
+
+  useEffect(() => {
+    if (!selectedService) {
+      if (selectedTechniqueId !== null) {
+        setSelectedTechniqueId(null)
+      }
+      return
+    }
+
+    const activeTechniques = selectedService.techniques
+    if (activeTechniques.length === 0) {
+      if (selectedTechniqueId !== null) {
+        setSelectedTechniqueId(null)
+      }
+      return
+    }
+
+    if (selectedTechniqueId && !activeTechniques.some((tech) => tech.id === selectedTechniqueId)) {
+      setSelectedTechniqueId(null)
+    }
+  }, [selectedService, selectedTechniqueId])
+
+  const selectedTechnique = useMemo(() => {
+    if (!selectedTechniqueId) return null
+
+    const withinService = selectedService?.techniques.find((tech) => tech.id === selectedTechniqueId)
+    if (withinService) return withinService
+
+    const fallback = techniqueMap.get(selectedTechniqueId)
+    if (!fallback) return null
+
+    return {
+      id: fallback.id,
+      name: fallback.name,
+      slug: fallback.slug,
+      description: fallback.description,
+      order_index: fallback.order_index,
+    }
+  }, [selectedService, selectedTechniqueId, techniqueMap])
+
+  useEffect(() => {
+    setSelectedSlot(null)
+  }, [selectedTechniqueId])
+
+  const availability = useMemo(
+    () =>
+      buildAvailabilityData(appointments, userId, {
+        fallbackBufferMinutes: FALLBACK_BUFFER_MINUTES,
+      }),
+    [appointments, userId],
+  )
+
+  const monthTitle = useMemo(() => {
+    const localeTitle = new Date(year, month, 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+      year: 'numeric',
+    })
+    return localeTitle.charAt(0).toUpperCase() + localeTitle.slice(1)
+  }, [month, year])
+
+  const serviceBufferMinutes = useMemo(() => {
+    const normalized = normalizeNumber(selectedService?.buffer_min)
+    const fallback = FALLBACK_BUFFER_MINUTES
+    if (normalized === null) return Math.max(0, fallback)
+    return Math.max(0, Math.round(normalized))
+  }, [selectedService])
+
+  const canInteract =
+    catalogStatus === 'ready' &&
+    !!selectedService &&
+    !!selectedTechnique &&
+    !isLoadingAvailability &&
+    !availabilityError
+
+  const calendarHeaderDays = useMemo(() => {
+    const firstDay = new Date(year, month, 1)
+    const startWeekday = firstDay.getDay()
+    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+
+    return Array.from({ length: 7 }, (_, index) => labels[(startWeekday + index) % 7])
+  }, [month, year])
+
+  const calendarDays = useMemo(() => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const dayEntries: Array<{
+      iso: string
+      day: string
+      isDisabled: boolean
+      state: string
+      isOutsideCurrentMonth: boolean
+    }> = []
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const date = new Date(year, month, day)
+      const iso = formatDateToIsoDay(date)
+
+      let status: 'available' | 'booked' | 'full' | 'mine' | 'disabled' = 'disabled'
+      if (availability.myDays.has(iso)) status = 'mine'
+      else if (availability.bookedDays.has(iso)) status = 'full'
+      else if (availability.partiallyBookedDays.has(iso)) status = 'booked'
+      else if (availability.availableDays.has(iso)) status = 'available'
+
+      const isPast = date < today
+      const isDisabled =
+        !canInteract ||
+        isPast ||
+        status === 'full' ||
+        status === 'disabled'
+
+      dayEntries.push({
+        iso,
+        day: String(day),
+        isDisabled,
+        state: status,
+        isOutsideCurrentMonth: false,
+      })
+    }
+
+    const trailingSpacers = (7 - (dayEntries.length % 7)) % 7
+    for (let day = 1; day <= trailingSpacers; day += 1) {
+      dayEntries.push({
+        iso: `trailing-${year}-${month}-${day}`,
+        day: '',
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
+
+    return { dayEntries }
+  }, [
+    availability.availableDays,
+    availability.bookedDays,
+    availability.partiallyBookedDays,
+    availability.myDays,
+    canInteract,
+    month,
+    year,
+  ])
+
+  const busyIntervalsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return []
+
+    const raw = availability.busyIntervals[selectedDate] ?? []
+
+    return raw
+      .map(({ start, end }) => {
+        const busyStart = new Date(start)
+        const busyEnd = new Date(end)
+        if (Number.isNaN(busyStart.getTime()) || Number.isNaN(busyEnd.getTime())) {
+          return null
+        }
+        return { start: busyStart, end: busyEnd }
+      })
+      .filter((interval): interval is { start: Date; end: Date } => interval !== null)
+  }, [availability.busyIntervals, selectedDate])
+
+  const bookedSlots = useMemo(() => {
+    if (!selectedDate) return new Set<string>()
+    return new Set(availability.bookedSlots[selectedDate] ?? [])
+  }, [availability.bookedSlots, selectedDate])
+
+  const slots = useMemo(() => {
+    if (!selectedDate || !canInteract || !selectedService) return []
+
+    const durationMinutes = selectedService.duration_min
+    if (!durationMinutes) return []
+
+    const template = availability.daySlots[selectedDate] ?? DEFAULT_SLOT_TEMPLATE
+
+    const closing = combineDateAndTime(selectedDate, WORK_DAY_END)
+    if (!closing) return []
+
+    const todayIso = formatDateToIsoDay(now)
+
+    return template.filter((slotValue) => {
+      const slotStart = combineDateAndTime(selectedDate, slotValue)
+      if (!slotStart) return false
+
+      if (selectedDate === todayIso && slotStart <= now) {
+        return false
+      }
+
+      const slotEnd = new Date(slotStart.getTime() + (durationMinutes + serviceBufferMinutes) * 60000)
+      if (slotEnd > closing) {
+        return false
+      }
+
+      const overlaps = busyIntervalsForSelectedDate.some(({ start, end }) => slotEnd > start && slotStart < end)
+
+      return !overlaps
+    })
+  }, [
+    availability.daySlots,
+    busyIntervalsForSelectedDate,
+    canInteract,
+    now,
+    selectedDate,
+    selectedService,
+    serviceBufferMinutes,
+  ])
+
+  useEffect(() => {
+    if (!selectedSlot) return
+    if (!slots.includes(selectedSlot)) {
+      setSelectedSlot(null)
+    }
+  }, [selectedSlot, slots])
+
+  const goToPreviousMonth = useCallback(() => {
+    const previous = new Date(year, month - 1, 1)
+    setYear(previous.getFullYear())
+    setMonth(previous.getMonth())
+  }, [month, year])
+
+  const goToNextMonth = useCallback(() => {
+    const next = new Date(year, month + 1, 1)
+    setYear(next.getFullYear())
+    setMonth(next.getMonth())
+  }, [month, year])
+
+  const handleServiceSelect = useCallback(
+    (serviceId: string) => {
+      if (serviceId === selectedServiceId) return
+      setSelectedServiceId(serviceId)
+      setSelectedTechniqueId(null)
+      setSelectedDate(null)
+      setSelectedSlot(null)
+      setPendingScrollTarget('technique')
+    },
+    [selectedServiceId],
+  )
+
+  const handleTechniqueSelect = useCallback((techniqueId: string) => {
+    if (techniqueId === selectedTechniqueId) return
+    setSelectedTechniqueId(techniqueId)
+    setSelectedDate(null)
+    setSelectedSlot(null)
+    setPendingScrollTarget('date')
+  }, [selectedTechniqueId])
+
+  const handleDaySelect = useCallback(
+    (dayIso: string, disabled: boolean) => {
+      if (disabled || !canInteract) return
+      setSelectedDate(dayIso)
+      setSelectedSlot(null)
+      setPendingScrollTarget('time')
+    },
+    [canInteract],
+  )
+
+  const handleSlotSelect = useCallback(
+    (slotValue: string, disabled: boolean) => {
+      if (disabled) return
+      setSelectedSlot(slotValue)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!pendingScrollTarget) return
+
+    const behavior = shouldReduceMotion ? 'auto' : 'smooth'
+    let element: HTMLElement | null = null
+
+    if (pendingScrollTarget === 'technique') {
+      element = techniqueSectionRef.current
+    } else if (pendingScrollTarget === 'date') {
+      element = dateSectionRef.current
+    } else if (pendingScrollTarget === 'time') {
+      element = timeSectionRef.current
+    }
+
+    if (element) {
+      element.scrollIntoView({ behavior, block: 'start' })
+    }
+
+    setPendingScrollTarget(null)
+  }, [pendingScrollTarget, shouldReduceMotion])
+
+  const summaryData = useMemo(() => {
+    if (!selectedService || !selectedTechnique || !selectedDate || !selectedSlot) return null
+
+    const priceValue = Number.isFinite(selectedService.price_cents)
+      ? selectedService.price_cents / 100
+      : 0
+    const priceLabel = priceValue > 0
+      ? priceValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : 'R$ 0,00'
+
+    const depositCents = Number.isFinite(selectedService.deposit_cents)
+      ? Math.max(0, selectedService.deposit_cents)
+      : 0
+    const depositLabel = depositCents > 0
+      ? (depositCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : 'Sem sinal'
+
+    const dateLabel = new Date(selectedDate).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+
+    return {
+      typeId: selectedService.id,
+      typeName: selectedService.name,
+      techniqueId: selectedTechnique.id,
+      techniqueName: selectedTechnique.name,
+      priceLabel,
+      priceCents: Number.isFinite(selectedService.price_cents)
+        ? selectedService.price_cents
+        : 0,
+      depositLabel,
+      depositCents,
+      durationLabel: formatDuration(selectedService.duration_min),
+      dateLabel,
+      timeLabel: selectedSlot,
+      payload: {
+        typeId: selectedService.id,
+        serviceId: selectedService.id,
+        date: selectedDate,
+        slot: selectedSlot,
+      },
+    } satisfies SummarySnapshot
+  }, [selectedDate, selectedService, selectedSlot, selectedTechnique])
+
+  useEffect(() => {
+    setAppointmentId(null)
+    setSummarySnapshot(null)
+    setModalError(null)
+    setIsSummaryModalOpen(false)
+    setIsProcessingPayment(false)
+    setActionMessage(null)
+    setIsPayLaterNoticeOpen(false)
+  }, [selectedServiceId, selectedTechniqueId, selectedDate, selectedSlot])
+
+  const ensureSession = useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) {
+      throw new Error('Não foi possível validar sua sessão. Faça login novamente.')
+    }
+
+    const session = data.session
+    if (!session) {
+      window.location.href = '/login'
+      throw new Error('Faça login para continuar.')
+    }
+
+    return session
+  }, [])
+
+  const closeSummaryModal = useCallback(() => {
+    setIsSummaryModalOpen(false)
+    setModalError(null)
+  }, [])
+
+  const isCurrentSelectionBooked = useMemo(() => {
+    if (!summaryData || !summarySnapshot || !appointmentId) return false
+
+    return (
+      summarySnapshot.payload.serviceId === summaryData.payload.serviceId &&
+      summarySnapshot.payload.typeId === summaryData.payload.typeId &&
+      summarySnapshot.payload.date === summaryData.payload.date &&
+      summarySnapshot.payload.slot === summaryData.payload.slot
+    )
+  }, [appointmentId, summaryData, summarySnapshot])
+
+  const handleContinue = useCallback(async () => {
+    if (!summaryData) return
+
+    setModalError(null)
+
+    if (isCurrentSelectionBooked) {
+      setIsSummaryModalOpen(true)
+      return
+    }
+
+    if (isCreatingAppointment) return
+
+    const currentSummary = summaryData
+    setIsCreatingAppointment(true)
+    setActionMessage(null)
+
+    try {
+      const scheduledDate = combineDateAndTime(
+        currentSummary.payload.date,
+        currentSummary.payload.slot,
+      )
+      if (!scheduledDate) {
+        throw new Error('Horário selecionado inválido. Escolha outro horário.')
+      }
+
+      const session = await ensureSession()
+
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          service_id: currentSummary.payload.serviceId,
+          service_type_id: currentSummary.payload.typeId,
+          scheduled_at: scheduledDate.toISOString(),
+        }),
+      })
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        const message =
+          typeof payload?.error === 'string'
+            ? payload.error
+            : typeof payload?.message === 'string'
+            ? payload.message
+            : 'Não foi possível criar o agendamento. Tente novamente.'
+        throw new Error(message)
+      }
+
+      const responseData = await res.json().catch(() => null)
+      const newAppointmentId =
+        typeof responseData?.appointment_id === 'string'
+          ? responseData.appointment_id
+          : null
+
+      if (!newAppointmentId) {
+        throw new Error('Resposta inválida ao criar o agendamento. Tente novamente.')
+      }
+
+      setAppointmentId(newAppointmentId)
+      setSummarySnapshot({
+        ...currentSummary,
+        payload: { ...currentSummary.payload },
+      })
+      setActionMessage({
+        kind: 'success',
+        text: `Agendamento criado para ${currentSummary.dateLabel} às ${currentSummary.timeLabel}. ID ${newAppointmentId}.`,
+      })
+      setIsSummaryModalOpen(true)
+    } catch (error) {
+      console.error('Erro ao criar agendamento', error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível criar o agendamento. Tente novamente.'
+      setActionMessage({ kind: 'error', text: message })
+    } finally {
+      setIsCreatingAppointment(false)
+    }
+  }, [ensureSession, isCreatingAppointment, isCurrentSelectionBooked, summaryData])
+
+  const handlePayDeposit = useCallback(async () => {
+    if (!summarySnapshot || summarySnapshot.depositCents <= 0) {
+      setModalError('Este agendamento não possui sinal disponível para pagamento.')
+      return
+    }
+
+    if (!appointmentId) {
+      setModalError('Crie um agendamento antes de iniciar o pagamento.')
+      return
+    }
+
+    if (!stripePromise) {
+      setModalError('Checkout indisponível. Verifique a configuração do Stripe.')
+      return
+    }
+
+    setModalError(null)
+    setIsProcessingPayment(true)
+
+    try {
+      const session = await ensureSession()
+
+      const res = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ appointment_id: appointmentId, mode: 'deposit' }),
+      })
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        const message =
+          typeof payload?.error === 'string'
+            ? payload.error
+            : 'Não foi possível iniciar o checkout.'
+        setModalError(message)
+        return
+      }
+
+      const payload = await res.json().catch(() => null)
+      const clientSecret =
+        typeof payload?.client_secret === 'string' ? payload.client_secret : null
+
+      if (!clientSecret) {
+        setModalError('Resposta inválida do servidor ao iniciar o checkout.')
+        return
+      }
+
+      setIsSummaryModalOpen(false)
+      closeSummaryModal()
+      router.push(
+        `/checkout?client_secret=${encodeURIComponent(clientSecret)}&appointment_id=${encodeURIComponent(appointmentId)}`,
+      )
+    } catch (error) {
+      console.error('Erro ao iniciar o checkout', error)
+      setModalError('Erro inesperado ao iniciar o checkout.')
+    } finally {
+      setIsProcessingPayment(false)
+    }
+  }, [appointmentId, closeSummaryModal, ensureSession, router, summarySnapshot])
+
+  const handlePayLater = useCallback(() => {
+    closeSummaryModal()
+    setIsPayLaterNoticeOpen(true)
+  }, [closeSummaryModal])
+
+  const handleConfirmPayLaterNotice = useCallback(() => {
+    setIsPayLaterNoticeOpen(false)
+    router.push('/dashboard/agendamentos')
+  }, [router])
+
+  useEffect(() => {
+    if (!isSummaryModalOpen) return
+    if (typeof window === 'undefined') return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeSummaryModal()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [closeSummaryModal, isSummaryModalOpen])
+
+  useEffect(() => {
+    if (!isPayLaterNoticeOpen) return
+    if (typeof window === 'undefined') return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setIsPayLaterNoticeOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isPayLaterNoticeOpen])
+
+  const hasSummary = !!summaryData
+  const continueButtonLabel = isCreatingAppointment
+    ? 'Criando agendamento…'
+    : isCurrentSelectionBooked
+    ? 'Ver resumo'
+    : 'Continuar'
+  const continueButtonDisabled = !summaryData || isCreatingAppointment
+  const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
+
 
   return (
     <>
@@ -930,7 +2105,12 @@ export default function ProcedimentoPage() {
           <canvas id="lavaLight" className="lava light" />
         </div>
         <div className="page">
-          <section className="center" id="sectionTipo" aria-label="Escolha do tipo">
+          <section
+            ref={typeSectionRef}
+            className="center"
+            id="sectionTipo"
+            aria-label="Escolha do tipo"
+          >
             <div className="stack">
               <header>
                 <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -943,52 +2123,41 @@ export default function ProcedimentoPage() {
               </header>
               <div className="glass" aria-label="Tipos de procedimento">
                 <div className="label">TIPO</div>
-                <div className="grid" id="tipoGrid">
-                  <button type="button" className="card" data-tipo="aplicacao">
-                    <div className="card-inner">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M4 12c2.5-3 13.5-3 16 0" />
-                        <path d="M7 13.5l-1 2" />
-                        <path d="M10 14l-.6 2" />
-                        <path d="M13.5 14l.6 2" />
-                        <path d="M17 13.5l1 2" />
-                      </svg>
-                      <span>Aplicação</span>
-                    </div>
-                  </button>
-                  <button type="button" className="card" data-tipo="manutencao">
-                    <div className="card-inner">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M21 7l-3 3-3-3 3-3 3 3Z" />
-                        <path d="M13 15l-6 6" />
-                        <circle cx="6" cy="18" r="2" />
-                      </svg>
-                      <span>Manutenção</span>
-                    </div>
-                  </button>
-                  <button type="button" className="card" data-tipo="reaplicacao">
-                    <div className="card-inner">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M20 11a8 8 0 1 1-2.3-5.7" />
-                        <path d="M20 4v7" />
-                      </svg>
-                      <span>Reaplicação</span>
-                    </div>
-                  </button>
-                  <button type="button" className="card" data-tipo="remocao">
-                    <div className="card-inner">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M12 3s6 6.7 6 10.2A6 6 0 1 1 6 13.2C6 9.7 12 3 12 3Z" />
-                      </svg>
-                      <span>Remoção</span>
-                    </div>
-                  </button>
-                </div>
+                {catalogError && <div className="status status-error">{catalogError}</div>}
+                {catalogStatus === 'loading' && !catalogError && (
+                  <div className="status status-info">Carregando tipos…</div>
+                )}
+                {catalogStatus === 'ready' && availableServices.length === 0 && (
+                  <div className="status status-info">Nenhum tipo disponível no momento.</div>
+                )}
+                {catalogStatus === 'ready' && availableServices.length > 0 ? (
+                  <div className="grid tipo-grid">
+                    {availableServices.map((service) => (
+                      <button
+                        key={service.id}
+                        type="button"
+                        className="card"
+                        data-active={selectedServiceId === service.id ? 'true' : 'false'}
+                        onClick={() => handleServiceSelect(service.id)}
+                      >
+                        <div className="card-inner">
+                          <LashIcon />
+                          <span>{service.name}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <footer>ROMEIKE BEAUTY</footer>
             </div>
           </section>
-          <section className="center" id="sectionTecnica" aria-label="Escolha da técnica">
+          <section
+            ref={techniqueSectionRef}
+            className="center"
+            id="sectionTecnica"
+            aria-label="Escolha da técnica"
+          >
             <div className="stack">
               <header>
                 <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -1001,24 +2170,46 @@ export default function ProcedimentoPage() {
               </header>
               <div className="glass" aria-label="Técnicas de cílios">
                 <div className="label">TÉCNICA</div>
-                <div className="grid" id="techGrid" />
+                {catalogStatus === 'ready' && selectedService ? (
+                  <>
+                    {selectedService.techniques.length > 0 ? (
+                      <div className="grid tecnica-grid">
+                        {visibleTechniques.map((technique) => (
+                          <button
+                            key={technique.id}
+                            type="button"
+                            className="card"
+                            data-active={selectedTechniqueId === technique.id ? 'true' : 'false'}
+                            onClick={() => handleTechniqueSelect(technique.id)}
+                          >
+                            <div className="card-inner">
+                              <LashIcon />
+                              <span>{technique.name}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="status status-info">Nenhuma técnica disponível para este tipo.</div>
+                    )}
+                    {!showAllTechniques && selectedService.techniques.length > visibleTechniques.length && (
+                      <button type="button" className="view-more" onClick={() => setShowAllTechniques(true)}>
+                        Ver mais técnicas
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="status status-info">Selecione um tipo para ver as técnicas disponíveis.</div>
+                )}
               </div>
-              <nav className="tech-nav-bar" aria-label="Navegação de páginas">
-                <button className="tech-arrow" id="techPrev" aria-label="Anterior" disabled>
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                </button>
-                <div className="tech-dots" id="techDots" aria-hidden="true" />
-                <button className="tech-arrow" id="techNext" aria-label="Próxima">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
-                </button>
-              </nav>
             </div>
           </section>
-          <section className="center" id="sectionDia" aria-label="Escolha do dia">
+          <section
+            ref={dateSectionRef}
+            className="center"
+            id="sectionDia"
+            aria-label="Escolha do dia"
+          >
             <div className="stack">
               <header>
                 <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -1031,14 +2222,74 @@ export default function ProcedimentoPage() {
               </header>
               <div className="glass" aria-label="Escolha do dia">
                 <div className="label">DIA</div>
-                <div className="placeholder" id="calendarPlaceholder">
-                  calendário aqui
+                {availabilityError && <div className="status status-error">{availabilityError}</div>}
+                {!availabilityError && isLoadingAvailability && (
+                  <div className="status status-info">Carregando disponibilidade…</div>
+                )}
+                <div className="calendar-head">
+                  <button
+                    type="button"
+                    className="calendar-nav"
+                    onClick={goToPreviousMonth}
+                    disabled={!selectedTechnique}
+                    aria-label="Mês anterior"
+                  >
+                    ‹
+                  </button>
+                  <div className="calendar-title" id="cal-title">
+                    {monthTitle}
+                  </div>
+                  <button
+                    type="button"
+                    className="calendar-nav"
+                    onClick={goToNextMonth}
+                    disabled={!selectedTechnique}
+                    aria-label="Próximo mês"
+                  >
+                    ›
+                  </button>
+                </div>
+                <div className="calendar-grid" aria-hidden="true">
+                  {calendarHeaderDays.map((label, index) => (
+                    <div key={`dow-${index}`} className="calendar-day calendar-day-header">
+                      {label}
+                    </div>
+                  ))}
+                </div>
+                <div className="calendar-grid" role="grid">
+                  {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
+                    <button
+                      key={iso}
+                      type="button"
+                      className="calendar-day"
+                      data-state={state}
+                      data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+                      data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
+                      aria-disabled={isDisabled}
+                      disabled={isDisabled}
+                      onClick={() => handleDaySelect(iso, isDisabled)}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+                <div className="calendar-legend">
+                  <span><span className="dot dot-available" /> Disponível</span>
+                  <span><span className="dot dot-partial" /> Parcial</span>
+                  <span><span className="dot dot-full" /> Lotado</span>
+                  <span><span className="dot dot-mine" /> Meus</span>
+                  <span><span className="dot dot-disabled" /> Indisponível</span>
                 </div>
               </div>
               <footer>ROMEIKE BEAUTY</footer>
             </div>
           </section>
-          <section className="center" id="sectionHorario" aria-label="Escolha do horário">
+          <section
+            ref={timeSectionRef}
+            className="center"
+            id="sectionHorario"
+            aria-label="Escolha do horário"
+          >
             <div className="stack">
               <header>
                 <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -1051,24 +2302,171 @@ export default function ProcedimentoPage() {
               </header>
               <div className="glass" aria-label="Escolha do horário">
                 <div className="label">HORÁRIO</div>
-                <div className="placeholder" id="timePlaceholder">
-                  horários disponiveis
+                <div ref={slotsContainerRef} className="slots">
+                  {!selectedDate ? (
+                    <div className="status status-info">Escolha um dia para ver os horários disponíveis.</div>
+                  ) : slots.length > 0 ? (
+                    slots.map((slotValue) => {
+                      const disabled = bookedSlots.has(slotValue)
+                      return (
+                        <button
+                          key={slotValue}
+                          type="button"
+                          className="slot"
+                          data-selected={selectedSlot === slotValue ? 'true' : 'false'}
+                          data-busy={disabled ? 'true' : 'false'}
+                          onClick={() => handleSlotSelect(slotValue, disabled)}
+                          disabled={disabled}
+                        >
+                          {slotValue}
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div className="status status-info">Sem horários para este dia.</div>
+                  )}
                 </div>
+                {actionMessage ? (
+                  <div className={`status ${actionMessage.kind === 'success' ? 'status-success' : 'status-error'}`}>
+                    {actionMessage.text}
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  className="continue-button"
+                  onClick={handleContinue}
+                  disabled={continueButtonDisabled}
+                >
+                  {continueButtonLabel}
+                </button>
               </div>
               <footer>ROMEIKE BEAUTY</footer>
             </div>
           </section>
         </div>
-        <button id="paletteBtn" title="Personalizar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
-            <path d="M7.2 7.2l1.8 1.8" />
-            <path d="M16.8 7.2l-1.8 1.8" />
-          </svg>
-        </button>
-        <div id="palettePanel">
-          <div id="panelScroll">
+        {hasSummary ? (
+          <div className="summary-bar" data-visible={hasSummary ? 'true' : 'false'} ref={summaryRef}>
+            <div className="summary-details">
+              <div className="summary-item">
+                <span className="summary-label">Tipo</span>
+                <span className="summary-value">{summaryData?.typeName}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Técnica</span>
+                <span className="summary-value">{summaryData?.techniqueName}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Valor</span>
+                <span className="summary-value">{summaryData?.priceLabel}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Duração</span>
+                <span className="summary-value">{summaryData?.durationLabel}</span>
+              </div>
+              <div className="summary-item summary-item-full">
+                <span className="summary-label">Horário</span>
+                <span className="summary-value">
+                  {summaryData?.dateLabel} às {summaryData?.timeLabel}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="summary-action"
+              onClick={handleContinue}
+              disabled={continueButtonDisabled}
+            >
+              {continueButtonLabel}
+            </button>
+          </div>
+        ) : null}
+        {summarySnapshot ? (
+          <div className="modal" data-open={isSummaryModalOpen ? 'true' : 'false'}>
+            <div className="modal-backdrop" onClick={closeSummaryModal} aria-hidden="true" />
+            <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="appointment-summary-title">
+              <h2 id="appointment-summary-title" className="modal-title">
+                Resumo do agendamento
+              </h2>
+              <div className="modal-body">
+                <div className="modal-line">
+                  <span>Tipo</span>
+                  <strong>{summarySnapshot.typeName}</strong>
+                </div>
+                <div className="modal-line">
+                  <span>Técnica</span>
+                  <strong>{summarySnapshot.techniqueName}</strong>
+                </div>
+                <div className="modal-line">
+                  <span>Horário</span>
+                  <strong>
+                    {summarySnapshot.dateLabel} às {summarySnapshot.timeLabel}
+                  </strong>
+                </div>
+                <div className="modal-line">
+                  <span>Duração</span>
+                  <strong>{summarySnapshot.durationLabel}</strong>
+                </div>
+                <div className="modal-line">
+                  <span>Valor</span>
+                  <strong>{summarySnapshot.priceLabel}</strong>
+                </div>
+                {summarySnapshot.depositCents > 0 ? (
+                  <div className="modal-line">
+                    <span>Sinal</span>
+                    <strong>{summarySnapshot.depositLabel}</strong>
+                  </div>
+                ) : null}
+              </div>
+              {modalError ? <div className="status status-error">{modalError}</div> : null}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="modal-button"
+                  onClick={handlePayDeposit}
+                  disabled={isProcessingPayment || !depositAvailable}
+                >
+                  {isProcessingPayment ? 'Processando…' : 'Pagar sinal'}
+                </button>
+                <button type="button" className="modal-button secondary" onClick={handlePayLater} disabled={isProcessingPayment}>
+                  Pagar depois
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {isPayLaterNoticeOpen ? (
+          <div className="modal" data-open="true">
+            <div className="modal-backdrop" onClick={() => setIsPayLaterNoticeOpen(false)} aria-hidden="true" />
+            <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="pay-later-title">
+              <h2 id="pay-later-title" className="modal-title">
+                Pagamento na clínica
+              </h2>
+              <div className="modal-body">
+                Seu agendamento foi criado com sucesso. Conclua o pagamento no dia do atendimento.
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="modal-button" onClick={handleConfirmPayLaterNotice}>
+                  Ver meus agendamentos
+                </button>
+                <button type="button" className="modal-button secondary" onClick={() => setIsPayLaterNoticeOpen(false)}>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {isAdmin ? (
+          <>
+            <button id="paletteBtn" title="Personalizar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
+                <path d="M7.2 7.2l1.8 1.8" />
+                <path d="M16.8 7.2l-1.8 1.8" />
+              </svg>
+            </button>
+            <div id="palettePanel">
+              <div id="panelScroll">
             <div className="pal-section">
               <h3>Cards (livre)</h3>
               <div className="row">
@@ -1320,7 +2718,8 @@ export default function ProcedimentoPage() {
           </button>
         </div>
       </div>
-    </>
+          </>
+        ) : null}
   )
 }
 

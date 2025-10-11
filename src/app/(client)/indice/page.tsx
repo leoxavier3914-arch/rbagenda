@@ -2,17 +2,17 @@ import Link from 'next/link'
 
 const quickLinks = [
   {
-    href: '/dashboard/novo-agendamento',
+    href: '/novo-agendamento',
     title: 'Agendar um atendimento',
     description: 'Escolha o melhor horário e confirme a reserva em poucos passos.',
   },
   {
-    href: '/dashboard/agendamentos',
+    href: '/agendamentos',
     title: 'Ver meus agendamentos',
     description: 'Acompanhe todos os compromissos, status e detalhes importantes.',
   },
   {
-    href: '/dashboard',
+    href: '/meu-perfil',
     title: 'Atualizar meus dados',
     description: 'Mantenha seu perfil, contatos e preferências sempre atualizados.',
   },

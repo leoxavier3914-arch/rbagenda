@@ -491,7 +491,7 @@ export default function BookingFlow(){
               <span className="muted-text">ID: {apptId}</span>
             </div>
             <Link
-              href="/dashboard/agendamentos"
+              href="/agendamentos"
               className="btn-secondary block w-full text-center"
             >
               Ver meus agendamentos

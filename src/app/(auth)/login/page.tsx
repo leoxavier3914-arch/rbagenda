@@ -31,9 +31,9 @@ export default function Login(){
             ? 'adminsuper'
             : 'client'
 
-      router.replace(role === 'admin' ? '/admin' : role === 'adminsuper' ? '/admin/adminsuper' : '/dashboard')
+      router.replace(role === 'admin' ? '/admin' : role === 'adminsuper' ? '/admin/adminsuper' : '/meu-perfil')
     } catch {
-      router.replace('/dashboard')
+      router.replace('/meu-perfil')
     }
   }, [router])
 

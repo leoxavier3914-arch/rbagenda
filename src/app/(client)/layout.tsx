@@ -11,10 +11,7 @@ export default function ClientLayout({
   children: ReactNode;
 }>) {
   const pathname = usePathname();
-  const routesWithoutShell = [
-    "/checkout",
-    "/dashboard/novo-agendamento",
-  ];
+  const routesWithoutShell = ["/checkout", "/novo-agendamento"];
 
   const shouldHideMenu = routesWithoutShell.some((route) =>
     pathname?.startsWith(route),

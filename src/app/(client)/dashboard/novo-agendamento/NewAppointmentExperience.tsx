@@ -44,6 +44,7 @@ function prefersReducedMotion() {
 const CARD_SCROLL_DURATION_MS = 900
 const CARD_REVEAL_DELAY = 650
 const MAX_LAYOUT_CHECKS = 12
+const TECHNIQUES_PER_PAGE = 4
 
 function easeInOutCubic(t: number) {
   if (t <= 0) return 0
@@ -263,6 +264,123 @@ type SummarySnapshot = {
   }
 }
 
+type IconRenderer = () => JSX.Element
+
+function sanitizeKey(value: string | null | undefined): string {
+  if (!value) return ''
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+}
+
+const TYPE_ICON_MAP: Record<string, IconRenderer> = {
+  aplicacao: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M4 12c2.5-3 13.5-3 16 0" />
+      <path d="M7 13.5l-1 2" />
+      <path d="M10 14l-.6 2" />
+      <path d="M13.5 14l.6 2" />
+      <path d="M17 13.5l1 2" />
+    </svg>
+  ),
+  manutencao: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M21 7l-3 3-3-3 3-3 3 3Z" />
+      <path d="M13 15l-6 6" />
+      <circle cx="6" cy="18" r="2" />
+    </svg>
+  ),
+  reaplicacao: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M20 11a8 8 0 1 1-2.3-5.7" />
+      <path d="M20 4v7" />
+    </svg>
+  ),
+  remocao: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M12 3s6 6.7 6 10.2A6 6 0 1 1 6 13.2C6 9.7 12 3 12 3Z" />
+    </svg>
+  ),
+}
+
+const TECHNIQUE_ICON_MAP: Record<string, IconRenderer> = {
+  classica: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M3 12c2.8-3.2 15.2-3.2 18 0" />
+    </svg>
+  ),
+  hibrida: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M4 10c3-2 13-2 16 0" />
+      <path d="M6 14c4-1 8-1 12 0" />
+    </svg>
+  ),
+  vol2d: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M5 12q7-6 14 0" />
+      <path d="M8 14q3-2 8 0" />
+    </svg>
+  ),
+  vol3d: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M4 12q8-7 16 0" />
+      <path d="M7 14q5-3 10 0" />
+      <path d="M9 16q3-1 6 0" />
+    </svg>
+  ),
+  vol5d: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M3 12q9-8 18 0" />
+      <path d="M6 14q7-4 12 0" />
+      <path d="M8 16q5-2 8 0" />
+      <path d="M10 18q3-1 4 0" />
+      <path d="M12 20q1 0 2 0" />
+    </svg>
+  ),
+  vol8d: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M3 12q9-8 18 0" />
+      <path d="M5 13.5q7-6 14 0" />
+      <path d="M7 15q6-4 10 0" />
+      <path d="M9 16.5q5-3 8 0" />
+      <path d="M11 18q3-2 4 0" />
+      <path d="M6 18.5q4-2 12 0" />
+    </svg>
+  ),
+  brasileiro: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M4 11c2-4 14-4 16 0" />
+      <path d="M7 15c4-3 6-3 10 0" />
+    </svg>
+  ),
+  foxy: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M3 12c4-5 14-5 18 0" />
+      <path d="M17 10l4-2" />
+      <path d="M3 14l4 2" />
+    </svg>
+  ),
+  anime: () => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.optionIcon}>
+      <path d="M6 11c4-3 8-3 12 0" />
+      <path d="M8 14l2-2" />
+      <path d="M14 14l2-2" />
+    </svg>
+  ),
+}
+
+function getTypeIconRenderer(service: ServiceOption): IconRenderer {
+  const key = sanitizeKey(service.slug ?? service.name)
+  return TYPE_ICON_MAP[key] ?? LashIcon
+}
+
+function getTechniqueIconRenderer(technique: TechniqueSummary): IconRenderer {
+  const key = sanitizeKey(technique.slug ?? technique.name)
+  return TECHNIQUE_ICON_MAP[key] ?? LashIcon
+}
+
 function normalizeNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
@@ -296,7 +414,7 @@ export default function NewAppointmentExperience() {
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
   const [selectedTechniqueId, setSelectedTechniqueId] = useState<string | null>(null)
-  const [showAllTechniques, setShowAllTechniques] = useState(false)
+  const [techniquePage, setTechniquePage] = useState(0)
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
@@ -592,14 +710,37 @@ export default function NewAppointmentExperience() {
     [availableServices, selectedServiceId],
   )
 
-  const visibleTechniques = useMemo(() => {
+  const techniquePages = useMemo(() => {
     if (!selectedService) return []
-    if (showAllTechniques) return selectedService.techniques
-    return selectedService.techniques.slice(0, 6)
-  }, [selectedService, showAllTechniques])
+    const pages: TechniqueSummary[][] = []
+    selectedService.techniques.forEach((technique, index) => {
+      const pageIndex = Math.floor(index / TECHNIQUES_PER_PAGE)
+      if (!pages[pageIndex]) {
+        pages[pageIndex] = []
+      }
+      pages[pageIndex]!.push(technique)
+    })
+    return pages
+  }, [selectedService])
+
+  const techniquePageCount = techniquePages.length
+  const clampedTechniquePage = useMemo(() => {
+    if (techniquePageCount === 0) return 0
+    if (techniquePage <= 0) return 0
+    if (techniquePage >= techniquePageCount) return techniquePageCount - 1
+    return techniquePage
+  }, [techniquePage, techniquePageCount])
+
+  const paginatedTechniques = techniquePages[clampedTechniquePage] ?? []
 
   useEffect(() => {
-    setShowAllTechniques(false)
+    if (techniquePage !== clampedTechniquePage) {
+      setTechniquePage(clampedTechniquePage)
+    }
+  }, [clampedTechniquePage, techniquePage])
+
+  useEffect(() => {
+    setTechniquePage(0)
   }, [selectedServiceId])
 
   useEffect(() => {
@@ -622,6 +763,16 @@ export default function NewAppointmentExperience() {
       setSelectedTechniqueId(null)
     }
   }, [selectedService, selectedTechniqueId])
+
+  useEffect(() => {
+    if (!selectedService || !selectedTechniqueId) return
+    const index = selectedService.techniques.findIndex((technique) => technique.id === selectedTechniqueId)
+    if (index < 0) return
+    const pageIndex = Math.floor(index / TECHNIQUES_PER_PAGE)
+    if (pageIndex !== techniquePage) {
+      setTechniquePage(pageIndex)
+    }
+  }, [selectedService, selectedTechniqueId, techniquePage])
 
   const selectedTechnique = useMemo(() => {
     if (!selectedTechniqueId) return null
@@ -1283,6 +1434,10 @@ export default function NewAppointmentExperience() {
   const shouldShowTechniqueCard = Boolean(selectedService)
   const shouldShowDateCard = Boolean(selectedTechnique)
   const shouldShowTimeCard = Boolean(selectedTechnique && selectedDate)
+  const typeFillerCount = availableServices.length % 2 === 0 ? 0 : 1
+  const techniqueFillerCount =
+    paginatedTechniques.length > 0 ? Math.max(0, TECHNIQUES_PER_PAGE - paginatedTechniques.length) : 0
+  const showTechniqueNav = techniquePageCount > 1
 
   return (
     <div className={styles.screen} data-has-summary={hasSummary ? 'true' : 'false'}>
@@ -1323,28 +1478,43 @@ export default function NewAppointmentExperience() {
                 {catalogStatus === 'loading' && !catalogError && (
                   <div className={`${styles.status} ${styles.statusInfo}`}>Carregando tipos…</div>
                 )}
-                {catalogStatus === 'ready' && availableServices.length === 0 && (
+                {catalogStatus === 'ready' && availableServices.length === 0 ? (
                   <div className={styles.meta}>Nenhum tipo disponível no momento.</div>
-                )}
-                {catalogStatus === 'ready' && availableServices.length > 0 && (
-                  <div className={`${styles.pills} ${styles.tipoPills}`} role="tablist" aria-label="Tipo">
-                    {availableServices.map((service) => (
-                      <button
-                        key={service.id}
-                        type="button"
-                        className={`${styles.pill} ${styles.tipoPill}`}
-                        data-active={selectedServiceId === service.id}
-                        onClick={() => handleServiceSelect(service.id)}
-                      >
-                        <span className={styles.pillIcon} aria-hidden="true">
-                          <LashIcon />
-                        </span>
-                        <span className={styles.pillLabel}>{service.name}</span>
-                      </button>
-                    ))}
+                ) : null}
+                {catalogStatus === 'ready' && availableServices.length > 0 ? (
+                  <div className={`${styles.optionGrid} ${styles.typeGrid}`} role="tablist" aria-label="Tipo">
+                    {availableServices.map((service) => {
+                      const Icon = getTypeIconRenderer(service)
+                      return (
+                        <button
+                          key={service.id}
+                          type="button"
+                          className={styles.optionCard}
+                          data-active={selectedServiceId === service.id}
+                          onClick={() => handleServiceSelect(service.id)}
+                        >
+                          <div className={styles.optionInner}>
+                            <span className={styles.optionIconWrap} aria-hidden="true">
+                              <Icon />
+                            </span>
+                            <span className={styles.optionLabel}>{service.name}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                    {typeFillerCount > 0
+                      ? Array.from({ length: typeFillerCount }).map((_, index) => (
+                          <div
+                            key={`type-filler-${index}`}
+                            className={styles.optionCardFiller}
+                            aria-hidden="true"
+                          />
+                        ))
+                      : null}
                   </div>
-                )}
+                ) : null}
               </div>
+              <div className={styles.sectionFooter}>ROMEIKE BEAUTY</div>
             </section>
           </div>
 
@@ -1381,31 +1551,78 @@ export default function NewAppointmentExperience() {
                 <div className={`${styles.label} ${styles.labelCentered}`}>Técnica</div>
                 {catalogStatus === 'ready' && selectedService && selectedService.techniques.length > 0 ? (
                   <>
-                    <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
-                      {visibleTechniques.map((technique) => (
-                        <button
-                          key={technique.id}
-                          type="button"
-                          className={`${styles.pill} ${styles.techniquePill}`}
-                          data-active={selectedTechniqueId === technique.id}
-                          onClick={() => handleTechniqueSelect(technique.id)}
-                        >
-                          <span className={styles.pillIcon} aria-hidden="true">
-                            <LashIcon />
-                          </span>
-                          <span className={styles.pillLabel}>{technique.name}</span>
-                        </button>
-                      ))}
+                    <div className={`${styles.optionGrid} ${styles.techGrid}`} role="tablist" aria-label="Técnica">
+                      {paginatedTechniques.map((technique) => {
+                        const Icon = getTechniqueIconRenderer(technique)
+                        return (
+                          <button
+                            key={technique.id}
+                            type="button"
+                            className={styles.optionCard}
+                            data-active={selectedTechniqueId === technique.id}
+                            onClick={() => handleTechniqueSelect(technique.id)}
+                          >
+                            <div className={styles.optionInner}>
+                              <span className={styles.optionIconWrap} aria-hidden="true">
+                                <Icon />
+                              </span>
+                              <span className={styles.optionLabel}>{technique.name}</span>
+                            </div>
+                          </button>
+                        )
+                      })}
+                      {techniqueFillerCount > 0
+                        ? Array.from({ length: techniqueFillerCount }).map((_, index) => (
+                            <div
+                              key={`tech-filler-${index}`}
+                              className={styles.optionCardFiller}
+                              aria-hidden="true"
+                            />
+                          ))
+                        : null}
                     </div>
-                    {!showAllTechniques && selectedService.techniques.length > 6 && (
-                      <button
-                        type="button"
-                        className={styles.viewMoreButton}
-                        onClick={() => setShowAllTechniques(true)}
-                      >
-                        Ver mais
-                      </button>
-                    )}
+                    {showTechniqueNav ? (
+                      <nav className={styles.techNav} aria-label="Páginas de técnicas">
+                        <button
+                          type="button"
+                          className={styles.techArrow}
+                          onClick={() => setTechniquePage((prev) => Math.max(prev - 1, 0))}
+                          disabled={clampedTechniquePage === 0}
+                          aria-label="Técnicas anteriores"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M15 18l-6-6 6-6" />
+                          </svg>
+                        </button>
+                        <div className={styles.techDots} aria-hidden={techniquePageCount <= 1}>
+                          {Array.from({ length: techniquePageCount }).map((_, index) => (
+                            <button
+                              key={`tech-dot-${index}`}
+                              type="button"
+                              className={styles.techDot}
+                              data-active={clampedTechniquePage === index}
+                              onClick={() => setTechniquePage(index)}
+                              aria-label={`Página ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          className={styles.techArrow}
+                          onClick={() =>
+                            setTechniquePage((prev) =>
+                              Math.min(prev + 1, Math.max(techniquePageCount - 1, 0)),
+                            )
+                          }
+                          disabled={clampedTechniquePage >= Math.max(techniquePageCount - 1, 0)}
+                          aria-label="Próximas técnicas"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M9 6l6 6-6 6" />
+                          </svg>
+                        </button>
+                      </nav>
+                    ) : null}
                   </>
                 ) : catalogStatus === 'ready' && selectedService ? (
                   <div className={`${styles.meta} ${styles.labelCentered}`}>
@@ -1413,6 +1630,9 @@ export default function NewAppointmentExperience() {
                   </div>
                 ) : null}
               </div>
+              {catalogStatus === 'ready' && selectedService ? (
+                <div className={styles.sectionFooter}>ROMEIKE BEAUTY</div>
+              ) : null}
             </section>
           </div>
 
@@ -1525,6 +1745,7 @@ export default function NewAppointmentExperience() {
                   </div>
                 )}
               </div>
+              <div className={styles.sectionFooter}>ROMEIKE BEAUTY</div>
             </section>
           </div>
 
@@ -1588,6 +1809,7 @@ export default function NewAppointmentExperience() {
                   )}
                 </div>
               </div>
+              <div className={styles.sectionFooter}>ROMEIKE BEAUTY</div>
             </section>
           </div>
         </div>

@@ -20,7 +20,7 @@ type Profile = {
   whatsapp: string | null
   email: string | null
   birth_date: string | null
-  role?: 'admin' | 'adminsuper' | 'client'
+  role?: 'admin' | 'adminsuper' | 'adminmaster' | 'client'
 }
 
 type ThemeState = {
@@ -185,6 +185,11 @@ export default function MeuPerfil() {
   const [avatarDataUrl, setAvatarDataUrl] = useState<string>('')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
+
+  const canEditAppearance =
+    profile?.role === 'admin' ||
+    profile?.role === 'adminsuper' ||
+    profile?.role === 'adminmaster'
 
   const cardTopHexRef = useRef<HTMLInputElement>(null)
   const cardBottomHexRef = useRef<HTMLInputElement>(null)
@@ -452,6 +457,12 @@ export default function MeuPerfil() {
   }, [])
 
   useEffect(() => {
+    if (!canEditAppearance) {
+      setIsPaletteOpen(false)
+    }
+  }, [canEditAppearance])
+
+  useEffect(() => {
     let active = true
 
     async function loadProfile() {
@@ -491,12 +502,10 @@ export default function MeuPerfil() {
         return
       }
 
-      const role =
-        me?.role === 'admin'
-          ? 'admin'
-          : me?.role === 'adminsuper' || me?.role === 'adminmaster'
-            ? 'adminsuper'
-            : 'client'
+      const role: Profile['role'] =
+        me?.role === 'admin' || me?.role === 'adminsuper' || me?.role === 'adminmaster'
+          ? me.role
+          : 'client'
 
       const resolvedProfile: Profile = {
         full_name: me?.full_name ?? null,
@@ -1534,22 +1543,24 @@ export default function MeuPerfil() {
         </section>
       </div>
 
-      <button
-        id="paletteBtn"
-        type="button"
-        title="Personalizar"
-        onClick={() => setIsPaletteOpen((open) => !open)}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
-          <path d="M7.2 7.2l1.8 1.8" />
-          <path d="M16.8 7.2l-1.8 1.8" />
-        </svg>
-      </button>
+      {canEditAppearance ? (
+        <>
+          <button
+            id="paletteBtn"
+            type="button"
+            title="Personalizar"
+            onClick={() => setIsPaletteOpen((open) => !open)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
+              <path d="M7.2 7.2l1.8 1.8" />
+              <path d="M16.8 7.2l-1.8 1.8" />
+            </svg>
+          </button>
 
-      <div id="palettePanel" className={isPaletteOpen ? 'open' : ''}>
-        <div id="panelScroll">
+          <div id="palettePanel" className={isPaletteOpen ? 'open' : ''}>
+            <div id="panelScroll">
           <div className="pal-section">
             <h3>Cards (livre)</h3>
             <div className="row">
@@ -1968,6 +1979,9 @@ export default function MeuPerfil() {
           Fechar painel
         </button>
       </div>
+        </>
+      ) : null}
+
     </>
   )
 }

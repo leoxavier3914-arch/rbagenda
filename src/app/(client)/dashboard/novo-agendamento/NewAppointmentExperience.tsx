@@ -133,7 +133,9 @@ async function gentlyCenterCard(element: HTMLElement | null) {
 }
 
 type SectionTitleProps = {
-  text: string
+  lead: string
+  accent: string
+  tail: string
   isVisible: boolean
   id: string
   delayMs?: number
@@ -141,9 +143,23 @@ type SectionTitleProps = {
 
 type SectionTitleWrapperStyle = CSSProperties & { '--title-delay': string }
 
-function SectionTitle({ text, isVisible, id, delayMs = 0 }: SectionTitleProps) {
-  const characters = useMemo(() => Array.from(text), [text])
+function DiamondIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className={styles.diamond}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+    >
+      <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+      <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+    </svg>
+  )
+}
 
+function SectionTitle({ lead, accent, tail, isVisible, id, delayMs = 0 }: SectionTitleProps) {
   const wrapperStyle = useMemo<SectionTitleWrapperStyle>(
     () => ({ '--title-delay': `${delayMs}ms` }) satisfies SectionTitleWrapperStyle,
     [delayMs],
@@ -155,21 +171,36 @@ function SectionTitle({ text, isVisible, id, delayMs = 0 }: SectionTitleProps) {
       data-visible={isVisible ? 'true' : 'false'}
       style={wrapperStyle}
     >
-      <h2 id={id} className={styles.sectionTitle}>
-        <span aria-hidden="true" className={styles.titleVisual}>
-          {characters.map((char, index) => (
-            <span
-              key={`title-char-${id}-${index}`}
-              className={styles.titleChar}
-              style={{ '--char-index': `${index}` } as CSSProperties}
-            >
-              {char === ' ' ? '\u00A0' : char}
-            </span>
-          ))}
-        </span>
-        <span className={styles.titleHidden}>{text}</span>
-      </h2>
+      <div className={styles.sectionHeading}>
+        <DiamondIcon />
+        <h2 id={id} className={styles.sectionTitle}>
+          {lead}{' '}
+          <span className={styles.sectionTitleAccent}>{accent}</span>
+          {tail}
+        </h2>
+      </div>
     </div>
+  )
+}
+
+function LashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={styles.cardIcon}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 12c3-4 15-4 18 0" />
+      <path d="M7 13.5 6 16" />
+      <path d="M10 14l-.6 2" />
+      <path d="M13.5 14l.6 2" />
+      <path d="M17 13.5l1 2" />
+    </svg>
   )
 }
 
@@ -1257,7 +1288,9 @@ export default function NewAppointmentExperience() {
     <div className={styles.screen} data-has-summary={hasSummary ? 'true' : 'false'}>
       <div className={styles.experience}>
         <SectionTitle
-          text="Escolha seu Procedimento:"
+          lead="Escolha"
+          accent="seu"
+          tail=" Procedimento:"
           isVisible={isTypeCardVisible}
           id="titulo-procedimento"
         />
@@ -1301,7 +1334,10 @@ export default function NewAppointmentExperience() {
                     data-active={selectedServiceId === service.id}
                     onClick={() => handleServiceSelect(service.id)}
                   >
-                    {service.name}
+                    <span className={styles.pillIcon} aria-hidden="true">
+                      <LashIcon />
+                    </span>
+                    <span className={styles.pillLabel}>{service.name}</span>
                   </button>
                 ))}
               </div>
@@ -1310,7 +1346,9 @@ export default function NewAppointmentExperience() {
         </section>
 
         <SectionTitle
-          text="Escolha sua Técnica"
+          lead="Escolha"
+          accent="sua"
+          tail=" Técnica:"
           isVisible={shouldShowTechniqueCard}
           id="titulo-tecnica"
         />
@@ -1340,18 +1378,21 @@ export default function NewAppointmentExperience() {
             {catalogStatus === 'ready' && selectedService && selectedService.techniques.length > 0 ? (
               <>
                 <div className={`${styles.pills} ${styles.techniquePills}`} role="tablist" aria-label="Técnica">
-                  {visibleTechniques.map((technique) => (
-                    <button
-                      key={technique.id}
-                      type="button"
-                      className={`${styles.pill} ${styles.techniquePill}`}
-                      data-active={selectedTechniqueId === technique.id}
-                      onClick={() => handleTechniqueSelect(technique.id)}
-                    >
-                      {technique.name}
-                    </button>
-                  ))}
-                </div>
+                {visibleTechniques.map((technique) => (
+                  <button
+                    key={technique.id}
+                    type="button"
+                    className={`${styles.pill} ${styles.techniquePill}`}
+                    data-active={selectedTechniqueId === technique.id}
+                    onClick={() => handleTechniqueSelect(technique.id)}
+                  >
+                    <span className={styles.pillIcon} aria-hidden="true">
+                      <LashIcon />
+                    </span>
+                    <span className={styles.pillLabel}>{technique.name}</span>
+                  </button>
+                ))}
+              </div>
                 {!showAllTechniques && selectedService.techniques.length > 6 && (
                   <button
                     type="button"
@@ -1371,7 +1412,9 @@ export default function NewAppointmentExperience() {
         </section>
 
         <SectionTitle
-          text="Escolha o Dia"
+          lead="Escolha"
+          accent="o"
+          tail=" Dia:"
           isVisible={shouldShowDateCard}
           id="titulo-dia"
         />
@@ -1479,7 +1522,9 @@ export default function NewAppointmentExperience() {
         </section>
 
         <SectionTitle
-          text="Escolha o Horário"
+          lead="Escolha"
+          accent="o"
+          tail=" Horário:"
           isVisible={shouldShowTimeCard}
           id="titulo-horario"
         />

@@ -18,6 +18,7 @@ import {
   DEFAULT_TIMEZONE,
   buildAvailabilityData,
   formatDateToIsoDay,
+  type AvailabilityAppointment,
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
 import ClientMenu from '@/components/ClientMenu'
@@ -1382,9 +1383,37 @@ export default function ProcedimentoPage() {
 
     let isMounted = true
 
-    async function loadAvailability() {
-      setIsLoadingAvailability(true)
-      setAvailabilityError(null)
+    const relevantStatuses = new Set(['pending', 'reserved', 'confirmed'])
+
+    type AppointmentRecord = Partial<AvailabilityAppointment> | null | undefined
+
+    const isRecordRelevant = (record: AppointmentRecord) => {
+      if (!record) return false
+
+      const status = record.status
+      if (!status || !relevantStatuses.has(status)) return false
+
+      const rawStart: string | null = record.scheduled_at ?? record.starts_at ?? null
+      if (!rawStart) return false
+
+      const start = new Date(rawStart)
+      if (Number.isNaN(start.getTime())) return false
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const limit = new Date(today)
+      limit.setDate(limit.getDate() + 60)
+
+      return start >= today && start <= limit
+    }
+
+    const loadAvailability = async (options: { withLoading?: boolean } = {}) => {
+      const { withLoading = true } = options
+
+      if (withLoading) {
+        setIsLoadingAvailability(true)
+        setAvailabilityError(null)
+      }
 
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
@@ -1415,6 +1444,7 @@ export default function ProcedimentoPage() {
         if (!isMounted) return
 
         setAppointments(data ?? [])
+        setAvailabilityError(null)
       } catch (err) {
         console.error('Erro ao carregar disponibilidade', err)
         if (isMounted) {
@@ -1422,16 +1452,34 @@ export default function ProcedimentoPage() {
           setAppointments([])
         }
       } finally {
-        if (isMounted) {
+        if (withLoading && isMounted) {
           setIsLoadingAvailability(false)
         }
       }
     }
 
-    void loadAvailability()
+    void loadAvailability({ withLoading: true })
+
+    const channel = supabase
+      .channel('procedimento-appointments')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'appointments' },
+        (payload) => {
+          if (!isMounted) return
+
+          const { new: newRecord, old: oldRecord } = payload
+
+          if (isRecordRelevant(newRecord as AppointmentRecord) || isRecordRelevant(oldRecord as AppointmentRecord)) {
+            void loadAvailability({ withLoading: false })
+          }
+        },
+      )
+      .subscribe()
 
     return () => {
       isMounted = false
+      void supabase.removeChannel(channel)
     }
   }, [userId])
 

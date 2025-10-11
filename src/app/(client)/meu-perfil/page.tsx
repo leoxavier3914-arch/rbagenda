@@ -978,9 +978,10 @@ export default function MeuPerfil() {
         .center {
           min-height: 100svh;
           display: grid;
-          place-items: center;
+          place-items: start center;
+          align-content: start;
           justify-content: center;
-          padding: calc(10px + env(safe-area-inset-top)) 18px
+          padding: calc(12px + env(safe-area-inset-top)) 18px
             calc(18px + env(safe-area-inset-bottom));
           position: relative;
         }

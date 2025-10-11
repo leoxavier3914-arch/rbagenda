@@ -1236,7 +1236,7 @@ export default function NewAppointmentExperience() {
 
   const handleConfirmPayLaterNotice = useCallback(() => {
     setIsPayLaterNoticeOpen(false)
-    router.push('/dashboard/agendamentos')
+    router.push('/agendamentos')
   }, [router, setIsPayLaterNoticeOpen])
 
   useEffect(() => {

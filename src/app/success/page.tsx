@@ -28,7 +28,7 @@ export default function Success(){
           <h1 className="text-3xl font-semibold text-[#1f2d28]">Tudo certo! 🎉</h1>
           <p className="muted-text">{msg}</p>
         </div>
-        <Link href="/dashboard/agendamentos" className="btn-primary w-full">
+        <Link href="/agendamentos" className="btn-primary w-full">
           Ver meus agendamentos
         </Link>
       </div>

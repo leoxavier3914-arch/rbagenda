@@ -592,7 +592,6 @@ export default function ProcedimentoPage() {
   >(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [shouldReduceMotion, setShouldReduceMotion] = useState(false)
-  const [isTypeCardVisible, setIsTypeCardVisible] = useState(false)
   const [pendingScrollTarget, setPendingScrollTarget] = useState<
     'technique' | 'date' | 'time' | null
   >(null)
@@ -605,6 +604,23 @@ export default function ProcedimentoPage() {
   const timeSectionRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setShouldReduceMotion(prefersReducedMotion())
+      return
+    }
+
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const syncPreference = () => setShouldReduceMotion(media.matches)
+
+    syncPreference()
+
+    media.addEventListener('change', syncPreference)
+    return () => {
+      media.removeEventListener('change', syncPreference)
+    }
+  }, [])
 
   useEffect(() => {
     const body = document.body
@@ -1200,27 +1216,6 @@ export default function ProcedimentoPage() {
       }
     }
   }, [isAdmin])
-
-  useEffect(() => {
-    if (prefersReducedMotion()) {
-      setShouldReduceMotion(true)
-      setIsTypeCardVisible(true)
-      return
-    }
-
-    if (typeof window === 'undefined') {
-      setIsTypeCardVisible(true)
-      return
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      setIsTypeCardVisible(true)
-    })
-
-    return () => {
-      window.cancelAnimationFrame(frameId)
-    }
-  }, [])
 
   useEffect(() => {
     let active = true
@@ -2037,7 +2032,7 @@ export default function ProcedimentoPage() {
 
   const handleConfirmPayLaterNotice = useCallback(() => {
     setIsPayLaterNoticeOpen(false)
-    router.push('/dashboard/agendamentos')
+    router.push('/agendamentos')
   }, [router])
 
   useEffect(() => {

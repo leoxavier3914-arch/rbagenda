@@ -208,7 +208,7 @@ function ManualCheckoutForm({ appointmentId, clientSecret }: ManualCheckoutFormP
       setStatus(paymentIntent.status)
       if (paymentIntent.status === 'succeeded') {
         setMessage('Pagamento confirmado com sucesso! Você será redirecionado em instantes.')
-        setTimeout(() => router.push('/dashboard/agendamentos'), 2000)
+        setTimeout(() => router.push('/agendamentos'), 2000)
       } else if (paymentIntent.status === 'processing') {
         setMessage('Estamos processando o seu pagamento. Assim que finalizar você receberá um e-mail.')
       } else if (paymentIntent.status === 'requires_action') {

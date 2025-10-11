@@ -1057,6 +1057,8 @@ export default function MeuPerfil() {
             var(--inner-top),
             var(--inner-bottom)
           );
+          background-clip: padding-box;
+          background-origin: border-box;
           box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.9),
             inset 0 -14px 20px rgba(143, 196, 170, 0.12);
@@ -1085,6 +1087,8 @@ export default function MeuPerfil() {
             var(--inner-top),
             var(--inner-bottom)
           );
+          background-clip: padding-box;
+          background-origin: border-box;
           box-shadow: 0 10px 20px rgba(28, 75, 56, 0.12),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
           overflow: hidden;

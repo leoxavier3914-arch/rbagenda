@@ -7,6 +7,7 @@ import { stripePromise } from '@/lib/stripeClient'
 import {
   buildAvailabilityData,
   DEFAULT_FALLBACK_BUFFER_MINUTES,
+  DEFAULT_TIMEZONE,
   type AvailabilityAppointment,
 } from '@/lib/availability'
 import FlowShell from '@/components/FlowShell'
@@ -505,6 +506,7 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
 
         const computed = buildAvailabilityData(data ?? [], session.user.id, {
           fallbackBufferMinutes: DEFAULT_FALLBACK_BUFFER_MINUTES,
+          timezone: DEFAULT_TIMEZONE,
         })
         setAvailability(computed)
       } catch (err) {

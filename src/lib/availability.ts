@@ -1,3 +1,6 @@
+import { addDays } from 'date-fns'
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
+
 export type AvailabilityAppointment = {
   id: string
   scheduled_at: string | null
@@ -25,7 +28,13 @@ export type BuildAvailabilityOptions = {
   fallbackBufferMinutes?: number
   days?: number
   slotTemplate?: string[]
+  timezone?: string
 }
+
+export const DEFAULT_TIMEZONE =
+  process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+  process.env.DEFAULT_TIMEZONE ||
+  'America/Sao_Paulo'
 
 function normalizeNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -58,7 +67,11 @@ export const DEFAULT_SLOT_TEMPLATE = makeSlots('09:00', '18:00', 30)
 export const DEFAULT_FALLBACK_BUFFER_MINUTES =
   Number(process.env.NEXT_PUBLIC_DEFAULT_BUFFER_MIN ?? '15') || 15
 
-export function formatDateToIsoDay(date: Date) {
+export function formatDateToIsoDay(date: Date, timeZone?: string) {
+  if (timeZone) {
+    return formatInTimeZone(date, timeZone, 'yyyy-MM-dd')
+  }
+
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -96,9 +109,10 @@ export function buildAvailabilityData(
   )
   const totalDays = Math.max(1, options.days ?? 60)
   const slotTemplate = options.slotTemplate ?? DEFAULT_SLOT_TEMPLATE
+  const timezone = options.timezone?.trim() || DEFAULT_TIMEZONE
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const todayIso = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd')
+  let currentDay = fromZonedTime(`${todayIso}T00:00:00`, timezone)
 
   const daySlots: Record<string, string[]> = {}
   const bookedSlots: Record<string, string[]> = {}
@@ -118,8 +132,8 @@ export function buildAvailabilityData(
     if (!rawStart) return
     const start = new Date(rawStart)
     if (Number.isNaN(start.getTime())) return
-    const isoDay = formatDateToIsoDay(start)
-    const time = start.toISOString().slice(11, 16)
+    const isoDay = formatInTimeZone(start, timezone, 'yyyy-MM-dd')
+    const time = formatInTimeZone(start, timezone, 'HH:mm')
     const rawEnd = appt.ends_at ? new Date(appt.ends_at) : new Date(start.getTime() + 60 * 60000)
     if (Number.isNaN(rawEnd.getTime())) return
     const bufferMinutes = getBufferMinutesFromAppointment(appt, fallbackBufferMinutes)
@@ -138,9 +152,7 @@ export function buildAvailabilityData(
   })
 
   for (let i = 0; i < totalDays; i += 1) {
-    const date = new Date(today)
-    date.setDate(date.getDate() + i)
-    const iso = formatDateToIsoDay(date)
+    const iso = formatInTimeZone(currentDay, timezone, 'yyyy-MM-dd')
     daySlots[iso] = [...slotTemplate]
 
     const entry = perDay.get(iso)
@@ -171,6 +183,8 @@ export function buildAvailabilityData(
     } else {
       availableDays.add(iso)
     }
+
+    currentDay = addDays(currentDay, 1)
   }
 
   return {

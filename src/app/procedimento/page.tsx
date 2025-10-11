@@ -9,11 +9,13 @@ import {
 } from 'react'
 
 import { useRouter } from 'next/navigation'
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
 import { supabase } from '@/lib/db'
 import {
   DEFAULT_FALLBACK_BUFFER_MINUTES,
   DEFAULT_SLOT_TEMPLATE,
+  DEFAULT_TIMEZONE,
   buildAvailabilityData,
   formatDateToIsoDay,
 } from '@/lib/availability'
@@ -530,15 +532,22 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function combineDateAndTime(dateIso: string, time: string) {
-  const [year, month, day] = dateIso.split('-').map(Number)
-  const [hour, minute] = time.split(':').map(Number)
+function combineDateAndTime(dateIso: string, time: string, timeZone = DEFAULT_TIMEZONE) {
+  const [hour, minute] = time.split(':')
 
-  if ([year, month, day, hour, minute].some((value) => Number.isNaN(value))) {
+  if (!dateIso || typeof hour === 'undefined' || typeof minute === 'undefined') {
     return null
   }
 
-  return new Date(year, (month ?? 1) - 1, day ?? 1, hour ?? 0, minute ?? 0, 0, 0)
+  const normalizedHour = hour.padStart(2, '0')
+  const normalizedMinute = minute.padStart(2, '0')
+  const candidate = fromZonedTime(`${dateIso}T${normalizedHour}:${normalizedMinute}:00`, timeZone)
+
+  if (Number.isNaN(candidate.getTime())) {
+    return null
+  }
+
+  return candidate
 }
 
 function LashIcon() {
@@ -1557,6 +1566,7 @@ export default function ProcedimentoPage() {
     () =>
       buildAvailabilityData(appointments, userId, {
         fallbackBufferMinutes: FALLBACK_BUFFER_MINUTES,
+        timezone: DEFAULT_TIMEZONE,
       }),
     [appointments, userId],
   )
@@ -1607,7 +1617,7 @@ export default function ProcedimentoPage() {
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = new Date(year, month, day)
-      const iso = formatDateToIsoDay(date)
+      const iso = formatDateToIsoDay(date, DEFAULT_TIMEZONE)
 
       let status: 'available' | 'booked' | 'full' | 'mine' | 'disabled' = 'disabled'
       if (availability.myDays.has(iso)) status = 'mine'
@@ -1686,7 +1696,7 @@ export default function ProcedimentoPage() {
     const closing = combineDateAndTime(selectedDate, WORK_DAY_END)
     if (!closing) return []
 
-    const todayIso = formatDateToIsoDay(now)
+    const todayIso = formatInTimeZone(now, DEFAULT_TIMEZONE, 'yyyy-MM-dd')
 
     return template.filter((slotValue) => {
       const slotStart = combineDateAndTime(selectedDate, slotValue)

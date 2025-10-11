@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 
+import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
@@ -635,7 +636,9 @@ export default function ProcedimentoPage() {
 
   useEffect(() => {
     const body = document.body
-    body.classList.add('procedimento-screen')
+    if (!body.classList.contains('procedimento-screen')) {
+      body.classList.add('procedimento-screen')
+    }
 
     const updatedVars = new Set<string>()
     const cleanupFns: Array<() => void> = []
@@ -2141,6 +2144,9 @@ export default function ProcedimentoPage() {
   return (
     <ClientMenu disableContentPadding>
       <>
+        <Script id="procedimento-body-class" strategy="beforeInteractive">
+          {"document.body.classList.add('procedimento-screen');"}
+        </Script>
         <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
         <div className="procedimento-root">
         <div className="texture" aria-hidden="true">

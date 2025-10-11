@@ -100,6 +100,16 @@ const rgbaFromHexAlpha = (hex: string, alpha: number) => {
   return `rgba(${r}, ${g}, ${b}, ${clamped})`
 }
 
+const mixHexColors = (colorA: string, colorB: string, ratio: number) => {
+  const a = hexToRgb(colorA)
+  const b = hexToRgb(colorB)
+  const mixChannel = (channelA: number, channelB: number) =>
+    Math.round(channelA + (channelB - channelA) * ratio)
+  return `#${[mixChannel(a.r, b.r), mixChannel(a.g, b.g), mixChannel(a.b, b.b)]
+    .map((channel) => channel.toString(16).padStart(2, '0'))
+    .join('')}`.toUpperCase()
+}
+
 const parseColorString = (value: string) => {
   const trimmed = value.trim()
   if (!trimmed) {
@@ -139,6 +149,24 @@ const parseColorString = (value: string) => {
   return { hex: '#000000', alpha: 1 }
 }
 
+type LavaInstance = {
+  reseed: () => void
+}
+
+type LavaController = {
+  greens: string[]
+  accents: string[]
+  instances: LavaInstance[]
+  reseedAll: () => void
+}
+
+declare global {
+  interface Window {
+    LAVA?: LavaController
+    syncLavaPaletteFromVars?: () => void
+  }
+}
+
 export default function MeuPerfil() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -171,6 +199,11 @@ export default function MeuPerfil() {
   const commitVar = useCallback((name: string, value: string) => {
     if (typeof window === 'undefined') return
     document.documentElement.style.setProperty(name, value)
+  }, [])
+
+  const refreshLavaPalette = useCallback(() => {
+    if (typeof window === 'undefined') return
+    window.syncLavaPaletteFromVars?.()
   }, [])
 
   const syncThemeFromComputed = useCallback(() => {
@@ -227,6 +260,182 @@ export default function MeuPerfil() {
     root.classList.add('force-motion')
     return () => {
       root.classList.remove('force-motion')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const cleanupFns: Array<() => void> = []
+    const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+
+    const lavaController: LavaController =
+      window.LAVA ?? {
+        greens: [],
+        accents: ['rgba(255,255,255,0.5)', 'rgba(0,0,0,0.2)'],
+        instances: [],
+        reseedAll() {
+          this.instances.forEach((instance) => instance.reseed())
+        },
+      }
+
+    window.LAVA = lavaController
+
+    const createdInstances: LavaInstance[] = []
+    const lavaInstances = lavaController.instances
+
+    const LAVA_CONFIG = {
+      dark: { count: 24, radius: [90, 150] as [number, number], speed: 1.2 },
+      light: { count: 22, radius: [80, 130] as [number, number], speed: 1.0 },
+    }
+
+    type LavaBlob = {
+      x: number
+      y: number
+      r: number
+      a: number
+      vx: number
+      vy: number
+      color: string
+      opacity: number
+    }
+
+    type LavaLayerState = {
+      width: number
+      height: number
+      blobs: LavaBlob[]
+      time: number
+      raf?: number
+      destroyed: boolean
+    }
+
+    const rand = (min: number, max: number) => min + Math.random() * (max - min)
+    const pick = <T,>(values: readonly T[]) =>
+      values[Math.floor(Math.random() * values.length)]
+
+    const buildLavaPalette = () => {
+      const computed = getComputedStyle(document.documentElement)
+      const dark =
+        parseColorString(computed.getPropertyValue('--dark')).hex ||
+        defaultTheme.bubbleDark
+      const light =
+        parseColorString(computed.getPropertyValue('--light')).hex ||
+        defaultTheme.bubbleLight
+      const steps = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.85, 0.92, 0.97]
+      return steps.map((step) => mixHexColors(dark, light, step))
+    }
+
+    const syncLavaPaletteFromVars = () => {
+      lavaController.greens = buildLavaPalette()
+      lavaController.reseedAll()
+    }
+
+    window.syncLavaPaletteFromVars = syncLavaPaletteFromVars
+
+    const createLavaLayer = (canvasId: string, type: 'dark' | 'light') => {
+      const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null
+      if (!canvas) return
+
+      const context = canvas.getContext('2d')
+      if (!context) return
+
+      const state: LavaLayerState = {
+        width: 0,
+        height: 0,
+        blobs: [],
+        time: 0,
+        destroyed: false,
+      }
+
+      const resize = () => {
+        const rect = canvas.getBoundingClientRect()
+        state.width = Math.ceil(rect.width * devicePixelRatio)
+        state.height = Math.ceil(rect.height * devicePixelRatio)
+        canvas.width = state.width
+        canvas.height = state.height
+        canvas.style.transform = 'translateZ(0)'
+      }
+
+      const reseed = () => {
+        const config = LAVA_CONFIG[type]
+        const computed = getComputedStyle(document.documentElement)
+        const minOpacity =
+          parseFloat(computed.getPropertyValue('--lava-alpha-min')) ||
+          defaultTheme.bubbleAlphaMin
+        const maxOpacity =
+          parseFloat(computed.getPropertyValue('--lava-alpha-max')) ||
+          defaultTheme.bubbleAlphaMax
+
+        resize()
+        state.blobs = []
+        for (let index = 0; index < config.count; index += 1) {
+          state.blobs.push({
+            x: rand(0, state.width),
+            y: rand(0, state.height),
+            r: rand(config.radius[0], config.radius[1]) * devicePixelRatio,
+            a: rand(0, Math.PI * 2),
+            vx: rand(-1, 1) * config.speed * devicePixelRatio,
+            vy: rand(-1, 1) * config.speed * devicePixelRatio,
+            color: pick([...lavaController.greens, ...lavaController.accents]),
+            opacity: rand(minOpacity, maxOpacity),
+          })
+        }
+      }
+
+      const tick = () => {
+        if (state.destroyed) return
+        state.time += 1
+        context.clearRect(0, 0, state.width, state.height)
+        context.globalCompositeOperation = 'lighter'
+        for (const blob of state.blobs) {
+          blob.x += blob.vx
+          blob.y += blob.vy
+          const bounds = 200 * devicePixelRatio
+          if (blob.x < -bounds || blob.x > state.width + bounds) blob.vx *= -1
+          if (blob.y < -bounds || blob.y > state.height + bounds) blob.vy *= -1
+          const projectedRadius =
+            blob.r * (1 + Math.sin(state.time * 0.02 + blob.a) * 0.05)
+          context.globalAlpha = blob.opacity
+          context.fillStyle = blob.color
+          context.beginPath()
+          context.arc(blob.x, blob.y, projectedRadius, 0, Math.PI * 2)
+          context.fill()
+        }
+        state.raf = window.requestAnimationFrame(tick)
+      }
+
+      const resizeHandler = () => resize()
+      window.addEventListener('resize', resizeHandler)
+      cleanupFns.push(() => {
+        window.removeEventListener('resize', resizeHandler)
+        state.destroyed = true
+        if (state.raf) window.cancelAnimationFrame(state.raf)
+      })
+
+      const instance: LavaInstance = { reseed }
+      lavaInstances.push(instance)
+      createdInstances.push(instance)
+
+      reseed()
+      tick()
+    }
+
+    lavaController.greens = buildLavaPalette()
+    createLavaLayer('lavaDark', 'dark')
+    createLavaLayer('lavaLight', 'light')
+    syncLavaPaletteFromVars()
+
+    return () => {
+      cleanupFns.forEach((fn) => fn())
+      lavaController.instances = lavaController.instances.filter(
+        (instance) => !createdInstances.includes(instance),
+      )
+      if (lavaController.instances.length === 0 && window.LAVA === lavaController) {
+        delete window.LAVA
+      }
+      if (window.syncLavaPaletteFromVars === syncLavaPaletteFromVars) {
+        delete window.syncLavaPaletteFromVars
+      }
     }
   }, [])
 
@@ -419,8 +628,9 @@ export default function MeuPerfil() {
       if (bubbleDarkHexRef.current) {
         bubbleDarkHexRef.current.value = normalized
       }
+      refreshLavaPalette()
     },
-    [commitVar],
+    [commitVar, refreshLavaPalette],
   )
 
   const applyBubbleLight = useCallback(
@@ -431,8 +641,9 @@ export default function MeuPerfil() {
       if (bubbleLightHexRef.current) {
         bubbleLightHexRef.current.value = normalized
       }
+      refreshLavaPalette()
     },
-    [commitVar],
+    [commitVar, refreshLavaPalette],
   )
 
   const applyBubbleAlpha = useCallback(
@@ -448,8 +659,9 @@ export default function MeuPerfil() {
         bubbleAlphaMin: resolvedMin,
         bubbleAlphaMax: resolvedMax,
       }))
+      refreshLavaPalette()
     },
-    [commitVar],
+    [commitVar, refreshLavaPalette],
   )
 
   const handlePaletteSwatch = useCallback(
@@ -465,8 +677,9 @@ export default function MeuPerfil() {
         }
       })
       syncThemeFromComputed()
+      refreshLavaPalette()
     },
-    [commitVar, syncThemeFromComputed],
+    [commitVar, refreshLavaPalette, syncThemeFromComputed],
   )
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -757,6 +970,7 @@ export default function MeuPerfil() {
           min-height: 100svh;
           display: grid;
           place-items: center;
+          justify-content: center;
           padding: calc(18px + env(safe-area-inset-top)) 18px
             calc(18px + env(safe-area-inset-bottom));
           position: relative;
@@ -1153,8 +1367,8 @@ export default function MeuPerfil() {
         </svg>
       </div>
       <div className="lamp" aria-hidden="true">
-        <div className="lava dark" />
-        <div className="lava light" />
+        <canvas id="lavaDark" className="lava dark" />
+        <canvas id="lavaLight" className="lava light" />
       </div>
 
       <div className="page">

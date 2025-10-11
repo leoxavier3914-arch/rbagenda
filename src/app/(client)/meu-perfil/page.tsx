@@ -990,6 +990,14 @@ export default function MeuPerfil() {
           justify-items: center;
           gap: clamp(12px, 2.2vw, 18px);
         }
+        @media (max-width: 640px) {
+          .center {
+            padding-top: calc(6px + env(safe-area-inset-top));
+          }
+          .stack {
+            gap: clamp(8px, 3.6vw, 16px);
+          }
+        }
         header {
           text-align: center;
         }
@@ -1200,11 +1208,13 @@ export default function MeuPerfil() {
           background: rgba(247, 242, 231, 0.7);
           color: #2f6d4f;
         }
-        .support-note {
-          margin-top: 4px;
+        .profile-name {
+          margin: 6px 0 0;
           text-align: center;
-          font-size: 12px;
-          color: rgba(31, 45, 40, 0.6);
+          font-size: clamp(18px, 4.6vw, 22px);
+          font-weight: 600;
+          color: rgba(24, 63, 46, 0.9);
+          letter-spacing: 0.01em;
         }
         footer {
           text-align: center;
@@ -1392,9 +1402,6 @@ export default function MeuPerfil() {
               <h1>
                 Meu <span className="muted2">Perfil</span>
               </h1>
-              {resolvedName ? (
-                <p className="support-note">{resolvedName}</p>
-              ) : null}
             </header>
 
             <div className="glass" aria-label="Dados do perfil">
@@ -1422,6 +1429,9 @@ export default function MeuPerfil() {
                           </div>
                         )}
                       </div>
+                      {resolvedName ? (
+                        <p className="profile-name">{resolvedName}</p>
+                      ) : null}
                       <div className="avatar-actions">
                         <label className="btn">
                           <input

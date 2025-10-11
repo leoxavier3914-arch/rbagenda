@@ -981,7 +981,7 @@ export default function MeuPerfil() {
           place-items: start center;
           align-content: start;
           justify-content: center;
-          padding: calc(12px + env(safe-area-inset-top)) 18px
+          padding: calc(0px + env(safe-area-inset-top)) 18px
             calc(18px + env(safe-area-inset-bottom));
           position: relative;
         }
@@ -992,7 +992,7 @@ export default function MeuPerfil() {
         }
         @media (max-width: 640px) {
           .center {
-            padding-top: calc(6px + env(safe-area-inset-top));
+            padding-top: calc(0px + env(safe-area-inset-top));
           }
           .stack {
             gap: clamp(8px, 3.6vw, 16px);

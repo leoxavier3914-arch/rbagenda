@@ -18,6 +18,7 @@ import {
   formatDateToIsoDay,
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
+import ClientMenu from '@/components/ClientMenu'
 
 const PROCEDIMENTO_CSS = /* css */ `
 :root{
@@ -2080,9 +2081,10 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <>
-      <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
-      <div className="procedimento-root">
+    <ClientMenu disableContentPadding>
+      <>
+        <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
+        <div className="procedimento-root">
         <div className="texture" aria-hidden="true">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
@@ -2758,8 +2760,9 @@ export default function ProcedimentoPage() {
             </div>
           </>
         ) : null}
-      </div>
-    </>
+        </div>
+      </>
+    </ClientMenu>
   )
 }
 

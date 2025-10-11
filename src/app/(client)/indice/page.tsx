@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const quickLinks = [
   {
-    href: '/novo-agendamento',
+    href: '/procedimento',
     title: 'Agendar um atendimento',
     description: 'Escolha o melhor horário e confirme a reserva em poucos passos.',
   },

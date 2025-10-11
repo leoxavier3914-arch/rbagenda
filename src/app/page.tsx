@@ -60,7 +60,7 @@ export default function Home(){
       } else if (role === 'adminsuper') {
         redirectTo('/admin/adminsuper')
       } else {
-        redirectTo('/novo-agendamento')
+        redirectTo('/procedimento')
       }
     }
 

@@ -253,8 +253,8 @@ export default function ClientMenu({ children }: ClientMenuProps) {
     () => [
       { href: "/meu-perfil", label: "Meu perfil", exact: true, icon: <ProfileIcon /> },
       {
-        href: "/novo-agendamento",
-        label: "Novo agendamento",
+        href: "/procedimento",
+        label: "Procedimento",
         icon: <PlusIcon />,
       },
       {

@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 
 import { supabase } from "@/lib/db";
 
-import styles from "./AppShell.module.css";
+import styles from "./ClientMenu.module.css";
 
 type DatabaseRole = "client" | "admin" | "adminmaster" | "adminsuper" | null;
 type AppRole = "client" | "admin" | "adminsuper";
@@ -28,6 +28,10 @@ type NavItem = {
   label: string;
   exact?: boolean;
   icon: ReactElement;
+};
+
+type ClientMenuProps = {
+  children: ReactNode;
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -178,15 +182,11 @@ const SettingsIcon = () => (
     aria-hidden
   >
     <path d="M12 15.5a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 12 15.5Z" />
-    <path d="M20 12a7.9 7.9 0 0 0-.12-1l2-1.55-2-3.46-2.41.65a8.06 8.06 0 0 0-1.73-1L13.5 2h-3L9 4.69a8.06 8.06 0 0 0-1.73 1L4.86 5.99l-2 3.46L4.8 11A7.9 7.9 0 0 0 4.68 12a7.9 7.9 0 0 0 .12 1l-2 1.55 2 3.46 2.41-.65a8.06 8.06 0 0 0 1.73 1L10.5 22h3l1.5-2.69a8.06 8.06 0 0 0 1.73-1l2.41.65 2-3.46-2-1.55c.08-.33.12-.66.12-1Z" />
+    <path d="M20 12a7.9 7.9 0 0 0-.12-1l2-1.55-2-3.46-2.41.65a8.06 8.06 0 0 0-1.73-1L13.5 2h-3L9 4.69a8.06 8.06 0 0 0-1.73 1L4.8 6l-2 3.46L4.8 11A7.9 7.9 0 0 0 4.68 12a7.9 7.9 0 0 0 .12 1l-2 1.55 2 3.46 2.41-.65a8.06 8.06 0 0 0 1.73 1L10.5 22h3l1.5-2.69a8.06 8.06 0 0 0 1.73-1l2.41.65 2-3.46-2-1.55c.08-.33.12-.66.12-1Z" />
   </svg>
 );
 
-type AppShellProps = {
-  children: ReactNode;
-};
-
-export default function AppShell({ children }: AppShellProps) {
+export default function ClientMenu({ children }: ClientMenuProps) {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profile, setProfile] = useState<ProfileState>({
@@ -332,10 +332,7 @@ export default function AppShell({ children }: AppShellProps) {
 
       if (elements.length > 0) {
         elements.push(
-          <div
-            key={`${section.id}-divider`}
-            className={styles.divider}
-          />,
+          <div key={`${section.id}-divider`} className={styles.divider} />,
         );
       }
 
@@ -377,9 +374,9 @@ export default function AppShell({ children }: AppShellProps) {
       <button
         type="button"
         className={styles.hamburger}
-        id="app-shell-menu-button"
+        id="client-menu-button"
         aria-expanded={isMenuOpen}
-        aria-controls="app-shell-sidebar"
+        aria-controls="client-menu-sidebar"
         onClick={toggleMenu}
       >
         <span className={styles.bars}>
@@ -397,7 +394,7 @@ export default function AppShell({ children }: AppShellProps) {
       />
 
       <aside
-        id="app-shell-sidebar"
+        id="client-menu-sidebar"
         className={`${styles.sidebar} ${isMenuOpen ? styles.sidebarActive : ""}`}
         aria-label="Menu principal"
       >

@@ -6,7 +6,7 @@ import BookingFlow from '@/components/BookingFlow'
 import { supabase } from '@/lib/db'
 import type { Session } from '@supabase/supabase-js'
 
-import AppShell from '@/components/AppShell'
+import ClientFullScreenLayout from '@/components/ClientFullScreenLayout'
 
 type ResolvedRole = 'admin' | 'adminsuper' | 'client' | null
 
@@ -100,7 +100,7 @@ export default function Home(){
   }
 
   return (
-    <AppShell>
+    <ClientFullScreenLayout>
       <div className="mx-auto w-full max-w-4xl space-y-10 text-center">
         <div className="space-y-3">
           <span className="badge mx-auto">Painel administrativo</span>
@@ -113,6 +113,6 @@ export default function Home(){
         </div>
         <BookingFlow />
       </div>
-    </AppShell>
+    </ClientFullScreenLayout>
   )
 }

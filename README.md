@@ -77,3 +77,16 @@ Caso o Supabase Scheduler não esteja disponível no plano do projeto, utilize o
 ## Estrutura do projeto
 
 Todo o código-fonte está na pasta `src/`, seguindo o padrão do App Router do Next.js. Configurações adicionais ficam nos arquivos `next.config.ts`, `tailwind.config.js` e `tsconfig.json`.
+
+## Instalação como PWA
+
+A aplicação está configurada para ser instalada na tela inicial em dispositivos iOS e Android por meio de um manifesto Web App (`/manifest.webmanifest`). Para personalizar os ícones exibidos durante a instalação, adicione arquivos PNG na pasta `public/icons/` (não versionados neste repositório) mantendo os seguintes nomes e dimensões:
+
+| Arquivo | Dimensão | Uso principal |
+| --- | --- | --- |
+| `icon-192.png` | 192×192 | ícone padrão exigido pelo Chrome/Android |
+| `icon-512.png` | 512×512 | ícone de alta resolução para Android e desktops |
+| `maskable-icon-512.png` | 512×512 | ícone com área segura para Android (maskable) |
+| `apple-touch-icon.png` | 180×180 | ícone exibido ao adicionar à tela inicial no iOS |
+
+Recomenda-se gerar os arquivos em PNG com fundo transparente ou cor sólida, respeitando as dimensões indicadas. Após a substituição, não é necessário alterar nenhum outro arquivo: o Next.js publica automaticamente o manifesto e referencia os ícones nos metadados da aplicação.

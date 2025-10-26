@@ -27,7 +27,14 @@
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   position: relative;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    flex-direction: row;
+  }
 }
 
 .topBar {
@@ -280,7 +287,7 @@
 }
 
 .contentShell {
-  max-width: 1140px;
+  width: min(1140px, 100%);
   margin: 0 auto;
   display: flex;
   flex-direction: column;

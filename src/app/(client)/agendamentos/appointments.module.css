@@ -65,7 +65,7 @@
   border: 1px solid var(--appointments-line);
   border-radius: 16px;
   padding: 12px 14px;
-  text-align: left;
+  text-align: center;
   background: linear-gradient(165deg, rgba(255, 255, 255, 0.9), rgba(227, 242, 237, 0.9));
   box-shadow: 0 16px 34px rgba(24, 63, 46, 0.12);
   color: var(--appointments-ink);
@@ -88,6 +88,7 @@
 .filterCardInner {
   display: grid;
   gap: 6px;
+  justify-items: center;
 }
 
 .filterTitle {

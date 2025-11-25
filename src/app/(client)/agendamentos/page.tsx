@@ -47,7 +47,7 @@ const statusCards: Array<{ key: StatusCategory; title: string; description: stri
   {
     key: 'pendentes',
     title: 'Pendentes',
-    description: 'Agendamentos aguardando confirmação.',
+    description: 'Aguardando confirmação.',
   },
   {
     key: 'cancelados',

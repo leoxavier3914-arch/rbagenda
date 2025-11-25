@@ -201,6 +201,7 @@
   justify-content: space-between;
   gap: 14px;
   margin-bottom: 12px;
+  position: relative;
 }
 
 .cardInfo {
@@ -616,7 +617,11 @@
   }
 
   .cardHeader {
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: flex-start;
+  }
+
+  .status {
+    margin-left: auto;
   }
 }

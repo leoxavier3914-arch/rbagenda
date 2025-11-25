@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
@@ -38,27 +38,11 @@ const STATUS_FILTERS: Record<StatusCategory, AppointmentStatus[]> = {
   concluidos: ['completed'],
 }
 
-const statusCards: Array<{ key: StatusCategory; title: string; description: string }> = [
-  {
-    key: 'ativos',
-    title: 'Ativos',
-    description: 'Horários confirmados ou reservados.',
-  },
-  {
-    key: 'pendentes',
-    title: 'Pendentes',
-    description: 'Aguardando confirmação.',
-  },
-  {
-    key: 'cancelados',
-    title: 'Cancelados',
-    description: 'Horários cancelados ou liberados.',
-  },
-  {
-    key: 'concluidos',
-    title: 'Concluídos',
-    description: 'Atendimentos já finalizados.',
-  },
+const statusCards: Array<{ key: StatusCategory; title: string }> = [
+  { key: 'ativos', title: 'Ativos' },
+  { key: 'pendentes', title: 'Pendentes' },
+  { key: 'cancelados', title: 'Cancelados' },
+  { key: 'concluidos', title: 'Concluídos' },
 ]
 
 const statusEmptyMessages: Record<StatusCategory, string> = {
@@ -272,6 +256,18 @@ const extractServiceDetails = (
     serviceName: rawServiceName.length > 0 ? rawServiceName : null,
     techniqueName,
   }
+}
+
+function LashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M4 12c3-4 15-4 18 0" />
+      <path d="M7 13.5 6 16" />
+      <path d="M10 14l-.6 2" />
+      <path d="M13.5 14l.6 2" />
+      <path d="M17 13.5l1 2" />
+    </svg>
+  )
 }
 
 const normalizeAppointment = (
@@ -877,6 +873,8 @@ export default function MyAppointments() {
   const [blockedAppointment, setBlockedAppointment] = useState<NormalizedAppointment | null>(null)
   const [editingAppointment, setEditingAppointment] = useState<NormalizedAppointment | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<SelectedStatusCategory>(null)
+  const [shouldScrollToResults, setShouldScrollToResults] = useState(false)
+  const resultsRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -1067,6 +1065,40 @@ export default function MyAppointments() {
     }
     return data.session.access_token ?? null
   }, [])
+
+  const scrollToResults = useCallback(() => {
+    if (typeof window === 'undefined') return
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const behavior: ScrollBehavior = prefersReducedMotion ? 'auto' : 'smooth'
+    const target = resultsRef.current
+    if (target) {
+      target.scrollIntoView({ behavior, block: 'start' })
+    }
+  }, [])
+
+  const handleCategorySelect = useCallback(
+    (category: StatusCategory) => {
+      if (selectedCategory === category) {
+        scrollToResults()
+        return
+      }
+
+      setSelectedCategory(category)
+      setShouldScrollToResults(true)
+    },
+    [scrollToResults, selectedCategory],
+  )
+
+  useEffect(() => {
+    if (!selectedCategory || !shouldScrollToResults) return
+
+    const timeoutId = window.setTimeout(() => {
+      scrollToResults()
+      setShouldScrollToResults(false)
+    }, 30)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [scrollToResults, selectedCategory, shouldScrollToResults])
 
   const filteredAppointments = useMemo(
     () =>
@@ -1275,31 +1307,28 @@ export default function MyAppointments() {
               </header>
 
               <div className={`glass ${styles.glass}`}>
-                <div className={styles.label}>Seus horários</div>
+                <div className="label">STATUS</div>
 
-                <div className={styles.filterGrid} role="group" aria-label="Filtro de agendamentos">
-                  {statusCards.map((card) => {
-                    const isActive = selectedCategory === card.key
-                    return (
-                      <button
-                        key={card.key}
-                        type="button"
-                        className={styles.filterCard}
-                        data-active={isActive ? 'true' : 'false'}
-                        onClick={() => setSelectedCategory(card.key)}
-                      >
-                        <div className={styles.filterCardInner}>
-                          <span className={styles.filterTitle}>{card.title}</span>
-                          <span className={styles.filterDescription}>{card.description}</span>
-                        </div>
-                      </button>
-                    )
-                  })}
+                <div className="grid tipo-grid" role="group" aria-label="Filtro de agendamentos">
+                  {statusCards.map((card) => (
+                    <button
+                      key={card.key}
+                      type="button"
+                      className="card"
+                      data-active={selectedCategory === card.key ? 'true' : 'false'}
+                      onClick={() => handleCategorySelect(card.key)}
+                    >
+                      <div className="card-inner">
+                        <LashIcon />
+                        <span>{card.title}</span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {selectedCategory ? (
-                <div className={`glass ${styles.glass} ${styles.resultsCard}`}>
+                <div ref={resultsRef} className={`glass ${styles.glass} ${styles.resultsCard}`}>
                   {loading ? (
                     <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
                   ) : error ? (

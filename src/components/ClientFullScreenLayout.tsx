@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 import ClientMenu from "./ClientMenu";
 import styles from "./ClientFullScreenLayout.module.css";
@@ -10,10 +11,13 @@ type ClientFullScreenLayoutProps = {
 };
 
 const BODY_CLASS = "client-fullscreen";
+const DISABLE_PADDING_ROUTES = ["/agendamentos"];
 
 export default function ClientFullScreenLayout({
   children,
 }: ClientFullScreenLayoutProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
     const body = document.body;
     body.classList.add(BODY_CLASS);
@@ -23,9 +27,13 @@ export default function ClientFullScreenLayout({
     };
   }, []);
 
+  const disableContentPadding = DISABLE_PADDING_ROUTES.some((route) =>
+    pathname === route || pathname?.startsWith(`${route}/`),
+  );
+
   return (
     <div className={styles.fullscreenWrapper}>
-      <ClientMenu>{children}</ClientMenu>
+      <ClientMenu disableContentPadding={disableContentPadding}>{children}</ClientMenu>
     </div>
   );
 }

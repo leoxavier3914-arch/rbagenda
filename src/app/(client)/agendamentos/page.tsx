@@ -1328,7 +1328,7 @@ export default function MyAppointments() {
               </div>
 
               {selectedCategory ? (
-                <div ref={resultsRef} className={`glass ${styles.glass} ${styles.resultsCard}`}>
+                <div ref={resultsRef} className={`${styles.glass} ${styles.resultsCard}`}>
                   {loading ? (
                     <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
                   ) : error ? (

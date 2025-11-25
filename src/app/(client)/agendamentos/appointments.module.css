@@ -50,6 +50,53 @@
   font-size: var(--label-size, 11px);
 }
 
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.filterCard {
+  appearance: none;
+  border: 1px solid var(--appointments-line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  text-align: left;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.9), rgba(227, 242, 237, 0.9));
+  box-shadow: 0 16px 34px rgba(24, 63, 46, 0.12);
+  color: var(--appointments-ink);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.filterCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(24, 63, 46, 0.18);
+  border-color: rgba(31, 98, 66, 0.35);
+}
+
+.filterCard[data-active='true'] {
+  border-color: rgba(31, 98, 66, 0.6);
+  box-shadow: 0 20px 46px rgba(24, 63, 46, 0.22);
+  background: linear-gradient(160deg, rgba(99, 150, 123, 0.16), rgba(255, 255, 255, 0.92));
+}
+
+.filterCardInner {
+  display: grid;
+  gap: 6px;
+}
+
+.filterTitle {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.filterDescription {
+  color: var(--appointments-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .stateCard {
   width: 100%;
   text-align: center;
@@ -82,6 +129,35 @@
   margin-top: 6px;
   color: var(--appointments-muted);
   font-size: 13px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.summaryCard {
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--appointments-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(227, 242, 237, 0.96));
+  box-shadow: var(--appointments-shadow);
+}
+
+.summaryLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  color: var(--appointments-muted);
+}
+
+.summaryValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--appointments-ink);
+  margin-top: 6px;
 }
 
 .cards {

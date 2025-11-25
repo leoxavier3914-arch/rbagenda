@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
@@ -10,7 +11,7 @@ import {
   DEFAULT_TIMEZONE,
   type AvailabilityAppointment,
 } from '@/lib/availability'
-import FlowShell from '@/components/FlowShell'
+import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
 
 import styles from './appointments.module.css'
 
@@ -83,6 +84,28 @@ const hoursUntil = (iso: string) => {
   const starts = new Date(iso).getTime()
   if (!Number.isFinite(starts)) return 0
   return (starts - Date.now()) / 3_600_000
+}
+
+type Rgb = { r: number; g: number; b: number }
+
+const hexToRgb = (hex: string): Rgb => {
+  const raw = hex.replace('#', '')
+  const normalized = raw.length === 3 ? raw.split('').map((char) => char + char).join('') : raw
+  const value = parseInt(normalized, 16)
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  }
+}
+
+const mixHexColors = (colorA: string, colorB: string, ratio: number): string => {
+  const a = hexToRgb(colorA)
+  const b = hexToRgb(colorB)
+  const mix = (channelA: number, channelB: number) => Math.round(channelA + (channelB - channelA) * ratio)
+  return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)]
+    .map((channel) => channel.toString(16).padStart(2, '0'))
+    .join('')}`
 }
 
 type ServiceTypeShape = { id?: string | null; name?: string | null } | null
@@ -813,6 +836,130 @@ export default function MyAppointments() {
   const router = useRouter()
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const body = document.body
+    if (!body.classList.contains('procedimento-screen')) {
+      body.classList.add('procedimento-screen')
+    }
+
+    const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+
+    const LAVA_CONFIG = {
+      dark: { count: 22, radius: [90, 150] as [number, number], speed: 1.2 },
+      light: { count: 18, radius: [80, 130] as [number, number], speed: 1.0 },
+    }
+
+    const steps = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.85, 0.92, 0.97]
+
+    const buildPalette = () => {
+      const style = getComputedStyle(document.documentElement)
+      const dark = style.getPropertyValue('--dark').trim() || '#7aa98a'
+      const light = style.getPropertyValue('--light').trim() || '#bcd6c3'
+      return steps.map((step) => mixHexColors(dark, light, step))
+    }
+
+    const palette = buildPalette()
+
+    const rand = (min: number, max: number) => min + Math.random() * (max - min)
+    const pick = <T,>(values: readonly T[]) => values[Math.floor(Math.random() * values.length)]
+
+    const cleanups: Array<() => void> = []
+
+    const createLayer = (canvasId: string, type: 'dark' | 'light') => {
+      const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null
+      if (!canvas) return
+      const context = canvas.getContext('2d')
+      if (!context) return
+
+      const state = {
+        width: 0,
+        height: 0,
+        blobs: [] as Array<{
+          x: number
+          y: number
+          r: number
+          a: number
+          vx: number
+          vy: number
+          color: string
+          opacity: number
+        }>,
+        raf: 0,
+        destroyed: false,
+      }
+
+      const resize = () => {
+        const rect = canvas.getBoundingClientRect()
+        state.width = Math.ceil(rect.width * devicePixelRatio)
+        state.height = Math.ceil(rect.height * devicePixelRatio)
+        canvas.width = state.width
+        canvas.height = state.height
+        canvas.style.transform = 'translateZ(0)'
+      }
+
+      const reseed = () => {
+        const config = LAVA_CONFIG[type]
+        const minOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-min')) || 0.4
+        const maxOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-max')) || 0.85
+        resize()
+        state.blobs = []
+        for (let index = 0; index < config.count; index += 1) {
+          state.blobs.push({
+            x: rand(0, state.width),
+            y: rand(0, state.height),
+            r: rand(config.radius[0], config.radius[1]) * devicePixelRatio,
+            a: rand(0, Math.PI * 2),
+            vx: rand(-1, 1) * config.speed * devicePixelRatio,
+            vy: rand(-1, 1) * config.speed * devicePixelRatio,
+            color: pick(palette),
+            opacity: rand(minOpacity, maxOpacity),
+          })
+        }
+      }
+
+      const tick = () => {
+        if (state.destroyed) return
+        context.clearRect(0, 0, state.width, state.height)
+        context.globalCompositeOperation = 'lighter'
+        for (const blob of state.blobs) {
+          blob.x += blob.vx
+          blob.y += blob.vy
+          const bounds = 200 * devicePixelRatio
+          if (blob.x < -bounds || blob.x > state.width + bounds) blob.vx *= -1
+          if (blob.y < -bounds || blob.y > state.height + bounds) blob.vy *= -1
+          const projectedRadius = blob.r * (1 + Math.sin(blob.a + performance.now() * 0.002) * 0.05)
+          context.globalAlpha = blob.opacity
+          context.fillStyle = blob.color
+          context.beginPath()
+          context.arc(blob.x, blob.y, projectedRadius, 0, Math.PI * 2)
+          context.fill()
+        }
+        state.raf = window.requestAnimationFrame(tick)
+      }
+
+      const resizeHandler = () => resize()
+      window.addEventListener('resize', resizeHandler)
+      cleanups.push(() => window.removeEventListener('resize', resizeHandler))
+      cleanups.push(() => {
+        state.destroyed = true
+        if (state.raf) window.cancelAnimationFrame(state.raf)
+      })
+
+      reseed()
+      tick()
+    }
+
+    createLayer('lavaDark', 'dark')
+    createLayer('lavaLight', 'light')
+
+    return () => {
+      body.classList.remove('procedimento-screen')
+      cleanups.forEach((fn) => fn())
+    }
+  }, [])
+
+  useEffect(() => {
     ;(async () => {
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
@@ -1017,102 +1164,158 @@ export default function MyAppointments() {
   }
 
   return (
-    <main className={styles.page}>
-      <FlowShell className={styles.shellExtras}>
-        <h1 className={styles.title}>Meus agendamentos</h1>
-        <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>
+    <main className={styles.wrapper}>
+      <Script id="procedimento-body-class" strategy="beforeInteractive">
+        {"document.body.classList.add('procedimento-screen');"}
+      </Script>
+      <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
 
-        {loading ? (
-          <div className={styles.loading}>Carregando…</div>
-        ) : error ? (
-          <div className={styles.errorMessage}>{error}</div>
-        ) : appointments.length === 0 ? (
-          <div className={styles.empty}>Você ainda não tem agendamentos cadastrados.</div>
-        ) : (
-          appointments.map((appointment) => {
-            const statusLabel = statusLabels[appointment.status] ?? appointment.status
-            const statusClass =
-              styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
-              styles.statusDefault
-            const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
-            const showPay = canShowPay(appointment)
-            const showCancel = canShowCancel(appointment.status)
-            const showEdit = canShowEdit(appointment)
-            const actions = [showPay, showCancel, showEdit].filter(Boolean)
-            const shouldShowPayError = payError && lastPayAttemptId === appointment.id
+      <div className="procedimento-root">
+        <div className="texture" aria-hidden="true">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <filter id="mottle" x="-50%" y="-50%" width="200%" height="200%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="turb" />
+                <feGaussianBlur stdDeviation="18" in="turb" result="blur" />
+                <feBlend in="SourceGraphic" in2="blur" mode="multiply" />
+              </filter>
+            </defs>
+            <rect x="0" y="0" width="100" height="100" fill="#e9f3ee" filter="url(#mottle)" />
+          </svg>
+        </div>
 
-            return (
-              <article key={appointment.id} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <div className={styles.cardInfo}>
-                    <div className={styles.serviceType}>{appointment.serviceType}</div>
-                    {appointment.serviceTechnique ? (
-                      <div className={styles.serviceTechnique}>{appointment.serviceTechnique}</div>
-                    ) : null}
-                  </div>
-                  <span className={`${styles.status} ${statusClass}`}>{statusLabel}</span>
-                </div>
+        <div className="lamp" aria-hidden="true">
+          <canvas id="lavaDark" className="lava dark" />
+          <canvas id="lavaLight" className="lava light" />
+        </div>
 
-                <div className={styles.cardBody}>
-                  <div className={styles.line}>
-                    <strong>Data:</strong> {formatDate(appointment.startsAt)}
-                  </div>
-                  <div className={styles.line}>
-                    <strong>Horário:</strong> {formatTime(appointment.startsAt)}
-                  </div>
-                  <div className={styles.line}>
-                    <strong>Valor:</strong> {toCurrency(appointment.totalValue)}
-                  </div>
-                  <div className={styles.line}>
-                    <strong>Sinal:</strong>{' '}
-                    {appointment.depositValue > 0
-                      ? `${toCurrency(appointment.depositValue)} (${depositLabel})`
-                      : 'não necessário'}
-                  </div>
-                </div>
+        <div className="page">
+          <section className="center">
+            <div className="stack">
+              <header className={styles.header}>
+                <svg
+                  aria-hidden="true"
+                  className="diamond"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                >
+                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+                </svg>
+                <h1 className={styles.title}>Meus agendamentos</h1>
+                <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>
+              </header>
 
-                {actions.length > 0 && (
-                  <div className={styles.cardFooter}>
-                    {showPay && (
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnPay}`}
-                        onClick={() => {
-                          void startDepositPayment(appointment.id)
-                        }}
-                        disabled={payingApptId === appointment.id}
-                      >
-                        {payingApptId === appointment.id ? 'Abrindo…' : '💳 Pagar'}
-                      </button>
-                    )}
-                    {showCancel && (
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnCancel}`}
-                        onClick={() => handleCancelRequest(appointment)}
-                        disabled={cancelingId === appointment.id}
-                      >
-                        {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}
-                      </button>
-                    )}
-                    {showEdit && (
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnEdit}`}
-                        onClick={() => handleEditRequest(appointment)}
-                      >
-                        ✎ Alterar
-                      </button>
-                    )}
+              <div className={`glass ${styles.glass}`}>
+                <div className={styles.label}>Seus horários</div>
+
+                {loading ? (
+                  <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
+                ) : error ? (
+                  <div className={`${styles.stateCard} ${styles.stateError}`}>{error}</div>
+                ) : appointments.length === 0 ? (
+                  <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
+                    <p>Você ainda não tem agendamentos cadastrados.</p>
+                    <span className={styles.stateHint}>Agende um horário para vê-lo aqui.</span>
+                  </div>
+                ) : (
+                  <div className={styles.cards}>
+                    {appointments.map((appointment) => {
+                      const statusLabel = statusLabels[appointment.status] ?? appointment.status
+                      const statusClass =
+                        styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
+                        styles.statusDefault
+                      const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
+                      const showPay = canShowPay(appointment)
+                      const showCancel = canShowCancel(appointment.status)
+                      const showEdit = canShowEdit(appointment)
+                      const actions = [showPay, showCancel, showEdit].filter(Boolean)
+                      const shouldShowPayError = payError && lastPayAttemptId === appointment.id
+
+                      return (
+                        <article key={appointment.id} className={styles.card}>
+                          <div className={styles.cardHeader}>
+                            <div className={styles.cardInfo}>
+                              <div className={styles.serviceType}>{appointment.serviceType}</div>
+                              {appointment.serviceTechnique ? (
+                                <div className={styles.serviceTechnique}>{appointment.serviceTechnique}</div>
+                              ) : null}
+                            </div>
+                            <span className={`${styles.status} ${statusClass}`}>{statusLabel}</span>
+                          </div>
+
+                          <div className={styles.cardBody}>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Data</div>
+                              <div className={styles.detailValue}>{formatDate(appointment.startsAt)}</div>
+                            </div>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Horário</div>
+                              <div className={styles.detailValue}>{formatTime(appointment.startsAt)}</div>
+                            </div>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Valor</div>
+                              <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
+                            </div>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Sinal</div>
+                              <div className={styles.detailValue}>
+                                {appointment.depositValue > 0
+                                  ? `${toCurrency(appointment.depositValue)} (${depositLabel})`
+                                  : 'Não necessário'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {actions.length > 0 && (
+                            <div className={styles.cardFooter}>
+                              {showPay && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnPay}`}
+                                  onClick={() => {
+                                    void startDepositPayment(appointment.id)
+                                  }}
+                                  disabled={payingApptId === appointment.id}
+                                >
+                                  {payingApptId === appointment.id ? 'Abrindo…' : '💳 Pagar'}
+                                </button>
+                              )}
+                              {showCancel && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnCancel}`}
+                                  onClick={() => handleCancelRequest(appointment)}
+                                  disabled={cancelingId === appointment.id}
+                                >
+                                  {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}
+                                </button>
+                              )}
+                              {showEdit && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnEdit}`}
+                                  onClick={() => handleEditRequest(appointment)}
+                                >
+                                  ✎ Alterar
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
+                        </article>
+                      )
+                    })}
                   </div>
                 )}
-
-                {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
-              </article>
-            )
-          })
-        )}
-      </FlowShell>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
 
       <ConfirmCancelModal
         dialog={cancelDialog}

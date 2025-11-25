@@ -15,25 +15,66 @@ import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
 
 import styles from './appointments.module.css'
 
-const statusLabels: Record<string, string> = {
+const statusLabels = {
   pending: 'Pendente',
   reserved: 'Reservado',
   confirmed: 'Confirmado',
   canceled: 'Cancelado',
   completed: 'Finalizado',
+} as const
+
+type AppointmentStatus = keyof typeof statusLabels
+
+const knownStatusKeys = new Set<AppointmentStatus>(Object.keys(statusLabels) as AppointmentStatus[])
+
+type StatusCategory = 'ativos' | 'pendentes' | 'cancelados' | 'concluidos'
+
+const STATUS_FILTERS: Record<StatusCategory, AppointmentStatus[]> = {
+  ativos: ['reserved', 'confirmed'],
+  pendentes: ['pending'],
+  cancelados: ['canceled'],
+  concluidos: ['completed'],
 }
 
-const knownStatusKeys = new Set(Object.keys(statusLabels))
+const statusCards: Array<{ key: StatusCategory; title: string; description: string }> = [
+  {
+    key: 'ativos',
+    title: 'Ativos',
+    description: 'Horários confirmados ou reservados.',
+  },
+  {
+    key: 'pendentes',
+    title: 'Pendentes',
+    description: 'Agendamentos aguardando confirmação.',
+  },
+  {
+    key: 'cancelados',
+    title: 'Cancelados',
+    description: 'Horários cancelados ou liberados.',
+  },
+  {
+    key: 'concluidos',
+    title: 'Concluídos',
+    description: 'Atendimentos já finalizados.',
+  },
+]
 
-const normalizeStatusValue = (status: string | null | undefined) => {
+const statusEmptyMessages: Record<StatusCategory, string> = {
+  ativos: 'Você ainda não tem agendamentos ativos.',
+  pendentes: 'Você ainda não tem agendamentos pendentes.',
+  cancelados: 'Você ainda não tem agendamentos cancelados.',
+  concluidos: 'Você ainda não tem agendamentos finalizados.',
+}
+
+const normalizeStatusValue = (status: string | null | undefined): AppointmentStatus => {
   if (typeof status !== 'string') return 'pending'
   const trimmed = status.trim()
   if (!trimmed) return 'pending'
   const normalized = trimmed.toLowerCase()
-  if (knownStatusKeys.has(normalized)) {
-    return normalized
+  if (knownStatusKeys.has(normalized as AppointmentStatus)) {
+    return normalized as AppointmentStatus
   }
-  return trimmed
+  return 'pending'
 }
 
 const CANCEL_THRESHOLD_HOURS = Number(process.env.NEXT_PUBLIC_DEFAULT_REMARCA_HOURS ?? 24)
@@ -124,7 +165,7 @@ type AppointmentRecord = {
   id: string
   starts_at: string
   ends_at: string | null
-  status: string
+  status: AppointmentStatus
   total_cents: number | null
   deposit_cents: number | null
   valor_sinal: number | string | null
@@ -146,7 +187,7 @@ type NormalizedAppointment = {
   serviceTypeId: string | null
   startsAt: string
   endsAt: string | null
-  status: string
+  status: AppointmentStatus
   serviceType: string
   serviceTechnique: string | null
   totalValue: number
@@ -307,7 +348,7 @@ const depositStatusLabel = (depositValue: number, paidValue: number) => {
   return 'aguardando'
 }
 
-const canShowCancel = (status: string) => !['canceled', 'completed'].includes(status)
+const canShowCancel = (status: AppointmentStatus) => !['canceled', 'completed'].includes(status)
 
 const canShowPay = (appointment: NormalizedAppointment) => {
   if (appointment.depositValue <= 0) return false
@@ -833,6 +874,7 @@ export default function MyAppointments() {
   const [cancelingId, setCancelingId] = useState<string | null>(null)
   const [blockedAppointment, setBlockedAppointment] = useState<NormalizedAppointment | null>(null)
   const [editingAppointment, setEditingAppointment] = useState<NormalizedAppointment | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<StatusCategory>('ativos')
   const router = useRouter()
 
   useEffect(() => {
@@ -1024,6 +1066,28 @@ export default function MyAppointments() {
     return data.session.access_token ?? null
   }, [])
 
+  const filteredAppointments = useMemo(
+    () =>
+      appointments.filter((appointment) =>
+        STATUS_FILTERS[selectedCategory].includes(appointment.status),
+      ),
+    [appointments, selectedCategory],
+  )
+
+  const completionSummary = useMemo(() => {
+    const canceledCount = appointments.filter((appointment) => appointment.status === 'canceled').length
+    const completedAppointments = appointments.filter((appointment) => appointment.status === 'completed')
+    const completedCount = completedAppointments.length
+    const totalCompletedValue = completedAppointments.reduce(
+      (sum, appointment) => sum + appointment.totalValue,
+      0,
+    )
+
+    return { canceledCount, completedCount, totalCompletedValue }
+  }, [appointments])
+
+  const hasAppointments = appointments.length > 0
+
   const startDepositPayment = useCallback(
     async (appointmentId: string) => {
       setPayError(null)
@@ -1211,31 +1275,76 @@ export default function MyAppointments() {
               <div className={`glass ${styles.glass}`}>
                 <div className={styles.label}>Seus horários</div>
 
+                <div className={styles.filterGrid} role="group" aria-label="Filtro de agendamentos">
+                  {statusCards.map((card) => {
+                    const isActive = selectedCategory === card.key
+                    return (
+                      <button
+                        key={card.key}
+                        type="button"
+                        className={styles.filterCard}
+                        data-active={isActive ? 'true' : 'false'}
+                        onClick={() => setSelectedCategory(card.key)}
+                      >
+                        <div className={styles.filterCardInner}>
+                          <span className={styles.filterTitle}>{card.title}</span>
+                          <span className={styles.filterDescription}>{card.description}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
                 {loading ? (
                   <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
                 ) : error ? (
                   <div className={`${styles.stateCard} ${styles.stateError}`}>{error}</div>
-                ) : appointments.length === 0 ? (
+                ) : !hasAppointments ? (
                   <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
                     <p>Você ainda não tem agendamentos cadastrados.</p>
                     <span className={styles.stateHint}>Agende um horário para vê-lo aqui.</span>
                   </div>
+                ) : filteredAppointments.length === 0 ? (
+                  <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
+                    <p>{statusEmptyMessages[selectedCategory]}</p>
+                    <span className={styles.stateHint}>Altere o filtro para ver outros status.</span>
+                  </div>
                 ) : (
-                  <div className={styles.cards}>
-                    {appointments.map((appointment) => {
-                      const statusLabel = statusLabels[appointment.status] ?? appointment.status
-                      const statusClass =
-                        styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
-                        styles.statusDefault
-                      const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
-                      const showPay = canShowPay(appointment)
-                      const showCancel = canShowCancel(appointment.status)
-                      const showEdit = canShowEdit(appointment)
-                      const actions = [showPay, showCancel, showEdit].filter(Boolean)
-                      const shouldShowPayError = payError && lastPayAttemptId === appointment.id
+                  <>
+                    {selectedCategory === 'concluidos' && filteredAppointments.length > 0 ? (
+                      <div className={styles.summaryGrid}>
+                        <div className={styles.summaryCard}>
+                          <div className={styles.summaryLabel}>Cancelados</div>
+                          <div className={styles.summaryValue}>{completionSummary.canceledCount}</div>
+                        </div>
+                        <div className={styles.summaryCard}>
+                          <div className={styles.summaryLabel}>Finalizados</div>
+                          <div className={styles.summaryValue}>{completionSummary.completedCount}</div>
+                        </div>
+                        <div className={styles.summaryCard}>
+                          <div className={styles.summaryLabel}>Total finalizados</div>
+                          <div className={styles.summaryValue}>
+                            {toCurrency(completionSummary.totalCompletedValue)}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
 
-                      return (
-                        <article key={appointment.id} className={styles.card}>
+                    <div className={styles.cards}>
+                      {filteredAppointments.map((appointment) => {
+                        const statusLabel = statusLabels[appointment.status] ?? appointment.status
+                        const statusClass =
+                          styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
+                          styles.statusDefault
+                        const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
+                        const showPay = canShowPay(appointment)
+                        const showCancel = canShowCancel(appointment.status)
+                        const showEdit = canShowEdit(appointment)
+                        const actions = [showPay, showCancel, showEdit].filter(Boolean)
+                        const shouldShowPayError = payError && lastPayAttemptId === appointment.id
+
+                        return (
+                          <article key={appointment.id} className={styles.card}>
                           <div className={styles.cardHeader}>
                             <div className={styles.cardInfo}>
                               <div className={styles.serviceType}>{appointment.serviceType}</div>
@@ -1309,7 +1418,8 @@ export default function MyAppointments() {
                         </article>
                       )
                     })}
-                  </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

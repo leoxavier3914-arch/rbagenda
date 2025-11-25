@@ -1,7 +1,7 @@
 :root {
   --appointments-ink: var(--ink, #183f2e);
   --appointments-muted: var(--muted, #6a8f7f);
-  --appointments-line: var(--card-stroke, rgba(255, 255, 255, 0.3));
+  --appointments-line: rgba(255, 255, 255, 0.7);
   --appointments-soft: rgba(255, 255, 255, 0.78);
   --appointments-strong: rgba(255, 255, 255, 0.94);
   --appointments-radius: var(--radius-inner, 22px);
@@ -61,27 +61,41 @@
 }
 
 .filterCard {
+  position: relative;
   appearance: none;
-  border: 1px solid var(--appointments-line);
+  border: 1.6px solid var(--appointments-line);
   border-radius: 16px;
   padding: 12px 14px;
   text-align: center;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(234, 243, 239, 0.94));
-  box-shadow: 0 12px 26px rgba(24, 63, 46, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(234, 243, 239, 0.94));
+  box-shadow: 0 12px 26px rgba(24, 63, 46, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -12px 18px rgba(143, 196, 170, 0.12);
   color: var(--appointments-ink);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
+  overflow: hidden;
+}
+
+.filterCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
 }
 
 .filterCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(24, 63, 46, 0.16);
-  border-color: rgba(31, 98, 66, 0.35);
+  box-shadow: 0 16px 34px rgba(24, 63, 46, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -12px 18px rgba(143, 196, 170, 0.12);
+  border-color: rgba(255, 255, 255, 0.98);
 }
 
 .filterCard[data-active='true'] {
-  border-color: rgba(31, 98, 66, 0.6);
-  box-shadow: 0 18px 40px rgba(24, 63, 46, 0.18);
+  border-color: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 40px rgba(24, 63, 46, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -12px 18px rgba(143, 196, 170, 0.16);
   background: linear-gradient(180deg, rgba(247, 252, 249, 0.98), rgba(232, 243, 237, 0.94));
 }
 
@@ -109,9 +123,21 @@
   padding: 16px 18px;
   border: 1px solid var(--appointments-line);
   background: var(--appointments-soft);
-  box-shadow: var(--appointments-shadow);
+  box-shadow: var(--appointments-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -14px 20px rgba(143, 196, 170, 0.12);
   color: var(--appointments-ink);
   line-height: 1.55;
+  position: relative;
+  overflow: hidden;
+}
+
+.stateCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
 }
 
 .stateNeutral {
@@ -144,11 +170,23 @@
 }
 
 .summaryCard {
+  position: relative;
   border-radius: 16px;
   padding: 14px 16px;
   border: 1px solid var(--appointments-line);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(227, 242, 237, 0.96));
-  box-shadow: var(--appointments-shadow);
+  box-shadow: var(--appointments-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -14px 20px rgba(143, 196, 170, 0.12);
+  overflow: hidden;
+}
+
+.summaryCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
 }
 
 .summaryLabel {
@@ -175,10 +213,20 @@
   border-radius: var(--appointments-radius);
   border: 1.6px solid var(--appointments-line);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(236, 245, 240, 0.94));
-  box-shadow: 0 16px 34px rgba(28, 75, 56, 0.14);
+  box-shadow: 0 16px 34px rgba(28, 75, 56, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -14px 20px rgba(143, 196, 170, 0.12);
   padding: 20px;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
 }
 
 .card:hover {

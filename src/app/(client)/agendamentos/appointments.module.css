@@ -42,6 +42,10 @@
   width: clamp(320px, 92vw, 720px);
 }
 
+.resultsCard {
+  margin-top: 12px;
+}
+
 .label {
   text-align: center;
   letter-spacing: 0.18em;

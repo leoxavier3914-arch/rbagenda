@@ -16,25 +16,7 @@ export default function Login(){
   const redirectByRole = useCallback(async (session: Session | null) => {
     if (!session?.user?.id) return
 
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .maybeSingle()
-
-      const databaseRole = profile?.role ?? 'client'
-      const role =
-        databaseRole === 'admin'
-          ? 'admin'
-          : databaseRole === 'adminsuper' || databaseRole === 'adminmaster'
-            ? 'adminsuper'
-            : 'client'
-
-      router.replace(role === 'admin' ? '/admin' : role === 'adminsuper' ? '/admin/adminsuper' : '/meu-perfil')
-    } catch {
-      router.replace('/meu-perfil')
-    }
+    router.replace('/meu-perfil')
   }, [router])
 
   useEffect(()=>{

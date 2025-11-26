@@ -217,27 +217,59 @@
   margin: 0 auto;
   width: min(100%, 1120px);
   position: relative;
+}
+
+.pageStack {
+  position: relative;
+  min-height: 100%;
+  perspective: 1600px;
+}
+
+.page {
+  position: relative;
+  width: 100%;
   transform-style: preserve-3d;
 }
 
-.contentInnerFlip {
-  animation: pageFlipIn 720ms ease;
+.pageFront {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform-origin: 100% 0;
+  filter: drop-shadow(-12px 12px 22px rgba(0, 0, 0, 0.28));
 }
 
-@keyframes pageFlipIn {
+.pageBack {
+  z-index: 1;
+}
+
+.pageBackActive {
+  filter: brightness(0.98);
+}
+
+.pageFlipping {
+  animation: pageTurn 720ms ease forwards;
+}
+
+@keyframes pageTurn {
   0% {
-    opacity: 0;
-    transform: perspective(1400px) rotateY(-94deg) translateX(-18px);
+    opacity: 1;
+    transform: rotateY(-2deg) translateZ(0);
   }
 
-  55% {
-    opacity: 1;
-    transform: perspective(1400px) rotateY(12deg) translateX(6px);
+  35% {
+    transform: rotateY(-28deg) translateZ(8px) translateX(-6px);
+  }
+
+  70% {
+    opacity: 0.84;
+    transform: rotateY(-82deg) translateZ(14px) translateX(-10px);
   }
 
   100% {
-    opacity: 1;
-    transform: perspective(1400px) rotateY(0) translateX(0);
+    opacity: 0;
+    transform: rotateY(-110deg) translateZ(20px) translateX(-14px);
   }
 }
 

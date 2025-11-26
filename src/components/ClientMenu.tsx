@@ -199,7 +199,10 @@ export default function ClientMenu({
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPageFlipping, setIsPageFlipping] = useState(false);
+  const [frontPage, setFrontPage] = useState<ReactNode | null>(null);
   const navigationTimeout = useRef<number | null>(null);
+  const prevChildrenRef = useRef<ReactNode>(null);
+  const hasHydratedRef = useRef(false);
   const [profile, setProfile] = useState<ProfileState>({
     name: null,
     role: "client",
@@ -248,17 +251,27 @@ export default function ClientMenu({
   }, []);
 
   useEffect(() => {
+    if (!hasHydratedRef.current) {
+      hasHydratedRef.current = true;
+      prevChildrenRef.current = children;
+      return;
+    }
+
     setIsMenuOpen(false);
+    setFrontPage(prevChildrenRef.current);
     setIsPageFlipping(true);
 
     const timer = window.setTimeout(() => {
       setIsPageFlipping(false);
+      setFrontPage(null);
     }, PAGE_FLIP_MS);
+
+    prevChildrenRef.current = children;
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [pathname]);
+  }, [children, pathname]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -484,13 +497,16 @@ export default function ClientMenu({
       </aside>
 
       <main className={contentClassName}>
-        <div
-          key={pathname}
-          className={`${styles.contentInner} ${
-            isPageFlipping ? styles.contentInnerFlip : ""
-          }`}
-        >
-          {children}
+        <div className={styles.pageStack}>
+          {isPageFlipping && frontPage ? (
+            <div className={`${styles.page} ${styles.pageFront} ${styles.pageFlipping}`}>
+              <div className={styles.contentInner}>{frontPage}</div>
+            </div>
+          ) : null}
+
+          <div className={`${styles.page} ${styles.pageBack} ${isPageFlipping ? styles.pageBackActive : ""}`}>
+            <div className={styles.contentInner}>{children}</div>
+          </div>
         </div>
       </main>
     </div>

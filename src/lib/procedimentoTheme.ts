@@ -13,7 +13,7 @@ export const PROCEDIMENTO_CSS = /* css */ `
   --heading-size: 28px;
   --card-text-size: ;
   --label-size: 11px;
-  --card-stroke: rgba(255, 255, 255, 0.3);
+  --card-stroke: rgba(255, 255, 255, 0.7);
   --lava-alpha-min: 0.40;
   --lava-alpha-max: 0.85;
 }

@@ -65,7 +65,10 @@
   aspect-ratio: 6 / 5;
   border-radius: var(--radius-inner);
   border: 1.6px solid var(--card-stroke);
+  outline: 1px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -1px;
   background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+  background-clip: padding-box;
   box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -14px 20px rgba(143, 196, 170, 0.12);
   display: grid;
@@ -123,7 +126,10 @@
 
 :global(.procedimento-screen) .statusCard {
   border: 1.6px solid var(--card-stroke);
+  outline: 1px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -1px;
   background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+  background-clip: padding-box;
   box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -14px 20px rgba(143, 196, 170, 0.12);
 }

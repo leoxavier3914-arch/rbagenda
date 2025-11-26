@@ -221,15 +221,15 @@ export default function Login() {
   ) : (
     <>
       <div className="space-y-2 text-center">
-        <span className="badge inline-flex">Bem-vinda de volta</span>
+        <span className="badge inline-flex login-welcome">Bem-vinda de volta</span>
         <h1 className="text-3xl font-semibold text-[#1f2d28]">Acessar conta</h1>
         <p className="muted-text">
           Entre para acompanhar seus agendamentos e garantir uma rotina mais tranquila.
         </p>
       </div>
       <div className="space-y-4">
-        <div className="space-y-1 text-left">
-          <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
+        <div className="space-y-1 text-center">
+          <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
             E-mail
           </label>
           <input
@@ -241,9 +241,9 @@ export default function Login() {
             disabled={loading}
           />
         </div>
-        <div className="space-y-2 text-left">
+        <div className="space-y-2 text-center">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
+            <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
               Senha
             </label>
             <input
@@ -302,12 +302,12 @@ export default function Login() {
               <div className="w-full space-y-6 rounded-3xl bg-transparent p-6">{cardContent}</div>
               {!checkingSession && (
                 <div className="button-stack flex flex-col gap-4 pt-1">
-                  <button className="btn-primary w-full" disabled={loading}>
+                  <button className="login-button login-enter" disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
                   <button
                     type="button"
-                    className="btn-secondary w-full"
+                    className="login-button login-create"
                     onClick={() => router.push('/signup')}
                     disabled={loading}
                   >
@@ -330,6 +330,48 @@ export default function Login() {
           .button-stack > * + * {
             margin-top: 1rem;
           }
+        }
+
+        .login-button {
+          display: inline-flex;
+          width: 100%;
+          align-items: center;
+          justify-content: center;
+          gap: 0.375rem;
+          border-radius: 14px;
+          border: 1px solid #fff;
+          padding: 0.75rem 1.25rem;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          color: #fff;
+          box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.45);
+          transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .login-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 14px 32px -16px rgba(0, 0, 0, 0.5);
+          filter: brightness(1.02);
+        }
+
+        .login-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.65;
+          transform: none;
+        }
+
+        .login-enter {
+          background-color: #556b2f;
+        }
+
+        .login-create {
+          background-color: #d4e3ba;
+        }
+
+        .login-welcome {
+          color: #fff;
+          border-color: #fff;
+          background: rgba(255, 255, 255, 0.08);
         }
       `}</style>
     </main>

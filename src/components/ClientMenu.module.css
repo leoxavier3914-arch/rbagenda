@@ -210,6 +210,7 @@
   box-sizing: border-box;
   padding: 96px 24px 56px;
   color: inherit;
+  perspective: 1400px;
 }
 
 .contentInner {

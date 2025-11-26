@@ -181,19 +181,19 @@
   text-decoration: none;
   color: inherit;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid #fff;
   transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .item:hover {
   background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: #fff;
   transform: translateY(-1px);
 }
 
 .itemActive {
   background: rgba(255, 255, 255, 0.24);
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: #2ecc71;
   color: #0f1d17;
 }
 

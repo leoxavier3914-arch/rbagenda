@@ -42,6 +42,14 @@ body.procedimento-screen .lamp{position:fixed;inset:-12vh -12vw;z-index:0;pointe
 body.procedimento-screen .lava{position:absolute;inset:0;width:100%;height:100%;display:block}
 body.procedimento-screen .lava.dark{mix-blend-mode:multiply;filter:blur(26px) contrast(1.05)}
 body.procedimento-screen .lava.light{mix-blend-mode:screen;filter:blur(30px) contrast(1.04)}
+body.procedimento-screen .reveal-seq{opacity:0;transform:translateY(12px);transition:opacity .28s ease,transform .32s ease;pointer-events:none}
+body.procedimento-screen .reveal-seq[data-visible="true"]{opacity:1;transform:none;pointer-events:auto}
+body.procedimento-screen .reveal-title{transition-delay:.05s}
+body.procedimento-screen .reveal-description{transition-delay:.16s}
+body.procedimento-screen .reveal-content{transition-delay:.26s}
+@media (prefers-reduced-motion: reduce){
+  body.procedimento-screen .reveal-seq{transition:none;transform:none;opacity:1;pointer-events:auto}
+}
 
 body.procedimento-screen .page{position:relative;min-height:100svh;z-index:1}
 body.procedimento-screen .center{min-height:100svh;display:grid;place-items:center;padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));position:relative}

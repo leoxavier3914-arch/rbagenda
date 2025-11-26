@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
+import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
@@ -39,7 +40,7 @@ export default function Login() {
 
   const fieldClasses = useMemo(
     () =>
-      'w-full rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-base text-[color:var(--ink)] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_6px_18px_rgba(24,63,46,0.08)] transition focus:border-[color:rgba(122,169,138,0.5)] focus:outline-none focus:ring-2 focus:ring-[color:rgba(122,169,138,0.35)] disabled:cursor-not-allowed disabled:opacity-70',
+      'w-full rounded-2xl border border-white/60 bg-white/10 px-4 py-3 text-base text-white backdrop-blur-md shadow-[0_12px_36px_rgba(0,0,0,0.18)] transition focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 disabled:cursor-not-allowed disabled:opacity-70 placeholder:text-white/70 [text-shadow:0_0_6px_rgba(0,0,0,0.45)]',
     [],
   )
 
@@ -270,54 +271,65 @@ export default function Login() {
                 </p>
               </header>
 
-              <div className="glass w-full max-w-xl">
-                <form className="grid gap-4" onSubmit={submit}>
-                  <div className="grid gap-2 text-left">
-                    <label className="text-sm font-semibold text-[color:var(--muted-2)]" htmlFor="email">
-                      E-mail
-                    </label>
-                    <input
-                      id="email"
-                      className={fieldClasses}
-                      placeholder="nome@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={loading}
-                      autoComplete="email"
-                    />
-                  </div>
+              <form className="grid w-full max-w-xl gap-6" onSubmit={submit}>
+                <div className="glass w-full">
+                  <div className="grid gap-4">
+                    <div className="grid gap-2 text-left">
+                      <label className="text-sm font-semibold text-[color:var(--muted-2)]" htmlFor="email">
+                        E-mail
+                      </label>
+                      <input
+                        id="email"
+                        className={fieldClasses}
+                        placeholder="nome@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                        autoComplete="email"
+                      />
+                    </div>
 
-                  <div className="grid gap-2 text-left">
-                    <label className="text-sm font-semibold text-[color:var(--muted-2)]" htmlFor="password">
-                      Senha
-                    </label>
-                    <input
-                      id="password"
-                      className={fieldClasses}
-                      type="password"
-                      placeholder="Digite sua senha"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={loading}
-                      autoComplete="current-password"
-                    />
+                    <div className="grid gap-2 text-left">
+                      <label className="text-sm font-semibold text-[color:var(--muted-2)]" htmlFor="password">
+                        Senha
+                      </label>
+                      <input
+                        id="password"
+                        className={fieldClasses}
+                        type="password"
+                        placeholder="Digite sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
+                        autoComplete="current-password"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  <button className="btn-primary w-full" disabled={loading}>
+                <div className="flex flex-col items-center gap-3">
+                  <button className="btn-primary w-full max-w-xs" disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
-                </form>
+
+                  <Link
+                    href="/signup"
+                    className="w-full max-w-xs rounded-2xl border border-white/60 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-white shadow-[0_12px_36px_rgba(0,0,0,0.18)] transition hover:border-white hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  >
+                    Criar conta
+                  </Link>
+                </div>
 
                 {checkingSession ? (
-                  <div className="mt-4 text-center text-sm text-[color:var(--muted-2)]">Verificando sessão…</div>
+                  <div className="text-center text-sm text-[color:var(--muted-2)]">Verificando sessão…</div>
                 ) : null}
 
                 {msg && (
-                  <div className="mt-4 rounded-2xl border border-[color:rgba(164,61,61,0.25)] bg-[color:rgba(255,235,235,0.85)] px-4 py-3 text-sm text-[color:#7b2f2f]">
+                  <div className="rounded-2xl border border-[color:rgba(164,61,61,0.25)] bg-[color:rgba(255,235,235,0.85)] px-4 py-3 text-sm text-[color:#7b2f2f]">
                     {msg}
                   </div>
                 )}
-              </div>
+              </form>
             </div>
           </section>
         </div>

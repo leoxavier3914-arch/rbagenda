@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import ClientFullScreenLayout from "@/components/ClientFullScreenLayout";
+import { LavaLampProvider } from "@/components/LavaLampProvider";
 
 export default function ClientLayout({
   children,
@@ -18,8 +19,16 @@ export default function ClientLayout({
   );
 
   if (shouldHideMenu) {
-    return <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>;
+    return (
+      <LavaLampProvider>
+        <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
+      </LavaLampProvider>
+    );
   }
 
-  return <ClientFullScreenLayout>{children}</ClientFullScreenLayout>;
+  return (
+    <LavaLampProvider>
+      <ClientFullScreenLayout>{children}</ClientFullScreenLayout>
+    </LavaLampProvider>
+  );
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
@@ -11,7 +10,6 @@ import {
   DEFAULT_TIMEZONE,
   type AvailabilityAppointment,
 } from '@/lib/availability'
-import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 
 import styles from './appointments.module.css'
@@ -114,28 +112,6 @@ const hoursUntil = (iso: string) => {
   const starts = new Date(iso).getTime()
   if (!Number.isFinite(starts)) return 0
   return (starts - Date.now()) / 3_600_000
-}
-
-type Rgb = { r: number; g: number; b: number }
-
-const hexToRgb = (hex: string): Rgb => {
-  const raw = hex.replace('#', '')
-  const normalized = raw.length === 3 ? raw.split('').map((char) => char + char).join('') : raw
-  const value = parseInt(normalized, 16)
-  return {
-    r: (value >> 16) & 255,
-    g: (value >> 8) & 255,
-    b: value & 255,
-  }
-}
-
-const mixHexColors = (colorA: string, colorB: string, ratio: number): string => {
-  const a = hexToRgb(colorA)
-  const b = hexToRgb(colorB)
-  const mix = (channelA: number, channelB: number) => Math.round(channelA + (channelB - channelA) * ratio)
-  return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)]
-    .map((channel) => channel.toString(16).padStart(2, '0'))
-    .join('')}`
 }
 
 type ServiceTypeShape = { id?: string | null; name?: string | null } | null
@@ -883,130 +859,6 @@ export default function MyAppointments() {
   const router = useRouter()
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined
-
-    const body = document.body
-    if (!body.classList.contains('procedimento-screen')) {
-      body.classList.add('procedimento-screen')
-    }
-
-    const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
-
-    const LAVA_CONFIG = {
-      dark: { count: 22, radius: [90, 150] as [number, number], speed: 1.2 },
-      light: { count: 18, radius: [80, 130] as [number, number], speed: 1.0 },
-    }
-
-    const steps = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.85, 0.92, 0.97]
-
-    const buildPalette = () => {
-      const style = getComputedStyle(document.documentElement)
-      const dark = style.getPropertyValue('--dark').trim() || '#7aa98a'
-      const light = style.getPropertyValue('--light').trim() || '#bcd6c3'
-      return steps.map((step) => mixHexColors(dark, light, step))
-    }
-
-    const palette = buildPalette()
-
-    const rand = (min: number, max: number) => min + Math.random() * (max - min)
-    const pick = <T,>(values: readonly T[]) => values[Math.floor(Math.random() * values.length)]
-
-    const cleanups: Array<() => void> = []
-
-    const createLayer = (canvasId: string, type: 'dark' | 'light') => {
-      const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null
-      if (!canvas) return
-      const context = canvas.getContext('2d')
-      if (!context) return
-
-      const state = {
-        width: 0,
-        height: 0,
-        blobs: [] as Array<{
-          x: number
-          y: number
-          r: number
-          a: number
-          vx: number
-          vy: number
-          color: string
-          opacity: number
-        }>,
-        raf: 0,
-        destroyed: false,
-      }
-
-      const resize = () => {
-        const rect = canvas.getBoundingClientRect()
-        state.width = Math.ceil(rect.width * devicePixelRatio)
-        state.height = Math.ceil(rect.height * devicePixelRatio)
-        canvas.width = state.width
-        canvas.height = state.height
-        canvas.style.transform = 'translateZ(0)'
-      }
-
-      const reseed = () => {
-        const config = LAVA_CONFIG[type]
-        const minOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-min')) || 0.4
-        const maxOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-max')) || 0.85
-        resize()
-        state.blobs = []
-        for (let index = 0; index < config.count; index += 1) {
-          state.blobs.push({
-            x: rand(0, state.width),
-            y: rand(0, state.height),
-            r: rand(config.radius[0], config.radius[1]) * devicePixelRatio,
-            a: rand(0, Math.PI * 2),
-            vx: rand(-1, 1) * config.speed * devicePixelRatio,
-            vy: rand(-1, 1) * config.speed * devicePixelRatio,
-            color: pick(palette),
-            opacity: rand(minOpacity, maxOpacity),
-          })
-        }
-      }
-
-      const tick = () => {
-        if (state.destroyed) return
-        context.clearRect(0, 0, state.width, state.height)
-        context.globalCompositeOperation = 'lighter'
-        for (const blob of state.blobs) {
-          blob.x += blob.vx
-          blob.y += blob.vy
-          const bounds = 200 * devicePixelRatio
-          if (blob.x < -bounds || blob.x > state.width + bounds) blob.vx *= -1
-          if (blob.y < -bounds || blob.y > state.height + bounds) blob.vy *= -1
-          const projectedRadius = blob.r * (1 + Math.sin(blob.a + performance.now() * 0.002) * 0.05)
-          context.globalAlpha = blob.opacity
-          context.fillStyle = blob.color
-          context.beginPath()
-          context.arc(blob.x, blob.y, projectedRadius, 0, Math.PI * 2)
-          context.fill()
-        }
-        state.raf = window.requestAnimationFrame(tick)
-      }
-
-      const resizeHandler = () => resize()
-      window.addEventListener('resize', resizeHandler)
-      cleanups.push(() => window.removeEventListener('resize', resizeHandler))
-      cleanups.push(() => {
-        state.destroyed = true
-        if (state.raf) window.cancelAnimationFrame(state.raf)
-      })
-
-      reseed()
-      tick()
-    }
-
-    createLayer('lavaDark', 'dark')
-    createLayer('lavaLight', 'light')
-
-    return () => {
-      body.classList.remove('procedimento-screen')
-      cleanups.forEach((fn) => fn())
-    }
-  }, [])
-
-  useEffect(() => {
     ;(async () => {
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
@@ -1290,32 +1142,8 @@ export default function MyAppointments() {
     setCancelError(null)
   }
 
-  return (
-    <main className={styles.wrapper}>
-      <Script id="procedimento-body-class" strategy="beforeInteractive">
-        {"document.body.classList.add('procedimento-screen');"}
-      </Script>
-      <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
-
-      <div className="procedimento-root">
-        <div className="texture" aria-hidden="true">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <filter id="mottle" x="-50%" y="-50%" width="200%" height="200%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="turb" />
-                <feGaussianBlur stdDeviation="18" in="turb" result="blur" />
-                <feBlend in="SourceGraphic" in2="blur" mode="multiply" />
-              </filter>
-            </defs>
-            <rect x="0" y="0" width="100" height="100" fill="#e9f3ee" filter="url(#mottle)" />
-          </svg>
-        </div>
-
-        <div className="lamp" aria-hidden="true">
-          <canvas id="lavaDark" className="lava dark" />
-          <canvas id="lavaLight" className="lava light" />
-        </div>
-
+    return (
+      <main className={styles.wrapper}>
         <div className="page">
           <section className="center">
             <div className="stack">
@@ -1535,30 +1363,29 @@ export default function MyAppointments() {
             </div>
           </section>
         </div>
-      </div>
 
-      <ConfirmCancelModal
-        dialog={cancelDialog}
-        onClose={closeCancelDialog}
-        onConfirm={handleCancelConfirm}
-        isProcessing={Boolean(cancelDialog && cancelingId === cancelDialog.appointment.id)}
-        errorMessage={cancelError}
-      />
-
-      <SuccessModal dialog={successDialog} onClose={closeSuccessDialog} />
-
-      <BlockedModal appointment={blockedAppointment} onClose={() => setBlockedAppointment(null)} />
-
-      {editingAppointment ? (
-        <RescheduleModal
-          appointment={editingAppointment}
-          onClose={() => setEditingAppointment(null)}
-          ensureAuth={ensureAuth}
-          onSuccess={({ starts_at, ends_at }) =>
-            handleRescheduleSuccess(editingAppointment.id, starts_at, ends_at)
-          }
+        <ConfirmCancelModal
+          dialog={cancelDialog}
+          onClose={closeCancelDialog}
+          onConfirm={handleCancelConfirm}
+          isProcessing={Boolean(cancelDialog && cancelingId === cancelDialog.appointment.id)}
+          errorMessage={cancelError}
         />
-      ) : null}
-    </main>
-  )
-}
+
+        <SuccessModal dialog={successDialog} onClose={closeSuccessDialog} />
+
+        <BlockedModal appointment={blockedAppointment} onClose={() => setBlockedAppointment(null)} />
+
+        {editingAppointment ? (
+          <RescheduleModal
+            appointment={editingAppointment}
+            onClose={() => setEditingAppointment(null)}
+            ensureAuth={ensureAuth}
+            onSuccess={({ starts_at, ends_at }) =>
+              handleRescheduleSuccess(editingAppointment.id, starts_at, ends_at)
+            }
+          />
+        ) : null}
+      </main>
+    )
+  }

@@ -82,10 +82,6 @@ type SummarySnapshot = {
     slot: string
   }
 }
-function escapeRegExp(value: string): string {
-  return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-}
-
 function isHex(value: string): boolean {
   return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(value.trim())
 }
@@ -167,6 +163,982 @@ function LashIcon() {
 const FALLBACK_BUFFER_MINUTES = DEFAULT_FALLBACK_BUFFER_MINUTES
 const WORK_DAY_END = '18:00'
 
+type PaletteState = {
+  cardTop: string
+  cardBottom: string
+  cardBorderColor: string
+  cardBorderAlpha: number
+  bgTop: string
+  bgBottom: string
+  glassBorderColor: string
+  glassBorderAlpha: number
+  glassColor: string
+  glassAlpha: number
+  bubbleDark: string
+  bubbleLight: string
+  bubbleAlphaMin: number
+  bubbleAlphaMax: number
+  textInk: string
+  textMuted: string
+  textMuted2: string
+  fontBody: string
+  fontHeading: string
+  sizeBase: number
+  sizeH1: number
+  sizeCard: number
+  sizeLabel: number
+}
+
+const PALETTE_VAR_NAMES = [
+  '--inner-top',
+  '--inner-bottom',
+  '--bg-top',
+  '--bg-bottom',
+  '--glass',
+  '--glass-stroke',
+  '--card-stroke',
+  '--dark',
+  '--light',
+  '--lava-alpha-min',
+  '--lava-alpha-max',
+  '--ink',
+  '--muted',
+  '--muted-2',
+  '--font-family',
+  '--heading-font',
+  '--base-font-size',
+  '--heading-size',
+  '--card-text-size',
+  '--label-size',
+] as const
+
+const DEFAULT_PALETTE: PaletteState = {
+  cardTop: '#eaf7ef',
+  cardBottom: '#daefe2',
+  cardBorderColor: '#ffffff',
+  cardBorderAlpha: 0.86,
+  bgTop: '#cfe6d5',
+  bgBottom: '#eef3e6',
+  glassBorderColor: '#ffffff',
+  glassBorderAlpha: 0.78,
+  glassColor: '#ecfaf1',
+  glassAlpha: 0.34,
+  bubbleDark: '#7aa98a',
+  bubbleLight: '#bcd6c3',
+  bubbleAlphaMin: 0.4,
+  bubbleAlphaMax: 0.85,
+  textInk: '#183f2e',
+  textMuted: '#6a8f7f',
+  textMuted2: '#5f8c79',
+  fontBody: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'",
+  fontHeading: "Fraunces, 'Playfair Display', Georgia, serif",
+  sizeBase: 16,
+  sizeH1: 28,
+  sizeCard: 20,
+  sizeLabel: 11,
+}
+
+type PaletteHexInputs = {
+  cardTop: string
+  cardBottom: string
+  cardBorder: string
+  bgTop: string
+  bgBottom: string
+  glass: string
+  glassBorder: string
+  bubbleDark: string
+  bubbleLight: string
+  textInk: string
+  textMuted: string
+  textMuted2: string
+}
+
+type FontOption = { label: string; value: string }
+
+const BODY_FONT_OPTIONS: FontOption[] = [
+  {
+    label: 'Inter',
+    value: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'",
+  },
+  {
+    label: 'Roboto',
+    value: "Roboto, system-ui, -apple-system, Segoe UI, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'",
+  },
+  {
+    label: 'Poppins',
+    value: 'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
+  },
+]
+
+const HEADING_FONT_OPTIONS: FontOption[] = [
+  { label: 'Fraunces', value: "Fraunces, 'Playfair Display', Georgia, serif" },
+  { label: 'Playfair Display', value: "'Playfair Display', Georgia, serif" },
+  { label: 'Poppins', value: 'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial' },
+  { label: 'Inter', value: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" },
+]
+
+function parseCssNumeric(value: string, fallback: number) {
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function parseRgbaColor(value: string): { hex: string; alpha: number } | null {
+  const match = value.match(/rgba?\(([^)]+)\)/i)
+  if (!match) return null
+  const parts = match[1].split(',').map((part) => part.trim())
+  const [r, g, b, a = '1'] = parts
+  const toHex = (component: string) => {
+    const parsed = Math.max(0, Math.min(255, Number(component)))
+    return parsed.toString(16).padStart(2, '0')
+  }
+  const alpha = parseCssNumeric(a, 1)
+  return { hex: `#${[r, g, b].map(toHex).join('')}`, alpha }
+}
+
+function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [palette, setPalette] = useState<PaletteState>(DEFAULT_PALETTE)
+  const [hexInputs, setHexInputs] = useState<PaletteHexInputs>({
+    cardTop: '',
+    cardBottom: '',
+    cardBorder: '',
+    bgTop: '',
+    bgBottom: '',
+    glass: '',
+    glassBorder: '',
+    bubbleDark: '',
+    bubbleLight: '',
+    textInk: '',
+    textMuted: '',
+    textMuted2: '',
+  })
+  const [fontUrl, setFontUrl] = useState('')
+  const [fontFamilyName, setFontFamilyName] = useState('')
+  const [fontApplyWhere, setFontApplyWhere] = useState<'body' | 'heading' | 'both'>('body')
+  const [bodyOptions, setBodyOptions] = useState(BODY_FONT_OPTIONS)
+  const [headingOptions, setHeadingOptions] = useState(HEADING_FONT_OPTIONS)
+  const paletteTouchedRef = useRef(false)
+  const mountedRef = useRef(false)
+
+  const updateHexInput = useCallback((key: keyof PaletteHexInputs, value: string) => {
+    setHexInputs((prev) => ({ ...prev, [key]: value }))
+  }, [])
+
+  const markPaletteChanged = useCallback(() => {
+    paletteTouchedRef.current = true
+  }, [])
+
+  const setPaletteValues = useCallback((updates: Partial<PaletteState>, options?: { markPalette?: boolean }) => {
+    setPalette((prev) => ({ ...prev, ...updates }))
+    if (options?.markPalette) {
+      markPaletteChanged()
+    }
+  }, [markPaletteChanged])
+
+  useEffect(() => {
+    const style = getComputedStyle(document.documentElement)
+    setPalette((prev) => {
+      const glass = parseRgbaColor(style.getPropertyValue('--glass'))
+      const glassStroke = parseRgbaColor(style.getPropertyValue('--glass-stroke'))
+      const cardStroke = parseRgbaColor(style.getPropertyValue('--card-stroke'))
+      return {
+        ...prev,
+        cardTop: style.getPropertyValue('--inner-top').trim() || prev.cardTop,
+        cardBottom: style.getPropertyValue('--inner-bottom').trim() || prev.cardBottom,
+        cardBorderColor: cardStroke?.hex ?? prev.cardBorderColor,
+        bgTop: style.getPropertyValue('--bg-top').trim() || prev.bgTop,
+        bgBottom: style.getPropertyValue('--bg-bottom').trim() || prev.bgBottom,
+        glassBorderColor: glassStroke?.hex ?? prev.glassBorderColor,
+        bubbleDark: style.getPropertyValue('--dark').trim() || prev.bubbleDark,
+        bubbleLight: style.getPropertyValue('--light').trim() || prev.bubbleLight,
+        textInk: style.getPropertyValue('--ink').trim() || prev.textInk,
+        textMuted: style.getPropertyValue('--muted').trim() || prev.textMuted,
+        textMuted2: style.getPropertyValue('--muted-2').trim() || prev.textMuted2,
+        fontBody: style.getPropertyValue('--font-family').trim() || prev.fontBody,
+        fontHeading: style.getPropertyValue('--heading-font').trim() || prev.fontHeading,
+        sizeBase: parseCssNumeric(style.getPropertyValue('--base-font-size'), prev.sizeBase),
+        sizeH1: parseCssNumeric(style.getPropertyValue('--heading-size'), prev.sizeH1),
+        sizeCard: parseCssNumeric(style.getPropertyValue('--card-text-size'), prev.sizeCard),
+        sizeLabel: parseCssNumeric(style.getPropertyValue('--label-size'), prev.sizeLabel),
+        glassColor: glass?.hex ?? prev.glassColor,
+        glassAlpha: glass?.alpha ?? prev.glassAlpha,
+        glassBorderAlpha: glassStroke?.alpha ?? prev.glassBorderAlpha,
+        cardBorderAlpha: cardStroke?.alpha ?? prev.cardBorderAlpha,
+        bubbleAlphaMin: parseCssNumeric(style.getPropertyValue('--lava-alpha-min'), prev.bubbleAlphaMin),
+        bubbleAlphaMax: parseCssNumeric(style.getPropertyValue('--lava-alpha-max'), prev.bubbleAlphaMax),
+      }
+    })
+    mountedRef.current = true
+  }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    const updated: Array<[string, string]> = [
+      ['--inner-top', palette.cardTop],
+      ['--inner-bottom', palette.cardBottom],
+      ['--bg-top', palette.bgTop],
+      ['--bg-bottom', palette.bgBottom],
+      ['--glass', rgbaFromHexAlpha(palette.glassColor, palette.glassAlpha)],
+      ['--glass-stroke', rgbaFromHexAlpha(palette.glassBorderColor, palette.glassBorderAlpha)],
+      ['--card-stroke', rgbaFromHexAlpha(palette.cardBorderColor, palette.cardBorderAlpha)],
+      ['--dark', palette.bubbleDark],
+      ['--light', palette.bubbleLight],
+      ['--lava-alpha-min', String(palette.bubbleAlphaMin)],
+      ['--lava-alpha-max', String(palette.bubbleAlphaMax)],
+      ['--ink', palette.textInk],
+      ['--muted', palette.textMuted],
+      ['--muted-2', palette.textMuted2],
+      ['--font-family', palette.fontBody],
+      ['--heading-font', palette.fontHeading],
+      ['--base-font-size', `${palette.sizeBase}px`],
+      ['--heading-size', `${palette.sizeH1}px`],
+      ['--card-text-size', `${palette.sizeCard}px`],
+      ['--label-size', `${palette.sizeLabel}px`],
+    ]
+
+    updated.forEach(([name, value]) => {
+      root.style.setProperty(name, value)
+    })
+  }, [palette])
+
+  useEffect(
+    () => () => {
+      const root = document.documentElement
+      PALETTE_VAR_NAMES.forEach((name) => {
+        root.style.removeProperty(name)
+      })
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!mountedRef.current || !paletteTouchedRef.current) return
+    refreshPalette()
+  }, [palette.bubbleDark, palette.bubbleLight, palette.bubbleAlphaMin, palette.bubbleAlphaMax, refreshPalette])
+
+  const applyHexValue = useCallback(
+    (key: keyof PaletteHexInputs, setter: (value: string) => void) => {
+      const value = hexInputs[key].trim()
+      if (!value || !isHex(value)) return
+      setter(value)
+      updateHexInput(key, value)
+    },
+    [hexInputs, updateHexInput],
+  )
+
+  const handleSwatchClick = useCallback(
+    (rules: string) => {
+      const entries = rules
+        .split(';')
+        .map((rule) => rule.trim())
+        .filter(Boolean)
+        .map((rule) => rule.split(':'))
+        .filter(([prop, val]) => Boolean(prop) && Boolean(val)) as Array<[string, string]>
+
+      const updates: Partial<PaletteState> = {}
+      let paletteChanged = false
+
+      entries.forEach(([prop, val]) => {
+        const value = val.trim()
+        switch (prop.trim()) {
+          case '--glass': {
+            const parsed = parseRgbaColor(value)
+            if (parsed) {
+              updates.glassColor = parsed.hex
+              updates.glassAlpha = parsed.alpha
+            }
+            break
+          }
+          case '--glass-stroke':
+            updates.glassBorderColor = value
+            break
+          case '--card-stroke':
+            updates.cardBorderColor = value
+            break
+          case '--inner-top':
+            updates.cardTop = value
+            break
+          case '--inner-bottom':
+            updates.cardBottom = value
+            break
+          case '--bg-top':
+            updates.bgTop = value
+            break
+          case '--bg-bottom':
+            updates.bgBottom = value
+            break
+          case '--dark':
+            updates.bubbleDark = value
+            paletteChanged = true
+            break
+          case '--light':
+            updates.bubbleLight = value
+            paletteChanged = true
+            break
+          case '--ink':
+            updates.textInk = value
+            break
+          case '--muted':
+            updates.textMuted = value
+            break
+          case '--muted-2':
+            updates.textMuted2 = value
+            break
+          default:
+            break
+        }
+      })
+
+      setPaletteValues(updates, { markPalette: paletteChanged })
+    },
+    [setPaletteValues],
+  )
+
+  const handleFontAdd = useCallback(() => {
+    const url = fontUrl.trim()
+    const family = fontFamilyName.trim()
+    if (!url || !family) return
+    const target = fontApplyWhere
+
+    const linkExists = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).some(
+      (link) => link.href === url,
+    )
+    if (!linkExists) {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      document.head.appendChild(link)
+    }
+
+    if (target === 'body' || target === 'both') {
+      setBodyOptions((prev) => (prev.some((option) => option.value === family) ? prev : [...prev, { label: family, value: family }]))
+      setPaletteValues({ fontBody: family })
+    }
+
+    if (target === 'heading' || target === 'both') {
+      setHeadingOptions((prev) =>
+        prev.some((option) => option.value === family) ? prev : [...prev, { label: family, value: family }],
+      )
+      setPaletteValues({ fontHeading: family })
+    }
+  }, [fontApplyWhere, fontFamilyName, fontUrl, setPaletteValues])
+
+  const handleSaveClick = useCallback(() => {
+    const html = '<!doctype html>\n' + document.documentElement.outerHTML
+    const blob = new Blob([html], { type: 'text/html' })
+    const anchor = document.createElement('a')
+    const name = (document.title || 'index').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html'
+    anchor.href = URL.createObjectURL(blob)
+    anchor.download = name
+    document.body.appendChild(anchor)
+    anchor.click()
+    window.setTimeout(() => {
+      URL.revokeObjectURL(anchor.href)
+      anchor.remove()
+    }, 1200)
+  }, [])
+
+  const handleGlassAlphaChange = useCallback(
+    (value: string) => {
+      const parsed = Number.parseFloat(value)
+      if (!Number.isFinite(parsed)) return
+      setPaletteValues({ glassAlpha: Math.max(0, Math.min(1, parsed)) })
+    },
+    [setPaletteValues],
+  )
+
+  const handleBubbleAlphaChange = useCallback(
+    (key: 'bubbleAlphaMin' | 'bubbleAlphaMax', value: string) => {
+      const parsed = Number.parseFloat(value)
+      if (!Number.isFinite(parsed)) return
+      const clamped = Math.max(0, Math.min(1, parsed))
+      setPalette((prev) => {
+        let nextMin = key === 'bubbleAlphaMin' ? clamped : prev.bubbleAlphaMin
+        let nextMax = key === 'bubbleAlphaMax' ? clamped : prev.bubbleAlphaMax
+        if (key === 'bubbleAlphaMin' && nextMin > nextMax) {
+          nextMax = nextMin
+        } else if (key === 'bubbleAlphaMax' && nextMax < nextMin) {
+          nextMin = nextMax
+        }
+        return { ...prev, bubbleAlphaMin: nextMin, bubbleAlphaMax: nextMax }
+      })
+      markPaletteChanged()
+    },
+    [markPaletteChanged],
+  )
+
+  const handleSizeChange = useCallback(
+    (key: keyof Pick<PaletteState, 'sizeBase' | 'sizeH1' | 'sizeCard' | 'sizeLabel'>, value: string, fallback: number) => {
+      const parsed = parseInt(value || `${fallback}`, 10)
+      if (!Number.isFinite(parsed)) return
+      setPaletteValues({ [key]: parsed } as Partial<PaletteState>)
+    },
+    [setPaletteValues],
+  )
+
+  const renderSwatch = (css: string, style: string) => (
+    <div className="swatch" style={{ background: style }} onClick={() => handleSwatchClick(css)} role="button" />
+  )
+
+  return (
+    <>
+      <button id="paletteBtn" title="Personalizar" onClick={() => setIsOpen((open) => !open)}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
+          <path d="M7.2 7.2l1.8 1.8" />
+          <path d="M16.8 7.2l-1.8 1.8" />
+        </svg>
+      </button>
+      <div id="palettePanel" className={isOpen ? 'open' : ''} onClick={(event) => event.target === event.currentTarget && setIsOpen(false)}>
+        <div id="panelScroll">
+          <div className="pal-section">
+            <h3>Cards (livre)</h3>
+            <div className="row">
+              <span className="small">Superior</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="cardTop"
+                value={palette.cardTop}
+                onChange={(event) => setPaletteValues({ cardTop: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Inferior</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="cardBottom"
+                value={palette.cardBottom}
+                onChange={(event) => setPaletteValues({ cardBottom: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="cardTopHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.cardTop}
+                onChange={(event) => updateHexInput('cardTop', event.target.value)}
+              />
+              <button className="btn-mini" id="addCardTop" type="button" onClick={() => applyHexValue('cardTop', (value) => setPaletteValues({ cardTop: value }))}>
+                Aplicar sup.
+              </button>
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="cardBottomHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.cardBottom}
+                onChange={(event) => updateHexInput('cardBottom', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="addCardBottom"
+                type="button"
+                onClick={() => applyHexValue('cardBottom', (value) => setPaletteValues({ cardBottom: value }))}
+              >
+                Aplicar inf.
+              </button>
+            </div>
+            <div className="row">
+              <span className="small">Borda card</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="cardBorderColor"
+                value={palette.cardBorderColor}
+                onChange={(event) => setPaletteValues({ cardBorderColor: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Opacidade borda</span>
+              <input
+                type="range"
+                className="range"
+                id="cardBorderAlpha"
+                min="0"
+                max="1"
+                step="0.01"
+                value={palette.cardBorderAlpha}
+                onChange={(event) => setPaletteValues({ cardBorderAlpha: Number(event.target.value) })}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="cardBorderHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.cardBorder}
+                onChange={(event) => updateHexInput('cardBorder', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="applyCardBorderHex"
+                type="button"
+                onClick={() => applyHexValue('cardBorder', (value) => setPaletteValues({ cardBorderColor: value }))}
+              >
+                Aplicar borda
+              </button>
+            </div>
+          </div>
+          <div className="pal-section">
+            <h3>Container (fundo)</h3>
+            <div className="pal-options">
+              {renderSwatch('--bg-top:#cfe6d5;--bg-bottom:#eef3e6', '#cfe6d5')}
+              {renderSwatch('--bg-top:#e3e8df;--bg-bottom:#f2f3ef', '#e3e8df')}
+              {renderSwatch('--bg-top:#dbece3;--bg-bottom:#eef4ec', '#dbece3')}
+            </div>
+            <div className="row">
+              <span className="small">Topo</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="bgTop"
+                value={palette.bgTop}
+                onChange={(event) => setPaletteValues({ bgTop: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Base</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="bgBottom"
+                value={palette.bgBottom}
+                onChange={(event) => setPaletteValues({ bgBottom: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="bgTopHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.bgTop}
+                onChange={(event) => updateHexInput('bgTop', event.target.value)}
+              />
+              <button className="btn-mini" id="addBgTop" type="button" onClick={() => applyHexValue('bgTop', (value) => setPaletteValues({ bgTop: value }))}>
+                Aplicar topo
+              </button>
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="bgBottomHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.bgBottom}
+                onChange={(event) => updateHexInput('bgBottom', event.target.value)}
+              />
+              <button className="btn-mini" id="addBgBottom" type="button" onClick={() => applyHexValue('bgBottom', (value) => setPaletteValues({ bgBottom: value }))}>
+                Aplicar base
+              </button>
+            </div>
+            <div className="hr" />
+            <div className="row">
+              <span className="small">Borda vidro</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="glassBorderColor"
+                value={palette.glassBorderColor}
+                onChange={(event) => setPaletteValues({ glassBorderColor: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Opacidade borda</span>
+              <input
+                type="range"
+                className="range"
+                id="glassBorderAlpha"
+                min="0"
+                max="1"
+                step="0.01"
+                value={palette.glassBorderAlpha}
+                onChange={(event) => setPaletteValues({ glassBorderAlpha: Number(event.target.value) })}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="glassBorderHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.glassBorder}
+                onChange={(event) => updateHexInput('glassBorder', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="applyGlassBorderHex"
+                type="button"
+                onClick={() => applyHexValue('glassBorder', (value) => setPaletteValues({ glassBorderColor: value }))}
+              >
+                Aplicar borda
+              </button>
+            </div>
+          </div>
+          <div className="pal-section">
+            <h3>Overlay (vidro)</h3>
+            <div className="pal-options">
+              {renderSwatch('--glass:rgba(236,250,241,.34)', 'rgba(236,250,241,.34)')}
+              {renderSwatch('--glass:rgba(240,245,240,.42)', 'rgba(240,245,240,.42)')}
+              {renderSwatch('--glass:rgba(230,240,235,.50)', 'rgba(230,240,235,.50)')}
+            </div>
+            <div className="row">
+              <span className="small">Cor</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="glassColor"
+                value={palette.glassColor}
+                onChange={(event) => setPaletteValues({ glassColor: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Opacidade</span>
+              <input
+                type="range"
+                className="range"
+                id="glassAlpha"
+                min="0"
+                max="1"
+                step="0.01"
+                value={palette.glassAlpha}
+                onChange={(event) => handleGlassAlphaChange(event.target.value)}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="glassHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.glass}
+                onChange={(event) => updateHexInput('glass', event.target.value)}
+              />
+              <button className="btn-mini" id="applyGlassHex" type="button" onClick={() => applyHexValue('glass', (value) => setPaletteValues({ glassColor: value }))}>
+                Aplicar cor
+              </button>
+            </div>
+          </div>
+          <div className="pal-section">
+            <h3>Bolhas</h3>
+            <div className="pal-options">
+              {renderSwatch('--dark:#7aa98a;--light:#bcd6c3', '#7aa98a')}
+              {renderSwatch('--dark:#86b79c;--light:#cae0cf', '#86b79c')}
+              {renderSwatch('--dark:#9ccbb1;--light:#d7ede1', '#9ccbb1')}
+            </div>
+            <div className="row">
+              <span className="small">Escura</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="bubbleDark"
+                value={palette.bubbleDark}
+                onChange={(event) => setPaletteValues({ bubbleDark: event.target.value }, { markPalette: true })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Clara</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="bubbleLight"
+                value={palette.bubbleLight}
+                onChange={(event) => setPaletteValues({ bubbleLight: event.target.value }, { markPalette: true })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Opac. mín</span>
+              <input
+                type="range"
+                className="range"
+                id="bubbleAlphaMin"
+                min="0"
+                max="1"
+                step="0.01"
+                value={palette.bubbleAlphaMin}
+                onChange={(event) => handleBubbleAlphaChange('bubbleAlphaMin', event.target.value)}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Opac. máx</span>
+              <input
+                type="range"
+                className="range"
+                id="bubbleAlphaMax"
+                min="0"
+                max="1"
+                step="0.01"
+                value={palette.bubbleAlphaMax}
+                onChange={(event) => handleBubbleAlphaChange('bubbleAlphaMax', event.target.value)}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="bubbleDarkHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.bubbleDark}
+                onChange={(event) => updateHexInput('bubbleDark', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="applyBubbleDark"
+                type="button"
+                onClick={() => applyHexValue('bubbleDark', (value) => setPaletteValues({ bubbleDark: value }, { markPalette: true }))}
+              >
+                Aplicar escura
+              </button>
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="bubbleLightHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.bubbleLight}
+                onChange={(event) => updateHexInput('bubbleLight', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="applyBubbleLight"
+                type="button"
+                onClick={() => applyHexValue('bubbleLight', (value) => setPaletteValues({ bubbleLight: value }, { markPalette: true }))}
+              >
+                Aplicar clara
+              </button>
+            </div>
+          </div>
+          <div className="pal-section">
+            <h3>Textos &amp; Títulos</h3>
+            <div className="pal-options">
+              {renderSwatch('--ink:#183f2e;--muted:#6a8f7f;--muted-2:#5f8c79', '#183f2e')}
+              {renderSwatch('--ink:#224c3a;--muted:#7da08d;--muted-2:#5f8c79', '#224c3a')}
+              {renderSwatch('--ink:#123628;--muted:#5a7a6a;--muted-2:#497565', '#123628')}
+            </div>
+            <div className="row">
+              <span className="small">Primária</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="textInk"
+                value={palette.textInk}
+                onChange={(event) => setPaletteValues({ textInk: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Muted</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="textMuted"
+                value={palette.textMuted}
+                onChange={(event) => setPaletteValues({ textMuted: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Muted 2</span>
+              <input
+                type="color"
+                className="colorpicker"
+                id="textMuted2"
+                value={palette.textMuted2}
+                onChange={(event) => setPaletteValues({ textMuted2: event.target.value })}
+              />
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="textInkHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.textInk}
+                onChange={(event) => updateHexInput('textInk', event.target.value)}
+              />
+              <button className="btn-mini" id="applyTextInk" type="button" onClick={() => applyHexValue('textInk', (value) => setPaletteValues({ textInk: value }))}>
+                Aplicar prim.
+              </button>
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="textMutedHex"
+                placeholder="#RRGGBB"
+                value={hexInputs.textMuted}
+                onChange={(event) => updateHexInput('textMuted', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="applyTextMuted"
+                type="button"
+                onClick={() => applyHexValue('textMuted', (value) => setPaletteValues({ textMuted: value }))}
+              >
+                Aplicar muted
+              </button>
+            </div>
+            <div className="row">
+              <input
+                type="text"
+                className="input-hex"
+                id="textMuted2Hex"
+                placeholder="#RRGGBB"
+                value={hexInputs.textMuted2}
+                onChange={(event) => updateHexInput('textMuted2', event.target.value)}
+              />
+              <button
+                className="btn-mini"
+                id="applyTextMuted2"
+                type="button"
+                onClick={() => applyHexValue('textMuted2', (value) => setPaletteValues({ textMuted2: value }))}
+              >
+                Aplicar muted2
+              </button>
+            </div>
+            <div className="hr" />
+            <div className="row">
+              <span className="small">Fonte texto</span>
+              <select
+                id="fontBody"
+                className="colorpicker"
+                value={palette.fontBody}
+                onChange={(event) => setPaletteValues({ fontBody: event.target.value })}
+              >
+                {bodyOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="row">
+              <span className="small">Fonte título</span>
+              <select
+                id="fontHeading"
+                className="colorpicker"
+                value={palette.fontHeading}
+                onChange={(event) => setPaletteValues({ fontHeading: event.target.value })}
+              >
+                {headingOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="row">
+              <span className="small">Texto base (px)</span>
+              <input
+                type="number"
+                id="sizeBase"
+                className="colorpicker"
+                min="10"
+                max="28"
+                step="1"
+                value={palette.sizeBase}
+                onChange={(event) => handleSizeChange('sizeBase', event.target.value, DEFAULT_PALETTE.sizeBase)}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Título H1 (px)</span>
+              <input
+                type="number"
+                id="sizeH1"
+                className="colorpicker"
+                min="20"
+                max="80"
+                step="1"
+                value={palette.sizeH1}
+                onChange={(event) => handleSizeChange('sizeH1', event.target.value, DEFAULT_PALETTE.sizeH1)}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Texto cards (px)</span>
+              <input
+                type="number"
+                id="sizeCard"
+                className="colorpicker"
+                min="10"
+                max="36"
+                step="1"
+                value={palette.sizeCard}
+                onChange={(event) => handleSizeChange('sizeCard', event.target.value, DEFAULT_PALETTE.sizeCard)}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Label/muted (px)</span>
+              <input
+                type="number"
+                id="sizeLabel"
+                className="colorpicker"
+                min="8"
+                max="24"
+                step="1"
+                value={palette.sizeLabel}
+                onChange={(event) => handleSizeChange('sizeLabel', event.target.value, DEFAULT_PALETTE.sizeLabel)}
+              />
+            </div>
+          </div>
+          <div className="pal-section">
+            <h3>Adicionar nova fonte</h3>
+            <div className="row">
+              <span className="small">CSS URL</span>
+              <input
+                type="text"
+                id="fontUrl"
+                className="colorpicker"
+                placeholder="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap"
+                value={fontUrl}
+                onChange={(event) => setFontUrl(event.target.value)}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Family</span>
+              <input
+                type="text"
+                id="fontFamilyName"
+                className="colorpicker"
+                placeholder="DM Sans, sans-serif"
+                value={fontFamilyName}
+                onChange={(event) => setFontFamilyName(event.target.value)}
+              />
+            </div>
+            <div className="row">
+              <span className="small">Aplicar em</span>
+              <select
+                id="fontApplyWhere"
+                className="colorpicker"
+                value={fontApplyWhere}
+                onChange={(event) => setFontApplyWhere(event.target.value as 'body' | 'heading' | 'both')}
+              >
+                <option value="body">Texto</option>
+                <option value="heading">Título</option>
+                <option value="both">Ambos</option>
+              </select>
+            </div>
+            <div className="row">
+              <button className="btn-mini" id="addFontBtn" type="button" onClick={handleFontAdd}>
+                Adicionar &amp; aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+        <button id="saveBtn" type="button" onClick={handleSaveClick}>
+          Salvar (baixar HTML)
+        </button>
+      </div>
+    </>
+  )
+}
+
 export default function ProcedimentoPage() {
   const now = useMemo(() => new Date(), [])
   const [year, setYear] = useState(now.getFullYear())
@@ -228,449 +1200,34 @@ export default function ProcedimentoPage() {
   }, [])
 
   useEffect(() => {
-    const updatedVars = new Set<string>()
-    const cleanupFns: Array<() => void> = []
-
-    const styleNode = document.getElementById('procedimento-style') as HTMLStyleElement | null
-
-    const commitVar = (name: string, value: string) => {
-      document.documentElement.style.setProperty(name, value)
-      updatedVars.add(name)
-
-      if (!styleNode || !styleNode.textContent) return
-
-      const pattern = new RegExp(`(${escapeRegExp(name)}\\s*:\\s*)([^;]*)(;)`)
-      styleNode.textContent = styleNode.textContent.replace(pattern, `$1${value}$3`)
-    }
-
-    const glassColorEl = document.getElementById('glassColor') as HTMLInputElement | null
-    const glassAlphaEl = document.getElementById('glassAlpha') as HTMLInputElement | null
-    const glassHexEl = document.getElementById('glassHex') as HTMLInputElement | null
-    const applyGlassHex = document.getElementById('applyGlassHex') as HTMLButtonElement | null
-
-    const cardTop = document.getElementById('cardTop') as HTMLInputElement | null
-    const cardBottom = document.getElementById('cardBottom') as HTMLInputElement | null
-    const cardTopHex = document.getElementById('cardTopHex') as HTMLInputElement | null
-    const cardBottomHex = document.getElementById('cardBottomHex') as HTMLInputElement | null
-    const addCardTop = document.getElementById('addCardTop') as HTMLButtonElement | null
-    const addCardBottom = document.getElementById('addCardBottom') as HTMLButtonElement | null
-
-    const cardBorderColor = document.getElementById('cardBorderColor') as HTMLInputElement | null
-    const cardBorderAlpha = document.getElementById('cardBorderAlpha') as HTMLInputElement | null
-    const cardBorderHex = document.getElementById('cardBorderHex') as HTMLInputElement | null
-    const applyCardBorderHex = document.getElementById('applyCardBorderHex') as HTMLButtonElement | null
-
-    const bgTop = document.getElementById('bgTop') as HTMLInputElement | null
-    const bgBottom = document.getElementById('bgBottom') as HTMLInputElement | null
-    const bgTopHex = document.getElementById('bgTopHex') as HTMLInputElement | null
-    const bgBottomHex = document.getElementById('bgBottomHex') as HTMLInputElement | null
-    const addBgTop = document.getElementById('addBgTop') as HTMLButtonElement | null
-    const addBgBottom = document.getElementById('addBgBottom') as HTMLButtonElement | null
-
-    const glassBorderColor = document.getElementById('glassBorderColor') as HTMLInputElement | null
-    const glassBorderAlpha = document.getElementById('glassBorderAlpha') as HTMLInputElement | null
-    const glassBorderHex = document.getElementById('glassBorderHex') as HTMLInputElement | null
-    const applyGlassBorderHex = document.getElementById('applyGlassBorderHex') as HTMLButtonElement | null
-
-    const bubbleDark = document.getElementById('bubbleDark') as HTMLInputElement | null
-    const bubbleLight = document.getElementById('bubbleLight') as HTMLInputElement | null
-    const bubbleAlphaMin = document.getElementById('bubbleAlphaMin') as HTMLInputElement | null
-    const bubbleAlphaMax = document.getElementById('bubbleAlphaMax') as HTMLInputElement | null
-    const bubbleDarkHex = document.getElementById('bubbleDarkHex') as HTMLInputElement | null
-    const bubbleLightHex = document.getElementById('bubbleLightHex') as HTMLInputElement | null
-    const applyBubbleDark = document.getElementById('applyBubbleDark') as HTMLButtonElement | null
-    const applyBubbleLight = document.getElementById('applyBubbleLight') as HTMLButtonElement | null
-
-    const textInk = document.getElementById('textInk') as HTMLInputElement | null
-    const textMuted = document.getElementById('textMuted') as HTMLInputElement | null
-    const textMuted2 = document.getElementById('textMuted2') as HTMLInputElement | null
-    const textInkHex = document.getElementById('textInkHex') as HTMLInputElement | null
-    const textMutedHex = document.getElementById('textMutedHex') as HTMLInputElement | null
-    const textMuted2Hex = document.getElementById('textMuted2Hex') as HTMLInputElement | null
-    const applyTextInk = document.getElementById('applyTextInk') as HTMLButtonElement | null
-    const applyTextMuted = document.getElementById('applyTextMuted') as HTMLButtonElement | null
-    const applyTextMuted2 = document.getElementById('applyTextMuted2') as HTMLButtonElement | null
-
-    const fontBody = document.getElementById('fontBody') as HTMLSelectElement | null
-    const fontHeading = document.getElementById('fontHeading') as HTMLSelectElement | null
-
-    const sizeBase = document.getElementById('sizeBase') as HTMLInputElement | null
-    const sizeH1 = document.getElementById('sizeH1') as HTMLInputElement | null
-    const sizeCard = document.getElementById('sizeCard') as HTMLInputElement | null
-    const sizeLabel = document.getElementById('sizeLabel') as HTMLInputElement | null
-
-    const paletteBtn = isAdmin
-      ? (document.getElementById('paletteBtn') as HTMLButtonElement | null)
-      : null
-    const palettePanel = isAdmin
-      ? (document.getElementById('palettePanel') as HTMLDivElement | null)
-      : null
-    const saveBtn = isAdmin
-      ? (document.getElementById('saveBtn') as HTMLButtonElement | null)
-      : null
-
-    const syncLavaPaletteFromVars = () => {
-      refreshPalette()
-    }
-
-    function syncGlassVar() {
-      if (!glassColorEl || !glassAlphaEl) return
-      commitVar('--glass', rgbaFromHexAlpha(glassColorEl.value, glassAlphaEl.value))
-    }
-
-    function syncGlassPickersFromVar() {
-      if (!glassColorEl || !glassAlphaEl) return
-      const value = getComputedStyle(document.documentElement).getPropertyValue('--glass').trim()
-      const match = value.match(/rgba?\(([^)]+)\)/i)
-      if (!match) return
-      const parts = match[1].split(',').map((part) => part.trim())
-      const [r, g, b, a = '1'] = parts
-      const toHex = (component: string) => {
-        const parsed = Math.max(0, Math.min(255, Number(component)))
-        return parsed.toString(16).padStart(2, '0')
+    const lockGlassHeight = () => {
+      const reference = document.querySelector<HTMLElement>('#sectionTipo .glass')
+      if (!reference) return
+      const height = reference.getBoundingClientRect().height
+      if (height > 0) {
+        document.documentElement.style.setProperty('--glass-min-height', `${Math.round(height)}px`)
       }
-      glassColorEl.value = `#${[r, g, b].map(toHex).join('')}`
-      glassAlphaEl.value = String(Number(a))
-    }
-
-    function syncCardBorder() {
-      if (!cardBorderColor || !cardBorderAlpha) return
-      const fallback = cardBorderColor.value
-      const hexValue = (cardBorderHex?.value ?? '').trim()
-      const base = hexValue && isHex(hexValue) ? hexValue : fallback
-      commitVar('--card-stroke', rgbaFromHexAlpha(base, cardBorderAlpha.value))
-    }
-
-    function syncGlassBorder() {
-      if (!glassBorderColor || !glassBorderAlpha) return
-      const fallback = glassBorderColor.value
-      const hexValue = (glassBorderHex?.value ?? '').trim()
-      const base = hexValue && isHex(hexValue) ? hexValue : fallback
-      commitVar('--glass-stroke', rgbaFromHexAlpha(base, glassBorderAlpha.value))
-    }
-
-
-    function handleSwatchClick(this: HTMLElement) {
-      const rules = this.dataset.css?.split(';').map((rule) => rule.trim()).filter(Boolean) ?? []
-      for (const rule of rules) {
-        const [prop, val] = rule.split(':')
-        if (!prop || typeof val === 'undefined') continue
-        commitVar(prop.trim(), val.trim())
-      }
-      if (rules.some((rule) => rule.includes('--dark') || rule.includes('--light'))) {
-        syncLavaPaletteFromVars()
-      }
-      if (rules.some((rule) => rule.includes('--glass'))) {
-        syncGlassPickersFromVar()
-      }
-    }
-
-    document.querySelectorAll<HTMLElement>('#palettePanel .swatch').forEach((swatch) => {
-      swatch.addEventListener('click', handleSwatchClick)
-      cleanupFns.push(() => swatch.removeEventListener('click', handleSwatchClick))
-    })
-
-    cardTop?.addEventListener('input', (event) => {
-      const value = (event.target as HTMLInputElement).value
-      commitVar('--inner-top', value)
-    })
-    cardBottom?.addEventListener('input', (event) => {
-      const value = (event.target as HTMLInputElement).value
-      commitVar('--inner-bottom', value)
-    })
-    addCardTop?.addEventListener('click', () => {
-      const value = cardTopHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--inner-top', value)
-        if (cardTop) cardTop.value = value
-      }
-    })
-    addCardBottom?.addEventListener('click', () => {
-      const value = cardBottomHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--inner-bottom', value)
-        if (cardBottom) cardBottom.value = value
-      }
-    })
-
-    cardBorderColor?.addEventListener('input', syncCardBorder)
-    cardBorderAlpha?.addEventListener('input', syncCardBorder)
-    applyCardBorderHex?.addEventListener('click', () => {
-      if (cardBorderHex && isHex(cardBorderHex.value.trim())) {
-        syncCardBorder()
-      }
-    })
-
-    bgTop?.addEventListener('input', (event) => {
-      const value = (event.target as HTMLInputElement).value
-      commitVar('--bg-top', value)
-    })
-    bgBottom?.addEventListener('input', (event) => {
-      const value = (event.target as HTMLInputElement).value
-      commitVar('--bg-bottom', value)
-    })
-    addBgTop?.addEventListener('click', () => {
-      const value = bgTopHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--bg-top', value)
-        if (bgTop) bgTop.value = value
-      }
-    })
-    addBgBottom?.addEventListener('click', () => {
-      const value = bgBottomHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--bg-bottom', value)
-        if (bgBottom) bgBottom.value = value
-      }
-    })
-
-    glassBorderColor?.addEventListener('input', syncGlassBorder)
-    glassBorderAlpha?.addEventListener('input', syncGlassBorder)
-    applyGlassBorderHex?.addEventListener('click', () => {
-      if (glassBorderHex && isHex(glassBorderHex.value.trim())) {
-        syncGlassBorder()
-      }
-    })
-
-    glassColorEl?.addEventListener('input', syncGlassVar)
-    glassAlphaEl?.addEventListener('input', syncGlassVar)
-    applyGlassHex?.addEventListener('click', () => {
-      const value = glassHexEl?.value.trim()
-      if (value && isHex(value) && glassColorEl) {
-        glassColorEl.value = value
-        syncGlassVar()
-      }
-    })
-
-    bubbleDark?.addEventListener('input', (event) => {
-      const value = (event.target as HTMLInputElement).value
-      commitVar('--dark', value)
-      syncLavaPaletteFromVars()
-    })
-    bubbleLight?.addEventListener('input', (event) => {
-      const value = (event.target as HTMLInputElement).value
-      commitVar('--light', value)
-      syncLavaPaletteFromVars()
-    })
-    applyBubbleDark?.addEventListener('click', () => {
-      const value = bubbleDarkHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--dark', value)
-        if (bubbleDark) bubbleDark.value = value
-        syncLavaPaletteFromVars()
-      }
-    })
-    applyBubbleLight?.addEventListener('click', () => {
-      const value = bubbleLightHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--light', value)
-        if (bubbleLight) bubbleLight.value = value
-        syncLavaPaletteFromVars()
-      }
-    })
-    const handleBubbleAlpha = () => {
-      if (!bubbleAlphaMin || !bubbleAlphaMax) return
-      let min = parseFloat(bubbleAlphaMin.value)
-      let max = parseFloat(bubbleAlphaMax.value)
-      if (Number.isNaN(min)) min = 0
-      if (Number.isNaN(max)) max = 1
-      if (max < min) {
-        ;[min, max] = [max, min]
-        bubbleAlphaMin.value = String(min)
-        bubbleAlphaMax.value = String(max)
-      }
-      commitVar('--lava-alpha-min', String(min))
-      commitVar('--lava-alpha-max', String(max))
-      refreshPalette()
-    }
-    bubbleAlphaMin?.addEventListener('input', handleBubbleAlpha)
-    bubbleAlphaMax?.addEventListener('input', handleBubbleAlpha)
-
-    textInk?.addEventListener('input', (event) => {
-      commitVar('--ink', (event.target as HTMLInputElement).value)
-    })
-    textMuted?.addEventListener('input', (event) => {
-      commitVar('--muted', (event.target as HTMLInputElement).value)
-    })
-    textMuted2?.addEventListener('input', (event) => {
-      commitVar('--muted-2', (event.target as HTMLInputElement).value)
-    })
-    applyTextInk?.addEventListener('click', () => {
-      const value = textInkHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--ink', value)
-        if (textInk) textInk.value = value
-      }
-    })
-    applyTextMuted?.addEventListener('click', () => {
-      const value = textMutedHex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--muted', value)
-        if (textMuted) textMuted.value = value
-      }
-    })
-    applyTextMuted2?.addEventListener('click', () => {
-      const value = textMuted2Hex?.value.trim()
-      if (value && isHex(value)) {
-        commitVar('--muted-2', value)
-        if (textMuted2) textMuted2.value = value
-      }
-    })
-
-    fontBody?.addEventListener('change', (event) => {
-      commitVar('--font-family', (event.target as HTMLSelectElement).value)
-    })
-    fontHeading?.addEventListener('change', (event) => {
-      commitVar('--heading-font', (event.target as HTMLSelectElement).value)
-    })
-
-    const initSizes = () => {
-      const h1 = document.querySelector<HTMLHeadingElement>('h1')
-      const cardSpan = document.querySelector<HTMLSpanElement>('.card span')
-      const label = document.querySelector<HTMLDivElement>('.label')
-      if (sizeH1 && h1) sizeH1.value = Math.round(parseFloat(getComputedStyle(h1).fontSize)).toString()
-      if (sizeCard && cardSpan)
-        sizeCard.value = Math.round(parseFloat(getComputedStyle(cardSpan).fontSize)).toString()
-      if (sizeLabel && label)
-        sizeLabel.value = Math.round(parseFloat(getComputedStyle(label).fontSize)).toString()
-      if (sizeBase)
-        sizeBase.value = Math.round(parseFloat(getComputedStyle(document.body).fontSize)).toString()
-    }
-    initSizes()
-
-    sizeBase?.addEventListener('input', (event) => {
-      const value = parseInt((event.target as HTMLInputElement).value || '16', 10)
-      commitVar('--base-font-size', `${Number.isNaN(value) ? 16 : value}px`)
-    })
-    sizeH1?.addEventListener('input', (event) => {
-      const value = parseInt((event.target as HTMLInputElement).value || '28', 10)
-      if (!Number.isNaN(value)) commitVar('--heading-size', `${value}px`)
-    })
-    sizeCard?.addEventListener('input', (event) => {
-      const value = parseInt((event.target as HTMLInputElement).value || '20', 10)
-      if (!Number.isNaN(value)) commitVar('--card-text-size', `${value}px`)
-    })
-    sizeLabel?.addEventListener('input', (event) => {
-      const value = parseInt((event.target as HTMLInputElement).value || '11', 10)
-      if (!Number.isNaN(value)) commitVar('--label-size', `${value}px`)
-    })
-
-    if (paletteBtn) {
-      const handlePaletteToggle = () => {
-        palettePanel?.classList.toggle('open')
-      }
-      paletteBtn.addEventListener('click', handlePaletteToggle)
-      cleanupFns.push(() => paletteBtn.removeEventListener('click', handlePaletteToggle))
-    }
-
-    if (palettePanel) {
-      const handlePanelClick = (event: MouseEvent) => {
-        if (event.target === palettePanel) {
-          palettePanel.classList.remove('open')
-        }
-      }
-      palettePanel.addEventListener('click', handlePanelClick)
-      cleanupFns.push(() => palettePanel.removeEventListener('click', handlePanelClick))
-    }
-
-    const fontUrl = document.getElementById('fontUrl') as HTMLInputElement | null
-    const fontFamilyName = document.getElementById('fontFamilyName') as HTMLInputElement | null
-    const fontApplyWhere = document.getElementById('fontApplyWhere') as HTMLSelectElement | null
-    const addFontBtn = document.getElementById('addFontBtn') as HTMLButtonElement | null
-
-    function injectFontLink(url: string) {
-      const existing = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).some(
-        (link) => link.href === url,
-      )
-      if (existing) return
-      const link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = url
-      document.head.appendChild(link)
-    }
-
-    function addOptionIfMissing(select: HTMLSelectElement, family: string) {
-      if (Array.from(select.options).some((option) => option.value === family)) return
-      const option = document.createElement('option')
-      option.value = family
-      option.textContent = family.split(',')[0]?.replace(/['"]/g, '') ?? family
-      select.appendChild(option)
-    }
-
-    addFontBtn?.addEventListener('click', () => {
-      const url = fontUrl?.value.trim()
-      const family = fontFamilyName?.value.trim()
-      const target = fontApplyWhere?.value ?? 'body'
-      if (!url || !family) return
-      injectFontLink(url)
-      if ((target === 'body' || target === 'both') && fontBody) {
-        addOptionIfMissing(fontBody, family)
-        commitVar('--font-family', family)
-        fontBody.value = family
-      }
-      if ((target === 'heading' || target === 'both') && fontHeading) {
-        addOptionIfMissing(fontHeading, family)
-        commitVar('--heading-font', family)
-        fontHeading.value = family
-      }
-    })
-
-    if (saveBtn) {
-      const handleSaveClick = () => {
-        const html = '<!doctype html>\n' + document.documentElement.outerHTML
-        const blob = new Blob([html], { type: 'text/html' })
-        const anchor = document.createElement('a')
-        const name = (document.title || 'index').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html'
-        anchor.href = URL.createObjectURL(blob)
-        anchor.download = name
-        document.body.appendChild(anchor)
-        anchor.click()
-        window.setTimeout(() => {
-          URL.revokeObjectURL(anchor.href)
-          anchor.remove()
-        }, 1200)
-      }
-      saveBtn.addEventListener('click', handleSaveClick)
-      cleanupFns.push(() => saveBtn.removeEventListener('click', handleSaveClick))
-    }
-
-    function lockGlassHeight() {
-      window.requestAnimationFrame(() => {
-        const reference = document.querySelector<HTMLElement>('#sectionTipo .glass')
-        if (!reference) return
-        const height = reference.getBoundingClientRect().height
-        if (height > 0) {
-          commitVar('--glass-min-height', `${Math.round(height)}px`)
-        }
-      })
     }
 
     lockGlassHeight()
+    window.addEventListener('resize', lockGlassHeight)
 
-    const resizeHandler = () => lockGlassHeight()
-    window.addEventListener('resize', resizeHandler)
-    cleanupFns.push(() => window.removeEventListener('resize', resizeHandler))
+    return () => {
+      window.removeEventListener('resize', lockGlassHeight)
+      document.documentElement.style.removeProperty('--glass-min-height')
+    }
+  }, [])
 
+  useEffect(() => {
     document.documentElement.classList.add('force-motion')
-    if (window.location.hash.includes('nomotion')) {
+    if (typeof window !== 'undefined' && window.location.hash.includes('nomotion')) {
       document.documentElement.classList.remove('force-motion')
     }
-
-    syncGlassPickersFromVar()
-    syncCardBorder()
-    syncGlassBorder()
-    syncLavaPaletteFromVars()
-    syncGlassVar()
-    handleBubbleAlpha()
 
     return () => {
       document.documentElement.classList.remove('force-motion')
-      updatedVars.forEach((name) => {
-        document.documentElement.style.removeProperty(name)
-      })
-      cleanupFns.forEach((fn) => fn())
     }
-  }, [isAdmin, refreshPalette])
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -2005,314 +2562,7 @@ export default function ProcedimentoPage() {
             </div>
           </div>
         ) : null}
-        {isAdmin ? (
-          <>
-            <button id="paletteBtn" title="Personalizar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
-                <path d="M7.2 7.2l1.8 1.8" />
-                <path d="M16.8 7.2l-1.8 1.8" />
-              </svg>
-            </button>
-            <div id="palettePanel">
-              <div id="panelScroll">
-                <div className="pal-section">
-                  <h3>Cards (livre)</h3>
-                  <div className="row">
-                    <span className="small">Superior</span>
-                    <input type="color" className="colorpicker" id="cardTop" defaultValue="#eaf7ef" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Inferior</span>
-                    <input type="color" className="colorpicker" id="cardBottom" defaultValue="#daefe2" />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="cardTopHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="addCardTop" type="button">
-                      Aplicar sup.
-                    </button>
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="cardBottomHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="addCardBottom" type="button">
-                      Aplicar inf.
-                    </button>
-                  </div>
-                  <div className="row">
-                    <span className="small">Borda card</span>
-                    <input type="color" className="colorpicker" id="cardBorderColor" defaultValue="#ffffff" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Opacidade borda</span>
-                    <input
-                      type="range"
-                      className="range"
-                      id="cardBorderAlpha"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      defaultValue="0.86"
-                    />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="cardBorderHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyCardBorderHex" type="button">
-                      Aplicar borda
-                    </button>
-                  </div>
-                </div>
-                <div className="pal-section">
-                  <h3>Container (fundo)</h3>
-                  <div className="pal-options">
-                    <div className="swatch" style={{ background: '#cfe6d5' }} data-css="--bg-top:#cfe6d5;--bg-bottom:#eef3e6" />
-                    <div className="swatch" style={{ background: '#e3e8df' }} data-css="--bg-top:#e3e8df;--bg-bottom:#f2f3ef" />
-                    <div className="swatch" style={{ background: '#dbece3' }} data-css="--bg-top:#dbece3;--bg-bottom:#eef4ec" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Topo</span>
-                    <input type="color" className="colorpicker" id="bgTop" defaultValue="#cfe6d5" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Base</span>
-                    <input type="color" className="colorpicker" id="bgBottom" defaultValue="#eef3e6" />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="bgTopHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="addBgTop" type="button">
-                      Aplicar topo
-                    </button>
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="bgBottomHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="addBgBottom" type="button">
-                      Aplicar base
-                    </button>
-                  </div>
-                  <div className="hr" />
-                  <div className="row">
-                    <span className="small">Borda vidro</span>
-                    <input type="color" className="colorpicker" id="glassBorderColor" defaultValue="#ffffff" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Opacidade borda</span>
-                    <input
-                      type="range"
-                      className="range"
-                      id="glassBorderAlpha"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      defaultValue="0.78"
-                    />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="glassBorderHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyGlassBorderHex" type="button">
-                      Aplicar borda
-                    </button>
-                  </div>
-                </div>
-                <div className="pal-section">
-                  <h3>Overlay (vidro)</h3>
-                  <div className="pal-options">
-                    <div className="swatch" style={{ background: 'rgba(236,250,241,.34)' }} data-css="--glass:rgba(236,250,241,.34)" />
-                    <div className="swatch" style={{ background: 'rgba(240,245,240,.42)' }} data-css="--glass:rgba(240,245,240,.42)" />
-                    <div className="swatch" style={{ background: 'rgba(230,240,235,.50)' }} data-css="--glass:rgba(230,240,235,.50)" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Cor</span>
-                    <input type="color" className="colorpicker" id="glassColor" defaultValue="#ecfaf1" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Opacidade</span>
-                    <input
-                      type="range"
-                      className="range"
-                      id="glassAlpha"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      defaultValue="0.34"
-                    />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="glassHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyGlassHex" type="button">
-                      Aplicar cor
-                    </button>
-                  </div>
-                </div>
-                <div className="pal-section">
-                  <h3>Bolhas</h3>
-                  <div className="pal-options">
-                    <div className="swatch" style={{ background: '#7aa98a' }} data-css="--dark:#7aa98a;--light:#bcd6c3" />
-                    <div className="swatch" style={{ background: '#86b79c' }} data-css="--dark:#86b79c;--light:#cae0cf" />
-                    <div className="swatch" style={{ background: '#9ccbb1' }} data-css="--dark:#9ccbb1;--light:#d7ede1" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Escura</span>
-                    <input type="color" className="colorpicker" id="bubbleDark" defaultValue="#7aa98a" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Clara</span>
-                    <input type="color" className="colorpicker" id="bubbleLight" defaultValue="#bcd6c3" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Opac. mín</span>
-                    <input
-                      type="range"
-                      className="range"
-                      id="bubbleAlphaMin"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      defaultValue="0.40"
-                    />
-                  </div>
-                  <div className="row">
-                    <span className="small">Opac. máx</span>
-                    <input
-                      type="range"
-                      className="range"
-                      id="bubbleAlphaMax"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      defaultValue="0.85"
-                    />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="bubbleDarkHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyBubbleDark" type="button">
-                      Aplicar escura
-                    </button>
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="bubbleLightHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyBubbleLight" type="button">
-                      Aplicar clara
-                    </button>
-                  </div>
-                </div>
-                <div className="pal-section">
-                  <h3>Textos &amp; Títulos</h3>
-                  <div className="pal-options">
-                    <div className="swatch" style={{ background: '#183f2e' }} data-css="--ink:#183f2e;--muted:#6a8f7f;--muted-2:#5f8c79" />
-                    <div className="swatch" style={{ background: '#224c3a' }} data-css="--ink:#224c3a;--muted:#7da08d;--muted-2:#5f8c79" />
-                    <div className="swatch" style={{ background: '#123628' }} data-css="--ink:#123628;--muted:#5a7a6a;--muted-2:#497565" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Primária</span>
-                    <input type="color" className="colorpicker" id="textInk" defaultValue="#183f2e" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Muted</span>
-                    <input type="color" className="colorpicker" id="textMuted" defaultValue="#6a8f7f" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Muted 2</span>
-                    <input type="color" className="colorpicker" id="textMuted2" defaultValue="#5f8c79" />
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="textInkHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyTextInk" type="button">
-                      Aplicar prim.
-                    </button>
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="textMutedHex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyTextMuted" type="button">
-                      Aplicar muted
-                    </button>
-                  </div>
-                  <div className="row">
-                    <input type="text" className="input-hex" id="textMuted2Hex" placeholder="#RRGGBB" />
-                    <button className="btn-mini" id="applyTextMuted2" type="button">
-                      Aplicar muted2
-                    </button>
-                  </div>
-                  <div className="hr" />
-                  <div className="row">
-                    <span className="small">Fonte texto</span>
-                    <select
-                      id="fontBody"
-                      className="colorpicker"
-                      defaultValue="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'"
-                    >
-                      <option value="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'">
-                        Inter
-                      </option>
-                      <option value="Roboto, system-ui, -apple-system, Segoe UI, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'">
-                        Roboto
-                      </option>
-                      <option value="Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">
-                        Poppins
-                      </option>
-                    </select>
-                  </div>
-                  <div className="row">
-                    <span className="small">Fonte título</span>
-                    <select id="fontHeading" className="colorpicker" defaultValue="Fraunces, 'Playfair Display', Georgia, serif">
-                      <option value="Fraunces, 'Playfair Display', Georgia, serif">Fraunces</option>
-                      <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
-                      <option value="Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">Poppins</option>
-                      <option value="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">Inter</option>
-                    </select>
-                  </div>
-                  <div className="row">
-                    <span className="small">Texto base (px)</span>
-                    <input type="number" id="sizeBase" className="colorpicker" min="10" max="28" step="1" defaultValue="16" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Título H1 (px)</span>
-                    <input type="number" id="sizeH1" className="colorpicker" min="20" max="80" step="1" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Texto cards (px)</span>
-                    <input type="number" id="sizeCard" className="colorpicker" min="10" max="36" step="1" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Label/muted (px)</span>
-                    <input type="number" id="sizeLabel" className="colorpicker" min="8" max="24" step="1" defaultValue="11" />
-                  </div>
-                </div>
-                <div className="pal-section">
-                  <h3>Adicionar nova fonte</h3>
-                  <div className="row">
-                    <span className="small">CSS URL</span>
-                    <input
-                      type="text"
-                      id="fontUrl"
-                      className="colorpicker"
-                      placeholder="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap"
-                    />
-                  </div>
-                  <div className="row">
-                    <span className="small">Family</span>
-                    <input type="text" id="fontFamilyName" className="colorpicker" placeholder="DM Sans, sans-serif" />
-                  </div>
-                  <div className="row">
-                    <span className="small">Aplicar em</span>
-                    <select id="fontApplyWhere" className="colorpicker" defaultValue="body">
-                      <option value="body">Texto</option>
-                      <option value="heading">Título</option>
-                      <option value="both">Ambos</option>
-                    </select>
-                  </div>
-                  <div className="row">
-                    <button className="btn-mini" id="addFontBtn" type="button">
-                      Adicionar &amp; aplicar
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button id="saveBtn" type="button">
-                Salvar (baixar HTML)
-              </button>
-            </div>
-          </>
-        ) : null}
+        {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}
     </div>
   )
 }

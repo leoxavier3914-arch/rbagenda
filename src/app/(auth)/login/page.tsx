@@ -233,7 +233,7 @@ export default function Login() {
           Entre para acompanhar seus agendamentos e garantir uma rotina mais tranquila.
         </p>
       </div>
-      <form className="space-y-4" onSubmit={submit}>
+      <div className="space-y-4">
         <div className="space-y-1 text-left">
           <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
             E-mail
@@ -261,10 +261,7 @@ export default function Login() {
             disabled={loading}
           />
         </div>
-        <button className="btn-primary w-full" disabled={loading}>
-          {loading ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
+      </div>
       {msg && (
         <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
           {msg}
@@ -301,9 +298,14 @@ export default function Login() {
 
         <div className="page">
           <section className="center">
-            <div className="card w-full max-w-md space-y-6 bg-white/90">
-              {cardContent}
-            </div>
+            <form className="w-full max-w-md space-y-4" onSubmit={submit}>
+              <div className="w-full space-y-6 rounded-3xl bg-transparent p-6">{cardContent}</div>
+              {!checkingSession && (
+                <button className="btn-primary w-full" disabled={loading}>
+                  {loading ? 'Entrando…' : 'Entrar'}
+                </button>
+              )}
+            </form>
           </section>
         </div>
       </div>

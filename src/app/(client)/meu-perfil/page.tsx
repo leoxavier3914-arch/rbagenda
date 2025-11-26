@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
 
 import { supabase } from '@/lib/db'
+import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 
 type Profile = {
   full_name: string | null
@@ -185,6 +186,7 @@ export default function MeuPerfil() {
   const [avatarDataUrl, setAvatarDataUrl] = useState<string>('')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
+  const revealStage = useLavaRevealStage()
 
   const canEditAppearance =
     profile?.role === 'admin' ||
@@ -970,6 +972,34 @@ export default function MeuPerfil() {
           filter: blur(30px) contrast(1.04);
           background: radial-gradient(circle, var(--light), transparent 70%);
         }
+        .reveal-seq {
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.28s ease, transform 0.32s ease;
+          pointer-events: none;
+        }
+        .reveal-seq[data-visible='true'] {
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+        }
+        .reveal-title {
+          transition-delay: 0.05s;
+        }
+        .reveal-description {
+          transition-delay: 0.16s;
+        }
+        .reveal-content {
+          transition-delay: 0.26s;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .reveal-seq {
+            transition: none;
+            transform: none;
+            opacity: 1;
+            pointer-events: auto;
+          }
+        }
         .page {
           position: relative;
           min-height: 100svh;
@@ -1398,14 +1428,26 @@ export default function MeuPerfil() {
       <div className="page">
         <section className="center" id="sectionPerfil" aria-label="Meu Perfil">
           <div className="stack">
-            <header>
+            <header
+              className="reveal-seq reveal-title"
+              data-visible={revealStage >= REVEAL_STAGE.TITLE}
+            >
               <h1>
                 Meu <span className="muted2">Perfil</span>
               </h1>
             </header>
 
-            <div className="glass" aria-label="Dados do perfil">
-              <div className="label">PERFIL</div>
+            <div
+              className="glass reveal-seq reveal-content"
+              aria-label="Dados do perfil"
+              data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+            >
+              <div
+                className="label reveal-seq reveal-description"
+                data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
+              >
+                PERFIL
+              </div>
               <form onSubmit={handleSubmit} className="profile-form">
                 <div className="profile-grid">
                   <div className="card">
@@ -1553,7 +1595,12 @@ export default function MeuPerfil() {
               </form>
             </div>
 
-            <footer>ROMEIKE BEAUTY</footer>
+            <footer
+              className="reveal-seq reveal-content"
+              data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+            >
+              ROMEIKE BEAUTY
+            </footer>
           </div>
         </section>
       </div>
@@ -1565,6 +1612,8 @@ export default function MeuPerfil() {
             type="button"
             title="Personalizar"
             onClick={() => setIsPaletteOpen((open) => !open)}
+            className="reveal-seq reveal-content"
+            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <circle cx="12" cy="12" r="9" />
@@ -1574,7 +1623,11 @@ export default function MeuPerfil() {
             </svg>
           </button>
 
-          <div id="palettePanel" className={isPaletteOpen ? 'open' : ''}>
+          <div
+            id="palettePanel"
+            className={`${isPaletteOpen ? 'open' : ''} reveal-seq reveal-content`}
+            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+          >
             <div id="panelScroll">
           <div className="pal-section">
             <h3>Cards (livre)</h3>

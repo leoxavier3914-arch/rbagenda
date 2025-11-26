@@ -60,6 +60,71 @@
   gap: 10px;
 }
 
+.statusCard {
+  position: relative;
+  aspect-ratio: 6 / 5;
+  border-radius: var(--radius-inner);
+  border: 1.6px solid var(--card-stroke);
+  background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+  box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -14px 20px rgba(143, 196, 170, 0.12);
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.22s ease;
+  overflow: hidden;
+  will-change: transform;
+  isolation: isolate;
+}
+
+.statusCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
+  pointer-events: none;
+}
+
+.statusCard:hover {
+  transform: translateY(-2px);
+}
+
+.statusCard:active {
+  transform: translateY(0);
+}
+
+.statusCard:focus {
+  outline: none;
+}
+
+.statusCard:focus-visible {
+  box-shadow: 0 0 0 4px rgba(143, 196, 170, 0.35), 0 12px 28px rgba(28, 75, 56, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.statusCard[data-active='true'] {
+  box-shadow: 0 0 0 2px rgba(99, 140, 118, 0.3), 0 18px 32px rgba(24, 63, 46, 0.18);
+  transform: translateY(-4px);
+}
+
+.statusCard[data-active='true'] :global(.card-inner) span {
+  color: #0f271c;
+}
+
+:global(.procedimento-screen) .statusCard {
+  border: 1.6px solid var(--card-stroke);
+  background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+  box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -14px 20px rgba(143, 196, 170, 0.12);
+}
+
+:global(.procedimento-screen) .statusCard[data-active='true'] {
+  box-shadow: 0 0 0 2px rgba(99, 140, 118, 0.3), 0 18px 32px rgba(24, 63, 46, 0.18);
+}
+
 .filterCard {
   position: relative;
   appearance: none;

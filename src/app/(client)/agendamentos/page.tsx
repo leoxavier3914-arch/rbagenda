@@ -1314,7 +1314,7 @@ export default function MyAppointments() {
                     <button
                       key={card.key}
                       type="button"
-                      className="card"
+                      className={`card ${styles.statusCard}`}
                       data-active={selectedCategory === card.key ? 'true' : 'false'}
                       onClick={() => handleCategorySelect(card.key)}
                     >

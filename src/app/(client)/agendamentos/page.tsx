@@ -52,6 +52,8 @@ const statusEmptyMessages: Record<StatusCategory, string> = {
   concluidos: 'Você ainda não tem agendamentos finalizados.',
 }
 
+const ITEMS_PER_PAGE = 5
+
 const normalizeStatusValue = (status: string | null | undefined): AppointmentStatus => {
   if (typeof status !== 'string') return 'pending'
   const trimmed = status.trim()
@@ -873,6 +875,7 @@ export default function MyAppointments() {
   const [blockedAppointment, setBlockedAppointment] = useState<NormalizedAppointment | null>(null)
   const [editingAppointment, setEditingAppointment] = useState<NormalizedAppointment | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<SelectedStatusCategory>(null)
+  const [currentPage, setCurrentPage] = useState(1)
   const [shouldScrollToResults, setShouldScrollToResults] = useState(false)
   const resultsRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
@@ -1084,6 +1087,7 @@ export default function MyAppointments() {
       }
 
       setSelectedCategory(category)
+      setCurrentPage(1)
       setShouldScrollToResults(true)
     },
     [scrollToResults, selectedCategory],
@@ -1106,6 +1110,29 @@ export default function MyAppointments() {
         ? appointments.filter((appointment) => STATUS_FILTERS[selectedCategory].includes(appointment.status))
         : [],
     [appointments, selectedCategory],
+  )
+
+  const totalPages = useMemo(
+    () => (filteredAppointments.length > 0 ? Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE) : 0),
+    [filteredAppointments],
+  )
+
+  useEffect(() => {
+    if (filteredAppointments.length === 0) {
+      setCurrentPage(1)
+      return
+    }
+
+    setCurrentPage((prev) => Math.min(prev, totalPages || 1))
+  }, [filteredAppointments, totalPages])
+
+  const paginatedAppointments = useMemo(
+    () =>
+      filteredAppointments.slice(
+        (Math.max(currentPage, 1) - 1) * ITEMS_PER_PAGE,
+        Math.max(currentPage, 1) * ITEMS_PER_PAGE,
+      ),
+    [filteredAppointments, currentPage],
   )
 
   const completionSummary = useMemo(() => {
@@ -1363,7 +1390,7 @@ export default function MyAppointments() {
                       ) : null}
 
                       <div className={styles.cards}>
-                        {filteredAppointments.map((appointment) => {
+                        {paginatedAppointments.map((appointment) => {
                           const statusLabel = statusLabels[appointment.status] ?? appointment.status
                           const statusClass =
                             styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
@@ -1451,6 +1478,30 @@ export default function MyAppointments() {
                           )
                         })}
                       </div>
+
+                      {totalPages > 1 ? (
+                        <div className={styles.pagination} role="navigation" aria-label="Paginação de agendamentos">
+                          <button
+                            type="button"
+                            className={styles.paginationButton}
+                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            ← Página anterior
+                          </button>
+                          <span className={styles.paginationInfo}>
+                            Página {currentPage} de {totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            className={styles.paginationButton}
+                            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            Próxima página →
+                          </button>
+                        </div>
+                      ) : null}
                     </>
                   )}
                 </div>

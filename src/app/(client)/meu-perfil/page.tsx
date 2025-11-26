@@ -988,10 +988,10 @@ export default function MeuPerfil() {
           gap: 12px;
         }
         .avatar {
-          width: 180px;
-          height: 180px;
-          border-radius: 50%;
-          border: 1.6px solid var(--card-stroke);
+          width: 192px;
+          height: 192px;
+          border-radius: 24px;
+          border: 5px solid #ffffff;
           background: linear-gradient(
             180deg,
             var(--inner-top),
@@ -999,7 +999,7 @@ export default function MeuPerfil() {
           );
           background-clip: padding-box;
           background-origin: border-box;
-          box-shadow: 0 10px 20px rgba(28, 75, 56, 0.12),
+          box-shadow: 0 14px 24px rgba(28, 75, 56, 0.14),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
           overflow: hidden;
           position: relative;
@@ -1027,19 +1027,28 @@ export default function MeuPerfil() {
           place-items: center;
           color: var(--muted);
         }
-        .avatar-actions {
+        .avatar-actions-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.16),
+            rgba(0, 0, 0, 0.32)
+          );
           display: none;
-          gap: 10px;
-          flex-wrap: wrap;
+          align-items: center;
           justify-content: center;
-          padding: 8px 12px;
-          border-radius: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          background: rgba(255, 255, 255, 0.78);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          padding: 14px;
         }
-        .avatar-actions[data-open='true'] {
+        .avatar-actions-overlay[data-open='true'] {
           display: flex;
+        }
+        .avatar-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          width: 100%;
+          max-width: 160px;
         }
         .btn {
           padding: 8px 12px;
@@ -1341,35 +1350,39 @@ export default function MeuPerfil() {
                             </svg>
                           </div>
                         )}
+                        <div
+                          className="avatar-actions-overlay"
+                          data-open={isAvatarMenuOpen}
+                        >
+                          <div
+                            className="avatar-actions"
+                            id="avatarActions"
+                            ref={avatarActionsRef}
+                          >
+                            <label className="btn">
+                              <input
+                                id="avatarInput"
+                                type="file"
+                                accept="image/*"
+                                hidden
+                                ref={avatarInputRef}
+                                onChange={handleAvatarChange}
+                              />
+                              Enviar foto
+                            </label>
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={handleRemoveAvatar}
+                            >
+                              Remover foto
+                            </button>
+                          </div>
+                        </div>
                       </div>
                       {resolvedName ? (
                         <p className="profile-name">{resolvedName}</p>
                       ) : null}
-                      <div
-                        className="avatar-actions"
-                        id="avatarActions"
-                        data-open={isAvatarMenuOpen}
-                        ref={avatarActionsRef}
-                      >
-                        <label className="btn">
-                          <input
-                            id="avatarInput"
-                            type="file"
-                            accept="image/*"
-                            hidden
-                            ref={avatarInputRef}
-                            onChange={handleAvatarChange}
-                          />
-                          Enviar foto
-                        </label>
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={handleRemoveAvatar}
-                        >
-                          Remover foto
-                        </button>
-                      </div>
                     </div>
                   </div>
 

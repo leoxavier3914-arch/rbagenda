@@ -110,8 +110,15 @@
   transform: translateY(-4px);
 }
 
-.statusCard[data-active='true'] :global(.card-inner) span {
+.statusCard[data-active='true'] .statusCardInner span {
   color: #0f271c;
+}
+
+.statusCardInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 :global(.procedimento-screen) .statusCard {

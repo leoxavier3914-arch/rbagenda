@@ -1314,11 +1314,11 @@ export default function MyAppointments() {
                     <button
                       key={card.key}
                       type="button"
-                      className={`card ${styles.statusCard}`}
+                      className={styles.statusCard}
                       data-active={selectedCategory === card.key ? 'true' : 'false'}
                       onClick={() => handleCategorySelect(card.key)}
                     >
-                      <div className="card-inner">
+                      <div className={styles.statusCardInner}>
                         <LashIcon />
                         <span>{card.title}</span>
                       </div>

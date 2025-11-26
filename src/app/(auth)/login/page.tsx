@@ -2,8 +2,6 @@
 
 import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
-import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
-import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
 
@@ -48,9 +46,6 @@ export default function Login() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-
-    const body = document.body
-    body.classList.add('procedimento-screen')
 
     const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
 
@@ -163,7 +158,6 @@ export default function Login() {
     createLayer('lavaLight', 'light')
 
     return () => {
-      body.classList.remove('procedimento-screen')
       cleanups.forEach((fn) => fn())
     }
   }, [])
@@ -283,11 +277,6 @@ export default function Login() {
 
   return (
     <main className="min-h-screen flex-1 overflow-hidden">
-      <Script id="procedimento-body-class" strategy="beforeInteractive">
-        {"document.body.classList.add('procedimento-screen');"}
-      </Script>
-      <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
-
       <div className="procedimento-root">
         <div className="texture" aria-hidden="true">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none">

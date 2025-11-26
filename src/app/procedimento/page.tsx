@@ -1755,6 +1755,9 @@ export default function ProcedimentoPage() {
   }, [isPayLaterNoticeOpen])
 
   const hasSummary = !!summaryData
+  const canSelectTechnique = Boolean(selectedServiceId)
+  const canSelectDate = Boolean(selectedTechniqueId)
+  const canSelectTime = Boolean(selectedDate)
   const continueButtonLabel = isCreatingAppointment
     ? 'Criando agendamento…'
     : isCurrentSelectionBooked
@@ -1858,6 +1861,8 @@ export default function ProcedimentoPage() {
             className="center"
             id="sectionTecnica"
             aria-label="Escolha da técnica"
+            hidden={!canSelectTechnique}
+            aria-hidden={!canSelectTechnique}
           >
             <div className="stack">
               <header
@@ -1922,6 +1927,8 @@ export default function ProcedimentoPage() {
             className="center"
             id="sectionDia"
             aria-label="Escolha do dia"
+            hidden={!canSelectDate}
+            aria-hidden={!canSelectDate}
           >
             <div className="stack">
               <header
@@ -2019,6 +2026,8 @@ export default function ProcedimentoPage() {
             className="center"
             id="sectionHorario"
             aria-label="Escolha do horário"
+            hidden={!canSelectTime}
+            aria-hidden={!canSelectTime}
           >
             <div className="stack">
               <header

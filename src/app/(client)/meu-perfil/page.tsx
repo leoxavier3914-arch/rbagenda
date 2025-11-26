@@ -4,6 +4,7 @@
 import {
   type ChangeEvent,
   type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type RefObject,
   useCallback,
   useEffect,
@@ -173,6 +174,7 @@ export default function MeuPerfil() {
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
   const [avatarDataUrl, setAvatarDataUrl] = useState<string>('')
+  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false)
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
   const revealStage = useLavaRevealStage()
@@ -192,6 +194,9 @@ export default function MeuPerfil() {
   const glassHexRef = useRef<HTMLInputElement>(null)
   const bubbleDarkHexRef = useRef<HTMLInputElement>(null)
   const bubbleLightHexRef = useRef<HTMLInputElement>(null)
+  const avatarBoxRef = useRef<HTMLDivElement>(null)
+  const avatarActionsRef = useRef<HTMLDivElement>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const lastSyncedThemeRef = useRef<ThemeState>(defaultTheme)
 
   const commitVar = useCallback((name: string, value: string) => {
@@ -516,6 +521,7 @@ export default function MeuPerfil() {
   )
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setIsAvatarMenuOpen(false)
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -536,10 +542,50 @@ export default function MeuPerfil() {
 
   const handleRemoveAvatar = () => {
     setAvatarDataUrl('')
+    setIsAvatarMenuOpen(false)
     try {
       window.localStorage.removeItem(AVATAR_STORAGE_KEY)
     } catch (storageError) {
       console.warn('Não foi possível remover o avatar local', storageError)
+    }
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!isAvatarMenuOpen) return
+
+      const target = event.target as Node
+      if (
+        avatarBoxRef.current?.contains(target) ||
+        avatarActionsRef.current?.contains(target)
+      ) {
+        return
+      }
+      setIsAvatarMenuOpen(false)
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsAvatarMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isAvatarMenuOpen])
+
+  const toggleAvatarMenu = () => {
+    setIsAvatarMenuOpen((prev) => !prev)
+  }
+
+  const handleAvatarKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      toggleAvatarMenu()
     }
   }
 
@@ -942,10 +988,10 @@ export default function MeuPerfil() {
           gap: 12px;
         }
         .avatar {
-          width: 180px;
-          height: 180px;
-          border-radius: 50%;
-          border: 1.6px solid var(--card-stroke);
+          width: 192px;
+          height: 192px;
+          border-radius: 24px;
+          border: 5px solid #ffffff;
           background: linear-gradient(
             180deg,
             var(--inner-top),
@@ -953,10 +999,20 @@ export default function MeuPerfil() {
           );
           background-clip: padding-box;
           background-origin: border-box;
-          box-shadow: 0 10px 20px rgba(28, 75, 56, 0.12),
+          box-shadow: 0 14px 24px rgba(28, 75, 56, 0.14),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
           overflow: hidden;
           position: relative;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .avatar:focus-visible {
+          outline: 2px solid rgba(31, 69, 55, 0.35);
+          outline-offset: 4px;
+        }
+        .avatar:hover {
+          box-shadow: 0 12px 26px rgba(28, 75, 56, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
         .avatar img {
           width: 100%;
@@ -971,11 +1027,28 @@ export default function MeuPerfil() {
           place-items: center;
           color: var(--muted);
         }
+        .avatar-actions-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.16),
+            rgba(0, 0, 0, 0.32)
+          );
+          display: none;
+          align-items: center;
+          justify-content: center;
+          padding: 14px;
+        }
+        .avatar-actions-overlay[data-open='true'] {
+          display: flex;
+        }
         .avatar-actions {
           display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          justify-content: center;
+          flex-direction: column;
+          gap: 8px;
+          width: 100%;
+          max-width: 160px;
         }
         .btn {
           padding: 8px 12px;
@@ -1248,7 +1321,18 @@ export default function MeuPerfil() {
                 <div className="profile-grid">
                   <div className="card">
                     <div className="avatar-wrap">
-                      <div className="avatar" id="avatarBox">
+                      <div
+                        className="avatar"
+                        id="avatarBox"
+                        ref={avatarBoxRef}
+                        onClick={toggleAvatarMenu}
+                        onKeyDown={handleAvatarKeyDown}
+                        tabIndex={0}
+                        role="button"
+                        aria-label="Abrir ações do avatar"
+                        aria-expanded={isAvatarMenuOpen}
+                        aria-controls="avatarActions"
+                      >
                         {avatarDataUrl ? (
                           <img src={avatarDataUrl} alt="" title="" />
                         ) : (
@@ -1266,29 +1350,39 @@ export default function MeuPerfil() {
                             </svg>
                           </div>
                         )}
+                        <div
+                          className="avatar-actions-overlay"
+                          data-open={isAvatarMenuOpen}
+                        >
+                          <div
+                            className="avatar-actions"
+                            id="avatarActions"
+                            ref={avatarActionsRef}
+                          >
+                            <label className="btn">
+                              <input
+                                id="avatarInput"
+                                type="file"
+                                accept="image/*"
+                                hidden
+                                ref={avatarInputRef}
+                                onChange={handleAvatarChange}
+                              />
+                              Enviar foto
+                            </label>
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={handleRemoveAvatar}
+                            >
+                              Remover foto
+                            </button>
+                          </div>
+                        </div>
                       </div>
                       {resolvedName ? (
                         <p className="profile-name">{resolvedName}</p>
                       ) : null}
-                      <div className="avatar-actions">
-                        <label className="btn">
-                          <input
-                            id="avatarInput"
-                            type="file"
-                            accept="image/*"
-                            hidden
-                            onChange={handleAvatarChange}
-                          />
-                          Enviar foto
-                        </label>
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={handleRemoveAvatar}
-                        >
-                          Remover foto
-                        </button>
-                      </div>
                     </div>
                   </div>
 

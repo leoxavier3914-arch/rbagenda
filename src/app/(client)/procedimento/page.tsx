@@ -21,7 +21,6 @@ import {
   type AvailabilityAppointment,
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
-import ClientMenu from '@/components/ClientMenu'
 import { useLavaLamp } from '@/components/LavaLampProvider'
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 
@@ -1587,8 +1586,7 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <ClientMenu disableContentPadding>
-      <div className="page">
+    <div className="page">
         <section
           ref={typeSectionRef}
           className="center"
@@ -2315,8 +2313,7 @@ export default function ProcedimentoPage() {
             </div>
           </>
         ) : null}
-      </div>
-    </ClientMenu>
+    </div>
   )
 }
 

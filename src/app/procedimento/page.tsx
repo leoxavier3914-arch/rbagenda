@@ -1856,93 +1856,92 @@ export default function ProcedimentoPage() {
               </footer>
             </div>
           </section>
-          <section
-            ref={techniqueSectionRef}
-            className="center"
-            id="sectionTecnica"
-            aria-label="Escolha da técnica"
-            hidden={!canSelectTechnique}
-            aria-hidden={!canSelectTechnique}
-          >
-            <div className="stack">
-              <header
-                className="reveal-seq reveal-title"
-                data-visible={revealStage >= REVEAL_STAGE.TITLE}
-              >
-                <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                </svg>
-                <h1>
-                  Escolha <span className="muted2">sua</span> Técnica:
-                </h1>
-              </header>
-              <div
-                className="glass reveal-seq reveal-content"
-                aria-label="Técnicas de cílios"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                <div
-                  className="label reveal-seq reveal-description"
-                  data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
+          {canSelectTechnique ? (
+            <section
+              ref={techniqueSectionRef}
+              className="center"
+              id="sectionTecnica"
+              aria-label="Escolha da técnica"
+            >
+              <div className="stack">
+                <header
+                  className="reveal-seq reveal-title"
+                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
                 >
-                  TÉCNICA
+                  <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+                    <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+                  </svg>
+                  <h1>
+                    Escolha <span className="muted2">sua</span> Técnica:
+                  </h1>
+                </header>
+                <div
+                  className="glass reveal-seq reveal-content"
+                  aria-label="Técnicas de cílios"
+                  data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+                >
+                  <div
+                    className="label reveal-seq reveal-description"
+                    data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
+                  >
+                    TÉCNICA
+                  </div>
+                  {catalogStatus === 'ready' && selectedService ? (
+                    <>
+                      {selectedService.techniques.length > 0 ? (
+                        <div className="grid tecnica-grid">
+                          {visibleTechniques.map((technique) => (
+                            <button
+                              key={technique.id}
+                              type="button"
+                              className="card"
+                              data-active={selectedTechniqueId === technique.id ? 'true' : 'false'}
+                              onClick={() => handleTechniqueSelect(technique.id)}
+                            >
+                              <div className="card-inner">
+                                <LashIcon />
+                                <span>{technique.name}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="status status-info">Nenhuma técnica disponível para este tipo.</div>
+                      )}
+                      {!showAllTechniques && selectedService.techniques.length > visibleTechniques.length && (
+                        <button type="button" className="view-more" onClick={() => setShowAllTechniques(true)}>
+                          Ver mais técnicas
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="status status-info">Selecione um tipo para ver as técnicas disponíveis.</div>
+                  )}
                 </div>
-                {catalogStatus === 'ready' && selectedService ? (
-                  <>
-                    {selectedService.techniques.length > 0 ? (
-                      <div className="grid tecnica-grid">
-                        {visibleTechniques.map((technique) => (
-                          <button
-                            key={technique.id}
-                            type="button"
-                            className="card"
-                            data-active={selectedTechniqueId === technique.id ? 'true' : 'false'}
-                            onClick={() => handleTechniqueSelect(technique.id)}
-                          >
-                            <div className="card-inner">
-                              <LashIcon />
-                              <span>{technique.name}</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="status status-info">Nenhuma técnica disponível para este tipo.</div>
-                    )}
-                    {!showAllTechniques && selectedService.techniques.length > visibleTechniques.length && (
-                      <button type="button" className="view-more" onClick={() => setShowAllTechniques(true)}>
-                        Ver mais técnicas
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <div className="status status-info">Selecione um tipo para ver as técnicas disponíveis.</div>
-                )}
               </div>
-            </div>
-          </section>
-          <section
-            ref={dateSectionRef}
-            className="center"
-            id="sectionDia"
-            aria-label="Escolha do dia"
-            hidden={!canSelectDate}
-            aria-hidden={!canSelectDate}
-          >
-            <div className="stack">
-              <header
-                className="reveal-seq reveal-title"
-                data-visible={revealStage >= REVEAL_STAGE.TITLE}
-              >
-                <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                </svg>
-                <h1>
-                  Escolha <span className="muted2">o</span> Dia:
-                </h1>
-              </header>
+            </section>
+          ) : null}
+          {canSelectDate ? (
+            <section
+              ref={dateSectionRef}
+              className="center"
+              id="sectionDia"
+              aria-label="Escolha do dia"
+            >
+              <div className="stack">
+                <header
+                  className="reveal-seq reveal-title"
+                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
+                >
+                  <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+                    <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+                  </svg>
+                  <h1>
+                    Escolha <span className="muted2">o</span> Dia:
+                  </h1>
+                </header>
               <div
                 className="glass reveal-seq reveal-content"
                 aria-label="Escolha do dia"
@@ -2021,32 +2020,32 @@ export default function ProcedimentoPage() {
               </footer>
             </div>
           </section>
-          <section
-            ref={timeSectionRef}
-            className="center"
-            id="sectionHorario"
-            aria-label="Escolha do horário"
-            hidden={!canSelectTime}
-            aria-hidden={!canSelectTime}
-          >
-            <div className="stack">
-              <header
-                className="reveal-seq reveal-title"
-                data-visible={revealStage >= REVEAL_STAGE.TITLE}
-              >
-                <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                </svg>
-                <h1>
-                  Escolha <span className="muted2">o</span> Horário:
-                </h1>
-              </header>
-              <div
-                className="glass reveal-seq reveal-content"
-                aria-label="Escolha do horário"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
+          ) : null}
+          {canSelectTime ? (
+            <section
+              ref={timeSectionRef}
+              className="center"
+              id="sectionHorario"
+              aria-label="Escolha do horário"
+            >
+              <div className="stack">
+                <header
+                  className="reveal-seq reveal-title"
+                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
+                >
+                  <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+                    <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+                  </svg>
+                  <h1>
+                    Escolha <span className="muted2">o</span> Horário:
+                  </h1>
+                </header>
+                <div
+                  className="glass reveal-seq reveal-content"
+                  aria-label="Escolha do horário"
+                  data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+                >
                 <div
                   className="label reveal-seq reveal-description"
                   data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
@@ -2099,6 +2098,7 @@ export default function ProcedimentoPage() {
               </footer>
             </div>
           </section>
+          ) : null}
         </div>
         {hasSummary ? (
           <div className="summary-bar" data-visible={hasSummary ? 'true' : 'false'} ref={summaryRef}>

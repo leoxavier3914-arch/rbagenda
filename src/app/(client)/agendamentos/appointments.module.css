@@ -483,6 +483,11 @@
   box-shadow: 0 18px 40px rgba(24, 63, 46, 0.14);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(200, 232, 212, 0.85));
   color: var(--appointments-ink);
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
 }
 
 .btn:hover:not(:disabled) {

@@ -465,9 +465,10 @@
 
 .cardFooter {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
   margin-top: 14px;
+  justify-content: center;
 }
 
 .btn {

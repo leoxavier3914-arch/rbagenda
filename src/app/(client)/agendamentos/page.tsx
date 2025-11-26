@@ -1399,7 +1399,7 @@ export default function MyAppointments() {
                           const showPay = canShowPay(appointment)
                           const showCancel = canShowCancel(appointment.status)
                           const showEdit = canShowEdit(appointment)
-                          const actions = [showPay, showCancel, showEdit].filter(Boolean)
+                          const actions = [showPay, showEdit, showCancel].filter(Boolean)
                           const shouldShowPayError = payError && lastPayAttemptId === appointment.id
 
                           return (
@@ -1451,6 +1451,15 @@ export default function MyAppointments() {
                                       {payingApptId === appointment.id ? 'Abrindo…' : '💳 Pagar'}
                                     </button>
                                   )}
+                                  {showEdit && (
+                                    <button
+                                      type="button"
+                                      className={`${styles.btn} ${styles.btnEdit}`}
+                                      onClick={() => handleEditRequest(appointment)}
+                                    >
+                                      ✎ Alterar
+                                    </button>
+                                  )}
                                   {showCancel && (
                                     <button
                                       type="button"
@@ -1459,15 +1468,6 @@ export default function MyAppointments() {
                                       disabled={cancelingId === appointment.id}
                                     >
                                       {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}
-                                    </button>
-                                  )}
-                                  {showEdit && (
-                                    <button
-                                      type="button"
-                                      className={`${styles.btn} ${styles.btnEdit}`}
-                                      onClick={() => handleEditRequest(appointment)}
-                                    >
-                                      ✎ Alterar
                                     </button>
                                   )}
                                 </div>

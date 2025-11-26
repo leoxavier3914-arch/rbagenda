@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./procedimento.css";
 
 export const metadata: Metadata = {
   title: "Agenda de Cílios",
@@ -31,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className="flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col procedimento-screen">
         <div className="brand-texture-overlay pointer-events-none fixed inset-0 -z-10" aria-hidden />
         <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
       </body>

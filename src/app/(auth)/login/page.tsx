@@ -312,7 +312,7 @@ export default function Login() {
             <form className="w-full max-w-md space-y-6" onSubmit={submit}>
               <div className="w-full space-y-6 rounded-3xl bg-transparent p-6">{cardContent}</div>
               {!checkingSession && (
-                <div className="space-y-4 pt-1">
+                <div className="button-stack flex flex-col gap-4 pt-1">
                   <button className="btn-primary w-full" disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
@@ -330,6 +330,19 @@ export default function Login() {
           </section>
         </div>
       </div>
+      <style jsx>{`
+        .button-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        @supports not (gap: 1rem) {
+          .button-stack > * + * {
+            margin-top: 1rem;
+          }
+        }
+      `}</style>
     </main>
   )
 }

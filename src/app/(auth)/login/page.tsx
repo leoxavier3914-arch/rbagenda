@@ -312,13 +312,13 @@ export default function Login() {
             <form className="w-full max-w-md space-y-6" onSubmit={submit}>
               <div className="w-full space-y-6 rounded-3xl bg-transparent p-6">{cardContent}</div>
               {!checkingSession && (
-                <div className="space-y-3 pt-1">
+                <div className="space-y-4 pt-1">
                   <button className="btn-primary w-full" disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
                   <button
                     type="button"
-                    className="btn-secondary mt-2 w-full"
+                    className="btn-secondary w-full"
                     onClick={() => router.push('/signup')}
                     disabled={loading}
                   >

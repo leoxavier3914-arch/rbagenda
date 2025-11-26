@@ -63,6 +63,22 @@ const defaultTheme: ThemeState = {
 
 const HEX_REGEX = /^#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/
 
+const isThemeEqual = (a: ThemeState, b: ThemeState) =>
+  a.innerTop === b.innerTop &&
+  a.innerBottom === b.innerBottom &&
+  a.cardBorderHex === b.cardBorderHex &&
+  a.cardBorderAlpha === b.cardBorderAlpha &&
+  a.bgTop === b.bgTop &&
+  a.bgBottom === b.bgBottom &&
+  a.glassColor === b.glassColor &&
+  a.glassAlpha === b.glassAlpha &&
+  a.glassBorderHex === b.glassBorderHex &&
+  a.glassBorderAlpha === b.glassBorderAlpha &&
+  a.bubbleDark === b.bubbleDark &&
+  a.bubbleLight === b.bubbleLight &&
+  a.bubbleAlphaMin === b.bubbleAlphaMin &&
+  a.bubbleAlphaMax === b.bubbleAlphaMax
+
 const clampAlpha = (value: number) => {
   if (Number.isNaN(value)) return 0
   return Math.min(1, Math.max(0, value))
@@ -176,6 +192,7 @@ export default function MeuPerfil() {
   const glassHexRef = useRef<HTMLInputElement>(null)
   const bubbleDarkHexRef = useRef<HTMLInputElement>(null)
   const bubbleLightHexRef = useRef<HTMLInputElement>(null)
+  const lastSyncedThemeRef = useRef<ThemeState>(defaultTheme)
 
   const commitVar = useCallback((name: string, value: string) => {
     if (typeof window === 'undefined') return
@@ -187,7 +204,7 @@ export default function MeuPerfil() {
   }, [refreshPalette])
 
   const syncThemeFromComputed = useCallback(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return null
     const computed = getComputedStyle(document.documentElement)
     const innerTop = parseColorString(computed.getPropertyValue('--inner-top'))
     const innerBottom = parseColorString(
@@ -209,7 +226,7 @@ export default function MeuPerfil() {
       computed.getPropertyValue('--lava-alpha-max'),
     )
 
-    setTheme({
+    return {
       innerTop: innerTop.hex,
       innerBottom: innerBottom.hex,
       cardBorderHex: cardStroke.hex,
@@ -228,16 +245,20 @@ export default function MeuPerfil() {
       bubbleAlphaMax: Number.isFinite(bubbleAlphaMax)
         ? clampAlpha(bubbleAlphaMax)
         : defaultTheme.bubbleAlphaMax,
-    })
+    }
   }, [])
 
   useEffect(() => {
-    syncThemeFromComputed()
-  }, [syncThemeFromComputed])
+    const computedTheme = syncThemeFromComputed()
+    if (!computedTheme) return
 
-  useEffect(() => {
-    refreshPalette()
-  }, [refreshPalette])
+    setTheme((previous) => (isThemeEqual(previous, computedTheme) ? previous : computedTheme))
+
+    if (!isThemeEqual(lastSyncedThemeRef.current, computedTheme)) {
+      lastSyncedThemeRef.current = computedTheme
+      refreshPalette()
+    }
+  }, [refreshPalette, syncThemeFromComputed])
 
   useEffect(() => {
     const root = document.documentElement

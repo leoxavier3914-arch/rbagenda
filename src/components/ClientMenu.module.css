@@ -210,11 +210,35 @@
   box-sizing: border-box;
   padding: 96px 24px 56px;
   color: inherit;
+  perspective: 1400px;
 }
 
 .contentInner {
   margin: 0 auto;
   width: min(100%, 1120px);
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.contentInnerFlip {
+  animation: pageFlipIn 720ms ease;
+}
+
+@keyframes pageFlipIn {
+  0% {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-94deg) translateX(-18px);
+  }
+
+  55% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(12deg) translateX(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0) translateX(0);
+  }
 }
 
 .contentNoPadding {

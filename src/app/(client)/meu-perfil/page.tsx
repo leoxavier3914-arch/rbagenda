@@ -946,41 +946,30 @@ export default function MeuPerfil() {
         }
         .profile-grid {
           display: grid;
-          grid-template-columns: 300px 1fr;
-          gap: clamp(12px, 2vw, 18px);
+          grid-template-columns: 320px 1fr;
+          gap: clamp(16px, 3vw, 26px);
+          align-items: start;
+        }
+        .profile-grid .avatar-column {
+          display: grid;
+          justify-items: center;
+          gap: 12px;
+        }
+        .profile-grid .fields-column {
+          border-left: 1px solid rgba(255, 255, 255, 0.6);
+          padding-left: clamp(16px, 3vw, 24px);
         }
         @media (max-width: 880px) {
           .profile-grid {
             grid-template-columns: 1fr;
           }
-        }
-        .card {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: clamp(12px, 1.5vw, 18px);
-          border-radius: var(--radius-inner);
-          border: 1.6px solid var(--card-stroke);
-          background: linear-gradient(
-            180deg,
-            var(--inner-top),
-            var(--inner-bottom)
-          );
-          background-clip: padding-box;
-          background-origin: border-box;
-          box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9),
-            inset 0 -14px 20px rgba(143, 196, 170, 0.12);
-          padding: clamp(16px, 3vw, 24px);
-          overflow: visible;
-        }
-        .card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
-          pointer-events: none;
+          .profile-grid .fields-column {
+            border-left: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+            padding-left: 0;
+            padding-top: clamp(16px, 3vw, 24px);
+            margin-top: clamp(6px, 2vw, 12px);
+          }
         }
         .avatar-wrap {
           display: grid;
@@ -1319,7 +1308,7 @@ export default function MeuPerfil() {
               </div>
               <form onSubmit={handleSubmit} className="profile-form">
                 <div className="profile-grid">
-                  <div className="card">
+                  <div className="avatar-column">
                     <div className="avatar-wrap">
                       <div
                         className="avatar"
@@ -1386,7 +1375,7 @@ export default function MeuPerfil() {
                     </div>
                   </div>
 
-                  <div className="card">
+                  <div className="fields-column">
                     <div className="fields">
                       <div className="field" style={{ gridColumn: '1 / -1' }}>
                         <label htmlFor="nome">Nome</label>

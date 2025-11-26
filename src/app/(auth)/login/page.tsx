@@ -318,7 +318,7 @@ export default function Login() {
                   </button>
                   <button
                     type="button"
-                    className="btn-secondary w-full"
+                    className="btn-secondary mt-2 w-full"
                     onClick={() => router.push('/signup')}
                     disabled={loading}
                   >

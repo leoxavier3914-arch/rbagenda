@@ -290,16 +290,23 @@
 
 .pagination {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.paginationRow {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 8px;
   flex-wrap: wrap;
 }
 
 .paginationInfo {
   font-weight: 700;
   color: var(--appointments-ink);
+  text-align: center;
 }
 
 .paginationButton {

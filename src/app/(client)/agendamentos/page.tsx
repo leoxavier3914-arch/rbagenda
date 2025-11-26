@@ -1481,25 +1481,27 @@ export default function MyAppointments() {
 
                       {totalPages > 1 ? (
                         <div className={styles.pagination} role="navigation" aria-label="Paginação de agendamentos">
-                          <button
-                            type="button"
-                            className={styles.paginationButton}
-                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                          >
-                            ← Página anterior
-                          </button>
+                          <div className={styles.paginationRow}>
+                            <button
+                              type="button"
+                              className={styles.paginationButton}
+                              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              ← Página anterior
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.paginationButton}
+                              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                              disabled={currentPage === totalPages}
+                            >
+                              Próxima página →
+                            </button>
+                          </div>
                           <span className={styles.paginationInfo}>
-                            Página {currentPage} de {totalPages}
+                            {currentPage} de {totalPages}
                           </span>
-                          <button
-                            type="button"
-                            className={styles.paginationButton}
-                            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
-                          >
-                            Próxima página →
-                          </button>
                         </div>
                       ) : null}
                     </>

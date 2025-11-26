@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useInsertionEffect,
   useMemo,
   useRef,
   type ReactNode,
@@ -99,14 +100,23 @@ export function LavaLampProvider({ children }: LavaLampProviderProps) {
   const lightRef = useRef<HTMLCanvasElement | null>(null);
   const controllerRef = useRef<LavaController | null>(null);
 
+  useInsertionEffect(() => {
+    if (typeof document === "undefined") return undefined;
+
+    ensureProcedimentoStyle();
+    const body = document.body;
+    body.classList.add("procedimento-screen");
+
+    return () => {
+      body.classList.remove("procedimento-screen");
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
 
-    ensureProcedimentoStyle();
     const cleanupFns: Array<() => void> = [];
     const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-    const body = document.body;
-    body.classList.add("procedimento-screen");
 
     const controller: LavaController = {
       greens: [],
@@ -246,7 +256,6 @@ export function LavaLampProvider({ children }: LavaLampProviderProps) {
     return () => {
       cleanupFns.forEach((fn) => fn());
       controller.instances = [];
-      body.classList.remove("procedimento-screen");
       controllerRef.current = null;
     };
   }, []);

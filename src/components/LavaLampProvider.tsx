@@ -5,13 +5,10 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useInsertionEffect,
   useMemo,
   useRef,
   type ReactNode,
 } from "react";
-
-import { PROCEDIMENTO_CSS } from "@/lib/procedimentoTheme";
 
 type LavaInstance = {
   reseed: () => void;
@@ -73,16 +70,6 @@ const buildPalette = () => {
   return steps.map((step) => mixHexColors(dark, light, step));
 };
 
-const ensureProcedimentoStyle = () => {
-  const styleId = "procedimento-style";
-  if (document.getElementById(styleId)) return;
-  const styleTag = document.createElement("style");
-  styleTag.id = styleId;
-  styleTag.setAttribute("data-lava-lamp", "true");
-  styleTag.textContent = PROCEDIMENTO_CSS;
-  document.head.appendChild(styleTag);
-};
-
 export const useLavaLamp = () => {
   const context = useContext(LavaLampContext);
   if (!context) {
@@ -99,18 +86,6 @@ export function LavaLampProvider({ children }: LavaLampProviderProps) {
   const darkRef = useRef<HTMLCanvasElement | null>(null);
   const lightRef = useRef<HTMLCanvasElement | null>(null);
   const controllerRef = useRef<LavaController | null>(null);
-
-  useInsertionEffect(() => {
-    if (typeof document === "undefined") return undefined;
-
-    ensureProcedimentoStyle();
-    const body = document.body;
-    body.classList.add("procedimento-screen");
-
-    return () => {
-      body.classList.remove("procedimento-screen");
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;

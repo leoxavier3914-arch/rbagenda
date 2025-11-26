@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import ClientMenu from "./ClientMenu";
@@ -18,7 +18,7 @@ export default function ClientFullScreenLayout({
 }: ClientFullScreenLayoutProps) {
   const pathname = usePathname();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const body = document.body;
     body.classList.add(BODY_CLASS);
 

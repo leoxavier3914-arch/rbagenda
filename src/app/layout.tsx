@@ -53,19 +53,41 @@ export default async function RootLayout({
     "/regras",
   ];
 
+  const clientShellRoutes = [
+    "/",
+    "/indice",
+    "/agendamentos",
+    "/procedimento",
+    "/checkout",
+    "/configuracoes",
+    "/suporte",
+    "/meu-perfil",
+    "/regras",
+  ];
+
   const isProcedimentoScreen =
     currentPath === "" ||
     procedimentoRoutes.some((route) =>
       currentPath === route || currentPath.startsWith(`${route}/`),
     );
 
+  const isClientShellRoute = clientShellRoutes.some(
+    (route) => currentPath === route || currentPath.startsWith(`${route}/`),
+  );
+
+  const bodyClasses = ["flex min-h-screen flex-col"];
+
+  if (isProcedimentoScreen) {
+    bodyClasses.push("procedimento-screen");
+  }
+
+  if (isClientShellRoute) {
+    bodyClasses.push("client-fullscreen");
+  }
+
   return (
     <html lang="pt-BR">
-      <body
-        className={`flex min-h-screen flex-col${
-          isProcedimentoScreen ? " procedimento-screen" : ""
-        }`}
-      >
+      <body className={bodyClasses.join(" ")}>
         <div className="brand-texture-overlay pointer-events-none fixed inset-0 -z-10" aria-hidden />
         <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
       </body>

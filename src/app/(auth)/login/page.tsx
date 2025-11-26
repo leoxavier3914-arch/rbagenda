@@ -247,19 +247,30 @@ export default function Login() {
             disabled={loading}
           />
         </div>
-        <div className="space-y-1 text-left">
-          <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
-            Senha
-          </label>
-          <input
-            id="password"
-            className="input-field"
-            type="password"
-            placeholder="Digite sua senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-          />
+        <div className="space-y-2 text-left">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
+              Senha
+            </label>
+            <input
+              id="password"
+              className="input-field"
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <p className="text-left text-sm text-[color:rgba(31,45,40,0.8)]">
+            esqueceu sua senha?{' '}
+            <button
+              type="button"
+              className="font-semibold text-[#1f2d28] underline underline-offset-4 transition-colors hover:text-[#153227]"
+            >
+              Clique aqui
+            </button>
+          </p>
         </div>
       </div>
       {msg && (
@@ -271,7 +282,7 @@ export default function Login() {
   )
 
   return (
-    <main className="min-h-screen flex-1">
+    <main className="min-h-screen flex-1 overflow-hidden">
       <Script id="procedimento-body-class" strategy="beforeInteractive">
         {"document.body.classList.add('procedimento-screen');"}
       </Script>
@@ -298,12 +309,22 @@ export default function Login() {
 
         <div className="page">
           <section className="center">
-            <form className="w-full max-w-md space-y-4" onSubmit={submit}>
+            <form className="w-full max-w-md space-y-6" onSubmit={submit}>
               <div className="w-full space-y-6 rounded-3xl bg-transparent p-6">{cardContent}</div>
               {!checkingSession && (
-                <button className="btn-primary w-full" disabled={loading}>
-                  {loading ? 'Entrando…' : 'Entrar'}
-                </button>
+                <div className="space-y-3 pt-1">
+                  <button className="btn-primary w-full" disabled={loading}>
+                    {loading ? 'Entrando…' : 'Entrar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary w-full"
+                    onClick={() => router.push('/signup')}
+                    disabled={loading}
+                  >
+                    Criar conta
+                  </button>
+                </div>
               )}
             </form>
           </section>

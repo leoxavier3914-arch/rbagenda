@@ -4,11 +4,12 @@ import Link from "next/link";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/db";
 
@@ -34,6 +35,9 @@ type ClientMenuProps = {
   children: ReactNode;
   disableContentPadding?: boolean;
 };
+
+const MENU_TRANSITION_MS = 320;
+const PAGE_FLIP_MS = 720;
 
 const roleLabels: Record<AppRole, string> = {
   client: "Cliente",
@@ -192,7 +196,13 @@ export default function ClientMenu({
   disableContentPadding = false,
 }: ClientMenuProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPageFlipping, setIsPageFlipping] = useState(false);
+  const [frontPage, setFrontPage] = useState<ReactNode | null>(null);
+  const navigationTimeout = useRef<number | null>(null);
+  const prevChildrenRef = useRef<ReactNode>(null);
+  const hasHydratedRef = useRef(false);
   const [profile, setProfile] = useState<ProfileState>({
     name: null,
     role: "client",
@@ -241,8 +251,27 @@ export default function ClientMenu({
   }, []);
 
   useEffect(() => {
+    if (!hasHydratedRef.current) {
+      hasHydratedRef.current = true;
+      prevChildrenRef.current = children;
+      return;
+    }
+
     setIsMenuOpen(false);
-  }, [pathname]);
+    setFrontPage(prevChildrenRef.current);
+    setIsPageFlipping(true);
+
+    const timer = window.setTimeout(() => {
+      setIsPageFlipping(false);
+      setFrontPage(null);
+    }, PAGE_FLIP_MS);
+
+    prevChildrenRef.current = children;
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [children, pathname]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -252,6 +281,14 @@ export default function ClientMenu({
       document.body.style.overflowY = previousOverflowY;
     };
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (navigationTimeout.current !== null) {
+        window.clearTimeout(navigationTimeout.current);
+      }
+    };
+  }, []);
 
   const primaryItems = useMemo<NavItem[]>(
     () => [
@@ -345,6 +382,29 @@ export default function ClientMenu({
           <Link
             key={item.href}
             href={item.href}
+            onClick={(event) => {
+              const hasModifier =
+                event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+
+              if (hasModifier || event.button !== 0) return;
+
+              const isSamePage = item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+              if (isSamePage) {
+                setIsMenuOpen(false);
+                return;
+              }
+
+              event.preventDefault();
+              setIsMenuOpen(false);
+
+              navigationTimeout.current = window.setTimeout(() => {
+                void router.push(item.href);
+                navigationTimeout.current = null;
+              }, MENU_TRANSITION_MS);
+            }}
             className={`${styles.item} ${isActive ? styles.itemActive : ""}`}
           >
             {item.icon}
@@ -437,7 +497,17 @@ export default function ClientMenu({
       </aside>
 
       <main className={contentClassName}>
-        <div className={styles.contentInner}>{children}</div>
+        <div className={styles.pageStack}>
+          {isPageFlipping && frontPage ? (
+            <div className={`${styles.page} ${styles.pageFront} ${styles.pageFlipping}`}>
+              <div className={styles.contentInner}>{frontPage}</div>
+            </div>
+          ) : null}
+
+          <div className={`${styles.page} ${styles.pageBack} ${isPageFlipping ? styles.pageBackActive : ""}`}>
+            <div className={styles.contentInner}>{children}</div>
+          </div>
+        </div>
       </main>
     </div>
   );

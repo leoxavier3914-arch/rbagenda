@@ -1,9 +1,8 @@
 'use client'
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
-import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
@@ -37,12 +36,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
   const router = useRouter()
-
-  const fieldClasses = useMemo(
-    () =>
-      'w-full rounded-2xl border border-white/60 bg-white/10 px-4 py-3 text-base text-white backdrop-blur-md shadow-[0_12px_36px_rgba(0,0,0,0.18)] transition focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 disabled:cursor-not-allowed disabled:opacity-70 placeholder:text-white/70 [text-shadow:0_0_6px_rgba(0,0,0,0.45)]',
-    [],
-  )
 
   const redirectByRole = useCallback(
     async (session: Session | null) => {
@@ -229,6 +222,57 @@ export default function Login() {
     setLoading(false)
   }
 
+  const cardContent = checkingSession ? (
+    <div className="text-center text-sm text-[color:rgba(31,45,40,0.8)]">Verificando sessão…</div>
+  ) : (
+    <>
+      <div className="space-y-2 text-center">
+        <span className="badge inline-flex">Bem-vinda de volta</span>
+        <h1 className="text-3xl font-semibold text-[#1f2d28]">Acessar conta</h1>
+        <p className="muted-text">
+          Entre para acompanhar seus agendamentos e garantir uma rotina mais tranquila.
+        </p>
+      </div>
+      <form className="space-y-4" onSubmit={submit}>
+        <div className="space-y-1 text-left">
+          <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
+            E-mail
+          </label>
+          <input
+            id="email"
+            className="input-field"
+            placeholder="nome@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <div className="space-y-1 text-left">
+          <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
+            Senha
+          </label>
+          <input
+            id="password"
+            className="input-field"
+            type="password"
+            placeholder="Digite sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <button className="btn-primary w-full" disabled={loading}>
+          {loading ? 'Entrando…' : 'Entrar'}
+        </button>
+      </form>
+      {msg && (
+        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+          {msg}
+        </div>
+      )}
+    </>
+  )
+
   return (
     <main className="min-h-screen flex-1">
       <Script id="procedimento-body-class" strategy="beforeInteractive">
@@ -257,79 +301,8 @@ export default function Login() {
 
         <div className="page">
           <section className="center">
-            <div className="stack">
-              <header>
-                <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                </svg>
-                <h1>
-                  <span className="muted2">Entrar</span> para continuar
-                </h1>
-                <p className="muted-text max-w-xl text-balance text-center">
-                  Acesse para acompanhar seus agendamentos e manter sua rotina organizada.
-                </p>
-              </header>
-
-              <form className="grid w-full max-w-xl gap-6" onSubmit={submit}>
-                <div className="glass w-full">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2 text-left">
-                      <label className="text-sm font-semibold text-[color:var(--muted-2)]" htmlFor="email">
-                        E-mail
-                      </label>
-                      <input
-                        id="email"
-                        className={fieldClasses}
-                        placeholder="nome@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={loading}
-                        autoComplete="email"
-                      />
-                    </div>
-
-                    <div className="grid gap-2 text-left">
-                      <label className="text-sm font-semibold text-[color:var(--muted-2)]" htmlFor="password">
-                        Senha
-                      </label>
-                      <input
-                        id="password"
-                        className={fieldClasses}
-                        type="password"
-                        placeholder="Digite sua senha"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={loading}
-                        autoComplete="current-password"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-center gap-3">
-                  <button className="btn-primary w-full max-w-xs" disabled={loading}>
-                    {loading ? 'Entrando…' : 'Entrar'}
-                  </button>
-
-                  <Link
-                    href="/signup"
-                    className="w-full max-w-xs rounded-2xl border border-white/60 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-white shadow-[0_12px_36px_rgba(0,0,0,0.18)] transition hover:border-white hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
-                  >
-                    Criar conta
-                  </Link>
-                </div>
-
-                {checkingSession ? (
-                  <div className="text-center text-sm text-[color:var(--muted-2)]">Verificando sessão…</div>
-                ) : null}
-
-                {msg && (
-                  <div className="rounded-2xl border border-[color:rgba(164,61,61,0.25)] bg-[color:rgba(255,235,235,0.85)] px-4 py-3 text-sm text-[color:#7b2f2f]">
-                    {msg}
-                  </div>
-                )}
-              </form>
+            <div className="card w-full max-w-md space-y-6 bg-white/90">
+              {cardContent}
             </div>
           </section>
         </div>

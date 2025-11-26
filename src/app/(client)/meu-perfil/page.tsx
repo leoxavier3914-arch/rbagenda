@@ -910,6 +910,9 @@ export default function MeuPerfil() {
         }
         .card {
           position: relative;
+          display: flex;
+          flex-direction: column;
+          gap: clamp(12px, 1.5vw, 18px);
           border-radius: var(--radius-inner);
           border: 1.6px solid var(--card-stroke);
           background: linear-gradient(
@@ -922,7 +925,8 @@ export default function MeuPerfil() {
           box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.9),
             inset 0 -14px 20px rgba(143, 196, 170, 0.12);
-          padding: 14px;
+          padding: clamp(16px, 3vw, 24px);
+          overflow: visible;
         }
         .card::before {
           content: '';

@@ -8,7 +8,6 @@ import {
   useState,
 } from 'react'
 
-import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
@@ -23,20 +22,8 @@ import {
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
 import ClientMenu from '@/components/ClientMenu'
-import { PROCEDIMENTO_CSS } from '@/lib/procedimentoTheme'
+import { useLavaLamp } from '@/components/LavaLampProvider'
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
-
-
-type LavaInstance = {
-  reseed: () => void
-}
-
-type LavaController = {
-  greens: string[]
-  accents: string[]
-  instances: LavaInstance[]
-  reseedAll: () => void
-}
 
 type ServiceTechnique = {
   id: string
@@ -96,14 +83,6 @@ type SummarySnapshot = {
     slot: string
   }
 }
-
-declare global {
-  interface Window {
-    LAVA?: LavaController
-    syncLavaPaletteFromVars?: () => void
-  }
-}
-
 function escapeRegExp(value: string): string {
   return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 }
@@ -189,15 +168,6 @@ function LashIcon() {
 const FALLBACK_BUFFER_MINUTES = DEFAULT_FALLBACK_BUFFER_MINUTES
 const WORK_DAY_END = '18:00'
 
-function mixHexColors(colorA: string, colorB: string, ratio: number): string {
-  const a = hexToRgb(colorA)
-  const b = hexToRgb(colorB)
-  const mix = (channelA: number, channelB: number) => Math.round(channelA + (channelB - channelA) * ratio)
-  return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)]
-    .map((channel) => channel.toString(16).padStart(2, '0'))
-    .join('')}`
-}
-
 export default function ProcedimentoPage() {
   const now = useMemo(() => new Date(), [])
   const [year, setYear] = useState(now.getFullYear())
@@ -231,6 +201,7 @@ export default function ProcedimentoPage() {
   >(null)
 
   const router = useRouter()
+  const { refreshPalette } = useLavaLamp()
   const revealStage = useLavaRevealStage()
 
   const typeSectionRef = useRef<HTMLDivElement | null>(null)
@@ -258,29 +229,10 @@ export default function ProcedimentoPage() {
   }, [])
 
   useEffect(() => {
-    const body = document.body
-    if (!body.classList.contains('procedimento-screen')) {
-      body.classList.add('procedimento-screen')
-    }
-
     const updatedVars = new Set<string>()
     const cleanupFns: Array<() => void> = []
 
     const styleNode = document.getElementById('procedimento-style') as HTMLStyleElement | null
-
-    const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
-
-    const lavaController: LavaController =
-      window.LAVA ?? {
-        greens: [],
-        accents: ['rgba(255,255,255,0.5)', 'rgba(0,0,0,0.2)'],
-        instances: [],
-        reseedAll() {
-          this.instances.forEach((instance) => instance.reseed())
-        },
-      }
-
-    window.LAVA = lavaController
 
     const commitVar = (name: string, value: string) => {
       document.documentElement.style.setProperty(name, value)
@@ -358,36 +310,9 @@ export default function ProcedimentoPage() {
       ? (document.getElementById('saveBtn') as HTMLButtonElement | null)
       : null
 
-    const bubbleDarkValue = bubbleDark?.value ?? '#7aa98a'
-    const bubbleLightValue = bubbleLight?.value ?? '#bcd6c3'
-
-    const LAVA_CONFIG = {
-      dark: { count: 24, radius: [90, 150] as [number, number], speed: 1.2 },
-      light: { count: 22, radius: [80, 130] as [number, number], speed: 1.0 },
+    const syncLavaPaletteFromVars = () => {
+      refreshPalette()
     }
-
-    type LavaBlob = {
-      x: number
-      y: number
-      r: number
-      a: number
-      vx: number
-      vy: number
-      color: string
-      opacity: number
-    }
-
-    type LavaLayerState = {
-      width: number
-      height: number
-      blobs: LavaBlob[]
-      time: number
-      raf?: number
-      destroyed: boolean
-    }
-
-    const lavaInstances: LavaInstance[] = []
-    lavaController.instances = lavaInstances
 
     function syncGlassVar() {
       if (!glassColorEl || !glassAlphaEl) return
@@ -425,104 +350,6 @@ export default function ProcedimentoPage() {
       commitVar('--glass-stroke', rgbaFromHexAlpha(base, glassBorderAlpha.value))
     }
 
-    function buildLavaPalette() {
-      const dark = getComputedStyle(document.documentElement).getPropertyValue('--dark').trim() || bubbleDarkValue
-      const light = getComputedStyle(document.documentElement).getPropertyValue('--light').trim() || bubbleLightValue
-      const steps = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.85, 0.92, 0.97]
-      return steps.map((step) => mixHexColors(dark, light, step))
-    }
-
-    function syncLavaPaletteFromVars() {
-      lavaController.greens = buildLavaPalette()
-      lavaController.reseedAll()
-    }
-
-    window.syncLavaPaletteFromVars = syncLavaPaletteFromVars
-
-    const rand = (min: number, max: number) => min + Math.random() * (max - min)
-
-    const pick = <T,>(values: readonly T[]) => values[Math.floor(Math.random() * values.length)]
-
-    function createLavaLayer(canvasId: string, type: 'dark' | 'light') {
-      const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null
-      if (!canvas) return
-      const context = canvas.getContext('2d')
-      if (!context) return
-
-      const state: LavaLayerState = {
-        width: 0,
-        height: 0,
-        blobs: [],
-        time: 0,
-        destroyed: false,
-      }
-
-      const resize = () => {
-        const rect = canvas.getBoundingClientRect()
-        state.width = Math.ceil(rect.width * devicePixelRatio)
-        state.height = Math.ceil(rect.height * devicePixelRatio)
-        canvas.width = state.width
-        canvas.height = state.height
-        canvas.style.transform = 'translateZ(0)'
-      }
-
-      const reseed = () => {
-        const config = LAVA_CONFIG[type]
-        const minOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-min')) || 0.4
-        const maxOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-max')) || 0.85
-        resize()
-        state.blobs = []
-        for (let index = 0; index < config.count; index += 1) {
-          state.blobs.push({
-            x: rand(0, state.width),
-            y: rand(0, state.height),
-            r: rand(config.radius[0], config.radius[1]) * devicePixelRatio,
-            a: rand(0, Math.PI * 2),
-            vx: rand(-1, 1) * config.speed * devicePixelRatio,
-            vy: rand(-1, 1) * config.speed * devicePixelRatio,
-            color: pick([...lavaController.greens, ...lavaController.accents]),
-            opacity: rand(minOpacity, maxOpacity),
-          })
-        }
-      }
-
-      const tick = () => {
-        if (state.destroyed) return
-        state.time += 1
-        context.clearRect(0, 0, state.width, state.height)
-        context.globalCompositeOperation = 'lighter'
-        for (const blob of state.blobs) {
-          blob.x += blob.vx
-          blob.y += blob.vy
-          const bounds = 200 * devicePixelRatio
-          if (blob.x < -bounds || blob.x > state.width + bounds) blob.vx *= -1
-          if (blob.y < -bounds || blob.y > state.height + bounds) blob.vy *= -1
-          const projectedRadius = blob.r * (1 + Math.sin(state.time * 0.02 + blob.a) * 0.05)
-          context.globalAlpha = blob.opacity
-          context.fillStyle = blob.color
-          context.beginPath()
-          context.arc(blob.x, blob.y, projectedRadius, 0, Math.PI * 2)
-          context.fill()
-        }
-        state.raf = window.requestAnimationFrame(tick)
-      }
-
-      const resizeHandler = () => resize()
-      window.addEventListener('resize', resizeHandler)
-      cleanupFns.push(() => {
-        window.removeEventListener('resize', resizeHandler)
-        state.destroyed = true
-        if (state.raf) window.cancelAnimationFrame(state.raf)
-      })
-
-      lavaInstances.push({ reseed })
-      reseed()
-      tick()
-    }
-
-    lavaController.greens = buildLavaPalette()
-    createLavaLayer('lavaDark', 'dark')
-    createLavaLayer('lavaLight', 'light')
 
     function handleSwatchClick(this: HTMLElement) {
       const rules = this.dataset.css?.split(';').map((rule) => rule.trim()).filter(Boolean) ?? []
@@ -655,7 +482,7 @@ export default function ProcedimentoPage() {
       }
       commitVar('--lava-alpha-min', String(min))
       commitVar('--lava-alpha-max', String(max))
-      window.LAVA?.reseedAll()
+      refreshPalette()
     }
     bubbleAlphaMin?.addEventListener('input', handleBubbleAlpha)
     bubbleAlphaMax?.addEventListener('input', handleBubbleAlpha)
@@ -838,21 +665,13 @@ export default function ProcedimentoPage() {
     handleBubbleAlpha()
 
     return () => {
-      body.classList.remove('procedimento-screen')
       document.documentElement.classList.remove('force-motion')
       updatedVars.forEach((name) => {
         document.documentElement.style.removeProperty(name)
       })
       cleanupFns.forEach((fn) => fn())
-      lavaController.instances = []
-      if (window.LAVA === lavaController) {
-        delete window.LAVA
-      }
-      if (window.syncLavaPaletteFromVars === syncLavaPaletteFromVars) {
-        delete window.syncLavaPaletteFromVars
-      }
     }
-  }, [isAdmin])
+  }, [isAdmin, refreshPalette])
 
   useEffect(() => {
     let active = true
@@ -1769,35 +1588,13 @@ export default function ProcedimentoPage() {
 
   return (
     <ClientMenu disableContentPadding>
-      <>
-        <Script id="procedimento-body-class" strategy="beforeInteractive">
-          {"document.body.classList.add('procedimento-screen');"}
-        </Script>
-        <style id="procedimento-style" dangerouslySetInnerHTML={{ __html: PROCEDIMENTO_CSS }} />
-        <div className="procedimento-root">
-        <div className="texture" aria-hidden="true">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <filter id="mottle" x="-50%" y="-50%" width="200%" height="200%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="turb" />
-                <feGaussianBlur stdDeviation="18" in="turb" result="blur" />
-                <feBlend in="SourceGraphic" in2="blur" mode="multiply" />
-              </filter>
-            </defs>
-            <rect x="0" y="0" width="100" height="100" fill="#e9f3ee" filter="url(#mottle)" />
-          </svg>
-        </div>
-        <div className="lamp" aria-hidden="true">
-          <canvas id="lavaDark" className="lava dark" />
-          <canvas id="lavaLight" className="lava light" />
-        </div>
-        <div className="page">
-          <section
-            ref={typeSectionRef}
-            className="center"
-            id="sectionTipo"
-            aria-label="Escolha do tipo"
-          >
+      <div className="page">
+        <section
+          ref={typeSectionRef}
+          className="center"
+          id="sectionTipo"
+          aria-label="Escolha do tipo"
+        >
             <div className="stack">
               <header
                 className="reveal-seq reveal-title"
@@ -2099,7 +1896,6 @@ export default function ProcedimentoPage() {
             </div>
           </section>
           ) : null}
-        </div>
         {hasSummary ? (
           <div className="summary-bar" data-visible={hasSummary ? 'true' : 'false'} ref={summaryRef}>
             <div className="summary-details">
@@ -2519,8 +2315,7 @@ export default function ProcedimentoPage() {
             </div>
           </>
         ) : null}
-        </div>
-      </>
+      </div>
     </ClientMenu>
   )
 }

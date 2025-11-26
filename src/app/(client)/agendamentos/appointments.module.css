@@ -63,7 +63,7 @@
 .filterCard {
   position: relative;
   appearance: none;
-  border: 1.6px solid var(--appointments-line);
+  border: 1.6px solid rgba(255, 255, 255, 0.92);
   border-radius: 16px;
   padding: 12px 14px;
   text-align: center;
@@ -71,6 +71,8 @@
   box-shadow: 0 12px 26px rgba(24, 63, 46, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -12px 18px rgba(143, 196, 170, 0.12);
   color: var(--appointments-ink);
+  background-clip: padding-box;
+  isolation: isolate;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   overflow: hidden;

@@ -262,14 +262,14 @@ export default function Login() {
               disabled={loading}
             />
           </div>
-          <p className="text-left text-sm text-[color:rgba(31,45,40,0.8)]">
+          <p className="text-center text-sm text-[color:rgba(31,45,40,0.8)]">
             esqueceu sua senha?{' '}
-            <button
-              type="button"
-              className="font-semibold text-[#1f2d28] underline underline-offset-4 transition-colors hover:text-[#153227]"
+            <a
+              href="#"
+              className="cursor-pointer font-semibold text-[#1f2d28] underline underline-offset-4 transition-colors hover:text-[#153227]"
             >
               Clique aqui
-            </button>
+            </a>
           </p>
         </div>
       </div>

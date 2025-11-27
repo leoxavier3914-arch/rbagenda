@@ -879,9 +879,9 @@ export default function MeuPerfil() {
           place-items: start center;
           align-content: start;
           justify-content: center;
-          padding: calc(6px + env(safe-area-inset-top)) 18px
+          padding: calc(2px + env(safe-area-inset-top)) 18px
             calc(18px + env(safe-area-inset-bottom));
-          margin-top: clamp(-36px, -6vw, -18px);
+          margin-top: clamp(-54px, -8vw, -24px);
           position: relative;
         }
         .stack {
@@ -891,8 +891,8 @@ export default function MeuPerfil() {
         }
         @media (max-width: 640px) {
           .center {
-            padding-top: calc(6px + env(safe-area-inset-top));
-            margin-top: clamp(-24px, -5vw, -12px);
+            padding-top: calc(2px + env(safe-area-inset-top));
+            margin-top: clamp(-42px, -7vw, -18px);
           }
           .stack {
             gap: clamp(8px, 3vw, 14px);

@@ -208,7 +208,7 @@
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
-  padding: 56px 24px 56px;
+  padding: 16px 24px 56px;
   color: inherit;
 }
 
@@ -238,7 +238,7 @@
   }
 
   .content {
-    padding: 80px 48px 72px;
+    padding: 16px 48px 72px;
   }
 
   .contentInner {

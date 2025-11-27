@@ -879,21 +879,23 @@ export default function MeuPerfil() {
           place-items: start center;
           align-content: start;
           justify-content: center;
-          padding: calc(0px + env(safe-area-inset-top)) 18px
+          padding: calc(6px + env(safe-area-inset-top)) 18px
             calc(18px + env(safe-area-inset-bottom));
+          margin-top: clamp(-36px, -6vw, -18px);
           position: relative;
         }
         .stack {
           display: grid;
           justify-items: center;
-          gap: clamp(28px, 5vw, 48px);
+          gap: clamp(18px, 4vw, 34px);
         }
         @media (max-width: 640px) {
           .center {
-            padding-top: calc(0px + env(safe-area-inset-top));
+            padding-top: calc(6px + env(safe-area-inset-top));
+            margin-top: clamp(-24px, -5vw, -12px);
           }
           .stack {
-            gap: clamp(8px, 3.6vw, 16px);
+            gap: clamp(8px, 3vw, 14px);
           }
         }
         header {

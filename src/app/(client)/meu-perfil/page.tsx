@@ -886,7 +886,8 @@ export default function MeuPerfil() {
         .stack {
           display: grid;
           justify-items: center;
-          gap: clamp(12px, 2.2vw, 18px);
+          padding-top: clamp(28px, 5vw, 48px);
+          gap: clamp(28px, 5vw, 48px);
         }
         @media (max-width: 640px) {
           .center {
@@ -925,7 +926,7 @@ export default function MeuPerfil() {
               rgba(255, 255, 255, 0.14),
               transparent 60%
             );
-          border: 1.2px solid var(--glass-stroke);
+          border: 5px solid var(--glass-stroke);
           border-radius: var(--radius-outer);
           box-shadow: var(--shadow-xl);
           padding: clamp(14px, 2.6vw, 22px);
@@ -979,7 +980,7 @@ export default function MeuPerfil() {
         .avatar {
           width: 192px;
           height: 192px;
-          border-radius: 24px;
+          border-radius: 50%;
           border: 5px solid #ffffff;
           background: linear-gradient(
             180deg,

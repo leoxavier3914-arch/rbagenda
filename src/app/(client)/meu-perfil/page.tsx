@@ -886,7 +886,6 @@ export default function MeuPerfil() {
         .stack {
           display: grid;
           justify-items: center;
-          padding-top: clamp(28px, 5vw, 48px);
           gap: clamp(28px, 5vw, 48px);
         }
         @media (max-width: 640px) {

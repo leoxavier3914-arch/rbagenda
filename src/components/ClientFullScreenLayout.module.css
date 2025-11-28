@@ -6,10 +6,6 @@
   flex-direction: column;
 }
 
-:global(body.client-fullscreen) {
-  background: var(--bg-page);
-}
-
 :global(body.client-fullscreen .brand-texture-overlay) {
   display: none;
 }

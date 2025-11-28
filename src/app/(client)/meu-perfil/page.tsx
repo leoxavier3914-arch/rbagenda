@@ -760,49 +760,7 @@ export default function MeuPerfil() {
 
   return (
     <>
-      <style jsx global>{`
-        :root {
-          --ink: #183f2e;
-          --muted: #6a8f7f;
-          --muted-2: #5f8c79;
-          --bg-top: #7d9782;
-          --bg-bottom: #dfe9e2;
-          --glass: rgba(236, 250, 241, 0.34);
-          --glass-stroke: rgba(255, 255, 255, 0.78);
-          --inner-top: #f3fcf6;
-          --inner-bottom: #c9e0d1;
-          --shadow-xl: 0 28px 76px rgba(28, 75, 56, 0.14);
-          --radius-outer: 28px;
-          --radius-inner: 22px;
-          --dark: #7aa98a;
-          --light: #bcd6c3;
-          --card-stroke: rgba(255, 255, 255, 0.3);
-          --lava-alpha-min: 0.4;
-          --lava-alpha-max: 0.85;
-        }
-        * {
-          box-sizing: border-box;
-        }
-        html,
-        body {
-          height: 100%;
-        }
-        body {
-          margin: 0;
-          font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica,
-            Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-          font-size: 16px;
-          color: var(--ink);
-          -webkit-font-smoothing: antialiased;
-          text-rendering: optimizeLegibility;
-          background: radial-gradient(
-            120% 120% at 10% 0%,
-            var(--bg-top) 0%,
-            var(--bg-bottom) 62%
-          );
-          background-attachment: fixed;
-          overflow-x: hidden;
-        }
+      <style jsx>{`
         .texture {
           position: fixed;
           inset: -20%;

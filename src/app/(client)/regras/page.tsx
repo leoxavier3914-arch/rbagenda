@@ -52,7 +52,7 @@ export default function DashboardRulesPage() {
           </div>
         </header>
 
-        <div className={styles.glass}>
+        <div className={styles.cardList}>
           {ruleSections.map((section) => (
             <div key={section.label} className={styles.card}>
               <div className={styles.cardInner}>

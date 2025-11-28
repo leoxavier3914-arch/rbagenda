@@ -51,7 +51,14 @@ body.procedimento-screen .reveal-content{transition-delay:.26s}
 }
 
 body.procedimento-screen .page{position:relative;min-height:100svh;z-index:1}
-body.procedimento-screen .center{min-height:100svh;display:grid;place-items:center;padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));position:relative}
+body.procedimento-screen .center{
+  min-height:100svh;
+  display:grid;
+  align-content:start;
+  justify-items:center;
+  padding:calc(32px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+  position:relative;
+}
 body.procedimento-screen .center + .center{ margin-top:-1px; }
 body.procedimento-screen .stack{display:grid;justify-items:center;gap:clamp(12px,2.2vw,18px)}
 body.procedimento-screen header{text-align:center}

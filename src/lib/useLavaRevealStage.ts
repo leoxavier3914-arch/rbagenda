@@ -26,7 +26,7 @@ const scheduleStageUpdate = (
   }, delay)
 
 export function useLavaRevealStage(): RevealStage {
-  const [stage, setStage] = useState<RevealStage>(REVEAL_STAGE.LAMP)
+  const [stage, setStage] = useState<RevealStage>(REVEAL_STAGE.TITLE)
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -39,7 +39,6 @@ export function useLavaRevealStage(): RevealStage {
     }
 
     const timers = [
-      scheduleStageUpdate(REVEAL_STAGE.TITLE, 140, setStage),
       scheduleStageUpdate(REVEAL_STAGE.DESCRIPTION, 280, setStage),
       scheduleStageUpdate(REVEAL_STAGE.CONTENT, 440, setStage),
     ]

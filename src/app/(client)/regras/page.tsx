@@ -33,12 +33,6 @@ const ruleSections = [
 export default function DashboardRulesPage() {
   return (
     <main className={styles.page}>
-      <div className={styles.backdrop}>
-        <div className={styles.backdropLayer} />
-        <div className={`${styles.blurBubble} ${styles.blurBubblePrimary}`} />
-        <div className={`${styles.blurBubble} ${styles.blurBubbleSecondary}`} />
-      </div>
-
       <div className={styles.content}>
         <header className={styles.heading}>
           <span className={styles.mark}>◆</span>

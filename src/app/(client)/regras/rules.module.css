@@ -1,0 +1,205 @@
+.page {
+  position: relative;
+  min-height: 85vh;
+  width: 100%;
+  overflow: hidden;
+  padding: 48px 16px 64px;
+  color: var(--ink);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.backdropLayer {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 10% 0%, var(--bg-top) 0%, var(--bg-bottom) 62%);
+  opacity: 0.5;
+}
+
+.blurBubble {
+  position: absolute;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 9999px;
+  filter: blur(52px);
+  mix-blend-mode: screen;
+}
+
+.blurBubblePrimary {
+  top: 40px;
+  left: 32px;
+  background: color-mix(in srgb, var(--dark) 65%, transparent);
+  opacity: 0.6;
+}
+
+.blurBubbleSecondary {
+  right: 32px;
+  bottom: 28px;
+  background: color-mix(in srgb, var(--light) 70%, transparent);
+  opacity: 0.55;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.heading {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+}
+
+.mark {
+  font-size: 18px;
+  letter-spacing: 0.3em;
+  color: color-mix(in srgb, var(--ink) 68%, transparent);
+}
+
+.title {
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.08;
+  color: var(--ink);
+}
+
+.title span {
+  font-weight: 500;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: clamp(14px, 2.6vw, 16px);
+  color: color-mix(in srgb, var(--ink) 72%, transparent);
+}
+
+.glass {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vw, 18px);
+  padding: clamp(14px, 2.6vw, 22px);
+  width: clamp(320px, 92vw, 720px);
+  background: var(--glass);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 22%),
+    radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.14), transparent 60%);
+  border: 1.2px solid var(--glass-stroke);
+  border-radius: var(--radius-outer);
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  isolation: isolate;
+}
+
+@supports (backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px)) {
+  .glass {
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+  }
+}
+
+.card {
+  position: relative;
+  border-radius: var(--radius-inner);
+  border: 1.6px solid var(--card-stroke);
+  background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+  box-shadow:
+    0 14px 28px rgba(28, 75, 56, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -14px 20px rgba(143, 196, 170, 0.12);
+  padding: clamp(18px, 2.8vw, 22px);
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
+  pointer-events: none;
+}
+
+.cardInner {
+  position: relative;
+  display: grid;
+  gap: 10px;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.22em;
+  font-size: var(--label-size, 11px);
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.inlineList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-start;
+  font-size: clamp(14px, 2.6vw, 16px);
+  color: color-mix(in srgb, var(--ink) 90%, transparent);
+  line-height: 1.5;
+}
+
+.inlineItem {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.inlineItemMarker {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dark) 88%, transparent);
+  margin-top: 6px;
+  box-shadow: 0 0 0 0 rgba(99, 150, 123, 0.14);
+  transition: box-shadow 0.25s ease;
+}
+
+.inlineItemDivider {
+  margin-top: 4px;
+  color: color-mix(in srgb, var(--muted-2, var(--muted)) 70%, transparent);
+}
+
+.card:hover .inlineItemMarker {
+  box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.14);
+}
+
+.footerMark {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: color-mix(in srgb, var(--ink) 68%, transparent);
+  margin-top: 6px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 36px 14px 56px;
+  }
+
+  .glass {
+    width: 100%;
+  }
+}

@@ -54,7 +54,7 @@ body.procedimento-screen .page{position:relative;min-height:100svh;z-index:1}
 body.procedimento-screen .center{
   min-height:100svh;
   display:grid;
-  align-content:start;
+  align-content:center;
   justify-items:center;
   padding:calc(32px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
   position:relative;

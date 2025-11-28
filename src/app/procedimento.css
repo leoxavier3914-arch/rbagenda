@@ -15,7 +15,6 @@
   --card-stroke: rgba(255, 255, 255, 0.7);
   --lava-alpha-min: 0.40;
   --lava-alpha-max: 0.85;
-  --glass-min-height: 560px;
 }
 
 body.procedimento-screen{
@@ -34,7 +33,7 @@ body.procedimento-screen{
 body.procedimento-screen .brand-texture-overlay{display:none!important}
 
 body.procedimento-screen .procedimento-root *{box-sizing:border-box}
-body.procedimento-screen .procedimento-root{position:relative;min-height:100vh;z-index:0}
+body.procedimento-screen .procedimento-root{position:relative;min-height:100vh;z-index:0;--glass-min-height:auto}
 
 body.procedimento-screen .texture{position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.22;mix-blend-mode:multiply}
 body.procedimento-screen .texture svg{width:100%;height:100%;display:block}
@@ -76,7 +75,7 @@ body.procedimento-screen .glass{
   border-radius:var(--radius-outer);
   box-shadow:var(--shadow-xl);
   padding:clamp(14px,2.6vw,22px);
-  min-height: var(--glass-min-height, 560px);
+  min-height: var(--glass-min-height, auto);
   position:relative;
   z-index:1;
 }

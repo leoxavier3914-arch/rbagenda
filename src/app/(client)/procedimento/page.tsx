@@ -1201,15 +1201,15 @@ export default function ProcedimentoPage() {
   }, [])
 
   useLayoutEffect(() => {
-    const procedimentoRoot = document.querySelector<HTMLElement>('.procedimento-root')
-    if (!procedimentoRoot) return
+    const typeSection = typeSectionRef.current
+    if (!typeSection) return
 
     const lockGlassHeight = () => {
-      const reference = procedimentoRoot.querySelector<HTMLElement>('#sectionTipo .glass')
+      const reference = typeSection.querySelector<HTMLElement>('.glass')
       if (!reference) return
       const height = reference.getBoundingClientRect().height
       if (height > 0) {
-        procedimentoRoot.style.setProperty('--glass-min-height', `${Math.round(height)}px`)
+        typeSection.style.setProperty('--glass-min-height', `${Math.round(height)}px`)
       }
     }
 
@@ -1218,7 +1218,7 @@ export default function ProcedimentoPage() {
 
     return () => {
       window.removeEventListener('resize', lockGlassHeight)
-      procedimentoRoot.style.removeProperty('--glass-min-height')
+      typeSection.style.removeProperty('--glass-min-height')
     }
   }, [])
 

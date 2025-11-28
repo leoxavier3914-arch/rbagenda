@@ -1039,6 +1039,13 @@ export default function MeuPerfil() {
           width: 100%;
           max-width: 160px;
         }
+        .avatar-actions .btn {
+          width: 100%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: #1c4b38;
+        }
         .btn {
           padding: 8px 12px;
           border-radius: 12px;

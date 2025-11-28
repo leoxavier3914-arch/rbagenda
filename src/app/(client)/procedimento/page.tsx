@@ -1183,6 +1183,10 @@ export default function ProcedimentoPage() {
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
 
+  useLayoutEffect(() => {
+    document.body.classList.add('procedimento-screen')
+  }, [])
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       setShouldReduceMotion(prefersReducedMotion())

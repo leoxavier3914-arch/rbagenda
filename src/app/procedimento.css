@@ -15,6 +15,7 @@
   --card-stroke: rgba(255, 255, 255, 0.7);
   --lava-alpha-min: 0.40;
   --lava-alpha-max: 0.85;
+  --glass-min-height: 560px;
 }
 
 body.procedimento-screen{
@@ -75,7 +76,7 @@ body.procedimento-screen .glass{
   border-radius:var(--radius-outer);
   box-shadow:var(--shadow-xl);
   padding:clamp(14px,2.6vw,22px);
-  min-height: var(--glass-min-height, auto);
+  min-height: var(--glass-min-height, 560px);
   position:relative;
   z-index:1;
 }

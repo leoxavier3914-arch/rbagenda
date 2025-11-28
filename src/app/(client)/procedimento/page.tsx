@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -1199,7 +1200,7 @@ export default function ProcedimentoPage() {
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const lockGlassHeight = () => {
       const reference = document.querySelector<HTMLElement>('#sectionTipo .glass')
       if (!reference) return

@@ -53,26 +53,34 @@ export default function DashboardRulesPage() {
         </div>
 
         <div className={styles.cardList}>
-          {ruleSections.map((section) => (
-            <div key={section.label} className={styles.card}>
-              <div className={styles.cardInner}>
-                <p className={styles.eyebrow}>{section.eyebrow}</p>
-                <h2 className={styles.cardTitle}>{section.label}</h2>
-                <div className={styles.inlineList}>
-                  {section.items.map((item, index) => (
-                    <span key={item} className={styles.inlineItem}>
-                      {index === 0 ? (
-                        <span className={styles.inlineItemMarker} />
-                      ) : (
-                        <span aria-hidden className={styles.inlineItemDivider}>
-                          •
-                        </span>
-                      )}
-                      <span>{item}</span>
-                    </span>
-                  ))}
+          {ruleSections.map((section, index) => (
+            <div key={section.label}>
+              <div className={styles.card}>
+                <div className={styles.cardInner}>
+                  <p className={styles.eyebrow}>{section.eyebrow}</p>
+                  <h2 className={styles.cardTitle}>{section.label}</h2>
+                  <div className={styles.inlineList}>
+                    {section.items.map((item, itemIndex) => (
+                      <span key={item} className={styles.inlineItem}>
+                        {itemIndex === 0 ? (
+                          <span className={styles.inlineItemMarker} />
+                        ) : (
+                          <span aria-hidden className={styles.inlineItemDivider}>
+                            •
+                          </span>
+                        )}
+                        <span>{item}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
+
+              {index < ruleSections.length - 1 && (
+                <div className={styles.sectionDivider} aria-hidden="true">
+                  <span className={styles.sectionLine} />
+                </div>
+              )}
             </div>
           ))}
         </div>

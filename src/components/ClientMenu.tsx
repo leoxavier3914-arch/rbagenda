@@ -244,6 +244,10 @@ export default function ClientMenu({
   }, []);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
+  useEffect(() => {
     setIsMenuOpen(false);
     if (closeTimeoutRef.current !== null) {
       window.clearTimeout(closeTimeoutRef.current);

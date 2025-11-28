@@ -218,9 +218,7 @@
 }
 
 .contentNoPadding {
-  padding-inline: 0 !important;
-  padding-top: 0;
-  padding-bottom: 56px;
+  padding: 0 !important;
 }
 
 @media (max-width: 600px) {
@@ -241,10 +239,6 @@
 
   .content {
     padding: 0 48px 72px;
-  }
-
-  .contentNoPadding {
-    padding-bottom: 72px;
   }
 
   .contentInner {

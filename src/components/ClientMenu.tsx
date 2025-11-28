@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -243,8 +244,8 @@ export default function ClientMenu({
     };
   }, []);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, [pathname]);
 
   useEffect(() => {

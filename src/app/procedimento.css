@@ -75,10 +75,11 @@ body.procedimento-screen .glass{
   border-radius:var(--radius-outer);
   box-shadow:var(--shadow-xl);
   padding:clamp(14px,2.6vw,22px);
-  min-height: var(--glass-min-height, auto);
+  min-height:auto;
   position:relative;
   z-index:1;
 }
+body.procedimento-screen #sectionTipo .glass{min-height:var(--glass-min-height, auto)}
 @supports (backdrop-filter:blur(18px)) or (-webkit-backdrop-filter:blur(18px)){
   body.procedimento-screen .glass{backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
 }

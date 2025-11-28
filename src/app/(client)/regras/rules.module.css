@@ -123,6 +123,61 @@
   margin-top: 6px;
 }
 
+.ornamentalDivider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 2vw, 18px);
+  margin: 8px auto 12px;
+  width: min(720px, 100%);
+  color: #ffffff;
+}
+
+.flourish {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  background: #ffffff;
+  opacity: 0.92;
+}
+
+.flourish::before,
+.flourish::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  opacity: 0.6;
+  transform: translateY(-50%);
+}
+
+.flourish::before {
+  left: -11px;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  transform: translateY(-50%) rotate(-26deg);
+}
+
+.flourish::after {
+  right: -11px;
+  border-left-color: transparent;
+  border-top-color: transparent;
+  transform: translateY(-50%) rotate(26deg);
+}
+
+.diamond {
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 1px #ffffff inset, 0 0 10px rgba(255, 255, 255, 0.48);
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 36px 14px 56px;

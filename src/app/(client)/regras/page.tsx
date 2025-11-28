@@ -46,6 +46,12 @@ export default function DashboardRulesPage() {
           </div>
         </header>
 
+        <div className={styles.ornamentalDivider} aria-hidden="true">
+          <span className={styles.flourish} />
+          <span className={styles.diamond} />
+          <span className={styles.flourish} />
+        </div>
+
         <div className={styles.cardList}>
           {ruleSections.map((section) => (
             <div key={section.label} className={styles.card}>

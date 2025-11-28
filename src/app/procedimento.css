@@ -65,7 +65,8 @@ body.procedimento-screen h1{
 body.procedimento-screen h1 .muted2{ color:var(--muted-2); font-style:normal; }
 
 body.procedimento-screen .glass{
-  width:clamp(320px,92vw,720px);
+  width:100%;
+  max-width:min(720px, calc(100% - 36px), 92vw);
   display:inline-block;
   background:var(--glass);
   background-image:

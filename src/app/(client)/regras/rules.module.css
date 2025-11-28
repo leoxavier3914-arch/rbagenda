@@ -82,6 +82,8 @@
 .cardInner {
   display: grid;
   gap: 10px;
+  justify-items: center;
+  text-align: center;
 }
 
 .eyebrow {
@@ -102,7 +104,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px 14px;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   font-size: clamp(14px, 2.6vw, 16px);
   color: color-mix(in srgb, var(--ink) 90%, transparent);
   line-height: 1.5;

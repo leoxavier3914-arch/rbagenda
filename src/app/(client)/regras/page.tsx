@@ -60,16 +60,9 @@ export default function DashboardRulesPage() {
                   <p className={styles.eyebrow}>{section.eyebrow}</p>
                   <h2 className={styles.cardTitle}>{section.label}</h2>
                   <div className={styles.inlineList}>
-                    {section.items.map((item, itemIndex) => (
+                    {section.items.map((item) => (
                       <span key={item} className={styles.inlineItem}>
-                        {itemIndex === 0 ? (
-                          <span className={styles.inlineItemMarker} />
-                        ) : (
-                          <span aria-hidden className={styles.inlineItemDivider}>
-                            •
-                          </span>
-                        )}
-                        <span>{item}</span>
+                        <span className={styles.inlineItemText}>{item}</span>
                       </span>
                     ))}
                   </div>

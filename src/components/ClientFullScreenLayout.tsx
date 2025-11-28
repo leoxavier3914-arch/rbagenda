@@ -11,10 +11,7 @@ type ClientFullScreenLayoutProps = {
 };
 
 const BODY_CLASS = "client-fullscreen";
-const DISABLE_PADDING_ROUTES = [
-  "/agendamentos",
-  "/procedimento",
-];
+const DISABLE_PADDING_ROUTES: string[] = [];
 
 export default function ClientFullScreenLayout({
   children,

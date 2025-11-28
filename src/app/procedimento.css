@@ -85,7 +85,7 @@ body.procedimento-screen #sectionTipo .glass{min-height:var(--glass-min-height, 
 }
 
 body.procedimento-screen .label{text-align:center;font-size:var(--label-size);letter-spacing:.22em;color:var(--muted);margin-bottom:12px}
-body.procedimento-screen .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,18px);justify-content:center;justify-items:center}
+body.procedimento-screen .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,18px)}
 body.procedimento-screen .card{
   position:relative;aspect-ratio:6/5;border-radius:var(--radius-inner);
   border:1.6px solid var(--card-stroke);

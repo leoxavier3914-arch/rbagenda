@@ -50,7 +50,7 @@ body.procedimento-screen .reveal-content{transition-delay:.26s}
   body.procedimento-screen .reveal-seq{transition:none;transform:none;opacity:1;pointer-events:auto}
 }
 
-body.procedimento-screen .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:clamp(32px,3vw,48px);padding:calc(32px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
+body.procedimento-screen .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;gap:clamp(32px,3vw,48px);padding:calc(72px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
 body.procedimento-screen .center{width:100%;display:flex;justify-content:center;position:relative;padding:0 18px;}
 body.procedimento-screen .center + .center{ margin-top:0; }
 body.procedimento-screen .stack{display:grid;justify-items:center;gap:clamp(12px,2.2vw,18px)}

@@ -1183,10 +1183,6 @@ export default function ProcedimentoPage() {
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
 
-  useLayoutEffect(() => {
-    document.body.classList.add('procedimento-screen')
-  }, [])
-
   useEffect(() => {
     if (typeof window === 'undefined') {
       setShouldReduceMotion(prefersReducedMotion())
@@ -2151,7 +2147,8 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <div className="page">
+    <main className="procedimento-root">
+      <div className="page">
         <section
           ref={typeSectionRef}
           className="center"
@@ -2571,7 +2568,8 @@ export default function ProcedimentoPage() {
           </div>
         ) : null}
         {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}
-    </div>
+      </div>
+    </main>
   )
 }
 

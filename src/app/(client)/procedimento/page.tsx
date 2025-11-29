@@ -2147,7 +2147,8 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <div className="page">
+    <main className="procedimento-root">
+      <div className="page">
         <section
           ref={typeSectionRef}
           className="center"
@@ -2567,7 +2568,8 @@ export default function ProcedimentoPage() {
           </div>
         ) : null}
         {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}
-    </div>
+      </div>
+    </main>
   )
 }
 

@@ -833,10 +833,10 @@ export default function MeuPerfil() {
         }
         .center {
           min-height: 100svh;
-          display: grid;
-          place-items: start center;
-          align-content: start;
-          justify-content: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
           padding: 2px 18px calc(18px + env(safe-area-inset-bottom));
           margin-top: 0;
           position: relative;

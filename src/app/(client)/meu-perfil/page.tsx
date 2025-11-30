@@ -837,7 +837,7 @@ export default function MeuPerfil() {
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
-          padding: 2px 18px calc(18px + env(safe-area-inset-bottom));
+          padding: 0 18px calc(18px + env(safe-area-inset-bottom));
           margin-top: 0;
           position: relative;
         }
@@ -1245,6 +1245,12 @@ export default function MeuPerfil() {
           box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
           font-weight: 600;
           cursor: pointer;
+        }
+      `}</style>
+
+      <style jsx global>{`
+        body {
+          margin: 0;
         }
       `}</style>
 

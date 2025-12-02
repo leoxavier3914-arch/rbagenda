@@ -831,13 +831,16 @@ export default function MeuPerfil() {
           min-height: 100svh;
           z-index: 1;
         }
+        :global(body.procedimento-screen .meu-perfil-page) {
+          padding-top: calc(24px + env(safe-area-inset-top));
+        }
         .center {
           min-height: 100svh;
           display: grid;
           place-items: start center;
           align-content: start;
           justify-content: center;
-          padding: 2px 18px calc(18px + env(safe-area-inset-bottom));
+          padding: 0 18px calc(18px + env(safe-area-inset-bottom));
           margin-top: 0;
           position: relative;
         }
@@ -1248,7 +1251,7 @@ export default function MeuPerfil() {
         }
       `}</style>
 
-      <div className="page">
+      <div className="page meu-perfil-page">
         <section className="center" id="sectionPerfil" aria-label="Meu Perfil">
           <div className="stack">
             <header

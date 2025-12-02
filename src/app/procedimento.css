@@ -50,21 +50,19 @@ body.procedimento-screen .reveal-content{transition-delay:.26s}
   body.procedimento-screen .reveal-seq{transition:none;transform:none;opacity:1;pointer-events:auto}
 }
 
-body.procedimento-hero .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;gap:clamp(32px,3vw,48px);padding:calc(144px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
-body.procedimento-hero .center{width:100%;display:flex;justify-content:center;position:relative;padding:0 18px;}
-body.procedimento-hero .center + .center{ margin-top:0; }
-body.procedimento-hero .stack{display:grid;justify-items:center;gap:clamp(12px,2.2vw,18px)}
-body.procedimento-hero header{text-align:center}
-body.procedimento-hero .diamond{display:block;margin:0 auto 10px;width:22px;height:22px;color:color-mix(in srgb,var(--ink)72%,transparent)}
-body.procedimento-hero h1{
+body.procedimento-screen .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;gap:clamp(32px,3vw,48px);padding:calc(144px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
+body.procedimento-screen .center{width:100%;display:flex;justify-content:center;position:relative;padding:0 18px;}
+body.procedimento-screen .center + .center{ margin-top:0; }
+body.procedimento-screen .stack{display:grid;justify-items:center;gap:clamp(12px,2.2vw,18px)}
+body.procedimento-screen header{text-align:center}
+body.procedimento-screen .diamond{display:block;margin:0 auto 10px;width:22px;height:22px;color:color-mix(in srgb,var(--ink)72%,transparent)}
+body.procedimento-screen h1{
   font-family:var(--heading-font);
   font-weight:700;
   font-size: var(--heading-size, clamp(30px,5.4vw,48px));
   line-height:1.06;margin:0;letter-spacing:-.01em
 }
-body.procedimento-hero h1 .muted2{ color:var(--muted-2); font-style:normal; }
-
-body.meu-perfil-screen .page{padding:calc(144px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
+body.procedimento-screen h1 .muted2{ color:var(--muted-2); font-style:normal; }
 
 body.procedimento-screen .glass{
   width:clamp(320px,92vw,720px);

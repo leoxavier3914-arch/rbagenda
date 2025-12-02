@@ -833,11 +833,11 @@ export default function MeuPerfil() {
         }
         .center {
           min-height: 100svh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: flex-start;
-          padding: 0 18px calc(18px + env(safe-area-inset-bottom));
+          display: grid;
+          place-items: start center;
+          align-content: start;
+          justify-content: center;
+          padding: 2px 18px calc(18px + env(safe-area-inset-bottom));
           margin-top: 0;
           position: relative;
         }
@@ -1245,12 +1245,6 @@ export default function MeuPerfil() {
           box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
           font-weight: 600;
           cursor: pointer;
-        }
-      `}</style>
-
-      <style jsx global>{`
-        body {
-          margin: 0;
         }
       `}</style>
 

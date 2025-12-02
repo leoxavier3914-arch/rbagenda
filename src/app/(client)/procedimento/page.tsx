@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -296,9 +297,71 @@ function parseRgbaColor(value: string): { hex: string; alpha: number } | null {
   return { hex: `#${[r, g, b].map(toHex).join('')}`, alpha }
 }
 
+function extractPaletteFromStyle(style: CSSStyleDeclaration, fallback: PaletteState): PaletteState {
+  const glass = parseRgbaColor(style.getPropertyValue('--glass'))
+  const glassStroke = parseRgbaColor(style.getPropertyValue('--glass-stroke'))
+  const cardStroke = parseRgbaColor(style.getPropertyValue('--card-stroke'))
+
+  return {
+    ...fallback,
+    cardTop: style.getPropertyValue('--inner-top').trim() || fallback.cardTop,
+    cardBottom: style.getPropertyValue('--inner-bottom').trim() || fallback.cardBottom,
+    cardBorderColor: cardStroke?.hex ?? fallback.cardBorderColor,
+    bgTop: style.getPropertyValue('--bg-top').trim() || fallback.bgTop,
+    bgBottom: style.getPropertyValue('--bg-bottom').trim() || fallback.bgBottom,
+    glassBorderColor: glassStroke?.hex ?? fallback.glassBorderColor,
+    bubbleDark: style.getPropertyValue('--dark').trim() || fallback.bubbleDark,
+    bubbleLight: style.getPropertyValue('--light').trim() || fallback.bubbleLight,
+    textInk: style.getPropertyValue('--ink').trim() || fallback.textInk,
+    textMuted: style.getPropertyValue('--muted').trim() || fallback.textMuted,
+    textMuted2: style.getPropertyValue('--muted-2').trim() || fallback.textMuted2,
+    fontBody: style.getPropertyValue('--font-family').trim() || fallback.fontBody,
+    fontHeading: style.getPropertyValue('--heading-font').trim() || fallback.fontHeading,
+    sizeBase: parseCssNumeric(style.getPropertyValue('--base-font-size'), fallback.sizeBase),
+    sizeH1: parseCssNumeric(style.getPropertyValue('--heading-size'), fallback.sizeH1),
+    sizeCard: parseCssNumeric(style.getPropertyValue('--card-text-size'), fallback.sizeCard),
+    sizeLabel: parseCssNumeric(style.getPropertyValue('--label-size'), fallback.sizeLabel),
+    glassColor: glass?.hex ?? fallback.glassColor,
+    glassAlpha: glass?.alpha ?? fallback.glassAlpha,
+    glassBorderAlpha: glassStroke?.alpha ?? fallback.glassBorderAlpha,
+    cardBorderAlpha: cardStroke?.alpha ?? fallback.cardBorderAlpha,
+    bubbleAlphaMin: parseCssNumeric(style.getPropertyValue('--lava-alpha-min'), fallback.bubbleAlphaMin),
+    bubbleAlphaMax: parseCssNumeric(style.getPropertyValue('--lava-alpha-max'), fallback.bubbleAlphaMax),
+  }
+}
+
+function paletteToCssVars(palette: PaletteState): Array<[string, string]> {
+  return [
+    ['--inner-top', palette.cardTop],
+    ['--inner-bottom', palette.cardBottom],
+    ['--bg-top', palette.bgTop],
+    ['--bg-bottom', palette.bgBottom],
+    ['--glass', rgbaFromHexAlpha(palette.glassColor, palette.glassAlpha)],
+    ['--glass-stroke', rgbaFromHexAlpha(palette.glassBorderColor, palette.glassBorderAlpha)],
+    ['--card-stroke', rgbaFromHexAlpha(palette.cardBorderColor, palette.cardBorderAlpha)],
+    ['--dark', palette.bubbleDark],
+    ['--light', palette.bubbleLight],
+    ['--lava-alpha-min', String(palette.bubbleAlphaMin)],
+    ['--lava-alpha-max', String(palette.bubbleAlphaMax)],
+    ['--ink', palette.textInk],
+    ['--muted', palette.textMuted],
+    ['--muted-2', palette.textMuted2],
+    ['--font-family', palette.fontBody],
+    ['--heading-font', palette.fontHeading],
+    ['--base-font-size', `${palette.sizeBase}px`],
+    ['--heading-size', `${palette.sizeH1}px`],
+    ['--card-text-size', `${palette.sizeCard}px`],
+    ['--label-size', `${palette.sizeLabel}px`],
+  ]
+}
+
 function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => void }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [palette, setPalette] = useState<PaletteState>(DEFAULT_PALETTE)
+  const [palette, setPalette] = useState<PaletteState>(() => {
+    if (typeof document === 'undefined') return DEFAULT_PALETTE
+    const style = getComputedStyle(document.documentElement)
+    return extractPaletteFromStyle(style, DEFAULT_PALETTE)
+  })
   const [hexInputs, setHexInputs] = useState<PaletteHexInputs>({
     cardTop: '',
     cardBottom: '',
@@ -320,6 +383,7 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
   const [headingOptions, setHeadingOptions] = useState(HEADING_FONT_OPTIONS)
   const paletteTouchedRef = useRef(false)
   const mountedRef = useRef(false)
+  const previousPaletteRef = useRef<PaletteState | null>(null)
 
   const updateHexInput = useCallback((key: keyof PaletteHexInputs, value: string) => {
     setHexInputs((prev) => ({ ...prev, [key]: value }))
@@ -336,70 +400,23 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
     }
   }, [markPaletteChanged])
 
-  useEffect(() => {
-    const style = getComputedStyle(document.documentElement)
-    setPalette((prev) => {
-      const glass = parseRgbaColor(style.getPropertyValue('--glass'))
-      const glassStroke = parseRgbaColor(style.getPropertyValue('--glass-stroke'))
-      const cardStroke = parseRgbaColor(style.getPropertyValue('--card-stroke'))
-      return {
-        ...prev,
-        cardTop: style.getPropertyValue('--inner-top').trim() || prev.cardTop,
-        cardBottom: style.getPropertyValue('--inner-bottom').trim() || prev.cardBottom,
-        cardBorderColor: cardStroke?.hex ?? prev.cardBorderColor,
-        bgTop: style.getPropertyValue('--bg-top').trim() || prev.bgTop,
-        bgBottom: style.getPropertyValue('--bg-bottom').trim() || prev.bgBottom,
-        glassBorderColor: glassStroke?.hex ?? prev.glassBorderColor,
-        bubbleDark: style.getPropertyValue('--dark').trim() || prev.bubbleDark,
-        bubbleLight: style.getPropertyValue('--light').trim() || prev.bubbleLight,
-        textInk: style.getPropertyValue('--ink').trim() || prev.textInk,
-        textMuted: style.getPropertyValue('--muted').trim() || prev.textMuted,
-        textMuted2: style.getPropertyValue('--muted-2').trim() || prev.textMuted2,
-        fontBody: style.getPropertyValue('--font-family').trim() || prev.fontBody,
-        fontHeading: style.getPropertyValue('--heading-font').trim() || prev.fontHeading,
-        sizeBase: parseCssNumeric(style.getPropertyValue('--base-font-size'), prev.sizeBase),
-        sizeH1: parseCssNumeric(style.getPropertyValue('--heading-size'), prev.sizeH1),
-        sizeCard: parseCssNumeric(style.getPropertyValue('--card-text-size'), prev.sizeCard),
-        sizeLabel: parseCssNumeric(style.getPropertyValue('--label-size'), prev.sizeLabel),
-        glassColor: glass?.hex ?? prev.glassColor,
-        glassAlpha: glass?.alpha ?? prev.glassAlpha,
-        glassBorderAlpha: glassStroke?.alpha ?? prev.glassBorderAlpha,
-        cardBorderAlpha: cardStroke?.alpha ?? prev.cardBorderAlpha,
-        bubbleAlphaMin: parseCssNumeric(style.getPropertyValue('--lava-alpha-min'), prev.bubbleAlphaMin),
-        bubbleAlphaMax: parseCssNumeric(style.getPropertyValue('--lava-alpha-max'), prev.bubbleAlphaMax),
-      }
-    })
+  useLayoutEffect(() => {
     mountedRef.current = true
   }, [])
 
-  useEffect(() => {
+  useInsertionEffect(() => {
     const root = document.documentElement
-    const updated: Array<[string, string]> = [
-      ['--inner-top', palette.cardTop],
-      ['--inner-bottom', palette.cardBottom],
-      ['--bg-top', palette.bgTop],
-      ['--bg-bottom', palette.bgBottom],
-      ['--glass', rgbaFromHexAlpha(palette.glassColor, palette.glassAlpha)],
-      ['--glass-stroke', rgbaFromHexAlpha(palette.glassBorderColor, palette.glassBorderAlpha)],
-      ['--card-stroke', rgbaFromHexAlpha(palette.cardBorderColor, palette.cardBorderAlpha)],
-      ['--dark', palette.bubbleDark],
-      ['--light', palette.bubbleLight],
-      ['--lava-alpha-min', String(palette.bubbleAlphaMin)],
-      ['--lava-alpha-max', String(palette.bubbleAlphaMax)],
-      ['--ink', palette.textInk],
-      ['--muted', palette.textMuted],
-      ['--muted-2', palette.textMuted2],
-      ['--font-family', palette.fontBody],
-      ['--heading-font', palette.fontHeading],
-      ['--base-font-size', `${palette.sizeBase}px`],
-      ['--heading-size', `${palette.sizeH1}px`],
-      ['--card-text-size', `${palette.sizeCard}px`],
-      ['--label-size', `${palette.sizeLabel}px`],
-    ]
+    const updated = paletteToCssVars(palette)
+    const previous = previousPaletteRef.current
+    const previousVars = previous ? new Map(paletteToCssVars(previous)) : null
 
     updated.forEach(([name, value]) => {
-      root.style.setProperty(name, value)
+      if (!previousVars || previousVars.get(name) !== value) {
+        root.style.setProperty(name, value)
+      }
     })
+
+    previousPaletteRef.current = palette
   }, [palette])
 
   useEffect(

@@ -422,35 +422,36 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
     paletteTouchedRef.current = true
   }, [])
 
-  const setPaletteValues = useCallback((updates: Partial<PaletteState>, options?: { markPalette?: boolean }) => {
-    setPalette((prev) => ({ ...prev, ...updates }))
-    if (options?.markPalette) {
-      markPaletteChanged()
-    }
-  }, [markPaletteChanged])
+  const setPaletteValues = useCallback(
+    (updates: Partial<PaletteState>, options?: { markPalette?: boolean }) => {
+      setPalette((prev) => ({ ...prev, ...updates }))
+      if (options?.markPalette !== false) {
+        markPaletteChanged()
+      }
+    },
+    [markPaletteChanged],
+  )
 
   useLayoutEffect(() => {
     mountedRef.current = true
-  }, [])
-
-  useInsertionEffect(() => {
-    const root = document.documentElement
-    const computedPalette = extractPaletteFromStyle(getComputedStyle(root), DEFAULT_PALETTE)
-
-    let paletteToApply: PaletteState = palette
 
     if (!paletteInitializedRef.current) {
       paletteInitializedRef.current = true
-      paletteToApply = computedPalette
+      const computedPalette = extractPaletteFromStyle(getComputedStyle(document.documentElement), DEFAULT_PALETTE)
 
-      if (!arePalettesEqual(palette, computedPalette)) {
+      if (!arePalettesEqual(computedPalette, palette)) {
         setPalette(computedPalette)
       }
     }
+  }, [palette])
 
+  useInsertionEffect(() => {
+    if (!paletteTouchedRef.current) return
+
+    const root = document.documentElement
     const previous = previousPaletteRef.current
     const previousVars = previous ? new Map(paletteToCssVars(previous)) : null
-    const updated = paletteToCssVars(paletteToApply)
+    const updated = paletteToCssVars(palette)
 
     updated.forEach(([name, value]) => {
       if (!previousVars || previousVars.get(name) !== value) {
@@ -458,18 +459,8 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
       }
     })
 
-    previousPaletteRef.current = paletteToApply
+    previousPaletteRef.current = palette
   }, [palette])
-
-  useEffect(
-    () => () => {
-      const root = document.documentElement
-      PALETTE_VAR_NAMES.forEach((name) => {
-        root.style.removeProperty(name)
-      })
-    },
-    [],
-  )
 
   useEffect(() => {
     if (!mountedRef.current || !paletteTouchedRef.current) return

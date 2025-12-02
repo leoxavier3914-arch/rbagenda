@@ -53,6 +53,8 @@ export default async function RootLayout({
     "/regras",
   ];
 
+  const procedimentoHeroRoutes = ["/agendamentos", "/procedimento"];
+
   const clientShellRoutes = [
     "/",
     "/indice",
@@ -71,9 +73,16 @@ export default async function RootLayout({
       currentPath === route || currentPath.startsWith(`${route}/`),
     );
 
+  const isProcedimentoHero = procedimentoHeroRoutes.some(
+    (route) => currentPath === route || currentPath.startsWith(`${route}/`),
+  );
+
   const isClientShellRoute = clientShellRoutes.some(
     (route) => currentPath === route || currentPath.startsWith(`${route}/`),
   );
+
+  const isMeuPerfilRoute =
+    currentPath === "/meu-perfil" || currentPath.startsWith("/meu-perfil/");
 
   const bodyClasses = ["flex min-h-screen flex-col"];
 
@@ -81,8 +90,16 @@ export default async function RootLayout({
     bodyClasses.push("procedimento-screen");
   }
 
+  if (isProcedimentoHero) {
+    bodyClasses.push("procedimento-hero");
+  }
+
   if (isClientShellRoute) {
     bodyClasses.push("client-fullscreen");
+  }
+
+  if (isMeuPerfilRoute) {
+    bodyClasses.push("meu-perfil-screen");
   }
 
   return (

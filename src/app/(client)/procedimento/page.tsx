@@ -355,6 +355,34 @@ function paletteToCssVars(palette: PaletteState): Array<[string, string]> {
   ]
 }
 
+function arePalettesEqual(a: PaletteState, b: PaletteState): boolean {
+  return (
+    a.cardTop === b.cardTop &&
+    a.cardBottom === b.cardBottom &&
+    a.cardBorderColor === b.cardBorderColor &&
+    a.cardBorderAlpha === b.cardBorderAlpha &&
+    a.bgTop === b.bgTop &&
+    a.bgBottom === b.bgBottom &&
+    a.glassBorderColor === b.glassBorderColor &&
+    a.glassBorderAlpha === b.glassBorderAlpha &&
+    a.glassColor === b.glassColor &&
+    a.glassAlpha === b.glassAlpha &&
+    a.bubbleDark === b.bubbleDark &&
+    a.bubbleLight === b.bubbleLight &&
+    a.bubbleAlphaMin === b.bubbleAlphaMin &&
+    a.bubbleAlphaMax === b.bubbleAlphaMax &&
+    a.textInk === b.textInk &&
+    a.textMuted === b.textMuted &&
+    a.textMuted2 === b.textMuted2 &&
+    a.fontBody === b.fontBody &&
+    a.fontHeading === b.fontHeading &&
+    a.sizeBase === b.sizeBase &&
+    a.sizeH1 === b.sizeH1 &&
+    a.sizeCard === b.sizeCard &&
+    a.sizeLabel === b.sizeLabel
+  )
+}
+
 function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => void }) {
   const [isOpen, setIsOpen] = useState(false)
   const [palette, setPalette] = useState<PaletteState>(() => {
@@ -383,6 +411,7 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
   const [headingOptions, setHeadingOptions] = useState(HEADING_FONT_OPTIONS)
   const paletteTouchedRef = useRef(false)
   const mountedRef = useRef(false)
+  const paletteInitializedRef = useRef(false)
   const previousPaletteRef = useRef<PaletteState | null>(null)
 
   const updateHexInput = useCallback((key: keyof PaletteHexInputs, value: string) => {
@@ -406,9 +435,22 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
 
   useInsertionEffect(() => {
     const root = document.documentElement
-    const updated = paletteToCssVars(palette)
+    const computedPalette = extractPaletteFromStyle(getComputedStyle(root), DEFAULT_PALETTE)
+
+    let paletteToApply: PaletteState = palette
+
+    if (!paletteInitializedRef.current) {
+      paletteInitializedRef.current = true
+      paletteToApply = computedPalette
+
+      if (!arePalettesEqual(palette, computedPalette)) {
+        setPalette(computedPalette)
+      }
+    }
+
     const previous = previousPaletteRef.current
     const previousVars = previous ? new Map(paletteToCssVars(previous)) : null
+    const updated = paletteToCssVars(paletteToApply)
 
     updated.forEach(([name, value]) => {
       if (!previousVars || previousVars.get(name) !== value) {
@@ -416,7 +458,7 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
       }
     })
 
-    previousPaletteRef.current = palette
+    previousPaletteRef.current = paletteToApply
   }, [palette])
 
   useEffect(

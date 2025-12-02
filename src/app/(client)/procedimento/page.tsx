@@ -385,7 +385,11 @@ function arePalettesEqual(a: PaletteState, b: PaletteState): boolean {
 
 function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => void }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [palette, setPalette] = useState<PaletteState>(DEFAULT_PALETTE)
+  const [palette, setPalette] = useState<PaletteState>(() => {
+    if (typeof document === 'undefined') return DEFAULT_PALETTE
+    const style = getComputedStyle(document.documentElement)
+    return extractPaletteFromStyle(style, DEFAULT_PALETTE)
+  })
   const [hexInputs, setHexInputs] = useState<PaletteHexInputs>({
     cardTop: '',
     cardBottom: '',

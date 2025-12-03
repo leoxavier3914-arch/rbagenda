@@ -798,28 +798,28 @@ export default function MeuPerfil() {
           filter: blur(30px) contrast(1.04);
           background: radial-gradient(circle, var(--light), transparent 70%);
         }
-        .reveal-seq {
+        :global(.meu-perfil-page .reveal-seq) {
           opacity: 0;
           transform: translateY(12px);
           transition: opacity 0.28s ease, transform 0.32s ease;
           pointer-events: none;
         }
-        .reveal-seq[data-visible='true'] {
+        :global(.meu-perfil-page .reveal-seq[data-visible='true']) {
           opacity: 1;
           transform: none;
           pointer-events: auto;
         }
-        .reveal-title {
+        :global(.meu-perfil-page .reveal-title) {
           transition-delay: 0.05s;
         }
-        .reveal-description {
+        :global(.meu-perfil-page .reveal-description) {
           transition-delay: 0.16s;
         }
-        .reveal-content {
+        :global(.meu-perfil-page .reveal-content) {
           transition-delay: 0.26s;
         }
         @media (prefers-reduced-motion: reduce) {
-          .reveal-seq {
+          :global(.meu-perfil-page .reveal-seq) {
             transition: none;
             transform: none;
             opacity: 1;

@@ -2151,23 +2151,22 @@ export default function ProcedimentoPage() {
       <style jsx>{`
         :global(body.procedimento-screen .procedimento-root .reveal-seq) {
           opacity: 0;
-          transform: translateY(12px);
-          transition: opacity 0.28s ease, transform 0.32s ease;
+          transition: opacity 0.18s ease;
           pointer-events: none;
         }
         :global(body.procedimento-screen .procedimento-root .reveal-seq[data-visible='true']) {
           opacity: 1;
-          transform: none;
           pointer-events: auto;
         }
         :global(body.procedimento-screen .procedimento-root .reveal-title) {
-          transition-delay: 0.05s;
+          transition-duration: 0.15s;
+          transition-delay: 0.04s;
         }
         :global(body.procedimento-screen .procedimento-root .reveal-description) {
-          transition-delay: 0.16s;
+          transition-delay: 0.14s;
         }
         :global(body.procedimento-screen .procedimento-root .reveal-content) {
-          transition-delay: 0.26s;
+          transition-delay: 0.22s;
         }
         @media (prefers-reduced-motion: reduce) {
           :global(body.procedimento-screen .procedimento-root .reveal-seq) {

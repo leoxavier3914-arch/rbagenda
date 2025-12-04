@@ -82,7 +82,7 @@
 .procedimento-wrapper *{box-sizing:border-box}
 
 .procedimento-wrapper .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;gap:clamp(24px,3vw,36px);padding:calc(72px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
-.procedimento-wrapper .center{width:100%;display:flex;justify-content:center;align-items:center;padding:24px 18px 32px;min-height:100vh;}
+.procedimento-wrapper .center{width:100%;display:flex;justify-content:center;align-items:flex-start;padding:72px 18px 40px;min-height:100vh;}
 .procedimento-wrapper .stack{display:grid;justify-items:center;gap:clamp(12px,2.2vw,18px)}
 .procedimento-wrapper header{text-align:center}
 .procedimento-wrapper .diamond{display:block;margin:0 auto 10px;width:22px;height:22px;color:color-mix(in srgb,var(--ink)72%,transparent)}

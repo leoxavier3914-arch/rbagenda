@@ -33,7 +33,7 @@ body.procedimento-screen{
 
 body.procedimento-screen .brand-texture-overlay{display:none!important}
 
-body.procedimento-screen .procedimento-root{position:relative;min-height:100vh;z-index:0;--glass-min-height:auto;color:var(--ink)}
+body.procedimento-screen .procedimento-root{position:relative;min-height:100vh;z-index:0;--glass-min-height:280px;color:var(--ink)}
 body.procedimento-screen .procedimento-root *{box-sizing:border-box}
 
 body.procedimento-screen .texture{position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.22;mix-blend-mode:multiply}

@@ -39,20 +39,6 @@ export default async function RootLayout({
     headerList.get("next-url") ??
     "";
 
-  const procedimentoRoutes = [
-    "/",
-    "/login",
-    "/signup",
-    "/indice",
-    "/agendamentos",
-    "/procedimento",
-    "/checkout",
-    "/configuracoes",
-    "/suporte",
-    "/meu-perfil",
-    "/regras",
-  ];
-
   const clientShellRoutes = [
     "/",
     "/indice",
@@ -65,21 +51,11 @@ export default async function RootLayout({
     "/regras",
   ];
 
-  const isProcedimentoScreen =
-    currentPath === "" ||
-    procedimentoRoutes.some((route) =>
-      currentPath === route || currentPath.startsWith(`${route}/`),
-    );
-
   const isClientShellRoute = clientShellRoutes.some(
     (route) => currentPath === route || currentPath.startsWith(`${route}/`),
   );
 
   const bodyClasses = ["flex min-h-screen flex-col"];
-
-  if (isProcedimentoScreen) {
-    bodyClasses.push("procedimento-screen");
-  }
 
   if (isClientShellRoute) {
     bodyClasses.push("client-fullscreen");

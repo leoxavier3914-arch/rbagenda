@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -23,7 +22,6 @@ import {
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
 import { useLavaLamp } from '@/components/LavaLampProvider'
-import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 
 type ServiceTechnique = {
   id: string
@@ -1174,8 +1172,6 @@ export default function ProcedimentoPage() {
 
   const router = useRouter()
   const { refreshPalette } = useLavaLamp()
-  const revealStage = useLavaRevealStage()
-
   const typeSectionRef = useRef<HTMLDivElement | null>(null)
   const techniqueSectionRef = useRef<HTMLDivElement | null>(null)
   const dateSectionRef = useRef<HTMLDivElement | null>(null)
@@ -1197,28 +1193,6 @@ export default function ProcedimentoPage() {
     media.addEventListener('change', syncPreference)
     return () => {
       media.removeEventListener('change', syncPreference)
-    }
-  }, [])
-
-  useLayoutEffect(() => {
-    const typeSection = typeSectionRef.current
-    if (!typeSection) return
-
-    const lockGlassHeight = () => {
-      const reference = typeSection.querySelector<HTMLElement>('.glass')
-      if (!reference) return
-      const height = reference.getBoundingClientRect().height
-      if (height > 0) {
-        typeSection.style.setProperty('--glass-min-height', `${Math.round(height)}px`)
-      }
-    }
-
-    lockGlassHeight()
-    window.addEventListener('resize', lockGlassHeight)
-
-    return () => {
-      window.removeEventListener('resize', lockGlassHeight)
-      typeSection.style.removeProperty('--glass-min-height')
     }
   }, [])
 
@@ -2147,114 +2121,64 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <>
-      <style jsx>{`
-        :global(body.procedimento-screen .procedimento-root .reveal-seq) {
-          opacity: 0;
-          transition: opacity 0.18s ease;
-          pointer-events: none;
-        }
-        :global(body.procedimento-screen .procedimento-root .reveal-seq[data-visible='true']) {
-          opacity: 1;
-          pointer-events: auto;
-        }
-        :global(body.procedimento-screen .procedimento-root .reveal-title) {
-          transition-duration: 0.15s;
-          transition-delay: 0.04s;
-        }
-        :global(body.procedimento-screen .procedimento-root .reveal-description) {
-          transition-delay: 0.14s;
-        }
-        :global(body.procedimento-screen .procedimento-root .reveal-content) {
-          transition-delay: 0.22s;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          :global(body.procedimento-screen .procedimento-root .reveal-seq) {
-            transition: none;
-            transform: none;
-            opacity: 1;
-            pointer-events: auto;
-          }
-        }
-      `}</style>
-      <main className="procedimento-root">
-        <div className="page">
+    <main className="procedimento-wrapper">
+      <div className="page">
         <section
           ref={typeSectionRef}
           className="center"
           id="sectionTipo"
           aria-label="Escolha do tipo"
         >
-            <div className="stack">
-              <header
-                className="reveal-seq reveal-title"
-                data-visible={revealStage >= REVEAL_STAGE.TITLE}
-              >
-                <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                </svg>
-                <h1>
-                  Escolha <span className="muted2">seu</span> Procedimento:
-                </h1>
-              </header>
-              <div
-                className="glass reveal-seq reveal-content"
-                aria-label="Tipos de procedimento"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                <div
-                  className="label reveal-seq reveal-description"
-                  data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-                >
-                  TIPO
+          <div className="stack">
+            <header className="procedimento-header">
+              <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+                <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+              </svg>
+              <h1>
+                Escolha <span className="muted2">seu</span> Procedimento:
+              </h1>
+            </header>
+            <div className="glass procedimento-glass" aria-label="Tipos de procedimento">
+              <div className="label">TIPO</div>
+              {catalogError && <div className="status status-error">{catalogError}</div>}
+              {catalogStatus === 'loading' && !catalogError && (
+                <div className="status status-info">Carregando tipos…</div>
+              )}
+              {catalogStatus === 'ready' && availableServices.length === 0 && (
+                <div className="status status-info">Nenhum tipo disponível no momento.</div>
+              )}
+              {catalogStatus === 'ready' && availableServices.length > 0 ? (
+                <div className="grid tipo-grid">
+                  {availableServices.map((service) => (
+                    <button
+                      key={service.id}
+                      type="button"
+                      className="card"
+                      data-active={selectedServiceId === service.id ? 'true' : 'false'}
+                      onClick={() => handleServiceSelect(service.id)}
+                    >
+                      <div className="card-inner">
+                        <LashIcon />
+                        <span>{service.name}</span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                {catalogError && <div className="status status-error">{catalogError}</div>}
-                {catalogStatus === 'loading' && !catalogError && (
-                  <div className="status status-info">Carregando tipos…</div>
-                )}
-                {catalogStatus === 'ready' && availableServices.length === 0 && (
-                  <div className="status status-info">Nenhum tipo disponível no momento.</div>
-                )}
-                {catalogStatus === 'ready' && availableServices.length > 0 ? (
-                  <div className="grid tipo-grid">
-                    {availableServices.map((service) => (
-                      <button
-                        key={service.id}
-                        type="button"
-                        className="card"
-                        data-active={selectedServiceId === service.id ? 'true' : 'false'}
-                        onClick={() => handleServiceSelect(service.id)}
-                      >
-                        <div className="card-inner">
-                          <LashIcon />
-                          <span>{service.name}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              <footer
-                className="reveal-seq reveal-content"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                ROMEIKE BEAUTY
-              </footer>
+              ) : null}
             </div>
-          </section>
+            <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+          </div>
+        </section>
           {canSelectTechnique ? (
             <section
               ref={techniqueSectionRef}
               className="center"
               id="sectionTecnica"
-              aria-label="Escolha da técnica"
-            >
-              <div className="stack">
-                <header
-                  className="reveal-seq reveal-title"
-                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
-                >
+          aria-label="Escolha da técnica"
+        >
+          <div className="stack">
+            <header className="procedimento-header">
                   <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                     <path d="M12 3l4 4-4 4-4-4 4-4Z" />
                     <path d="M12 13l4 4-4 4-4-4 4-4Z" />
@@ -2262,18 +2186,9 @@ export default function ProcedimentoPage() {
                   <h1>
                     Escolha <span className="muted2">sua</span> Técnica:
                   </h1>
-                </header>
-                <div
-                  className="glass reveal-seq reveal-content"
-                  aria-label="Técnicas de cílios"
-                  data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-                >
-                  <div
-                    className="label reveal-seq reveal-description"
-                    data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-                  >
-                    TÉCNICA
-                  </div>
+            </header>
+            <div className="glass" aria-label="Técnicas de cílios">
+              <div className="label">TÉCNICA</div>
                   {catalogStatus === 'ready' && selectedService ? (
                     <>
                       {selectedService.techniques.length > 0 ? (
@@ -2305,7 +2220,7 @@ export default function ProcedimentoPage() {
                   ) : (
                     <div className="status status-info">Selecione um tipo para ver as técnicas disponíveis.</div>
                   )}
-                </div>
+            </div>
               </div>
             </section>
           ) : null}
@@ -2314,13 +2229,10 @@ export default function ProcedimentoPage() {
               ref={dateSectionRef}
               className="center"
               id="sectionDia"
-              aria-label="Escolha do dia"
-            >
-              <div className="stack">
-                <header
-                  className="reveal-seq reveal-title"
-                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
-                >
+          aria-label="Escolha do dia"
+        >
+          <div className="stack">
+            <header className="procedimento-header">
                   <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                     <path d="M12 3l4 4-4 4-4-4 4-4Z" />
                     <path d="M12 13l4 4-4 4-4-4 4-4Z" />
@@ -2328,18 +2240,9 @@ export default function ProcedimentoPage() {
                   <h1>
                     Escolha <span className="muted2">o</span> Dia:
                   </h1>
-                </header>
-              <div
-                className="glass reveal-seq reveal-content"
-                aria-label="Escolha do dia"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                <div
-                  className="label reveal-seq reveal-description"
-                  data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-                >
-                  DIA
-                </div>
+            </header>
+            <div className="glass" aria-label="Escolha do dia">
+              <div className="label">DIA</div>
                 {availabilityError && <div className="status status-error">{availabilityError}</div>}
                 {!availabilityError && isLoadingAvailability && (
                   <div className="status status-info">Carregando disponibilidade…</div>
@@ -2398,13 +2301,8 @@ export default function ProcedimentoPage() {
                   <span><span className="dot dot-mine" /> Meus</span>
                   <span><span className="dot dot-disabled" /> Indisponível</span>
                 </div>
-              </div>
-              <footer
-                className="reveal-seq reveal-content"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                ROMEIKE BEAUTY
-              </footer>
+            </div>
+            <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
             </div>
           </section>
           ) : null}
@@ -2413,13 +2311,10 @@ export default function ProcedimentoPage() {
               ref={timeSectionRef}
               className="center"
               id="sectionHorario"
-              aria-label="Escolha do horário"
-            >
-              <div className="stack">
-                <header
-                  className="reveal-seq reveal-title"
-                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
-                >
+          aria-label="Escolha do horário"
+        >
+          <div className="stack">
+            <header className="procedimento-header">
                   <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                     <path d="M12 3l4 4-4 4-4-4 4-4Z" />
                     <path d="M12 13l4 4-4 4-4-4 4-4Z" />
@@ -2427,18 +2322,9 @@ export default function ProcedimentoPage() {
                   <h1>
                     Escolha <span className="muted2">o</span> Horário:
                   </h1>
-                </header>
-                <div
-                  className="glass reveal-seq reveal-content"
-                  aria-label="Escolha do horário"
-                  data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-                >
-                <div
-                  className="label reveal-seq reveal-description"
-                  data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-                >
-                  HORÁRIO
-                </div>
+            </header>
+            <div className="glass" aria-label="Escolha do horário">
+              <div className="label">HORÁRIO</div>
                 <div ref={slotsContainerRef} className="slots">
                   {!selectedDate ? (
                     <div className="status status-info">Escolha um dia para ver os horários disponíveis.</div>
@@ -2476,13 +2362,8 @@ export default function ProcedimentoPage() {
                 >
                   {continueButtonLabel}
                 </button>
-              </div>
-              <footer
-                className="reveal-seq reveal-content"
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                ROMEIKE BEAUTY
-              </footer>
+            </div>
+            <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
             </div>
           </section>
           ) : null}
@@ -2600,7 +2481,6 @@ export default function ProcedimentoPage() {
         {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}
       </div>
     </main>
-    </>
   )
 }
 

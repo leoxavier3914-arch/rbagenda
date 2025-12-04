@@ -15,6 +15,7 @@
   --card-stroke: rgba(255, 255, 255, 0.7);
   --lava-alpha-min: 0.40;
   --lava-alpha-max: 0.85;
+  --procedimento-offset-top: 0px;
 }
 
 body.procedimento-screen{
@@ -44,7 +45,7 @@ body.procedimento-screen .lava.light{mix-blend-mode:screen;filter:blur(30px) con
 
 /* Reveal animations are scoped via styled-jsx in the procedimento page component. */
 body.procedimento-screen .procedimento-root .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;gap:clamp(32px,3vw,48px);padding:calc(72px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
-body.procedimento-screen .procedimento-root .center{width:100%;display:flex;justify-content:center;align-items:center;position:relative;padding:0 18px;min-height:min(84vh,780px);}
+body.procedimento-screen .procedimento-root .center{width:100%;display:flex;justify-content:center;align-items:center;position:relative;padding:0 18px;min-height:min(84vh,780px);top:var(--procedimento-offset-top,0px);}
 body.procedimento-screen .procedimento-root .center + .center{margin-top:clamp(128px,22vh,240px)}
 body.procedimento-screen .procedimento-root .stack{display:grid;justify-items:center;gap:clamp(12px,2.2vw,18px)}
 body.procedimento-screen .procedimento-root header{text-align:center}

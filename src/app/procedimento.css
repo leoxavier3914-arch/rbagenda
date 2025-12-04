@@ -41,6 +41,8 @@ body.procedimento-screen .lamp{position:fixed;inset:-12vh -12vw;z-index:0;pointe
 body.procedimento-screen .lava{position:absolute;inset:0;width:100%;height:100%;display:block}
 body.procedimento-screen .lava.dark{mix-blend-mode:multiply;filter:blur(26px) contrast(1.05)}
 body.procedimento-screen .lava.light{mix-blend-mode:screen;filter:blur(30px) contrast(1.04)}
+
+/* Reveal animations are scoped via styled-jsx in the procedimento page component. */
 body.procedimento-screen .procedimento-root .page{position:relative;min-height:100vh;z-index:1;display:flex;flex-direction:column;gap:clamp(32px,3vw,48px);padding:calc(72px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));}
 body.procedimento-screen .procedimento-root .center{width:100%;display:flex;justify-content:center;align-items:center;position:relative;padding:0 18px;min-height:min(84vh,780px);}
 body.procedimento-screen .procedimento-root .center + .center{margin-top:clamp(128px,22vh,240px)}

@@ -2130,7 +2130,7 @@ export default function ProcedimentoPage() {
           aria-label="Escolha do tipo"
         >
           <div className="stack">
-            <header className="procedimento-header">
+            <header>
               <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <path d="M12 3l4 4-4 4-4-4 4-4Z" />
                 <path d="M12 13l4 4-4 4-4-4 4-4Z" />
@@ -2139,7 +2139,7 @@ export default function ProcedimentoPage() {
                 Escolha <span className="muted2">seu</span> Procedimento:
               </h1>
             </header>
-            <div className="glass procedimento-glass" aria-label="Tipos de procedimento">
+            <div className="glass" aria-label="Tipos de procedimento">
               <div className="label">TIPO</div>
               {catalogError && <div className="status status-error">{catalogError}</div>}
               {catalogStatus === 'loading' && !catalogError && (
@@ -2148,9 +2148,9 @@ export default function ProcedimentoPage() {
               {catalogStatus === 'ready' && availableServices.length === 0 && (
                 <div className="status status-info">Nenhum tipo disponível no momento.</div>
               )}
-              {catalogStatus === 'ready' && availableServices.length > 0 ? (
-                <div className="grid tipo-grid">
-                  {availableServices.map((service) => (
+              <div className="grid tipo-grid">
+                {catalogStatus === 'ready' && availableServices.length > 0 ? (
+                  availableServices.map((service) => (
                     <button
                       key={service.id}
                       type="button"
@@ -2163,9 +2163,19 @@ export default function ProcedimentoPage() {
                         <span>{service.name}</span>
                       </div>
                     </button>
-                  ))}
-                </div>
-              ) : null}
+                  ))
+                ) : (
+                  // placeholders para manter o layout estável durante o loading ou quando não houver tipos
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="card" aria-hidden="true">
+                      <div className="card-inner">
+                        <LashIcon />
+                        <span>—</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
             <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
           </div>

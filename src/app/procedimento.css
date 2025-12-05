@@ -24,6 +24,9 @@
   transition:transform .33s cubic-bezier(.4,0,.2,1), opacity .2s ease-out;
   z-index:29;padding:16px;display:flex;flex-direction:column;gap:14px;
 }
+.client-hero-wrapper .stack>section+section{
+  margin-top:clamp(64px,10vh,96px);
+}
 .client-hero-wrapper #palettePanel.open{ transform:translate3d(0,0,0); opacity:1; pointer-events:auto; }
 .client-hero-wrapper #panelScroll{ overflow-y:auto; -webkit-overflow-scrolling:touch; height:100%; padding-bottom:72px; }
 

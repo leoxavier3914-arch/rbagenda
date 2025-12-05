@@ -10,7 +10,6 @@ import {
   DEFAULT_TIMEZONE,
   type AvailabilityAppointment,
 } from '@/lib/availability'
-import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 
 import styles from './appointments.module.css'
 
@@ -854,7 +853,6 @@ export default function MyAppointments() {
   const [selectedCategory, setSelectedCategory] = useState<SelectedStatusCategory>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [shouldScrollToResults, setShouldScrollToResults] = useState(false)
-  const revealStage = useLavaRevealStage()
   const resultsRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
 
@@ -1159,30 +1157,12 @@ export default function MyAppointments() {
                   <path d="M12 3l4 4-4 4-4-4 4-4Z" />
                   <path d="M12 13l4 4-4 4-4-4 4-4Z" />
                 </svg>
-                <h1
-                  className={`${styles.title} reveal-seq reveal-title`}
-                  data-visible={revealStage >= REVEAL_STAGE.TITLE}
-                >
-                  Meus agendamentos
-                </h1>
-                <p
-                  className={`${styles.subtitle} reveal-seq reveal-description`}
-                  data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-                >
-                  Veja seus horários ativos e históricos
-                </p>
+                <h1 className={styles.title}>Meus agendamentos</h1>
+                <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>
               </header>
 
-              <div
-                className={`glass ${styles.glass} reveal-seq reveal-content`}
-                data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-              >
-                <div
-                  className="label reveal-seq reveal-description"
-                  data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-                >
-                  STATUS
-                </div>
+              <div className={`glass ${styles.glass}`}>
+                <div className="label">STATUS</div>
 
                 <div className="grid tipo-grid" role="group" aria-label="Filtro de agendamentos">
                   {statusCards.map((card) => (
@@ -1203,11 +1183,7 @@ export default function MyAppointments() {
               </div>
 
               {selectedCategory ? (
-                <div
-                  ref={resultsRef}
-                  className={`${styles.glass} ${styles.resultsCard} reveal-seq reveal-content`}
-                  data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-                >
+                <div ref={resultsRef} className={`${styles.glass} ${styles.resultsCard}`}>
                   {loading ? (
                     <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
                   ) : error ? (

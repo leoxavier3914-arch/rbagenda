@@ -1176,6 +1176,7 @@ export default function ProcedimentoPage() {
   const [pendingScrollTarget, setPendingScrollTarget] = useState<
     'technique' | 'date' | 'time' | null
   >(null)
+  const [heroReady, setHeroReady] = useState(false)
 
   const router = useRouter()
   const { refreshPalette } = useLavaLamp()
@@ -1185,6 +1186,10 @@ export default function ProcedimentoPage() {
   const timeSectionRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    setHeroReady(true)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -2128,7 +2133,7 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <main className="client-hero-wrapper">
+    <main className={`client-hero-wrapper ${heroReady ? 'client-hero-ready' : ''}`}>
       <div className="page">
         <section
           ref={typeSectionRef}

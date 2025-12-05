@@ -52,6 +52,12 @@
     color: var(--ink);
     font-family: var(--font-family);
     font-size: var(--base-font-size);
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+  }
+
+  .client-hero-wrapper.client-hero-ready {
+    opacity: 1;
   }
 
   .client-hero-wrapper * {

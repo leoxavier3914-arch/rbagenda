@@ -853,8 +853,13 @@ export default function MyAppointments() {
   const [selectedCategory, setSelectedCategory] = useState<SelectedStatusCategory>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [shouldScrollToResults, setShouldScrollToResults] = useState(false)
+  const [heroReady, setHeroReady] = useState(false)
   const resultsRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    setHeroReady(true)
+  }, [])
 
   useEffect(() => {
     ;(async () => {
@@ -1141,7 +1146,7 @@ export default function MyAppointments() {
   }
 
     return (
-      <main className={`client-hero-wrapper ${styles.wrapper}`}>
+      <main className={`client-hero-wrapper ${heroReady ? 'client-hero-ready' : ''} ${styles.wrapper}`}>
         <div className="page">
           <section className="center">
             <div className="stack">

@@ -29,7 +29,7 @@
     --glass-stroke: rgba(255, 255, 255, 0.78);
     --inner-top: #f3fcf6;
     --inner-bottom: #c9e0d1;
-    --shadow-xl: 0 8px 32px rgba(31, 38, 135, 0.07);
+    --shadow-xl: 0 28px 76px rgba(28, 75, 56, 0.14);
     --radius-outer: 28px;
     --radius-inner: 22px;
     --dark: #7aa98a;
@@ -120,9 +120,11 @@
   .client-hero-wrapper .glass {
     width: clamp(320px, 92vw, 720px);
     display: inline-block;
-    background: transparent; /* fundo neutro, sem cor própria */
-    background-image: none;  /* remove gradientes internos */
-    border: none;
+    background: var(--glass);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 22%),
+      radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.14), transparent 60%);
+    border: 1.2px solid var(--glass-stroke);
     border-radius: var(--radius-outer);
     box-shadow: var(--shadow-xl);
     padding: clamp(14px, 2.6vw, 22px);
@@ -190,7 +192,7 @@
     --glass-stroke: rgba(255, 255, 255, 0.78);
     --inner-top: #f3fcf6;
     --inner-bottom: #c9e0d1;
-    --shadow-xl: 0 8px 32px rgba(31, 38, 135, 0.07);
+    --shadow-xl: 0 28px 76px rgba(28, 75, 56, 0.14);
     --radius-outer: 28px;
     --radius-inner: 22px;
     --dark: #7aa98a;
@@ -200,11 +202,12 @@
     --lava-alpha-max: 0.85;
     color: var(--ink);
     text-rendering: optimizeLegibility;
-    background: linear-gradient(
-      180deg,
+    background: radial-gradient(
+      120% 120% at 10% 0%,
       var(--bg-top) 0%,
-      var(--bg-bottom) 100%
+      var(--bg-bottom) 62%
     );
+    background-attachment: fixed;
   }
 
   * {

@@ -154,11 +154,22 @@ export function LavaLampProvider({ children }: LavaLampProviderProps) {
       };
 
       const resize = () => {
-        const rect = canvas.getBoundingClientRect();
-        state.width = Math.ceil(rect.width * devicePixelRatio);
-        state.height = Math.ceil(rect.height * devicePixelRatio);
+        // mede o contêiner pai (.lamp), não apenas o canvas
+        const parent = canvas.parentElement as HTMLElement | null;
+        const rect = parent
+          ? parent.getBoundingClientRect()
+          : canvas.getBoundingClientRect();
+
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
+
+        state.width = Math.ceil(displayWidth * devicePixelRatio);
+        state.height = Math.ceil(displayHeight * devicePixelRatio);
+
         canvas.width = state.width;
         canvas.height = state.height;
+
+        // força o canvas a ser renderizado numa camada própria (otimização)
         canvas.style.transform = "translateZ(0)";
       };
 

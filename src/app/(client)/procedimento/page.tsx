@@ -1836,7 +1836,7 @@ export default function ProcedimentoPage() {
     }
 
     if (element) {
-      element.scrollIntoView({ behavior, block: 'start' })
+      element.scrollIntoView({ behavior, block: 'center' })
     }
 
     setPendingScrollTarget(null)

@@ -124,7 +124,7 @@
     background-image:
       linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 22%),
       radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.14), transparent 60%);
-    border: 1.2px solid var(--glass-stroke);
+    border: none;
     border-radius: var(--radius-outer);
     box-shadow: var(--shadow-xl);
     padding: clamp(14px, 2.6vw, 22px);

@@ -11,7 +11,7 @@ import {
   type AvailabilityAppointment,
 } from '@/lib/availability'
 
-import styles from './appointments.module.css'
+import styles from './agendamentos.module.css'
 
 const statusLabels = {
   pending: 'Pendente',

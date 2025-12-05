@@ -123,6 +123,10 @@
     gap: clamp(12px, 2vw, 18px);
   }
 
+  .procedimento-wrapper .grid.tipo-grid {
+    gap: clamp(12px, 2vw, 18px);
+  }
+
   .procedimento-wrapper footer,
   .procedimento-wrapper .procedimento-footer {
     text-align: center;
@@ -335,6 +339,11 @@
     will-change: transform;
   }
 
+  .procedimento-wrapper .card[data-active="true"] {
+    box-shadow: 0 0 0 2px rgba(99, 140, 118, 0.3), 0 18px 32px rgba(24, 63, 46, 0.18);
+    transform: translateY(-4px);
+  }
+
   .procedimento-wrapper .card::before {
     content: "";
     position: absolute;
@@ -383,6 +392,10 @@
   .procedimento-wrapper .card span {
     font-size: var(--card-text-size, clamp(16px, 2.8vw, 20px));
     font-weight: 600;
+  }
+
+  .procedimento-wrapper .card[data-active="true"] .card-inner span {
+    color: #0f271c;
   }
 
   .card--flush-top {

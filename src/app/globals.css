@@ -53,6 +53,7 @@
     font-family: var(--font-family);
     font-size: var(--base-font-size);
     opacity: 0;
+    will-change: opacity;
     transition: opacity 1.0s ease-out 0.50s;
   }
 

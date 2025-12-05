@@ -2240,7 +2240,8 @@ export default function ProcedimentoPage() {
                     <div className="status status-info">Selecione um tipo para ver as técnicas disponíveis.</div>
                   )}
             </div>
-              </div>
+            <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+          </div>
             </section>
           ) : null}
           {canSelectDate ? (

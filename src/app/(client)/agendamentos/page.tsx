@@ -1145,7 +1145,7 @@ export default function MyAppointments() {
         <div className="page">
           <section className="center">
             <div className="stack">
-              <header className={styles.header}>
+              <header>
                 <svg
                   aria-hidden="true"
                   className="diamond"
@@ -1157,11 +1157,11 @@ export default function MyAppointments() {
                   <path d="M12 3l4 4-4 4-4-4 4-4Z" />
                   <path d="M12 13l4 4-4 4-4-4 4-4Z" />
                 </svg>
-                <h1 className={styles.title}>Meus agendamentos</h1>
+                <h1>Meus agendamentos</h1>
                 <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>
               </header>
 
-              <div className={`glass ${styles.glass}`}>
+              <div className="glass">
                 <div className="label">STATUS</div>
 
                 <div className="grid tipo-grid" role="group" aria-label="Filtro de agendamentos">

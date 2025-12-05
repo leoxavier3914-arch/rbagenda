@@ -1,23 +1,3 @@
-:root{
-  --ink:#183f2e; --muted:#6a8f7f; --muted-2:#5f8c79;
-  --bg-top:#7D9782; --bg-bottom:#DFE9E2;
-  --glass:rgba(236,250,241,.34); --glass-stroke:rgba(255,255,255,.78);
-  --inner-top:#F3FCF6; --inner-bottom:#C9E0D1;
-  --shadow-xl:0 28px 76px rgba(28,75,56,.14);
-  --radius-outer:28px; --radius-inner:22px;
-  --dark:#7aa98a; --light:#bcd6c3;
-  --font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  --heading-font: Fraunces, "Playfair Display", Georgia, serif;
-  --base-font-size: 16px;
-  --heading-size: 28px;
-  --card-text-size: ;
-  --label-size: 11px;
-  --card-stroke: rgba(255, 255, 255, 0.7);
-  --lava-alpha-min: 0.40;
-  --lava-alpha-max: 0.85;
-}
-
-
 @media(max-width:480px){.procedimento-wrapper .lamp{inset:-10vh -14vw}}
 
 .procedimento-wrapper #paletteBtn{

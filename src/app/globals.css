@@ -20,6 +20,30 @@
     --shadow-soft: 0 22px 60px -30px rgba(94, 72, 54, 0.28);
     --shadow-hover: 0 28px 70px -30px rgba(94, 72, 54, 0.35);
     --radius-card: 28px;
+    --ink: #183f2e;
+    --muted: #6a8f7f;
+    --muted-2: #5f8c79;
+    --bg-top: #7d9782;
+    --bg-bottom: #dfe9e2;
+    --glass: rgba(236, 250, 241, 0.34);
+    --glass-stroke: rgba(255, 255, 255, 0.78);
+    --inner-top: #f3fcf6;
+    --inner-bottom: #c9e0d1;
+    --shadow-xl: 0 28px 76px rgba(28, 75, 56, 0.14);
+    --radius-outer: 28px;
+    --radius-inner: 22px;
+    --dark: #7aa98a;
+    --light: #bcd6c3;
+    --font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+      "Apple Color Emoji", "Segoe UI Emoji";
+    --heading-font: Fraunces, "Playfair Display", Georgia, serif;
+    --base-font-size: 16px;
+    --heading-size: 28px;
+    --card-text-size: ;
+    --label-size: 11px;
+    --card-stroke: rgba(255, 255, 255, 0.7);
+    --lava-alpha-min: 0.4;
+    --lava-alpha-max: 0.85;
   }
 
   /* === Romeike hero layout (procedimento-wrapper) === */

@@ -159,6 +159,13 @@ function LashIcon() {
   )
 }
 
+const DEFAULT_SERVICE_LABELS = [
+  'Aplicação',
+  'Manutenção',
+  'Reaplicação',
+  'Remoção',
+] as const
+
 const FALLBACK_BUFFER_MINUTES = DEFAULT_FALLBACK_BUFFER_MINUTES
 const WORK_DAY_END = '18:00'
 
@@ -2139,17 +2146,14 @@ export default function ProcedimentoPage() {
                 Escolha <span className="muted2">seu</span> Procedimento:
               </h1>
             </header>
-            <div className="glass" aria-label="Tipos de procedimento">
-              <div className="label">TIPO</div>
-              {catalogError && <div className="status status-error">{catalogError}</div>}
-              {catalogStatus === 'loading' && !catalogError && (
-                <div className="status status-info">Carregando tipos…</div>
-              )}
-              {catalogStatus === 'ready' && availableServices.length === 0 && (
-                <div className="status status-info">Nenhum tipo disponível no momento.</div>
-              )}
-              <div className="grid tipo-grid">
-                {catalogStatus === 'ready' && availableServices.length > 0 ? (
+              <div className="glass" aria-label="Tipos de procedimento">
+                <div className="label">TIPO</div>
+                {catalogError && <div className="status status-error">{catalogError}</div>}
+                {catalogStatus === 'ready' && availableServices.length === 0 && (
+                  <div className="status status-info">Nenhum tipo disponível no momento.</div>
+                )}
+                <div className="grid tipo-grid">
+                  {catalogStatus === 'ready' && availableServices.length > 0 ? (
                   availableServices.map((service) => (
                     <button
                       key={service.id}
@@ -2166,11 +2170,11 @@ export default function ProcedimentoPage() {
                   ))
                 ) : (
                   // placeholders para manter o layout estável durante o loading ou quando não houver tipos
-                  Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="card" aria-hidden="true">
+                  DEFAULT_SERVICE_LABELS.map((label) => (
+                    <div key={label} className="card" aria-hidden="true">
                       <div className="card-inner">
                         <LashIcon />
-                        <span>—</span>
+                        <span>{label}</span>
                       </div>
                     </div>
                   ))

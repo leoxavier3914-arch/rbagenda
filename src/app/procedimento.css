@@ -111,12 +111,6 @@
 .procedimento-wrapper .status-info{color:var(--muted)}
 .procedimento-wrapper .status-error{color:#a43d3d;background:rgba(255,235,235,.76)}
 .procedimento-wrapper .status-success{color:#1b5c3a;background:rgba(220,244,229,.8)}
-.procedimento-wrapper .grid.tipo-grid{gap:clamp(12px,2vw,18px)}
-.procedimento-wrapper .card[data-active="true"]{
-  box-shadow:0 0 0 2px rgba(99,140,118,.3),0 18px 32px rgba(24,63,46,.18);
-  transform:translateY(-4px);
-}
-.procedimento-wrapper .card[data-active="true"] .card-inner span{color:#0f271c}
 .procedimento-wrapper .calendar-head{
   display:flex;
   align-items:center;

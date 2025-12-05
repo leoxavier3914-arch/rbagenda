@@ -2121,7 +2121,7 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <main className="procedimento-wrapper">
+    <main className="client-hero-wrapper">
       <div className="page">
         <section
           ref={typeSectionRef}

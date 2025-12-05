@@ -72,6 +72,30 @@
   filter: blur(30px) contrast(1.04);
 }
 
+.page {
+  position: relative;
+  min-height: 100vh;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: calc(20px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));
+}
+
+.center {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 72px 18px 40px;
+  min-height: 100vh;
+}
+
+.stack {
+  display: grid;
+  justify-items: center;
+  gap: clamp(12px, 2.2vw, 18px);
+}
+
 .procedimento-wrapper {
   min-height: 100vh;
   color: var(--ink);

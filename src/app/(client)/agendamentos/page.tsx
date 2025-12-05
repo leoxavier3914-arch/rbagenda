@@ -1182,6 +1182,8 @@ export default function MyAppointments() {
                 </div>
               </div>
 
+              <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+
               {selectedCategory ? (
                 <div ref={resultsRef} className={`${styles.glass} ${styles.resultsCard}`}>
                   {loading ? (

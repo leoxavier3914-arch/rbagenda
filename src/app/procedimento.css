@@ -28,18 +28,18 @@
   margin-top:clamp(64px,10vh,96px);
 }
 section.center[data-step="tecnica"] {
-  scroll-margin-top: 140px;
-  scroll-margin-bottom: 140px;
+  scroll-margin-top: 220px;
+  scroll-margin-bottom: 0px;
 }
 
 section.center[data-step="dia"] {
   scroll-margin-top: 160px;
-  scroll-margin-bottom: 160px;
+  scroll-margin-bottom: 0px;
 }
 
 section.center[data-step="horario"] {
-  scroll-margin-top: 150px;
-  scroll-margin-bottom: 150px;
+  scroll-margin-top: 160px;
+  scroll-margin-bottom: 0px;
 }
 .client-hero-wrapper #palettePanel.open{ transform:translate3d(0,0,0); opacity:1; pointer-events:auto; }
 .client-hero-wrapper #panelScroll{ overflow-y:auto; -webkit-overflow-scrolling:touch; height:100%; padding-bottom:72px; }

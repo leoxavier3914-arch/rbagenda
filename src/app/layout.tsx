@@ -61,10 +61,17 @@ export default async function RootLayout({
     bodyClasses.push("client-fullscreen");
   }
 
+  const showTextureOverlay = !isClientShellRoute;
+
   return (
     <html lang="pt-BR">
       <body className={bodyClasses.join(" ")}>
-        <div className="brand-texture-overlay pointer-events-none fixed inset-0 -z-10" aria-hidden />
+        {showTextureOverlay ? (
+          <div
+            className="brand-texture-overlay pointer-events-none fixed inset-0 -z-10"
+            aria-hidden
+          />
+        ) : null}
         <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
       </body>
     </html>

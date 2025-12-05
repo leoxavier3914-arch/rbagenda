@@ -1,19 +1,29 @@
 # rbagenda
 
-rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de agendamentos e integrações com Supabase e Stripe.
+rbagenda é um aplicativo web para gerenciamento de agendamentos e pagamentos online. O projeto foi construído com Next.js, Supabase e Stripe, priorizando performance e facilidade de implantação.
 
-## Requisitos
+## Visão geral
 
-- Node.js 18 ou superior
-- npm 10 ou superior
+- **Frontend:** Next.js (App Router) com Tailwind CSS.
+- **Backend:** APIs Edge/Route do Next.js e funções do Supabase.
+- **Banco de dados:** Supabase Postgres.
+- **Pagamentos:** Stripe Checkout e webhooks para sincronização.
 
-## Configuração
+Se você precisa apenas rodar localmente, siga o passo a passo rápido abaixo. As seções seguintes trazem detalhes de configuração, rotinas de manutenção e dicas para publicar o projeto.
 
-1. Instale as dependências:
+## Como rodar localmente
+
+1. **Pré-requisitos**
+   - Node.js 18+ e npm 10+.
+   - Conta no Supabase com um projeto criado.
+   - Chaves de teste do Stripe (publishable e secret) para habilitar os fluxos de checkout.
+
+2. **Instale as dependências**
    ```bash
    npm install
    ```
-2. Configure as variáveis de ambiente em `.env.local`.
+
+3. **Configure as variáveis de ambiente** em `.env.local`.
    ```env
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
@@ -22,9 +32,9 @@ rbagenda é um aplicativo web desenvolvido com Next.js para gerenciamento de age
    STRIPE_SECRET_KEY=sk_test_xxx
    STRIPE_WEBHOOK_SECRET=whsec_...
    ```
-   > Garanta que as chaves do Stripe estejam configuradas também no provedor de hospedagem (ex.: Vercel) ao publicar a aplicação.
+   > Ao publicar, replique as chaves do Stripe e do Supabase no provedor de hospedagem (ex.: Vercel) para evitar falhas em webhooks ou cron jobs.
 
-3. Execute o servidor de desenvolvimento:
+4. **Inicie o servidor de desenvolvimento**
    ```bash
    npm run dev
    ```
@@ -40,7 +50,7 @@ Cadastre no painel do Stripe um endpoint apontando para `https://SEU-DOMINIO/api
 - `checkout.session.expired`
 - `charge.refunded`
 
-Use o segredo configurado no Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado.
+Use o segredo configurado no Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse webhook mantém os pagamentos sincronizados (aprovações, falhas e estornos) e confirma automaticamente o agendamento após pagamento aprovado. Em ambiente local, você pode usar o [Stripe CLI](https://stripe.com/docs/stripe-cli/webhooks) para ouvir eventos e repassá-los para `http://localhost:3000/api/webhooks/stripe`.
 
 ### Agendador de rotinas (cron)
 
@@ -73,6 +83,25 @@ Caso o Supabase Scheduler não esteja disponível no plano do projeto, utilize o
 - `npm run build`: gera a versão otimizada para produção.
 - `npm run start`: inicia o servidor em modo produção.
 - `npm run lint`: executa a verificação de lint com ESLint.
+- `npm run test`: roda os testes unitários escritos com `tsx --test`.
+
+## Publicação
+
+Para publicar na Vercel (sugerido):
+
+1. Conecte o repositório no painel da Vercel e escolha framework **Next.js**.
+2. Defina todas as variáveis listadas em `.env.local` em **Project Settings → Environment Variables**.
+3. Opcionalmente ative a proteção de preview para evitar chamadas reais ao Stripe em branches de revisão.
+4. Após o deploy, cadastre o webhook do Stripe apontando para o domínio gerado (veja seção acima) e valide os endpoints de API.
+
+Se preferir outro provedor, garanta que as rotas do Next.js sejam executadas em ambiente Node 18+ e que variáveis de ambiente de Stripe/Supabase estejam disponíveis.
+
+## Testes e qualidade
+
+- Lint: `npm run lint`
+- Testes unitários: `npm run test`
+
+Os testes cobrem a lógica de agendamentos (cancelamento automático, confirmações pós-pagamento etc.). Execute-os antes de abrir pull requests para garantir que as rotinas críticas se mantenham estáveis.
 
 ## Estrutura do projeto
 

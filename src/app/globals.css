@@ -209,6 +209,10 @@
     );
   }
 
+  body.client-fullscreen .brand-texture-overlay {
+    display: none;
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
   }

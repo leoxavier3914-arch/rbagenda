@@ -123,73 +123,6 @@
     gap: clamp(12px, 2vw, 18px);
   }
 
-  .procedimento-wrapper .card {
-    position: relative;
-    aspect-ratio: 6/5;
-    border-radius: var(--radius-inner);
-    border: 1.6px solid var(--card-stroke);
-    background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
-    box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      inset 0 -14px 20px rgba(143, 196, 170, 0.12);
-    display: grid;
-    place-items: center;
-    padding: 10px;
-    color: var(--ink);
-    text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.22s ease;
-    overflow: hidden;
-    will-change: transform;
-  }
-
-  .procedimento-wrapper .card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
-    pointer-events: none;
-  }
-
-  .procedimento-wrapper .card:hover {
-    transform: translateY(-2px);
-  }
-
-  .procedimento-wrapper .card:active {
-    transform: translateY(0);
-  }
-
-  .procedimento-wrapper .card:focus {
-    outline: none;
-  }
-
-  .procedimento-wrapper .card:focus-visible {
-    box-shadow: 0 0 0 4px rgba(143, 196, 170, 0.35), 0 12px 28px rgba(28, 75, 56, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  }
-
-  .procedimento-wrapper .card-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .procedimento-wrapper .card svg {
-    width: clamp(28px, 6vw, 34px);
-    height: auto;
-    stroke: currentColor;
-    stroke-width: 2.2;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.96;
-  }
-
-  .procedimento-wrapper .card span {
-    font-size: var(--card-text-size, clamp(16px, 2.8vw, 20px));
-    font-weight: 600;
-  }
-
   .procedimento-wrapper footer,
   .procedimento-wrapper .procedimento-footer {
     text-align: center;
@@ -381,6 +314,75 @@
     border-radius: inherit;
     border: 1px solid rgba(255, 255, 255, 0.25);
     pointer-events: none;
+  }
+
+  /* Procedimento-specific card styling should override the generic card */
+  .procedimento-wrapper .card {
+    position: relative;
+    aspect-ratio: 6/5;
+    border-radius: var(--radius-inner);
+    border: 1.6px solid var(--card-stroke);
+    background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+    box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -14px 20px rgba(143, 196, 170, 0.12);
+    display: grid;
+    place-items: center;
+    padding: 10px;
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.22s ease;
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  .procedimento-wrapper .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
+    pointer-events: none;
+  }
+
+  .procedimento-wrapper .card:hover {
+    transform: translateY(-2px);
+  }
+
+  .procedimento-wrapper .card:active {
+    transform: translateY(0);
+  }
+
+  .procedimento-wrapper .card:focus {
+    outline: none;
+  }
+
+  .procedimento-wrapper .card:focus-visible {
+    box-shadow: 0 0 0 4px rgba(143, 196, 170, 0.35), 0 12px 28px rgba(28, 75, 56, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .procedimento-wrapper .card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .procedimento-wrapper .card svg {
+    width: clamp(28px, 6vw, 34px);
+    height: auto;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.96;
+  }
+
+  .procedimento-wrapper .card span {
+    font-size: var(--card-text-size, clamp(16px, 2.8vw, 20px));
+    font-weight: 600;
   }
 
   .card--flush-top {

@@ -23,8 +23,10 @@
 
 .title {
   margin: 0;
+  font-family: var(--heading-font);
   font-weight: 700;
-  font-size: clamp(28px, 4vw, 36px);
+  font-size: var(--heading-size, clamp(30px, 5.4vw, 48px));
+  line-height: 1.06;
   color: var(--appointments-ink);
 }
 
@@ -35,11 +37,26 @@
 }
 
 .glass {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: clamp(14px, 2.2vw, 20px);
   width: clamp(320px, 92vw, 720px);
+  display: inline-block;
+  background: var(--glass);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 22%),
+    radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.14), transparent 60%);
+  border: 1.2px solid var(--glass-stroke);
+  border-radius: var(--radius-outer);
+  box-shadow: var(--shadow-xl);
+  padding: clamp(14px, 2.6vw, 22px);
+  min-height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+@supports (backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px)) {
+  .glass {
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+  }
 }
 
 .resultsCard {
@@ -48,10 +65,11 @@
 
 .label {
   text-align: center;
-  letter-spacing: 0.18em;
+  font-size: var(--label-size);
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--appointments-muted);
-  font-size: var(--label-size, 11px);
+  margin-bottom: 12px;
 }
 
 .filterGrid {
@@ -65,10 +83,7 @@
   aspect-ratio: 6 / 5;
   border-radius: var(--radius-inner);
   border: 1.6px solid var(--card-stroke);
-  outline: 1px solid rgba(255, 255, 255, 0.9);
-  outline-offset: -1px;
   background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
-  background-clip: padding-box;
   box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -14px 20px rgba(143, 196, 170, 0.12);
   display: grid;

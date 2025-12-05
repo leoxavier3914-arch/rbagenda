@@ -46,19 +46,19 @@
     --lava-alpha-max: 0.85;
   }
 
-  /* === Romeike hero layout (procedimento-wrapper) === */
-  .procedimento-wrapper {
+  /* === Romeike hero layout (client-hero-wrapper) === */
+  .client-hero-wrapper {
     min-height: 100vh;
     color: var(--ink);
     font-family: var(--font-family);
     font-size: var(--base-font-size);
   }
 
-  .procedimento-wrapper * {
+  .client-hero-wrapper * {
     box-sizing: border-box;
   }
 
-  .procedimento-wrapper .page {
+  .client-hero-wrapper .page {
     position: relative;
     min-height: 100vh;
     z-index: 1;
@@ -69,7 +69,7 @@
       calc(36px + env(safe-area-inset-bottom));
   }
 
-  .procedimento-wrapper .center {
+  .client-hero-wrapper .center {
     width: 100%;
     display: flex;
     justify-content: center;
@@ -78,17 +78,17 @@
     min-height: 100vh;
   }
 
-  .procedimento-wrapper .stack {
+  .client-hero-wrapper .stack {
     display: grid;
     justify-items: center;
     gap: clamp(12px, 2.2vw, 18px);
   }
 
-  .procedimento-wrapper header {
+  .client-hero-wrapper header {
     text-align: center;
   }
 
-  .procedimento-wrapper .diamond {
+  .client-hero-wrapper .diamond {
     display: block;
     margin: 0 auto 10px;
     width: 22px;
@@ -96,7 +96,7 @@
     color: color-mix(in srgb, var(--ink) 72%, transparent);
   }
 
-  .procedimento-wrapper h1 {
+  .client-hero-wrapper h1 {
     font-family: var(--heading-font);
     font-weight: 700;
     font-size: var(--heading-size, clamp(30px, 5.4vw, 48px));
@@ -105,12 +105,12 @@
     letter-spacing: -0.01em;
   }
 
-  .procedimento-wrapper h1 .muted2 {
+  .client-hero-wrapper h1 .muted2 {
     color: var(--muted-2);
     font-style: normal;
   }
 
-  .procedimento-wrapper .glass {
+  .client-hero-wrapper .glass {
     width: clamp(320px, 92vw, 720px);
     display: inline-block;
     background: var(--glass);
@@ -127,13 +127,13 @@
   }
 
   @supports (backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px)) {
-    .procedimento-wrapper .glass {
+    .client-hero-wrapper .glass {
       backdrop-filter: blur(18px) saturate(150%);
       -webkit-backdrop-filter: blur(18px) saturate(150%);
     }
   }
 
-  .procedimento-wrapper .label {
+  .client-hero-wrapper .label {
     text-align: center;
     font-size: var(--label-size);
     letter-spacing: 0.22em;
@@ -141,18 +141,18 @@
     margin-bottom: 12px;
   }
 
-  .procedimento-wrapper .grid {
+  .client-hero-wrapper .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: clamp(12px, 2vw, 18px);
   }
 
-  .procedimento-wrapper .grid.tipo-grid {
+  .client-hero-wrapper .grid.tipo-grid {
     gap: clamp(12px, 2vw, 18px);
   }
 
-  .procedimento-wrapper footer,
-  .procedimento-wrapper .procedimento-footer {
+  .client-hero-wrapper footer,
+  .client-hero-wrapper .procedimento-footer {
     text-align: center;
     font-size: 12px;
     letter-spacing: 0.34em;
@@ -345,7 +345,7 @@
   }
 
   /* Procedimento-specific card styling should override the generic card */
-  .procedimento-wrapper .card {
+  .client-hero-wrapper .card {
     position: relative;
     aspect-ratio: 6/5;
     border-radius: var(--radius-inner);
@@ -363,12 +363,12 @@
     will-change: transform;
   }
 
-  .procedimento-wrapper .card[data-active="true"] {
+  .client-hero-wrapper .card[data-active="true"] {
     box-shadow: 0 0 0 2px rgba(99, 140, 118, 0.3), 0 18px 32px rgba(24, 63, 46, 0.18);
     transform: translateY(-4px);
   }
 
-  .procedimento-wrapper .card::before {
+  .client-hero-wrapper .card::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -377,24 +377,24 @@
     pointer-events: none;
   }
 
-  .procedimento-wrapper .card:hover {
+  .client-hero-wrapper .card:hover {
     transform: translateY(-2px);
   }
 
-  .procedimento-wrapper .card:active {
+  .client-hero-wrapper .card:active {
     transform: translateY(0);
   }
 
-  .procedimento-wrapper .card:focus {
+  .client-hero-wrapper .card:focus {
     outline: none;
   }
 
-  .procedimento-wrapper .card:focus-visible {
+  .client-hero-wrapper .card:focus-visible {
     box-shadow: 0 0 0 4px rgba(143, 196, 170, 0.35), 0 12px 28px rgba(28, 75, 56, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 
-  .procedimento-wrapper .card-inner {
+  .client-hero-wrapper .card-inner {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -402,7 +402,7 @@
     gap: 12px;
   }
 
-  .procedimento-wrapper .card svg {
+  .client-hero-wrapper .card svg {
     width: clamp(28px, 6vw, 34px);
     height: auto;
     stroke: currentColor;
@@ -413,12 +413,12 @@
     opacity: 0.96;
   }
 
-  .procedimento-wrapper .card span {
+  .client-hero-wrapper .card span {
     font-size: var(--card-text-size, clamp(16px, 2.8vw, 20px));
     font-weight: 600;
   }
 
-  .procedimento-wrapper .card[data-active="true"] .card-inner span {
+  .client-hero-wrapper .card[data-active="true"] .card-inner span {
     color: #0f271c;
   }
 

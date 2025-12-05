@@ -1141,7 +1141,7 @@ export default function MyAppointments() {
   }
 
     return (
-      <main className={`procedimento-wrapper ${styles.wrapper}`}>
+      <main className={`client-hero-wrapper ${styles.wrapper}`}>
         <div className="page">
           <section className="center">
             <div className="stack">

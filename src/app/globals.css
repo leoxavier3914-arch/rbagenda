@@ -380,7 +380,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
+    box-shadow: 0 8px 14px rgba(255, 255, 255, 0.10) inset;
     pointer-events: none;
   }
 

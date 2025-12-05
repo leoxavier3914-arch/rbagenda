@@ -48,6 +48,7 @@
   box-shadow: var(--shadow-xl);
   padding: clamp(14px, 2.6vw, 22px);
   min-height: auto;
+  margin-top: 10px;
   position: relative;
   z-index: 1;
 }

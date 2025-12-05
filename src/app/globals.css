@@ -22,6 +22,184 @@
     --radius-card: 28px;
   }
 
+  /* === Romeike hero layout (procedimento-wrapper) === */
+  .procedimento-wrapper {
+    min-height: 100vh;
+    color: var(--ink);
+    font-family: var(--font-family);
+    font-size: var(--base-font-size);
+  }
+
+  .procedimento-wrapper * {
+    box-sizing: border-box;
+  }
+
+  .procedimento-wrapper .page {
+    position: relative;
+    min-height: 100vh;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(24px, 3vw, 36px);
+    padding: calc(72px + env(safe-area-inset-top)) 0
+      calc(36px + env(safe-area-inset-bottom));
+  }
+
+  .procedimento-wrapper .center {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 72px 18px 40px;
+    min-height: 100vh;
+  }
+
+  .procedimento-wrapper .stack {
+    display: grid;
+    justify-items: center;
+    gap: clamp(12px, 2.2vw, 18px);
+  }
+
+  .procedimento-wrapper header {
+    text-align: center;
+  }
+
+  .procedimento-wrapper .diamond {
+    display: block;
+    margin: 0 auto 10px;
+    width: 22px;
+    height: 22px;
+    color: color-mix(in srgb, var(--ink) 72%, transparent);
+  }
+
+  .procedimento-wrapper h1 {
+    font-family: var(--heading-font);
+    font-weight: 700;
+    font-size: var(--heading-size, clamp(30px, 5.4vw, 48px));
+    line-height: 1.06;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .procedimento-wrapper h1 .muted2 {
+    color: var(--muted-2);
+    font-style: normal;
+  }
+
+  .procedimento-wrapper .glass {
+    width: clamp(320px, 92vw, 720px);
+    display: inline-block;
+    background: var(--glass);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 22%),
+      radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.14), transparent 60%);
+    border: 1.2px solid var(--glass-stroke);
+    border-radius: var(--radius-outer);
+    box-shadow: var(--shadow-xl);
+    padding: clamp(14px, 2.6vw, 22px);
+    min-height: auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  @supports (backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px)) {
+    .procedimento-wrapper .glass {
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+    }
+  }
+
+  .procedimento-wrapper .label {
+    text-align: center;
+    font-size: var(--label-size);
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .procedimento-wrapper .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(12px, 2vw, 18px);
+  }
+
+  .procedimento-wrapper .card {
+    position: relative;
+    aspect-ratio: 6/5;
+    border-radius: var(--radius-inner);
+    border: 1.6px solid var(--card-stroke);
+    background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
+    box-shadow: 0 14px 28px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -14px 20px rgba(143, 196, 170, 0.12);
+    display: grid;
+    place-items: center;
+    padding: 10px;
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.22s ease;
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  .procedimento-wrapper .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 14px 24px rgba(255, 255, 255, 0.25) inset;
+    pointer-events: none;
+  }
+
+  .procedimento-wrapper .card:hover {
+    transform: translateY(-2px);
+  }
+
+  .procedimento-wrapper .card:active {
+    transform: translateY(0);
+  }
+
+  .procedimento-wrapper .card:focus {
+    outline: none;
+  }
+
+  .procedimento-wrapper .card:focus-visible {
+    box-shadow: 0 0 0 4px rgba(143, 196, 170, 0.35), 0 12px 28px rgba(28, 75, 56, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .procedimento-wrapper .card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .procedimento-wrapper .card svg {
+    width: clamp(28px, 6vw, 34px);
+    height: auto;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.96;
+  }
+
+  .procedimento-wrapper .card span {
+    font-size: var(--card-text-size, clamp(16px, 2.8vw, 20px));
+    font-weight: 600;
+  }
+
+  .procedimento-wrapper footer,
+  .procedimento-wrapper .procedimento-footer {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.34em;
+    color: color-mix(in srgb, var(--ink) 74%, transparent);
+    border: none;
+    background: transparent;
+  }
+
   html,
   body {
     overflow-x: clip;

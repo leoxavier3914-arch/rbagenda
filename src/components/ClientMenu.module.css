@@ -7,12 +7,7 @@
   position: relative;
   overflow-x: hidden;
   color: inherit;
-  background: inherit;
-  background: linear-gradient(
-    180deg,
-    var(--bg-top, #7d9782) 0%,
-    var(--bg-bottom, #dfe9e2) 100%
-  );
+  background: transparent;
 }
 
 .hamburger {
@@ -216,7 +211,7 @@
   box-sizing: border-box;
   padding: 0 clamp(16px, 4vw, 32px) 56px;
   color: inherit;
-  background: inherit;
+  background: transparent;
 }
 
 .contentInner {
@@ -226,7 +221,7 @@
 
 .contentNoPadding {
   padding: 0 !important;
-  background: inherit;
+  background: transparent;
 }
 
 @media (max-width: 600px) {

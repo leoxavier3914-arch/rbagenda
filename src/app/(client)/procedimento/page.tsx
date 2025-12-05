@@ -2137,6 +2137,7 @@ export default function ProcedimentoPage() {
           ref={typeSectionRef}
           className="center"
           id="sectionTipo"
+          data-step="tipo"
           aria-label="Escolha do tipo"
         >
           <div className="stack">
@@ -2192,6 +2193,7 @@ export default function ProcedimentoPage() {
               ref={techniqueSectionRef}
               className="center"
               id="sectionTecnica"
+              data-step="tecnica"
           aria-label="Escolha da técnica"
         >
           <div className="stack">
@@ -2246,6 +2248,7 @@ export default function ProcedimentoPage() {
               ref={dateSectionRef}
               className="center"
               id="sectionDia"
+              data-step="dia"
           aria-label="Escolha do dia"
         >
           <div className="stack">
@@ -2328,6 +2331,7 @@ export default function ProcedimentoPage() {
               ref={timeSectionRef}
               className="center"
               id="sectionHorario"
+              data-step="horario"
           aria-label="Escolha do horário"
         >
           <div className="stack">

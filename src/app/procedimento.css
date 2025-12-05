@@ -96,6 +96,20 @@
   gap: clamp(12px, 2.2vw, 18px);
 }
 
+.diamond {
+  display: block;
+  margin: 0 auto 10px;
+  width: clamp(38px, 7vw, 52px);
+  height: clamp(38px, 7vw, 52px);
+  color: color-mix(in srgb, var(--ink) 72%, transparent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 2vw, 18px);
+}
+
 .procedimento-wrapper {
   min-height: 100vh;
   color: var(--ink);

@@ -1824,20 +1824,18 @@ export default function ProcedimentoPage() {
   useEffect(() => {
     if (!pendingScrollTarget) return
 
-    const behavior = shouldReduceMotion ? 'auto' : 'smooth'
-    let element: HTMLElement | null = null
+    const targetSection = pendingScrollTarget === 'technique'
+      ? techniqueSectionRef.current
+      : pendingScrollTarget === 'date'
+        ? dateSectionRef.current
+        : pendingScrollTarget === 'time'
+          ? timeSectionRef.current
+          : null
 
-    if (pendingScrollTarget === 'technique') {
-      element = techniqueSectionRef.current
-    } else if (pendingScrollTarget === 'date') {
-      element = dateSectionRef.current
-    } else if (pendingScrollTarget === 'time') {
-      element = timeSectionRef.current
-    }
-
-    if (element) {
-      element.scrollIntoView({ behavior, block: 'center' })
-    }
+    targetSection?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    })
 
     setPendingScrollTarget(null)
   }, [pendingScrollTarget, shouldReduceMotion])

@@ -107,10 +107,13 @@ export default function BookingFlow(){
   useEffect(() => {
     if (!date) return
 
-    const target = scheduleSectionRef.current
-    if (!target) return
+    const targetSection = scheduleSectionRef.current
+    if (!targetSection) return
 
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    targetSection?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    })
   }, [date])
 
   const makeCacheKey = useCallback((service: string, selectedDate: string) => `${service}::${selectedDate}`, [])

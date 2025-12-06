@@ -18,6 +18,12 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/db'
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 import { useLavaLamp } from '@/components/LavaLampProvider'
+import {
+  ClientGlassPanel,
+  ClientPageHeader,
+  ClientPageShell,
+  ClientSection,
+} from '@/components/client/ClientPageLayout'
 
 type Profile = {
   full_name: string | null
@@ -758,206 +764,184 @@ export default function MeuPerfil() {
   }
 
   return (
-    <main
-      className={`client-hero-wrapper ${heroReady ? 'client-hero-ready' : ''} ${styles.wrapper}`}
-    >
-      <div className="page">
-        <section className="center" id="sectionPerfil" aria-label="Meu Perfil">
-          <div className="stack">
-            <header
-              className={`${styles.revealSeq} ${styles.revealTitle}`}
-              data-visible={revealStage >= REVEAL_STAGE.TITLE}
-            >
-              <h1>
-                Meu <span className="muted2">Perfil</span>
-              </h1>
-            </header>
+    <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
+      <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
+        <ClientPageHeader
+          hideDiamond
+          className={`${styles.revealSeq} ${styles.revealTitle}`}
+          data-visible={revealStage >= REVEAL_STAGE.TITLE}
+          title={(
+            <>
+              Meu <span className="muted2">Perfil</span>
+            </>
+          )}
+        />
 
-            <div
-              className={`glass ${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
-              aria-label="Dados do perfil"
-              data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-            >
-              <div
-                className={`label ${styles.revealSeq} ${styles.revealDescription}`}
-                data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
-              >
-                PERFIL
-              </div>
-              <form onSubmit={handleSubmit} className="profile-form">
-                <div className={styles.profileGrid}>
-                  <div className={styles.avatarColumn}>
-                    <div className={styles.avatarWrap}>
-                      <div
-                        className={styles.avatar}
-                        id="avatarBox"
-                        ref={avatarBoxRef}
-                        onClick={toggleAvatarMenu}
-                        onKeyDown={handleAvatarKeyDown}
-                        tabIndex={0}
-                        role="button"
-                        aria-label="Abrir ações do avatar"
-                        aria-expanded={isAvatarMenuOpen}
-                        aria-controls="avatarActions"
-                      >
-                        {avatarDataUrl ? (
-                          <img src={avatarDataUrl} alt="" title="" />
-                        ) : (
-                          <div className={styles.avatarPlaceholder} aria-hidden="true">
-                            <svg
-                              width="56"
-                              height="56"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                            >
-                              <circle cx="12" cy="8" r="4" />
-                              <path d="M4 20c2-3 5-5 8-5s6 2 8 5" />
-                            </svg>
-                          </div>
-                        )}
-                        <div
-                          className={styles.avatarActionsOverlay}
-                          data-open={isAvatarMenuOpen}
+        <ClientGlassPanel
+          className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
+          aria-label="Dados do perfil"
+          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+          label="PERFIL"
+          labelProps={{
+            className: `${styles.revealSeq} ${styles.revealDescription}`,
+            'data-visible': revealStage >= REVEAL_STAGE.DESCRIPTION,
+          }}
+        >
+          <form onSubmit={handleSubmit} className="profile-form">
+            <div className={styles.profileGrid}>
+              <div className={styles.avatarColumn}>
+                <div className={styles.avatarWrap}>
+                  <div
+                    className={styles.avatar}
+                    id="avatarBox"
+                    ref={avatarBoxRef}
+                    onClick={toggleAvatarMenu}
+                    onKeyDown={handleAvatarKeyDown}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="Abrir ações do avatar"
+                    aria-expanded={isAvatarMenuOpen}
+                    aria-controls="avatarActions"
+                  >
+                    {avatarDataUrl ? (
+                      <img src={avatarDataUrl} alt="" title="" />
+                    ) : (
+                      <div className={styles.avatarPlaceholder} aria-hidden="true">
+                        <svg
+                          width="56"
+                          height="56"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
                         >
-                          <div
-                            className={styles.avatarActions}
-                            id="avatarActions"
-                            ref={avatarActionsRef}
-                          >
-                            <label className={styles.btn}>
-                              <input
-                                id="avatarInput"
-                                type="file"
-                                accept="image/*"
-                                hidden
-                                ref={avatarInputRef}
-                                onChange={handleAvatarChange}
-                              />
-                              Enviar foto
-                            </label>
-                            <button
-                              type="button"
-                              className={styles.btn}
-                              onClick={handleRemoveAvatar}
-                            >
-                              Remover foto
-                            </button>
-                          </div>
-                        </div>
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M4 20c2-3 5-5 8-5s6 2 8 5" />
+                        </svg>
                       </div>
-                      {resolvedName ? (
-                        <p className={styles.profileName}>{resolvedName}</p>
-                      ) : null}
+                    )}
+                    <div className={styles.avatarActionsOverlay} data-open={isAvatarMenuOpen}>
+                      <div className={styles.avatarActions} id="avatarActions" ref={avatarActionsRef}>
+                        <label className={styles.btn}>
+                          <input
+                            id="avatarInput"
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            ref={avatarInputRef}
+                            onChange={handleAvatarChange}
+                          />
+                          Enviar foto
+                        </label>
+                        <button type="button" className={styles.btn} onClick={handleRemoveAvatar}>
+                          Remover foto
+                        </button>
+                      </div>
                     </div>
                   </div>
+                  {resolvedName ? <p className={styles.profileName}>{resolvedName}</p> : null}
+                </div>
+              </div>
 
-                  <div className={styles.fieldsColumn}>
-                    <div className={styles.fields}>
-                      <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
-                        <label htmlFor="nome">Nome</label>
-                        <input
-                          id="nome"
-                          className={styles.input}
-                          type="text"
-                          placeholder="Seu nome"
-                          value={fullName}
-                          onChange={(event) => setFullName(event.target.value)}
-                          disabled={loading || saving}
-                          required
-                        />
-                      </div>
-                      <div className={styles.field}>
-                        <label htmlFor="email">E-mail</label>
-                        <input
-                          id="email"
-                          className={styles.input}
-                          type="email"
-                          placeholder="voce@exemplo.com"
-                          value={email}
-                          onChange={(event) => setEmail(event.target.value)}
-                          disabled={loading || saving}
-                          required
-                        />
-                      </div>
-                      <div className={styles.field}>
-                        <label htmlFor="nascimento">Data de nascimento</label>
-                        <input
-                          id="nascimento"
-                          className={styles.input}
-                          type="date"
-                          value={birthDate}
-                          onChange={(event) => setBirthDate(event.target.value)}
-                          disabled={loading || saving}
-                        />
-                      </div>
-                      <div className={styles.field}>
-                        <label htmlFor="whatsapp">WhatsApp</label>
-                        <input
-                          id="whatsapp"
-                          className={styles.input}
-                          type="tel"
-                          placeholder="(11) 99999-9999"
-                          value={whatsapp}
-                          onChange={(event) => setWhatsapp(event.target.value)}
-                          disabled={loading || saving}
-                        />
-                      </div>
-                      <div className={styles.field}>
-                        <label htmlFor="senha">Atualizar senha</label>
-                        <input
-                          id="senha"
-                          className={styles.input}
-                          type="password"
-                          placeholder="Deixe em branco para manter"
-                          value={password}
-                          onChange={(event) => setPassword(event.target.value)}
-                          disabled={loading || saving}
-                        />
-                      </div>
-                    </div>
-
-                    {loading ? (
-                      <p className={styles.statusMessage}>Carregando suas informações…</p>
-                    ) : null}
-                    {error ? <div className={`${styles.alert} ${styles.error}`}>{error}</div> : null}
-                    {success ? <div className={`${styles.alert} ${styles.success}`}>{success}</div> : null}
-                    {signOutError ? (
-                      <div className={`${styles.alert} ${styles.error}`}>{signOutError}</div>
-                    ) : null}
-
-                    <div className={styles.actions}>
-                      <button
-                        className={`${styles.btn} ${styles.primary}`}
-                        type="submit"
-                        disabled={saving || loading}
-                      >
-                        {saving ? 'Salvando…' : 'Salvar alterações'}
-                      </button>
-                      <button
-                        className={`${styles.btn} ${styles.secondary}`}
-                        type="button"
-                        onClick={handleSignOut}
-                        disabled={signingOut}
-                      >
-                        {signingOut ? 'Saindo…' : 'Encerrar sessão'}
-                      </button>
-                    </div>
+              <div className={styles.fieldsColumn}>
+                <div className={styles.fields}>
+                  <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
+                    <label htmlFor="nome">Nome</label>
+                    <input
+                      id="nome"
+                      className={styles.input}
+                      type="text"
+                      placeholder="Seu nome"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      disabled={loading || saving}
+                      required
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="email">E-mail</label>
+                    <input
+                      id="email"
+                      className={styles.input}
+                      type="email"
+                      placeholder="voce@exemplo.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      disabled={loading || saving}
+                      required
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="nascimento">Data de nascimento</label>
+                    <input
+                      id="nascimento"
+                      className={styles.input}
+                      type="date"
+                      value={birthDate}
+                      onChange={(event) => setBirthDate(event.target.value)}
+                      disabled={loading || saving}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="whatsapp">WhatsApp</label>
+                    <input
+                      id="whatsapp"
+                      className={styles.input}
+                      type="tel"
+                      placeholder="(11) 99999-9999"
+                      value={whatsapp}
+                      onChange={(event) => setWhatsapp(event.target.value)}
+                      disabled={loading || saving}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="senha">Atualizar senha</label>
+                    <input
+                      id="senha"
+                      className={styles.input}
+                      type="password"
+                      placeholder="Deixe em branco para manter"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      disabled={loading || saving}
+                    />
                   </div>
                 </div>
-              </form>
-            </div>
 
-            <footer
-              className={`${styles.revealSeq} ${styles.revealContent}`}
-              data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-            >
-              ROMEIKE BEAUTY
-            </footer>
-          </div>
-        </section>
-      </div>
+                {loading ? <p className={styles.statusMessage}>Carregando suas informações…</p> : null}
+                {error ? <div className={`${styles.alert} ${styles.error}`}>{error}</div> : null}
+                {success ? <div className={`${styles.alert} ${styles.success}`}>{success}</div> : null}
+                {signOutError ? <div className={`${styles.alert} ${styles.error}`}>{signOutError}</div> : null}
+
+                <div className={styles.actions}>
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    type="submit"
+                    disabled={saving || loading}
+                  >
+                    {saving ? 'Salvando…' : 'Salvar alterações'}
+                  </button>
+                  <button
+                    className={`${styles.btn} ${styles.secondary}`}
+                    type="button"
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                  >
+                    {signingOut ? 'Saindo…' : 'Encerrar sessão'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </ClientGlassPanel>
+
+        <footer
+          className={`${styles.revealSeq} ${styles.revealContent}`}
+          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+        >
+          ROMEIKE BEAUTY
+        </footer>
+      </ClientSection>
 
       {canEditAppearance ? (
         <>

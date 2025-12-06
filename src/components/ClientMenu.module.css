@@ -226,11 +226,14 @@
 }
 
 .contentNoPadding .contentInner {
+  margin: 0;
+  width: 100% !important;
+  max-width: none !important;
   padding-inline: 0 !important;
 }
 
 @media (max-width: 600px) {
-  .contentInner {
+  .content:not(.contentNoPadding) .contentInner {
     padding-inline: clamp(12px, 6vw, 18px);
   }
 }
@@ -249,14 +252,14 @@
     padding: 0 0 72px;
   }
 
-  .contentInner {
+  .content:not(.contentNoPadding) .contentInner {
     padding-inline: clamp(32px, 5vw, 72px);
     width: min(100%, 1180px);
   }
 }
 
 @media (min-width: 1280px) {
-  .contentInner {
+  .content:not(.contentNoPadding) .contentInner {
     width: min(100%, 1240px);
   }
 }

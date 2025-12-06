@@ -178,6 +178,7 @@ export default function MeuPerfil() {
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false)
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
+  const [heroReady, setHeroReady] = useState(false)
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
 
@@ -265,6 +266,10 @@ export default function MeuPerfil() {
       refreshPalette()
     }
   }, [refreshPalette, syncThemeFromComputed])
+
+  useEffect(() => {
+    setHeroReady(true)
+  }, [])
 
   useEffect(() => {
     const root = document.documentElement
@@ -748,7 +753,9 @@ export default function MeuPerfil() {
   }
 
   return (
-    <main className={`client-hero-wrapper ${styles.wrapper}`}>
+    <main
+      className={`client-hero-wrapper ${heroReady ? 'client-hero-ready' : ''} ${styles.wrapper}`}
+    >
       <div className="page">
         <section className="center" id="sectionPerfil" aria-label="Meu Perfil">
           <div className="stack">

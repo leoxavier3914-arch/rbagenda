@@ -214,6 +214,10 @@
   background: transparent;
 }
 
+.content:not(.contentNoPadding) {
+  background: inherit;
+}
+
 .contentInner {
   margin: 0 auto;
   width: min(100%, 1120px);
@@ -223,6 +227,7 @@
 .contentNoPadding {
   padding-inline: 0 !important;
   background: transparent;
+  width: 100% !important;
 }
 
 .contentNoPadding .contentInner {

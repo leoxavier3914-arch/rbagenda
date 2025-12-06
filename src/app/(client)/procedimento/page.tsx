@@ -11,6 +11,12 @@ import {
 import { useRouter } from 'next/navigation'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
+import { ProcedimentoCard } from './@components/ProcedimentoCard'
+import { ProcedimentoGrid } from './@components/ProcedimentoGrid'
+import { ProcedimentoHeader } from './@components/ProcedimentoHeader'
+import { ProcedimentoWrapper } from './@components/ProcedimentoWrapper'
+import styles from './procedimento.module.css'
+
 import { supabase } from '@/lib/db'
 import {
   DEFAULT_FALLBACK_BUFFER_MINUTES,
@@ -583,12 +589,17 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
   )
 
   const renderSwatch = (css: string, style: string) => (
-    <div className="swatch" style={{ background: style }} onClick={() => handleSwatchClick(css)} role="button" />
+    <div className={styles.swatch} style={{ background: style }} onClick={() => handleSwatchClick(css)} role="button" />
   )
 
   return (
     <>
-      <button id="paletteBtn" title="Personalizar" onClick={() => setIsOpen((open) => !open)}>
+      <button
+        id="paletteBtn"
+        className={styles.paletteButton}
+        title="Personalizar"
+        onClick={() => setIsOpen((open) => !open)}
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <circle cx="12" cy="12" r="9" />
           <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
@@ -596,54 +607,58 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
           <path d="M16.8 7.2l-1.8 1.8" />
         </svg>
       </button>
-      <div id="palettePanel" className={isOpen ? 'open' : ''} onClick={(event) => event.target === event.currentTarget && setIsOpen(false)}>
-        <div id="panelScroll">
-          <div className="pal-section">
+      <div
+        id="palettePanel"
+        className={`${styles.palettePanel} ${isOpen ? styles.palettePanelOpen : ''}`}
+        onClick={(event) => event.target === event.currentTarget && setIsOpen(false)}
+      >
+        <div id="panelScroll" className={styles.panelScroll}>
+          <div className={styles.paletteSection}>
             <h3>Cards (livre)</h3>
-            <div className="row">
-              <span className="small">Superior</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Superior</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="cardTop"
                 value={palette.cardTop}
                 onChange={(event) => setPaletteValues({ cardTop: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Inferior</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Inferior</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="cardBottom"
                 value={palette.cardBottom}
                 onChange={(event) => setPaletteValues({ cardBottom: event.target.value })}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="cardTopHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.cardTop}
                 onChange={(event) => updateHexInput('cardTop', event.target.value)}
               />
-              <button className="btn-mini" id="addCardTop" type="button" onClick={() => applyHexValue('cardTop', (value) => setPaletteValues({ cardTop: value }))}>
+              <button className={styles.btnMini} id="addCardTop" type="button" onClick={() => applyHexValue('cardTop', (value) => setPaletteValues({ cardTop: value }))}>
                 Aplicar sup.
               </button>
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="cardBottomHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.cardBottom}
                 onChange={(event) => updateHexInput('cardBottom', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="addCardBottom"
                 type="button"
                 onClick={() => applyHexValue('cardBottom', (value) => setPaletteValues({ cardBottom: value }))}
@@ -651,21 +666,21 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 Aplicar inf.
               </button>
             </div>
-            <div className="row">
-              <span className="small">Borda card</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Borda card</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="cardBorderColor"
                 value={palette.cardBorderColor}
                 onChange={(event) => setPaletteValues({ cardBorderColor: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Opacidade borda</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Opacidade borda</span>
               <input
                 type="range"
-                className="range"
+                className={styles.range}
                 id="cardBorderAlpha"
                 min="0"
                 max="1"
@@ -674,17 +689,17 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => setPaletteValues({ cardBorderAlpha: Number(event.target.value) })}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="cardBorderHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.cardBorder}
                 onChange={(event) => updateHexInput('cardBorder', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="applyCardBorderHex"
                 type="button"
                 onClick={() => applyHexValue('cardBorder', (value) => setPaletteValues({ cardBorderColor: value }))}
@@ -693,75 +708,75 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
               </button>
             </div>
           </div>
-          <div className="pal-section">
+          <div className={styles.paletteSection}>
             <h3>Container (fundo)</h3>
-            <div className="pal-options">
+            <div className={styles.paletteOptions}>
               {renderSwatch('--bg-top:#cfe6d5;--bg-bottom:#eef3e6', '#cfe6d5')}
               {renderSwatch('--bg-top:#e3e8df;--bg-bottom:#f2f3ef', '#e3e8df')}
               {renderSwatch('--bg-top:#dbece3;--bg-bottom:#eef4ec', '#dbece3')}
             </div>
-            <div className="row">
-              <span className="small">Topo</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Topo</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="bgTop"
                 value={palette.bgTop}
                 onChange={(event) => setPaletteValues({ bgTop: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Base</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Base</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="bgBottom"
                 value={palette.bgBottom}
                 onChange={(event) => setPaletteValues({ bgBottom: event.target.value })}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="bgTopHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.bgTop}
                 onChange={(event) => updateHexInput('bgTop', event.target.value)}
               />
-              <button className="btn-mini" id="addBgTop" type="button" onClick={() => applyHexValue('bgTop', (value) => setPaletteValues({ bgTop: value }))}>
+              <button className={styles.btnMini} id="addBgTop" type="button" onClick={() => applyHexValue('bgTop', (value) => setPaletteValues({ bgTop: value }))}>
                 Aplicar topo
               </button>
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="bgBottomHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.bgBottom}
                 onChange={(event) => updateHexInput('bgBottom', event.target.value)}
               />
-              <button className="btn-mini" id="addBgBottom" type="button" onClick={() => applyHexValue('bgBottom', (value) => setPaletteValues({ bgBottom: value }))}>
+              <button className={styles.btnMini} id="addBgBottom" type="button" onClick={() => applyHexValue('bgBottom', (value) => setPaletteValues({ bgBottom: value }))}>
                 Aplicar base
               </button>
             </div>
-            <div className="hr" />
-            <div className="row">
-              <span className="small">Borda vidro</span>
+            <div className={styles.hr} />
+            <div className={styles.row}>
+              <span className={styles.small}>Borda vidro</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="glassBorderColor"
                 value={palette.glassBorderColor}
                 onChange={(event) => setPaletteValues({ glassBorderColor: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Opacidade borda</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Opacidade borda</span>
               <input
                 type="range"
-                className="range"
+                className={styles.range}
                 id="glassBorderAlpha"
                 min="0"
                 max="1"
@@ -770,17 +785,17 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => setPaletteValues({ glassBorderAlpha: Number(event.target.value) })}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="glassBorderHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.glassBorder}
                 onChange={(event) => updateHexInput('glassBorder', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="applyGlassBorderHex"
                 type="button"
                 onClick={() => applyHexValue('glassBorder', (value) => setPaletteValues({ glassBorderColor: value }))}
@@ -789,28 +804,28 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
               </button>
             </div>
           </div>
-          <div className="pal-section">
+          <div className={styles.paletteSection}>
             <h3>Overlay (vidro)</h3>
-            <div className="pal-options">
+            <div className={styles.paletteOptions}>
               {renderSwatch('--glass:rgba(236,250,241,.34)', 'rgba(236,250,241,.34)')}
               {renderSwatch('--glass:rgba(240,245,240,.42)', 'rgba(240,245,240,.42)')}
               {renderSwatch('--glass:rgba(230,240,235,.50)', 'rgba(230,240,235,.50)')}
             </div>
-            <div className="row">
-              <span className="small">Cor</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Cor</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="glassColor"
                 value={palette.glassColor}
                 onChange={(event) => setPaletteValues({ glassColor: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Opacidade</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Opacidade</span>
               <input
                 type="range"
-                className="range"
+                className={styles.range}
                 id="glassAlpha"
                 min="0"
                 max="1"
@@ -819,52 +834,52 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => handleGlassAlphaChange(event.target.value)}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="glassHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.glass}
                 onChange={(event) => updateHexInput('glass', event.target.value)}
               />
-              <button className="btn-mini" id="applyGlassHex" type="button" onClick={() => applyHexValue('glass', (value) => setPaletteValues({ glassColor: value }))}>
+              <button className={styles.btnMini} id="applyGlassHex" type="button" onClick={() => applyHexValue('glass', (value) => setPaletteValues({ glassColor: value }))}>
                 Aplicar cor
               </button>
             </div>
           </div>
-          <div className="pal-section">
+          <div className={styles.paletteSection}>
             <h3>Bolhas</h3>
-            <div className="pal-options">
+            <div className={styles.paletteOptions}>
               {renderSwatch('--dark:#7aa98a;--light:#bcd6c3', '#7aa98a')}
               {renderSwatch('--dark:#86b79c;--light:#cae0cf', '#86b79c')}
               {renderSwatch('--dark:#9ccbb1;--light:#d7ede1', '#9ccbb1')}
             </div>
-            <div className="row">
-              <span className="small">Escura</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Escura</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="bubbleDark"
                 value={palette.bubbleDark}
                 onChange={(event) => setPaletteValues({ bubbleDark: event.target.value }, { markPalette: true })}
               />
             </div>
-            <div className="row">
-              <span className="small">Clara</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Clara</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="bubbleLight"
                 value={palette.bubbleLight}
                 onChange={(event) => setPaletteValues({ bubbleLight: event.target.value }, { markPalette: true })}
               />
             </div>
-            <div className="row">
-              <span className="small">Opac. mín</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Opac. mín</span>
               <input
                 type="range"
-                className="range"
+                className={styles.range}
                 id="bubbleAlphaMin"
                 min="0"
                 max="1"
@@ -873,11 +888,11 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => handleBubbleAlphaChange('bubbleAlphaMin', event.target.value)}
               />
             </div>
-            <div className="row">
-              <span className="small">Opac. máx</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Opac. máx</span>
               <input
                 type="range"
-                className="range"
+                className={styles.range}
                 id="bubbleAlphaMax"
                 min="0"
                 max="1"
@@ -886,17 +901,17 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => handleBubbleAlphaChange('bubbleAlphaMax', event.target.value)}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="bubbleDarkHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.bubbleDark}
                 onChange={(event) => updateHexInput('bubbleDark', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="applyBubbleDark"
                 type="button"
                 onClick={() => applyHexValue('bubbleDark', (value) => setPaletteValues({ bubbleDark: value }, { markPalette: true }))}
@@ -904,17 +919,17 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 Aplicar escura
               </button>
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="bubbleLightHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.bubbleLight}
                 onChange={(event) => updateHexInput('bubbleLight', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="applyBubbleLight"
                 type="button"
                 onClick={() => applyHexValue('bubbleLight', (value) => setPaletteValues({ bubbleLight: value }, { markPalette: true }))}
@@ -923,67 +938,67 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
               </button>
             </div>
           </div>
-          <div className="pal-section">
+          <div className={styles.paletteSection}>
             <h3>Textos &amp; Títulos</h3>
-            <div className="pal-options">
+            <div className={styles.paletteOptions}>
               {renderSwatch('--ink:#183f2e;--muted:#6a8f7f;--muted-2:#5f8c79', '#183f2e')}
               {renderSwatch('--ink:#224c3a;--muted:#7da08d;--muted-2:#5f8c79', '#224c3a')}
               {renderSwatch('--ink:#123628;--muted:#5a7a6a;--muted-2:#497565', '#123628')}
             </div>
-            <div className="row">
-              <span className="small">Primária</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Primária</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="textInk"
                 value={palette.textInk}
                 onChange={(event) => setPaletteValues({ textInk: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Muted</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Muted</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="textMuted"
                 value={palette.textMuted}
                 onChange={(event) => setPaletteValues({ textMuted: event.target.value })}
               />
             </div>
-            <div className="row">
-              <span className="small">Muted 2</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Muted 2</span>
               <input
                 type="color"
-                className="colorpicker"
+                className={styles.colorpicker}
                 id="textMuted2"
                 value={palette.textMuted2}
                 onChange={(event) => setPaletteValues({ textMuted2: event.target.value })}
               />
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="textInkHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.textInk}
                 onChange={(event) => updateHexInput('textInk', event.target.value)}
               />
-              <button className="btn-mini" id="applyTextInk" type="button" onClick={() => applyHexValue('textInk', (value) => setPaletteValues({ textInk: value }))}>
+              <button className={styles.btnMini} id="applyTextInk" type="button" onClick={() => applyHexValue('textInk', (value) => setPaletteValues({ textInk: value }))}>
                 Aplicar prim.
               </button>
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="textMutedHex"
                 placeholder="#RRGGBB"
                 value={hexInputs.textMuted}
                 onChange={(event) => updateHexInput('textMuted', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="applyTextMuted"
                 type="button"
                 onClick={() => applyHexValue('textMuted', (value) => setPaletteValues({ textMuted: value }))}
@@ -991,17 +1006,17 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 Aplicar muted
               </button>
             </div>
-            <div className="row">
+            <div className={styles.row}>
               <input
                 type="text"
-                className="input-hex"
+                className={styles.inputHex}
                 id="textMuted2Hex"
                 placeholder="#RRGGBB"
                 value={hexInputs.textMuted2}
                 onChange={(event) => updateHexInput('textMuted2', event.target.value)}
               />
               <button
-                className="btn-mini"
+                className={styles.btnMini}
                 id="applyTextMuted2"
                 type="button"
                 onClick={() => applyHexValue('textMuted2', (value) => setPaletteValues({ textMuted2: value }))}
@@ -1009,12 +1024,12 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 Aplicar muted2
               </button>
             </div>
-            <div className="hr" />
-            <div className="row">
-              <span className="small">Fonte texto</span>
+            <div className={styles.hr} />
+            <div className={styles.row}>
+              <span className={styles.small}>Fonte texto</span>
               <select
                 id="fontBody"
-                className="colorpicker"
+                className={styles.colorpicker}
                 value={palette.fontBody}
                 onChange={(event) => setPaletteValues({ fontBody: event.target.value })}
               >
@@ -1025,11 +1040,11 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 ))}
               </select>
             </div>
-            <div className="row">
-              <span className="small">Fonte título</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Fonte título</span>
               <select
                 id="fontHeading"
-                className="colorpicker"
+                className={styles.colorpicker}
                 value={palette.fontHeading}
                 onChange={(event) => setPaletteValues({ fontHeading: event.target.value })}
               >
@@ -1040,12 +1055,12 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 ))}
               </select>
             </div>
-            <div className="row">
-              <span className="small">Texto base (px)</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Texto base (px)</span>
               <input
                 type="number"
                 id="sizeBase"
-                className="colorpicker"
+                className={styles.colorpicker}
                 min="10"
                 max="28"
                 step="1"
@@ -1053,12 +1068,12 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => handleSizeChange('sizeBase', event.target.value, DEFAULT_PALETTE.sizeBase)}
               />
             </div>
-            <div className="row">
-              <span className="small">Título H1 (px)</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Título H1 (px)</span>
               <input
                 type="number"
                 id="sizeH1"
-                className="colorpicker"
+                className={styles.colorpicker}
                 min="20"
                 max="80"
                 step="1"
@@ -1066,12 +1081,12 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => handleSizeChange('sizeH1', event.target.value, DEFAULT_PALETTE.sizeH1)}
               />
             </div>
-            <div className="row">
-              <span className="small">Texto cards (px)</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Texto cards (px)</span>
               <input
                 type="number"
                 id="sizeCard"
-                className="colorpicker"
+                className={styles.colorpicker}
                 min="10"
                 max="36"
                 step="1"
@@ -1079,12 +1094,12 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 onChange={(event) => handleSizeChange('sizeCard', event.target.value, DEFAULT_PALETTE.sizeCard)}
               />
             </div>
-            <div className="row">
-              <span className="small">Label/muted (px)</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Label/muted (px)</span>
               <input
                 type="number"
                 id="sizeLabel"
-                className="colorpicker"
+                className={styles.colorpicker}
                 min="8"
                 max="24"
                 step="1"
@@ -1093,35 +1108,35 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
               />
             </div>
           </div>
-          <div className="pal-section">
+          <div className={styles.paletteSection}>
             <h3>Adicionar nova fonte</h3>
-            <div className="row">
-              <span className="small">CSS URL</span>
+            <div className={styles.row}>
+              <span className={styles.small}>CSS URL</span>
               <input
                 type="text"
                 id="fontUrl"
-                className="colorpicker"
+                className={styles.colorpicker}
                 placeholder="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap"
                 value={fontUrl}
                 onChange={(event) => setFontUrl(event.target.value)}
               />
             </div>
-            <div className="row">
-              <span className="small">Family</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Family</span>
               <input
                 type="text"
                 id="fontFamilyName"
-                className="colorpicker"
+                className={styles.colorpicker}
                 placeholder="DM Sans, sans-serif"
                 value={fontFamilyName}
                 onChange={(event) => setFontFamilyName(event.target.value)}
               />
             </div>
-            <div className="row">
-              <span className="small">Aplicar em</span>
+            <div className={styles.row}>
+              <span className={styles.small}>Aplicar em</span>
               <select
                 id="fontApplyWhere"
-                className="colorpicker"
+                className={styles.colorpicker}
                 value={fontApplyWhere}
                 onChange={(event) => setFontApplyWhere(event.target.value as 'body' | 'heading' | 'both')}
               >
@@ -1130,8 +1145,8 @@ function AdminCustomizationPanel({ refreshPalette }: { refreshPalette: () => voi
                 <option value="both">Ambos</option>
               </select>
             </div>
-            <div className="row">
-              <button className="btn-mini" id="addFontBtn" type="button" onClick={handleFontAdd}>
+            <div className={styles.row}>
+              <button className={styles.btnMini} id="addFontBtn" type="button" onClick={handleFontAdd}>
                 Adicionar &amp; aplicar
               </button>
             </div>
@@ -2131,375 +2146,382 @@ export default function ProcedimentoPage() {
 
 
   return (
-    <main className={`client-hero-wrapper ${heroReady ? 'client-hero-ready' : ''}`}>
-      <div className="page">
-        <section
-          ref={typeSectionRef}
-          className="center"
-          id="sectionTipo"
-          data-step="tipo"
-          aria-label="Escolha do tipo"
-        >
-          <div className="stack">
-            <header>
-              <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-              </svg>
-              <h1>
-                Escolha <span className="muted2">seu</span> Procedimento:
-              </h1>
-            </header>
-              <div className="glass" aria-label="Tipos de procedimento">
-                <div className="label">TIPO</div>
-                {catalogError && <div className="status status-error">{catalogError}</div>}
-                {catalogStatus === 'ready' && availableServices.length === 0 && (
-                  <div className="status status-info">Nenhum tipo disponível no momento.</div>
-                )}
-                <div className="grid tipo-grid">
-                  {catalogStatus === 'ready' && availableServices.length > 0 ? (
-                  availableServices.map((service) => (
-                    <button
-                      key={service.id}
-                      type="button"
-                      className="card"
-                      data-active={selectedServiceId === service.id ? 'true' : 'false'}
-                      onClick={() => handleServiceSelect(service.id)}
-                    >
-                      <div className="card-inner">
-                        <LashIcon />
-                        <span>{service.name}</span>
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  // placeholders para manter o layout estável durante o loading ou quando não houver tipos
-                  DEFAULT_SERVICE_LABELS.map((label) => (
-                    <div key={label} className="card" aria-hidden="true">
-                      <div className="card-inner">
-                        <LashIcon />
-                        <span>{label}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+    <ProcedimentoWrapper heroReady={heroReady}>
+      <section
+        ref={typeSectionRef}
+        className={styles.section}
+        id="sectionTipo"
+        data-step="tipo"
+        aria-label="Escolha do tipo"
+      >
+        <div className={styles.stack}>
+          <ProcedimentoHeader>
+            <>
+              Escolha <span className={styles.subtitle}>seu</span> Procedimento:
+            </>
+          </ProcedimentoHeader>
+          <div className={styles.glass} aria-label="Tipos de procedimento">
+            <div className={styles.label}>TIPO</div>
+            {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+            {catalogStatus === 'ready' && availableServices.length === 0 && (
+              <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
+            )}
+            <ProcedimentoGrid variant="tipo">
+              {catalogStatus === 'ready' && availableServices.length > 0 ? (
+                availableServices.map((service) => (
+                  <ProcedimentoCard
+                    key={service.id}
+                    active={selectedServiceId === service.id}
+                    onClick={() => handleServiceSelect(service.id)}
+                  >
+                    <LashIcon />
+                    <span>{service.name}</span>
+                  </ProcedimentoCard>
+                ))
+              ) : (
+                DEFAULT_SERVICE_LABELS.map((label) => (
+                  <ProcedimentoCard key={label} as="div">
+                    <LashIcon />
+                    <span>{label}</span>
+                  </ProcedimentoCard>
+                ))
+              )}
+            </ProcedimentoGrid>
           </div>
-        </section>
-          {canSelectTechnique ? (
-            <section
-              ref={techniqueSectionRef}
-              className="center"
-              id="sectionTecnica"
-              data-step="tecnica"
+          <footer className={styles.footer}>ROMEIKE BEAUTY</footer>
+        </div>
+      </section>
+
+      {canSelectTechnique ? (
+        <section
+          ref={techniqueSectionRef}
+          className={styles.section}
+          id="sectionTecnica"
+          data-step="tecnica"
           aria-label="Escolha da técnica"
         >
-          <div className="stack">
-            <header className="procedimento-header">
-                  <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                    <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                  </svg>
-                  <h1>
-                    Escolha <span className="muted2">sua</span> Técnica:
-                  </h1>
-            </header>
-            <div className="glass" aria-label="Técnicas de cílios">
-              <div className="label">TÉCNICA</div>
-                  {catalogStatus === 'ready' && selectedService ? (
-                    <>
-                      {selectedService.techniques.length > 0 ? (
-                        <div className="grid tecnica-grid">
-                          {visibleTechniques.map((technique) => (
-                            <button
-                              key={technique.id}
-                              type="button"
-                              className="card"
-                              data-active={selectedTechniqueId === technique.id ? 'true' : 'false'}
-                              onClick={() => handleTechniqueSelect(technique.id)}
-                            >
-                              <div className="card-inner">
-                                <LashIcon />
-                                <span>{technique.name}</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="status status-info">Nenhuma técnica disponível para este tipo.</div>
-                      )}
-                      {!showAllTechniques && selectedService.techniques.length > visibleTechniques.length && (
-                        <button type="button" className="view-more" onClick={() => setShowAllTechniques(true)}>
-                          Ver mais técnicas
-                        </button>
-                      )}
-                    </>
+          <div className={styles.stack}>
+            <ProcedimentoHeader className={styles.procedimentoHeader}>
+              <>
+                Escolha <span className={styles.subtitle}>sua</span> Técnica:
+              </>
+            </ProcedimentoHeader>
+            <div className={styles.glass} aria-label="Técnicas de cílios">
+              <div className={styles.label}>TÉCNICA</div>
+              {catalogStatus === 'ready' && selectedService ? (
+                <>
+                  {selectedService.techniques.length > 0 ? (
+                    <ProcedimentoGrid>
+                      {visibleTechniques.map((technique) => (
+                        <ProcedimentoCard
+                          key={technique.id}
+                          active={selectedTechniqueId === technique.id}
+                          onClick={() => handleTechniqueSelect(technique.id)}
+                        >
+                          <LashIcon />
+                          <span>{technique.name}</span>
+                        </ProcedimentoCard>
+                      ))}
+                    </ProcedimentoGrid>
                   ) : (
-                    <div className="status status-info">Selecione um tipo para ver as técnicas disponíveis.</div>
+                    <div className={`${styles.status} ${styles.statusInfo}`}>
+                      Nenhuma técnica disponível para este tipo.
+                    </div>
                   )}
+                  {!showAllTechniques && selectedService.techniques.length > visibleTechniques.length && (
+                    <button type="button" className={styles.viewMore} onClick={() => setShowAllTechniques(true)}>
+                      Ver mais técnicas
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className={`${styles.status} ${styles.statusInfo}`}>
+                  Selecione um tipo para ver as técnicas disponíveis.
+                </div>
+              )}
             </div>
           </div>
-            </section>
-          ) : null}
-          {canSelectDate ? (
-            <section
-              ref={dateSectionRef}
-              className="center"
-              id="sectionDia"
-              data-step="dia"
+        </section>
+      ) : null}
+
+      {canSelectDate ? (
+        <section
+          ref={dateSectionRef}
+          className={styles.section}
+          id="sectionDia"
+          data-step="dia"
           aria-label="Escolha do dia"
         >
-          <div className="stack">
-            <header className="procedimento-header">
-                  <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                    <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                  </svg>
-                  <h1>
-                    Escolha <span className="muted2">o</span> Dia:
-                  </h1>
-            </header>
-            <div className="glass" aria-label="Escolha do dia">
-              <div className="label">DIA</div>
-                {availabilityError && <div className="status status-error">{availabilityError}</div>}
-                {!availabilityError && isLoadingAvailability && (
-                  <div className="status status-info">Carregando disponibilidade…</div>
-                )}
-                <div className="calendar-head">
-                  <button
-                    type="button"
-                    className="calendar-nav"
-                    onClick={goToPreviousMonth}
-                    disabled={!selectedTechnique}
-                    aria-label="Mês anterior"
-                  >
-                    ‹
-                  </button>
-                  <div className="calendar-title" id="cal-title">
-                    {monthTitle}
-                  </div>
-                  <button
-                    type="button"
-                    className="calendar-nav"
-                    onClick={goToNextMonth}
-                    disabled={!selectedTechnique}
-                    aria-label="Próximo mês"
-                  >
-                    ›
-                  </button>
-                </div>
-                <div className="calendar-grid" aria-hidden="true">
-                  {calendarHeaderDays.map((label, index) => (
-                    <div key={`dow-${index}`} className="calendar-day calendar-day-header">
-                      {label}
-                    </div>
-                  ))}
-                </div>
-                <div className="calendar-grid" role="grid">
-                  {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
-                    <button
-                      key={iso}
-                      type="button"
-                      className="calendar-day"
-                      data-state={state}
-                      data-selected={!isOutsideCurrentMonth && selectedDate === iso}
-                      data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
-                      aria-disabled={isDisabled}
-                      disabled={isDisabled}
-                      onClick={() => handleDaySelect(iso, isDisabled)}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-                <div className="calendar-legend">
-                  <span><span className="dot dot-available" /> Disponível</span>
-                  <span><span className="dot dot-partial" /> Parcial</span>
-                  <span><span className="dot dot-full" /> Lotado</span>
-                  <span><span className="dot dot-mine" /> Meus</span>
-                  <span><span className="dot dot-disabled" /> Indisponível</span>
-                </div>
-            </div>
-            </div>
-          </section>
-          ) : null}
-          {canSelectTime ? (
-            <section
-              ref={timeSectionRef}
-              className="center"
-              id="sectionHorario"
-              data-step="horario"
-          aria-label="Escolha do horário"
-        >
-          <div className="stack">
-            <header className="procedimento-header">
-                  <svg aria-hidden="true" className="diamond" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                    <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                  </svg>
-                  <h1>
-                    Escolha <span className="muted2">o</span> Horário:
-                  </h1>
-            </header>
-            <div className="glass" aria-label="Escolha do horário">
-              <div className="label">HORÁRIO</div>
-                <div ref={slotsContainerRef} className="slots">
-                  {!selectedDate ? (
-                    <div className="status status-info">Escolha um dia para ver os horários disponíveis.</div>
-                  ) : slots.length > 0 ? (
-                    slots.map((slotValue) => {
-                      const disabled = bookedSlots.has(slotValue)
-                      return (
-                        <button
-                          key={slotValue}
-                          type="button"
-                          className="slot"
-                          data-selected={selectedSlot === slotValue ? 'true' : 'false'}
-                          data-busy={disabled ? 'true' : 'false'}
-                          onClick={() => handleSlotSelect(slotValue, disabled)}
-                          disabled={disabled}
-                        >
-                          {slotValue}
-                        </button>
-                      )
-                    })
-                  ) : (
-                    <div className="status status-info">Sem horários para este dia.</div>
-                  )}
-                </div>
-                {actionMessage ? (
-                  <div className={`status ${actionMessage.kind === 'success' ? 'status-success' : 'status-error'}`}>
-                    {actionMessage.text}
-                  </div>
-                ) : null}
+          <div className={styles.stack}>
+            <ProcedimentoHeader className={styles.procedimentoHeader}>
+              <>
+                Escolha <span className={styles.subtitle}>o</span> Dia:
+              </>
+            </ProcedimentoHeader>
+            <div className={styles.glass} aria-label="Escolha do dia">
+              <div className={styles.label}>DIA</div>
+              {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
+              {!availabilityError && isLoadingAvailability && (
+                <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
+              )}
+              <div className={styles.calendarHead}>
                 <button
                   type="button"
-                  className="continue-button"
-                  onClick={handleContinue}
-                  disabled={continueButtonDisabled}
+                  className={styles.calendarNav}
+                  onClick={goToPreviousMonth}
+                  disabled={!selectedTechnique}
+                  aria-label="Mês anterior"
                 >
-                  {continueButtonLabel}
+                  ‹
                 </button>
-            </div>
-            </div>
-          </section>
-          ) : null}
-        {hasSummary ? (
-          <div className="summary-bar" data-visible={hasSummary ? 'true' : 'false'} ref={summaryRef}>
-            <div className="summary-details">
-              <div className="summary-item">
-                <span className="summary-label">Tipo</span>
-                <span className="summary-value">{summaryData?.typeName}</span>
+                <div className={styles.calendarTitle} id="cal-title">
+                  {monthTitle}
+                </div>
+                <button
+                  type="button"
+                  className={styles.calendarNav}
+                  onClick={goToNextMonth}
+                  disabled={!selectedTechnique}
+                  aria-label="Próximo mês"
+                >
+                  ›
+                </button>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Técnica</span>
-                <span className="summary-value">{summaryData?.techniqueName}</span>
+              <div className={styles.calendarGrid} aria-hidden="true">
+                {calendarHeaderDays.map((label, index) => (
+                  <div key={`dow-${index}`} className={`${styles.calendarDay} ${styles.calendarDayHeader}`}>
+                    {label}
+                  </div>
+                ))}
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Valor</span>
-                <span className="summary-value">{summaryData?.priceLabel}</span>
+              <div className={styles.calendarGrid} role="grid">
+                {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
+                  <button
+                    key={iso}
+                    type="button"
+                    className={styles.calendarDay}
+                    data-state={state}
+                    data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+                    data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
+                    aria-disabled={isDisabled}
+                    disabled={isDisabled}
+                    onClick={() => handleDaySelect(iso, isDisabled)}
+                  >
+                    {day}
+                  </button>
+                ))}
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Duração</span>
-                <span className="summary-value">{summaryData?.durationLabel}</span>
-              </div>
-              <div className="summary-item summary-item-full">
-                <span className="summary-label">Horário</span>
-                <span className="summary-value">
-                  {summaryData?.dateLabel} às {summaryData?.timeLabel}
+              <div className={styles.calendarLegend}>
+                <span className={styles.calendarLegendItem}>
+                  <span className={`${styles.dot} ${styles.dotAvailable}`} /> Disponível
+                </span>
+                <span className={styles.calendarLegendItem}>
+                  <span className={`${styles.dot} ${styles.dotPartial}`} /> Parcial
+                </span>
+                <span className={styles.calendarLegendItem}>
+                  <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
+                </span>
+                <span className={styles.calendarLegendItem}>
+                  <span className={`${styles.dot} ${styles.dotMine}`} /> Meus
+                </span>
+                <span className={styles.calendarLegendItem}>
+                  <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              className="summary-action"
-              onClick={handleContinue}
-              disabled={continueButtonDisabled}
-            >
-              {continueButtonLabel}
-            </button>
           </div>
-        ) : null}
-        {summarySnapshot ? (
-          <div className="modal" data-open={isSummaryModalOpen ? 'true' : 'false'}>
-            <div className="modal-backdrop" onClick={closeSummaryModal} aria-hidden="true" />
-            <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="appointment-summary-title">
-              <h2 id="appointment-summary-title" className="modal-title">
-                Resumo do agendamento
-              </h2>
-              <div className="modal-body">
-                <div className="modal-line">
-                  <span>Tipo</span>
-                  <strong>{summarySnapshot.typeName}</strong>
-                </div>
-                <div className="modal-line">
-                  <span>Técnica</span>
-                  <strong>{summarySnapshot.techniqueName}</strong>
-                </div>
-                <div className="modal-line">
-                  <span>Horário</span>
-                  <strong>
-                    {summarySnapshot.dateLabel} às {summarySnapshot.timeLabel}
-                  </strong>
-                </div>
-                <div className="modal-line">
-                  <span>Duração</span>
-                  <strong>{summarySnapshot.durationLabel}</strong>
-                </div>
-                <div className="modal-line">
-                  <span>Valor</span>
-                  <strong>{summarySnapshot.priceLabel}</strong>
-                </div>
-                {summarySnapshot.depositCents > 0 ? (
-                  <div className="modal-line">
-                    <span>Sinal</span>
-                    <strong>{summarySnapshot.depositLabel}</strong>
+        </section>
+      ) : null}
+
+      {canSelectTime ? (
+        <section
+          ref={timeSectionRef}
+          className={styles.section}
+          id="sectionHorario"
+          data-step="horario"
+          aria-label="Escolha do horário"
+        >
+          <div className={styles.stack}>
+            <ProcedimentoHeader className={styles.procedimentoHeader}>
+              <>
+                Escolha <span className={styles.subtitle}>o</span> Horário:
+              </>
+            </ProcedimentoHeader>
+            <div className={styles.glass} aria-label="Escolha do horário">
+              <div className={styles.label}>HORÁRIO</div>
+              <div ref={slotsContainerRef} className={styles.slots}>
+                {!selectedDate ? (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>
+                    Escolha um dia para ver os horários disponíveis.
                   </div>
-                ) : null}
+                ) : slots.length > 0 ? (
+                  slots.map((slotValue) => {
+                    const disabled = bookedSlots.has(slotValue)
+                    return (
+                      <button
+                        key={slotValue}
+                        type="button"
+                        className={styles.slot}
+                        data-selected={selectedSlot === slotValue ? 'true' : 'false'}
+                        data-busy={disabled ? 'true' : 'false'}
+                        onClick={() => handleSlotSelect(slotValue, disabled)}
+                        disabled={disabled}
+                      >
+                        {slotValue}
+                      </button>
+                    )
+                  })
+                ) : (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>Sem horários para este dia.</div>
+                )}
               </div>
-              {modalError ? <div className="status status-error">{modalError}</div> : null}
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="modal-button"
-                  onClick={handlePayDeposit}
-                  disabled={isProcessingPayment || !depositAvailable}
+              {actionMessage ? (
+                <div
+                  className={`${styles.status} ${
+                    actionMessage.kind === 'success' ? styles.statusSuccess : styles.statusError
+                  }`}
                 >
-                  {isProcessingPayment ? 'Processando…' : 'Pagar sinal'}
-                </button>
-                <button type="button" className="modal-button secondary" onClick={handlePayLater} disabled={isProcessingPayment}>
-                  Pagar depois
-                </button>
-              </div>
+                  {actionMessage.text}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                className={styles.continueButton}
+                onClick={handleContinue}
+                disabled={continueButtonDisabled}
+              >
+                {continueButtonLabel}
+              </button>
             </div>
           </div>
-        ) : null}
-        {isPayLaterNoticeOpen ? (
-          <div className="modal" data-open="true">
-            <div className="modal-backdrop" onClick={() => setIsPayLaterNoticeOpen(false)} aria-hidden="true" />
-            <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="pay-later-title">
-              <h2 id="pay-later-title" className="modal-title">
-                Pagamento na clínica
-              </h2>
-              <div className="modal-body">
-                Seu agendamento foi criado com sucesso. Conclua o pagamento no dia do atendimento.
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="modal-button" onClick={handleConfirmPayLaterNotice}>
-                  Ver meus agendamentos
-                </button>
-                <button type="button" className="modal-button secondary" onClick={() => setIsPayLaterNoticeOpen(false)}>
-                  Fechar
-                </button>
-              </div>
+        </section>
+      ) : null}
+
+      {hasSummary ? (
+        <div className={styles.summaryBar} data-visible={hasSummary ? 'true' : 'false'} ref={summaryRef}>
+          <div className={styles.summaryDetails}>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Tipo</span>
+              <span className={styles.summaryValue}>{summaryData?.typeName}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Técnica</span>
+              <span className={styles.summaryValue}>{summaryData?.techniqueName}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Valor</span>
+              <span className={styles.summaryValue}>{summaryData?.priceLabel}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Duração</span>
+              <span className={styles.summaryValue}>{summaryData?.durationLabel}</span>
+            </div>
+            <div className={`${styles.summaryItem} ${styles.summaryItemFull}`}>
+              <span className={styles.summaryLabel}>Horário</span>
+              <span className={styles.summaryValue}>
+                {summaryData?.dateLabel} às {summaryData?.timeLabel}
+              </span>
             </div>
           </div>
-        ) : null}
-        {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}
-      </div>
-    </main>
+          <button
+            type="button"
+            className={styles.summaryAction}
+            onClick={handleContinue}
+            disabled={continueButtonDisabled}
+          >
+            {continueButtonLabel}
+          </button>
+        </div>
+      ) : null}
+
+      {summarySnapshot ? (
+        <div className={styles.modal} data-open={isSummaryModalOpen ? 'true' : 'false'}>
+          <div className={styles.modalBackdrop} onClick={closeSummaryModal} aria-hidden="true" />
+          <div className={styles.modalContent} role="dialog" aria-modal="true" aria-labelledby="appointment-summary-title">
+            <h2 id="appointment-summary-title" className={styles.modalTitle}>
+              Resumo do agendamento
+            </h2>
+            <div className={styles.modalBody}>
+              <div className={styles.modalLine}>
+                <span>Tipo</span>
+                <strong>{summarySnapshot.typeName}</strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Técnica</span>
+                <strong>{summarySnapshot.techniqueName}</strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Horário</span>
+                <strong>
+                  {summarySnapshot.dateLabel} às {summarySnapshot.timeLabel}
+                </strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Duração</span>
+                <strong>{summarySnapshot.durationLabel}</strong>
+              </div>
+              <div className={styles.modalLine}>
+                <span>Valor</span>
+                <strong>{summarySnapshot.priceLabel}</strong>
+              </div>
+              {summarySnapshot.depositCents > 0 ? (
+                <div className={styles.modalLine}>
+                  <span>Sinal</span>
+                  <strong>{summarySnapshot.depositLabel}</strong>
+                </div>
+              ) : null}
+            </div>
+            {modalError ? <div className={`${styles.status} ${styles.statusError}`}>{modalError}</div> : null}
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalButton}
+                onClick={handlePayDeposit}
+                disabled={isProcessingPayment || !depositAvailable}
+              >
+                {isProcessingPayment ? 'Processando…' : 'Pagar sinal'}
+              </button>
+              <button
+                type="button"
+                className={`${styles.modalButton} ${styles.modalButtonSecondary}`}
+                onClick={handlePayLater}
+                disabled={isProcessingPayment}
+              >
+                Pagar depois
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isPayLaterNoticeOpen ? (
+        <div className={styles.modal} data-open="true">
+          <div className={styles.modalBackdrop} onClick={() => setIsPayLaterNoticeOpen(false)} aria-hidden="true" />
+          <div className={styles.modalContent} role="dialog" aria-modal="true" aria-labelledby="pay-later-title">
+            <h2 id="pay-later-title" className={styles.modalTitle}>
+              Pagamento na clínica
+            </h2>
+            <div className={styles.modalBody}>
+              Seu agendamento foi criado com sucesso. Conclua o pagamento no dia do atendimento.
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.modalButton} onClick={handleConfirmPayLaterNotice}>
+                Ver meus agendamentos
+              </button>
+              <button
+                type="button"
+                className={`${styles.modalButton} ${styles.modalButtonSecondary}`}
+                onClick={() => setIsPayLaterNoticeOpen(false)}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}
+    </ProcedimentoWrapper>
   )
 }
 

@@ -10,6 +10,12 @@ import {
   DEFAULT_TIMEZONE,
   type AvailabilityAppointment,
 } from '@/lib/availability'
+import {
+  ClientGlassPanel,
+  ClientPageHeader,
+  ClientPageShell,
+  ClientSection,
+} from '@/components/client/ClientPageLayout'
 
 import styles from './agendamentos.module.css'
 
@@ -1145,207 +1151,191 @@ export default function MyAppointments() {
     setCancelError(null)
   }
 
-    return (
-      <main className={`client-hero-wrapper ${heroReady ? 'client-hero-ready' : ''} ${styles.wrapper}`}>
-        <div className="page">
-          <section className="center">
-            <div className="stack">
-              <header>
-                <svg
-                  aria-hidden="true"
-                  className="diamond"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
+  return (
+      <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
+        <ClientSection>
+          <ClientPageHeader
+            title="Meus agendamentos"
+            subtitle="Veja seus horários ativos e históricos"
+            subtitleClassName={styles.subtitle}
+          />
+
+          <ClientGlassPanel label="STATUS">
+            <div className="grid tipo-grid" role="group" aria-label="Filtro de agendamentos">
+              {statusCards.map((card) => (
+                <button
+                  key={card.key}
+                  type="button"
+                  className="card"
+                  data-active={selectedCategory === card.key ? 'true' : 'false'}
+                  onClick={() => handleCategorySelect(card.key)}
                 >
-                  <path d="M12 3l4 4-4 4-4-4 4-4Z" />
-                  <path d="M12 13l4 4-4 4-4-4 4-4Z" />
-                </svg>
-                <h1>Meus agendamentos</h1>
-                <p className={styles.subtitle}>Veja seus horários ativos e históricos</p>
-              </header>
-
-              <div className="glass">
-                <div className="label">STATUS</div>
-
-                <div className="grid tipo-grid" role="group" aria-label="Filtro de agendamentos">
-                  {statusCards.map((card) => (
-                    <button
-                      key={card.key}
-                      type="button"
-                      className="card"
-                      data-active={selectedCategory === card.key ? 'true' : 'false'}
-                      onClick={() => handleCategorySelect(card.key)}
-                    >
-                      <div className="card-inner">
-                        <LashIcon />
-                        <span>{card.title}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
-
-              {selectedCategory ? (
-                <div ref={resultsRef} className={`${styles.glass} ${styles.resultsCard}`}>
-                  {loading ? (
-                    <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
-                  ) : error ? (
-                    <div className={`${styles.stateCard} ${styles.stateError}`}>{error}</div>
-                  ) : !hasAppointments ? (
-                    <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
-                      <p>Você ainda não tem agendamentos cadastrados.</p>
-                      <span className={styles.stateHint}>Agende um horário para vê-lo aqui.</span>
-                    </div>
-                  ) : filteredAppointments.length === 0 ? (
-                    <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
-                      <p>{statusEmptyMessages[selectedCategory]}</p>
-                      <span className={styles.stateHint}>Altere o filtro para ver outros status.</span>
-                    </div>
-                  ) : (
-                    <>
-                      {selectedCategory === 'concluidos' && filteredAppointments.length > 0 ? (
-                        <div className={styles.summaryGrid}>
-                          <div className={styles.summaryCard}>
-                            <div className={styles.summaryLabel}>Cancelados</div>
-                            <div className={styles.summaryValue}>{completionSummary.canceledCount}</div>
-                          </div>
-                          <div className={styles.summaryCard}>
-                            <div className={styles.summaryLabel}>Finalizados</div>
-                            <div className={styles.summaryValue}>{completionSummary.completedCount}</div>
-                          </div>
-                          <div className={styles.summaryCard}>
-                            <div className={styles.summaryLabel}>Valor total finalizado</div>
-                            <div className={styles.summaryValue}>{toCurrency(completionSummary.totalCompletedValue)}</div>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className={styles.cards}>
-                        {paginatedAppointments.map((appointment) => {
-                          const statusLabel = statusLabels[appointment.status] ?? appointment.status
-                          const statusClass =
-                            styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
-                            styles.statusDefault
-                          const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
-                          const showPay = canShowPay(appointment)
-                          const showCancel = canShowCancel(appointment.status)
-                          const showEdit = canShowEdit(appointment)
-                          const actions = [showPay, showEdit, showCancel].filter(Boolean)
-                          const shouldShowPayError = payError && lastPayAttemptId === appointment.id
-
-                          return (
-                            <article key={appointment.id} className={styles.card}>
-                              <div className={styles.cardHeader}>
-                                <div className={styles.cardInfo}>
-                                  <div className={styles.serviceType}>{appointment.serviceType}</div>
-                                  {appointment.serviceTechnique ? (
-                                    <div className={styles.serviceTechnique}>{appointment.serviceTechnique}</div>
-                                  ) : null}
-                                </div>
-                                <span className={`${styles.status} ${statusClass}`}>{statusLabel}</span>
-                              </div>
-
-                              <div className={styles.cardBody}>
-                                <div className={styles.detail}>
-                                  <div className={styles.detailLabel}>Data</div>
-                                  <div className={styles.detailValue}>{formatDate(appointment.startsAt)}</div>
-                                </div>
-                                <div className={styles.detail}>
-                                  <div className={styles.detailLabel}>Horário</div>
-                                  <div className={styles.detailValue}>{formatTime(appointment.startsAt)}</div>
-                                </div>
-                                <div className={styles.detail}>
-                                  <div className={styles.detailLabel}>Valor</div>
-                                  <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
-                                </div>
-                                <div className={styles.detail}>
-                                  <div className={styles.detailLabel}>Sinal</div>
-                                  <div className={styles.detailValue}>
-                                    {appointment.depositValue > 0
-                                      ? `${toCurrency(appointment.depositValue)} (${depositLabel})`
-                                      : 'Não necessário'}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {actions.length > 0 && (
-                                <div className={styles.cardFooter}>
-                                  {showPay && (
-                                    <button
-                                      type="button"
-                                      className={`${styles.btn} ${styles.btnPay}`}
-                                      onClick={() => {
-                                        void startDepositPayment(appointment.id)
-                                      }}
-                                      disabled={payingApptId === appointment.id}
-                                    >
-                                      {payingApptId === appointment.id ? 'Abrindo…' : '💳 Pagar'}
-                                    </button>
-                                  )}
-                                  {showEdit && (
-                                    <button
-                                      type="button"
-                                      className={`${styles.btn} ${styles.btnEdit}`}
-                                      onClick={() => handleEditRequest(appointment)}
-                                    >
-                                      ✎ Alterar
-                                    </button>
-                                  )}
-                                  {showCancel && (
-                                    <button
-                                      type="button"
-                                      className={`${styles.btn} ${styles.btnCancel}`}
-                                      onClick={() => handleCancelRequest(appointment)}
-                                      disabled={cancelingId === appointment.id}
-                                    >
-                                      {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-
-                              {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
-                            </article>
-                          )
-                        })}
-                      </div>
-
-                      {totalPages > 1 ? (
-                        <div className={styles.pagination} role="navigation" aria-label="Paginação de agendamentos">
-                          <div className={styles.paginationRow}>
-                            <button
-                              type="button"
-                              className={styles.paginationButton}
-                              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                              disabled={currentPage === 1}
-                            >
-                              ← Página anterior
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.paginationButton}
-                              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                              disabled={currentPage === totalPages}
-                            >
-                              Próxima página →
-                            </button>
-                          </div>
-                          <span className={styles.paginationInfo}>
-                            {currentPage} de {totalPages}
-                          </span>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              ) : null}
+                  <div className="card-inner">
+                    <LashIcon />
+                    <span>{card.title}</span>
+                  </div>
+                </button>
+              ))}
             </div>
-          </section>
-        </div>
+          </ClientGlassPanel>
+
+          <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+
+          {selectedCategory ? (
+            <ClientGlassPanel ref={resultsRef} className={styles.resultsCard}>
+              {loading ? (
+                <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
+              ) : error ? (
+                <div className={`${styles.stateCard} ${styles.stateError}`}>{error}</div>
+              ) : !hasAppointments ? (
+                <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
+                  <p>Você ainda não tem agendamentos cadastrados.</p>
+                  <span className={styles.stateHint}>Agende um horário para vê-lo aqui.</span>
+                </div>
+              ) : filteredAppointments.length === 0 ? (
+                <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
+                  <p>{statusEmptyMessages[selectedCategory]}</p>
+                  <span className={styles.stateHint}>Altere o filtro para ver outros status.</span>
+                </div>
+              ) : (
+                <>
+                  {selectedCategory === 'concluidos' && filteredAppointments.length > 0 ? (
+                    <div className={styles.summaryGrid}>
+                      <div className={styles.summaryCard}>
+                        <div className={styles.summaryLabel}>Cancelados</div>
+                        <div className={styles.summaryValue}>{completionSummary.canceledCount}</div>
+                      </div>
+                      <div className={styles.summaryCard}>
+                        <div className={styles.summaryLabel}>Finalizados</div>
+                        <div className={styles.summaryValue}>{completionSummary.completedCount}</div>
+                      </div>
+                      <div className={styles.summaryCard}>
+                        <div className={styles.summaryLabel}>Valor total finalizado</div>
+                        <div className={styles.summaryValue}>{toCurrency(completionSummary.totalCompletedValue)}</div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className={styles.cards}>
+                    {paginatedAppointments.map((appointment) => {
+                      const statusLabel = statusLabels[appointment.status] ?? appointment.status
+                      const statusClass =
+                        styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
+                        styles.statusDefault
+                      const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
+                      const showPay = canShowPay(appointment)
+                      const showCancel = canShowCancel(appointment.status)
+                      const showEdit = canShowEdit(appointment)
+                      const actions = [showPay, showEdit, showCancel].filter(Boolean)
+                      const shouldShowPayError = payError && lastPayAttemptId === appointment.id
+
+                      return (
+                        <article key={appointment.id} className={styles.card}>
+                          <div className={styles.cardHeader}>
+                            <div className={styles.cardInfo}>
+                              <div className={styles.serviceType}>{appointment.serviceType}</div>
+                              {appointment.serviceTechnique ? (
+                                <div className={styles.serviceTechnique}>{appointment.serviceTechnique}</div>
+                              ) : null}
+                            </div>
+                            <span className={`${styles.status} ${statusClass}`}>{statusLabel}</span>
+                          </div>
+
+                          <div className={styles.cardBody}>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Data</div>
+                              <div className={styles.detailValue}>{formatDate(appointment.startsAt)}</div>
+                            </div>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Horário</div>
+                              <div className={styles.detailValue}>{formatTime(appointment.startsAt)}</div>
+                            </div>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Valor</div>
+                              <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
+                            </div>
+                            <div className={styles.detail}>
+                              <div className={styles.detailLabel}>Sinal</div>
+                              <div className={styles.detailValue}>
+                                {appointment.depositValue > 0
+                                  ? `${toCurrency(appointment.depositValue)} (${depositLabel})`
+                                  : 'Não necessário'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {actions.length > 0 && (
+                            <div className={styles.cardFooter}>
+                              {showPay && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnPay}`}
+                                  onClick={() => {
+                                    void startDepositPayment(appointment.id)
+                                  }}
+                                  disabled={payingApptId === appointment.id}
+                                >
+                                  {payingApptId === appointment.id ? 'Abrindo…' : '💳 Pagar'}
+                                </button>
+                              )}
+                              {showEdit && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnEdit}`}
+                                  onClick={() => handleEditRequest(appointment)}
+                                >
+                                  ✎ Alterar
+                                </button>
+                              )}
+                              {showCancel && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnCancel}`}
+                                  onClick={() => handleCancelRequest(appointment)}
+                                  disabled={cancelingId === appointment.id}
+                                >
+                                  {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
+                        </article>
+                      )
+                    })}
+                  </div>
+
+                  {totalPages > 1 ? (
+                    <div className={styles.pagination} role="navigation" aria-label="Paginação de agendamentos">
+                      <div className={styles.paginationRow}>
+                        <button
+                          type="button"
+                          className={styles.paginationButton}
+                          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1}
+                        >
+                          ← Página anterior
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.paginationButton}
+                          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage === totalPages}
+                        >
+                          Próxima página →
+                        </button>
+                      </div>
+                      <span className={styles.paginationInfo}>
+                        {currentPage} de {totalPages}
+                      </span>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </ClientGlassPanel>
+          ) : null}
+        </ClientSection>
 
         <ConfirmCancelModal
           dialog={cancelDialog}

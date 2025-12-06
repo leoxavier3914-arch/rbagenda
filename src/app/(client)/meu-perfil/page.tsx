@@ -12,6 +12,7 @@ import {
   useState,
 } from 'react'
 import { useRouter } from 'next/navigation'
+import styles from './meu-perfil.module.css'
 import type { Session } from '@supabase/supabase-js'
 
 import { supabase } from '@/lib/db'
@@ -268,994 +269,19 @@ export default function MeuPerfil() {
   useEffect(() => {
     const root = document.documentElement
     root.classList.add('force-motion')
+
     return () => {
       root.classList.remove('force-motion')
     }
   }, [])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    try {
-      const stored = window.localStorage.getItem(AVATAR_STORAGE_KEY)
-      if (stored) {
-        setAvatarDataUrl(stored)
-      }
-    } catch (storageError) {
-      console.warn('Não foi possível carregar o avatar salvo', storageError)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!canEditAppearance) {
-      setIsPaletteOpen(false)
-    }
-  }, [canEditAppearance])
-
-  useEffect(() => {
-    let active = true
-
-    async function loadProfile() {
-      setLoading(true)
-      setError(null)
-
-      const { data: sess, error: sessionError } = await supabase.auth.getSession()
-      if (!active) return
-
-      if (sessionError) {
-        setError('Não foi possível carregar seus dados. Tente novamente.')
-        setLoading(false)
-        return
-      }
-
-      const currentSession = sess.session
-
-      if (!currentSession) {
-        router.replace('/login')
-        return
-      }
-
-      setSession(currentSession)
-
-      const { data: me, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name, whatsapp, email, birth_date, role')
-        .eq('id', currentSession.user.id)
-        .maybeSingle()
-
-      if (!active) return
-
-      if (profileError) {
-        setError('Não foi possível carregar seus dados. Tente novamente.')
-        setProfile(null)
-        setLoading(false)
-        return
-      }
-
-      const role: Profile['role'] =
-        me?.role === 'admin' || me?.role === 'adminsuper' || me?.role === 'adminmaster'
-          ? me.role
-          : 'client'
-
-      const resolvedProfile: Profile = {
-        full_name: me?.full_name ?? null,
-        whatsapp: me?.whatsapp ?? null,
-        email: me?.email ?? currentSession.user.email ?? null,
-        birth_date: me?.birth_date ?? null,
-        role,
-      }
-
-      setProfile(resolvedProfile)
-      setFullName(resolvedProfile.full_name ?? '')
-      setWhatsapp(resolvedProfile.whatsapp ?? '')
-      setEmail(resolvedProfile.email ?? '')
-      setBirthDate(resolvedProfile.birth_date ?? '')
-      setLoading(false)
-    }
-
-    void loadProfile()
-
-    return () => {
-      active = false
-    }
-  }, [router])
-
-  const applyCardTop = useCallback(
-    (value: string) => {
-      const normalized = normalizeHex(value)
-      commitVar('--inner-top', normalized)
-      setTheme((prev) => ({ ...prev, innerTop: normalized }))
-      if (cardTopHexRef.current) {
-        cardTopHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyCardBottom = useCallback(
-    (value: string) => {
-      const normalized = normalizeHex(value)
-      commitVar('--inner-bottom', normalized)
-      setTheme((prev) => ({ ...prev, innerBottom: normalized }))
-      if (cardBottomHexRef.current) {
-        cardBottomHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyCardBorder = useCallback(
-    (hex: string, alpha: number) => {
-      const normalized = normalizeHex(hex)
-      const clamped = clampAlpha(alpha)
-      commitVar('--card-stroke', rgbaFromHexAlpha(normalized, clamped))
-      setTheme((prev) => ({
-        ...prev,
-        cardBorderHex: normalized,
-        cardBorderAlpha: clamped,
-      }))
-      if (cardBorderHexRef.current) {
-        cardBorderHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyBackgroundTop = useCallback(
-    (value: string) => {
-      const normalized = normalizeHex(value)
-      commitVar('--bg-top', normalized)
-      setTheme((prev) => ({ ...prev, bgTop: normalized }))
-      if (bgTopHexRef.current) {
-        bgTopHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyBackgroundBottom = useCallback(
-    (value: string) => {
-      const normalized = normalizeHex(value)
-      commitVar('--bg-bottom', normalized)
-      setTheme((prev) => ({ ...prev, bgBottom: normalized }))
-      if (bgBottomHexRef.current) {
-        bgBottomHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyGlassBorder = useCallback(
-    (hex: string, alpha: number) => {
-      const normalized = normalizeHex(hex)
-      const clamped = clampAlpha(alpha)
-      commitVar('--glass-stroke', rgbaFromHexAlpha(normalized, clamped))
-      setTheme((prev) => ({
-        ...prev,
-        glassBorderHex: normalized,
-        glassBorderAlpha: clamped,
-      }))
-      if (glassBorderHexRef.current) {
-        glassBorderHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyGlass = useCallback(
-    (hex: string, alpha: number) => {
-      const normalized = normalizeHex(hex)
-      const clamped = clampAlpha(alpha)
-      commitVar('--glass', rgbaFromHexAlpha(normalized, clamped))
-      setTheme((prev) => ({
-        ...prev,
-        glassColor: normalized,
-        glassAlpha: clamped,
-      }))
-      if (glassHexRef.current) {
-        glassHexRef.current.value = normalized
-      }
-    },
-    [commitVar],
-  )
-
-  const applyBubbleDark = useCallback(
-    (hex: string) => {
-      const normalized = normalizeHex(hex)
-      commitVar('--dark', normalized)
-      setTheme((prev) => ({ ...prev, bubbleDark: normalized }))
-      if (bubbleDarkHexRef.current) {
-        bubbleDarkHexRef.current.value = normalized
-      }
-      refreshLavaPalette()
-    },
-    [commitVar, refreshLavaPalette],
-  )
-
-  const applyBubbleLight = useCallback(
-    (hex: string) => {
-      const normalized = normalizeHex(hex)
-      commitVar('--light', normalized)
-      setTheme((prev) => ({ ...prev, bubbleLight: normalized }))
-      if (bubbleLightHexRef.current) {
-        bubbleLightHexRef.current.value = normalized
-      }
-      refreshLavaPalette()
-    },
-    [commitVar, refreshLavaPalette],
-  )
-
-  const applyBubbleAlpha = useCallback(
-    (minValue: number, maxValue: number) => {
-      const min = clampAlpha(minValue)
-      const max = clampAlpha(maxValue)
-      const resolvedMin = max < min ? max : min
-      const resolvedMax = max < min ? min : max
-      commitVar('--lava-alpha-min', String(resolvedMin))
-      commitVar('--lava-alpha-max', String(resolvedMax))
-      setTheme((prev) => ({
-        ...prev,
-        bubbleAlphaMin: resolvedMin,
-        bubbleAlphaMax: resolvedMax,
-      }))
-      refreshLavaPalette()
-    },
-    [commitVar, refreshLavaPalette],
-  )
-
-  const handlePaletteSwatch = useCallback(
-    (css: string) => {
-      const rules = css
-        .split(';')
-        .map((rule) => rule.trim())
-        .filter(Boolean)
-      rules.forEach((rule) => {
-        const [prop, value] = rule.split(':')
-        if (prop && value) {
-          commitVar(prop.trim(), value.trim())
-        }
-      })
-      syncThemeFromComputed()
-      refreshLavaPalette()
-    },
-    [commitVar, refreshLavaPalette, syncThemeFromComputed],
-  )
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setIsAvatarMenuOpen(false)
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result
-      if (typeof result === 'string') {
-        setAvatarDataUrl(result)
-        try {
-          window.localStorage.setItem(AVATAR_STORAGE_KEY, result)
-        } catch (storageError) {
-          console.warn('Não foi possível salvar o avatar localmente', storageError)
-        }
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleRemoveAvatar = () => {
-    setAvatarDataUrl('')
-    setIsAvatarMenuOpen(false)
-    try {
-      window.localStorage.removeItem(AVATAR_STORAGE_KEY)
-    } catch (storageError) {
-      console.warn('Não foi possível remover o avatar local', storageError)
-    }
-  }
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!isAvatarMenuOpen) return
-
-      const target = event.target as Node
-      if (
-        avatarBoxRef.current?.contains(target) ||
-        avatarActionsRef.current?.contains(target)
-      ) {
-        return
-      }
-      setIsAvatarMenuOpen(false)
-    }
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsAvatarMenuOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('keydown', handleEscape)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isAvatarMenuOpen])
-
-  const toggleAvatarMenu = () => {
-    setIsAvatarMenuOpen((prev) => !prev)
-  }
-
-  const handleAvatarKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      toggleAvatarMenu()
-    }
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (saving) return
-
-    if (!session?.user?.id) {
-      setError('Sua sessão expirou. Entre novamente para atualizar seus dados.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
-
-    const userId = session.user.id
-    const normalizedEmail = email.trim()
-    const updates = {
-      full_name: fullName.trim() || null,
-      whatsapp: whatsapp.trim() || null,
-      email: normalizedEmail || null,
-      birth_date: birthDate || null,
-    }
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId)
-
-    if (profileError) {
-      setError('Não foi possível atualizar seus dados. Tente novamente.')
-      setSaving(false)
-      return
-    }
-
-    const authPayload: { email?: string; password?: string } = {}
-    if (normalizedEmail && normalizedEmail !== session.user.email) {
-      authPayload.email = normalizedEmail
-    }
-    if (password) {
-      authPayload.password = password
-    }
-
-    if (Object.keys(authPayload).length > 0) {
-      const { error: authError } = await supabase.auth.updateUser(authPayload)
-      if (authError) {
-        setError(
-          authError.message ||
-            'Não foi possível atualizar seus dados de acesso.',
-        )
-        setSaving(false)
-        return
-      }
-    }
-
-    const { data: refreshed } = await supabase.auth.getSession()
-    if (refreshed.session) {
-      setSession(refreshed.session)
-    }
-
-    const updatedProfile: Profile = {
-      full_name: updates.full_name,
-      whatsapp: updates.whatsapp,
-      email: updates.email,
-      birth_date: updates.birth_date,
-      role: profile?.role ?? 'client',
-    }
-
-    setProfile(updatedProfile)
-    setPassword('')
-    setSuccess('Dados atualizados com sucesso.')
-    setSaving(false)
-  }
-
-  const handleSignOut = async () => {
-    if (signingOut) return
-
-    setSigningOut(true)
-    setSignOutError(null)
-
-    const { error: signOutError } = await supabase.auth.signOut()
-
-    if (signOutError) {
-      setSignOutError(
-        signOutError.message ||
-          'Não foi possível encerrar a sessão. Tente novamente.',
-      )
-      setSigningOut(false)
-      return
-    }
-
-    router.replace('/login')
-    setSigningOut(false)
-  }
-
-  const resolvedName = fullName.trim() || profile?.full_name?.trim() || ''
-
-  const handleCardTopColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyCardTop(event.target.value)
-  }
-
-  const handleCardBottomColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyCardBottom(event.target.value)
-  }
-
-  const handleCardBorderColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyCardBorder(event.target.value, theme.cardBorderAlpha)
-  }
-
-  const handleCardBorderAlpha = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = clampAlpha(Number(event.target.value))
-    applyCardBorder(theme.cardBorderHex, value)
-  }
-
-  const handleBackgroundTopColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyBackgroundTop(event.target.value)
-  }
-
-  const handleBackgroundBottomColor = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    applyBackgroundBottom(event.target.value)
-  }
-
-  const handleGlassBorderColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyGlassBorder(event.target.value, theme.glassBorderAlpha)
-  }
-
-  const handleGlassBorderAlpha = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = clampAlpha(Number(event.target.value))
-    applyGlassBorder(theme.glassBorderHex, value)
-  }
-
-  const handleGlassColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyGlass(event.target.value, theme.glassAlpha)
-  }
-
-  const handleGlassAlpha = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = clampAlpha(Number(event.target.value))
-    applyGlass(theme.glassColor, value)
-  }
-
-  const handleBubbleDarkColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyBubbleDark(event.target.value)
-  }
-
-  const handleBubbleLightColor = (event: ChangeEvent<HTMLInputElement>) => {
-    applyBubbleLight(event.target.value)
-  }
-
-  const handleBubbleAlphaMin = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = clampAlpha(Number(event.target.value))
-    const nextMax = Math.max(value, theme.bubbleAlphaMax)
-    applyBubbleAlpha(value, nextMax)
-  }
-
-  const handleBubbleAlphaMax = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = clampAlpha(Number(event.target.value))
-    const nextMin = Math.min(value, theme.bubbleAlphaMin)
-    applyBubbleAlpha(nextMin, value)
-  }
-
-  const applyHexFromRef = (
-    ref: RefObject<HTMLInputElement | null>,
-    apply: (value: string) => void,
-  ) => {
-    const value = ref.current?.value?.trim()
-    if (!value || !isHex(value)) return
-    apply(value)
-  }
-
   return (
-    <>
-      <style jsx>{`
-        .texture {
-          position: fixed;
-          inset: -20%;
-          z-index: 0;
-          pointer-events: none;
-          opacity: 0.22;
-          mix-blend-mode: multiply;
-        }
-        .texture svg {
-          width: 100%;
-          height: 100%;
-          display: block;
-        }
-        .lamp {
-          position: fixed;
-          inset: -12vh -12vw;
-          z-index: 0;
-          pointer-events: none;
-          overflow: hidden;
-        }
-        .lava {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          display: block;
-        }
-        .lava.dark {
-          mix-blend-mode: multiply;
-          filter: blur(26px) contrast(1.05);
-          background: radial-gradient(circle, var(--dark), transparent 70%);
-        }
-        .lava.light {
-          mix-blend-mode: screen;
-          filter: blur(30px) contrast(1.04);
-          background: radial-gradient(circle, var(--light), transparent 70%);
-        }
-        :global(.meu-perfil-page .reveal-seq) {
-          opacity: 0;
-          transform: translateY(12px);
-          transition: opacity 0.28s ease, transform 0.32s ease;
-          pointer-events: none;
-        }
-        :global(.meu-perfil-page .reveal-seq[data-visible='true']) {
-          opacity: 1;
-          transform: none;
-          pointer-events: auto;
-        }
-        :global(.meu-perfil-page .reveal-title) {
-          transition-delay: 0.05s;
-        }
-        :global(.meu-perfil-page .reveal-description) {
-          transition-delay: 0.16s;
-        }
-        :global(.meu-perfil-page .reveal-content) {
-          transition-delay: 0.26s;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          :global(.meu-perfil-page .reveal-seq) {
-            transition: none;
-            transform: none;
-            opacity: 1;
-            pointer-events: auto;
-          }
-        }
-        .page {
-          position: relative;
-          min-height: 100svh;
-          z-index: 1;
-        }
-        :global(body.procedimento-screen .meu-perfil-page) {
-          padding-top: calc(24px + env(safe-area-inset-top));
-        }
-        .center {
-          min-height: 100svh;
-          display: grid;
-          place-items: start center;
-          align-content: start;
-          justify-content: center;
-          padding: 0 18px calc(18px + env(safe-area-inset-bottom));
-          margin-top: 0;
-          position: relative;
-        }
-        .stack {
-          display: grid;
-          justify-items: center;
-          gap: clamp(18px, 4vw, 34px);
-        }
-        @media (max-width: 640px) {
-          .center {
-            margin-top: 0;
-          }
-          .stack {
-            gap: clamp(8px, 3vw, 14px);
-          }
-        }
-        header {
-          text-align: center;
-        }
-        h1 {
-          font-family: Fraunces, 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          font-size: clamp(30px, 5.4vw, 48px);
-          line-height: 1.06;
-          margin: 0;
-          letter-spacing: -0.01em;
-        }
-        h1 .muted2 {
-          color: var(--muted-2);
-          font-style: normal;
-        }
-        .glass {
-          width: clamp(320px, 92vw, 880px);
-          display: inline-block;
-          background: var(--glass);
-          background-image: linear-gradient(
-              180deg,
-              rgba(255, 255, 255, 0.28),
-              rgba(255, 255, 255, 0) 22%
-            ),
-            radial-gradient(
-              120% 120% at 50% -10%,
-              rgba(255, 255, 255, 0.14),
-              transparent 60%
-            );
-          border: 5px solid var(--glass-stroke);
-          border-radius: var(--radius-outer);
-          box-shadow: var(--shadow-xl);
-          padding: clamp(14px, 2.6vw, 22px);
-        }
-        @supports (backdrop-filter: blur(18px)) or
-          (-webkit-backdrop-filter: blur(18px)) {
-          .glass {
-            backdrop-filter: blur(18px) saturate(150%);
-            -webkit-backdrop-filter: blur(18px) saturate(150%);
-          }
-        }
-        .label {
-          text-align: center;
-          font-size: 11px;
-          letter-spacing: 0.22em;
-          color: var(--muted);
-          margin-bottom: 12px;
-        }
-        .profile-grid {
-          display: grid;
-          grid-template-columns: 320px 1fr;
-          gap: clamp(16px, 3vw, 26px);
-          align-items: start;
-        }
-        .profile-grid .avatar-column {
-          display: grid;
-          justify-items: center;
-          gap: 12px;
-        }
-        .profile-grid .fields-column {
-          border-left: 1px solid rgba(255, 255, 255, 0.6);
-          padding-left: clamp(16px, 3vw, 24px);
-        }
-        @media (max-width: 880px) {
-          .profile-grid {
-            grid-template-columns: 1fr;
-          }
-          .profile-grid .fields-column {
-            border-left: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.6);
-            padding-left: 0;
-            padding-top: clamp(16px, 3vw, 24px);
-            margin-top: clamp(6px, 2vw, 12px);
-          }
-        }
-        .avatar-wrap {
-          display: grid;
-          place-items: center;
-          gap: 12px;
-        }
-        .avatar {
-          width: 192px;
-          height: 192px;
-          border-radius: 50%;
-          border: 5px solid #ffffff;
-          background: linear-gradient(
-            180deg,
-            var(--inner-top),
-            var(--inner-bottom)
-          );
-          background-clip: padding-box;
-          background-origin: border-box;
-          box-shadow: 0 14px 24px rgba(28, 75, 56, 0.14),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-          overflow: hidden;
-          position: relative;
-          cursor: pointer;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .avatar:focus-visible {
-          outline: 2px solid rgba(31, 69, 55, 0.35);
-          outline-offset: 4px;
-        }
-        .avatar:hover {
-          box-shadow: 0 12px 26px rgba(28, 75, 56, 0.18),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
-        .avatar img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-        .avatar .placeholder {
-          position: absolute;
-          inset: 0;
-          display: grid;
-          place-items: center;
-          color: var(--muted);
-        }
-        .avatar-actions-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            180deg,
-            rgba(0, 0, 0, 0.16),
-            rgba(0, 0, 0, 0.32)
-          );
-          display: none;
-          align-items: center;
-          justify-content: center;
-          padding: 14px;
-        }
-        .avatar-actions-overlay[data-open='true'] {
-          display: flex;
-        }
-        .avatar-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          width: 100%;
-          max-width: 160px;
-        }
-        .avatar-actions .btn {
-          width: 100%;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: #1c4b38;
-        }
-        .btn {
-          padding: 8px 12px;
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          background: rgba(255, 255, 255, 0.8);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s ease;
-        }
-        .btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .btn:active {
-          transform: translateY(1px);
-        }
-        .btn.primary {
-          background: rgba(31, 69, 55, 0.9);
-          color: #f8fbf8;
-          border-color: rgba(31, 69, 55, 0.2);
-        }
-        .btn.secondary {
-          background: rgba(255, 255, 255, 0.75);
-        }
-        .fields {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-        }
-        @media (max-width: 640px) {
-          .fields {
-            grid-template-columns: 1fr;
-          }
-        }
-        .field {
-          display: grid;
-          gap: 6px;
-        }
-        .field label {
-          font-size: 12px;
-          letter-spacing: 0.14em;
-          color: var(--muted);
-          text-transform: uppercase;
-        }
-        .input {
-          width: 100%;
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          background: rgba(255, 255, 255, 0.9);
-          padding: 10px 12px;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
-            0 8px 18px rgba(28, 75, 56, 0.06);
-          font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto,
-            Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-          font-size: 15px;
-          color: var(--ink);
-        }
-        .actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          justify-content: center;
-          margin-top: 14px;
-        }
-        .status-message {
-          margin-top: 16px;
-          text-align: center;
-          font-size: 14px;
-          color: rgba(24, 63, 46, 0.8);
-        }
-        .alert {
-          margin-top: 12px;
-          border-radius: 16px;
-          padding: 12px 16px;
-          font-size: 14px;
-        }
-        .alert.error {
-          border: 1px solid rgba(220, 38, 38, 0.2);
-          background: rgba(254, 226, 226, 0.8);
-          color: #991b1b;
-        }
-        .alert.success {
-          border: 1px solid rgba(47, 109, 79, 0.3);
-          background: rgba(247, 242, 231, 0.7);
-          color: #2f6d4f;
-        }
-        .profile-name {
-          margin: 6px 0 0;
-          text-align: center;
-          font-size: clamp(18px, 4.6vw, 22px);
-          font-weight: 600;
-          color: rgba(24, 63, 46, 0.9);
-          letter-spacing: 0.01em;
-        }
-        footer {
-          text-align: center;
-          font-size: 12px;
-          letter-spacing: 0.34em;
-          color: color-mix(in srgb, var(--ink) 74%, transparent);
-          border: none;
-          background: transparent;
-        }
-        #paletteBtn {
-          position: fixed;
-          bottom: 22px;
-          right: 22px;
-          z-index: 30;
-          width: 46px;
-          height: 46px;
-          border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.8);
-          background: rgba(255, 255, 255, 0.3);
-          backdrop-filter: blur(8px) saturate(160%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
-          cursor: pointer;
-          transition: 0.25s;
-        }
-        #paletteBtn:hover {
-          transform: scale(1.06);
-        }
-        #paletteBtn svg {
-          width: 22px;
-          height: 22px;
-          stroke: #183f2e;
-          opacity: 0.9;
-        }
-        #palettePanel {
-          position: fixed;
-          top: 0;
-          right: 0;
-          width: 300px;
-          height: 100%;
-          transform: translate3d(110%, 0, 0);
-          opacity: 0;
-          pointer-events: none;
-          will-change: transform, opacity;
-          overflow: hidden;
-          backdrop-filter: blur(18px) saturate(160%);
-          background: rgba(240, 245, 240, 0.68);
-          box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-          transition: transform 0.33s cubic-bezier(0.4, 0, 0.2, 1),
-            opacity 0.2s ease-out;
-          z-index: 29;
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-        #palettePanel.open {
-          transform: translate3d(0, 0, 0);
-          opacity: 1;
-          pointer-events: auto;
-        }
-        #panelScroll {
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-          height: 100%;
-          padding-bottom: 72px;
-        }
-        .pal-section {
-          border-top: 1px solid rgba(255, 255, 255, 0.6);
-          padding-top: 12px;
-          margin-top: 8px;
-        }
-        .pal-section:first-child {
-          border-top: none;
-          padding-top: 0;
-          margin-top: 0;
-        }
-        .pal-section h3 {
-          font-size: 13px;
-          margin: 0 0 8px;
-          color: #183f2e;
-        }
-        .pal-options {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .swatch {
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-        }
-        .row {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          margin: 6px 0;
-        }
-        .colorpicker {
-          flex: 1;
-        }
-        .range {
-          width: 100%;
-        }
-        .small {
-          font-size: 12px;
-          color: #2a4738;
-          opacity: 0.9;
-        }
-        .input-hex {
-          flex: 1;
-          min-width: 0;
-          border-radius: 10px;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          padding: 8px 10px;
-          background: rgba(255, 255, 255, 0.75);
-        }
-        .btn-mini {
-          padding: 6px 10px;
-          border-radius: 10px;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          background: rgba(255, 255, 255, 0.65);
-          backdrop-filter: blur(6px);
-          cursor: pointer;
-        }
-        .hr {
-          height: 1px;
-          background: rgba(0, 0, 0, 0.08);
-          margin: 6px 0;
-        }
-        #saveBtn {
-          position: absolute;
-          left: 16px;
-          right: 16px;
-          bottom: 16px;
-          height: 44px;
-          border-radius: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          background: rgba(255, 255, 255, 0.8);
-          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
-          font-weight: 600;
-          cursor: pointer;
-        }
-      `}</style>
-
-      <div className="page meu-perfil-page">
+    <main className={`client-hero-wrapper ${styles.wrapper}`}>
+      <div className="page">
         <section className="center" id="sectionPerfil" aria-label="Meu Perfil">
           <div className="stack">
             <header
-              className="reveal-seq reveal-title"
+              className={`${styles.revealSeq} ${styles.revealTitle}`}
               data-visible={revealStage >= REVEAL_STAGE.TITLE}
             >
               <h1>
@@ -1264,22 +290,22 @@ export default function MeuPerfil() {
             </header>
 
             <div
-              className="glass reveal-seq reveal-content"
+              className={`glass ${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
               aria-label="Dados do perfil"
               data-visible={revealStage >= REVEAL_STAGE.CONTENT}
             >
               <div
-                className="label reveal-seq reveal-description"
+                className={`label ${styles.revealSeq} ${styles.revealDescription}`}
                 data-visible={revealStage >= REVEAL_STAGE.DESCRIPTION}
               >
                 PERFIL
               </div>
               <form onSubmit={handleSubmit} className="profile-form">
-                <div className="profile-grid">
-                  <div className="avatar-column">
-                    <div className="avatar-wrap">
+                <div className={styles.profileGrid}>
+                  <div className={styles.avatarColumn}>
+                    <div className={styles.avatarWrap}>
                       <div
-                        className="avatar"
+                        className={styles.avatar}
                         id="avatarBox"
                         ref={avatarBoxRef}
                         onClick={toggleAvatarMenu}
@@ -1293,7 +319,7 @@ export default function MeuPerfil() {
                         {avatarDataUrl ? (
                           <img src={avatarDataUrl} alt="" title="" />
                         ) : (
-                          <div className="placeholder" aria-hidden="true">
+                          <div className={styles.avatarPlaceholder} aria-hidden="true">
                             <svg
                               width="56"
                               height="56"
@@ -1308,15 +334,15 @@ export default function MeuPerfil() {
                           </div>
                         )}
                         <div
-                          className="avatar-actions-overlay"
+                          className={styles.avatarActionsOverlay}
                           data-open={isAvatarMenuOpen}
                         >
                           <div
-                            className="avatar-actions"
+                            className={styles.avatarActions}
                             id="avatarActions"
                             ref={avatarActionsRef}
                           >
-                            <label className="btn">
+                            <label className={styles.btn}>
                               <input
                                 id="avatarInput"
                                 type="file"
@@ -1329,7 +355,7 @@ export default function MeuPerfil() {
                             </label>
                             <button
                               type="button"
-                              className="btn"
+                              className={styles.btn}
                               onClick={handleRemoveAvatar}
                             >
                               Remover foto
@@ -1338,18 +364,18 @@ export default function MeuPerfil() {
                         </div>
                       </div>
                       {resolvedName ? (
-                        <p className="profile-name">{resolvedName}</p>
+                        <p className={styles.profileName}>{resolvedName}</p>
                       ) : null}
                     </div>
                   </div>
 
-                  <div className="fields-column">
-                    <div className="fields">
-                      <div className="field" style={{ gridColumn: '1 / -1' }}>
+                  <div className={styles.fieldsColumn}>
+                    <div className={styles.fields}>
+                      <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
                         <label htmlFor="nome">Nome</label>
                         <input
                           id="nome"
-                          className="input"
+                          className={styles.input}
                           type="text"
                           placeholder="Seu nome"
                           value={fullName}
@@ -1358,11 +384,11 @@ export default function MeuPerfil() {
                           required
                         />
                       </div>
-                      <div className="field">
+                      <div className={styles.field}>
                         <label htmlFor="email">E-mail</label>
                         <input
                           id="email"
-                          className="input"
+                          className={styles.input}
                           type="email"
                           placeholder="voce@exemplo.com"
                           value={email}
@@ -1371,79 +397,76 @@ export default function MeuPerfil() {
                           required
                         />
                       </div>
-                      <div className="field">
+                      <div className={styles.field}>
                         <label htmlFor="nascimento">Data de nascimento</label>
                         <input
                           id="nascimento"
-                          className="input"
+                          className={styles.input}
                           type="date"
                           value={birthDate}
                           onChange={(event) => setBirthDate(event.target.value)}
                           disabled={loading || saving}
                         />
                       </div>
-                      <div className="field">
-                        <label htmlFor="celular">Celular</label>
+                      <div className={styles.field}>
+                        <label htmlFor="whatsapp">WhatsApp</label>
                         <input
-                          id="celular"
-                          className="input"
+                          id="whatsapp"
+                          className={styles.input}
                           type="tel"
-                          placeholder="(00) 00000-0000"
-                          autoComplete="tel"
+                          placeholder="(11) 99999-9999"
                           value={whatsapp}
                           onChange={(event) => setWhatsapp(event.target.value)}
                           disabled={loading || saving}
                         />
                       </div>
-                      <div className="field">
-                        <label htmlFor="senha">Nova senha</label>
+                      <div className={styles.field}>
+                        <label htmlFor="senha">Atualizar senha</label>
                         <input
                           id="senha"
-                          className="input"
+                          className={styles.input}
                           type="password"
-                          autoComplete="new-password"
-                          placeholder="••••••••"
+                          placeholder="Deixe em branco para manter"
                           value={password}
                           onChange={(event) => setPassword(event.target.value)}
                           disabled={loading || saving}
-                          minLength={6}
                         />
                       </div>
                     </div>
+
+                    {loading ? (
+                      <p className={styles.statusMessage}>Carregando suas informações…</p>
+                    ) : null}
+                    {error ? <div className={`${styles.alert} ${styles.error}`}>{error}</div> : null}
+                    {success ? <div className={`${styles.alert} ${styles.success}`}>{success}</div> : null}
+                    {signOutError ? (
+                      <div className={`${styles.alert} ${styles.error}`}>{signOutError}</div>
+                    ) : null}
+
+                    <div className={styles.actions}>
+                      <button
+                        className={`${styles.btn} ${styles.primary}`}
+                        type="submit"
+                        disabled={saving || loading}
+                      >
+                        {saving ? 'Salvando…' : 'Salvar alterações'}
+                      </button>
+                      <button
+                        className={`${styles.btn} ${styles.secondary}`}
+                        type="button"
+                        onClick={handleSignOut}
+                        disabled={signingOut}
+                      >
+                        {signingOut ? 'Saindo…' : 'Encerrar sessão'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                {loading ? (
-                  <p className="status-message">Carregando suas informações…</p>
-                ) : null}
-                {error ? <div className="alert error">{error}</div> : null}
-                {success ? <div className="alert success">{success}</div> : null}
-                {signOutError ? (
-                  <div className="alert error">{signOutError}</div>
-                ) : null}
-
-                <div className="actions">
-                  <button
-                    className="btn primary"
-                    type="submit"
-                    disabled={saving || loading}
-                  >
-                    {saving ? 'Salvando…' : 'Salvar alterações'}
-                  </button>
-                  <button
-                    className="btn secondary"
-                    type="button"
-                    onClick={handleSignOut}
-                    disabled={signingOut}
-                  >
-                    {signingOut ? 'Saindo…' : 'Encerrar sessão'}
-                  </button>
                 </div>
               </form>
             </div>
 
             <footer
-              className="reveal-seq reveal-content"
+              className={`${styles.revealSeq} ${styles.revealContent}`}
               data-visible={revealStage >= REVEAL_STAGE.CONTENT}
             >
               ROMEIKE BEAUTY
@@ -1459,7 +482,7 @@ export default function MeuPerfil() {
             type="button"
             title="Personalizar"
             onClick={() => setIsPaletteOpen((open) => !open)}
-            className="reveal-seq reveal-content"
+            className={`${styles.revealSeq} ${styles.revealContent}`}
             data-visible={revealStage >= REVEAL_STAGE.CONTENT}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1472,11 +495,11 @@ export default function MeuPerfil() {
 
           <div
             id="palettePanel"
-            className={`${isPaletteOpen ? 'open' : ''} reveal-seq reveal-content`}
+            className={`${isPaletteOpen ? 'open' : ''} ${styles.revealSeq} ${styles.revealContent}`}
             data-visible={revealStage >= REVEAL_STAGE.CONTENT}
           >
             <div id="panelScroll">
-          <div className="pal-section">
+              <div className="pal-section">
             <h3>Cards (livre)</h3>
             <div className="row">
               <span className="small">Superior</span>
@@ -1896,7 +919,6 @@ export default function MeuPerfil() {
       </div>
         </>
       ) : null}
-
-    </>
+    </main>
   )
 }

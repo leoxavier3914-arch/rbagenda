@@ -199,7 +199,7 @@ export default function MeuPerfil() {
   const avatarBoxRef = useRef<HTMLDivElement>(null)
   const avatarActionsRef = useRef<HTMLDivElement>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
-  const lastSyncedThemeRef = useRef<ThemeState>(defaultTheme)
+  const lastSyncedThemeRef = useRef<ThemeState | null>(null)
 
   const commitVar = useCallback((name: string, value: string) => {
     if (typeof window === 'undefined') return
@@ -260,6 +260,11 @@ export default function MeuPerfil() {
     if (!computedTheme) return
 
     setTheme((previous) => (isThemeEqual(previous, computedTheme) ? previous : computedTheme))
+
+    if (!lastSyncedThemeRef.current) {
+      lastSyncedThemeRef.current = computedTheme
+      return
+    }
 
     if (!isThemeEqual(lastSyncedThemeRef.current, computedTheme)) {
       lastSyncedThemeRef.current = computedTheme

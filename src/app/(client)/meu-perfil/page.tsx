@@ -47,12 +47,12 @@ type ThemeState = {
 const AVATAR_STORAGE_KEY = 'rb_meu_perfil_avatar'
 
 const defaultTheme: ThemeState = {
-  innerTop: '#F3FCF6',
-  innerBottom: '#C9E0D1',
+  innerTop: '#EAF7EF',
+  innerBottom: '#DAEFE2',
   cardBorderHex: '#FFFFFF',
-  cardBorderAlpha: 0.3,
-  bgTop: '#7D9782',
-  bgBottom: '#DFE9E2',
+  cardBorderAlpha: 0.86,
+  bgTop: '#CFE6D5',
+  bgBottom: '#EEF3E6',
   glassColor: '#ECFAF1',
   glassAlpha: 0.34,
   glassBorderHex: '#FFFFFF',

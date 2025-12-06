@@ -215,7 +215,7 @@
 }
 
 .content:not(.contentNoPadding) {
-  background: inherit;
+  background: transparent;
 }
 
 .contentInner {
@@ -225,7 +225,7 @@
 }
 
 .contentNoPadding {
-  padding-inline: 0 !important;
+  padding: 0 !important;
   background: transparent;
   width: 100% !important;
 }

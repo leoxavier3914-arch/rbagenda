@@ -202,15 +202,12 @@
     --lava-alpha-max: 0.85;
     color: var(--ink);
     text-rendering: optimizeLegibility;
-    background: linear-gradient(
-      180deg,
+    background: radial-gradient(
+      120% 120% at 10% 0%,
       var(--bg-top) 0%,
-      var(--bg-bottom) 100%
+      var(--bg-bottom) 62%
     );
-  }
-
-  body.client-fullscreen .brand-texture-overlay {
-    display: none;
+    background-attachment: fixed;
   }
 
   * {

@@ -14,7 +14,6 @@ const BODY_CLASS = "client-fullscreen";
 const DISABLE_PADDING_ROUTES = [
   "/agendamentos",
   "/procedimento",
-  "/meu-perfil",
 ];
 
 export default function ClientFullScreenLayout({

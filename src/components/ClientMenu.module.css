@@ -7,7 +7,6 @@
   position: relative;
   overflow-x: hidden;
   color: inherit;
-  background: transparent;
 }
 
 .hamburger {
@@ -209,37 +208,22 @@
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 0 56px;
+  padding: 0 24px 56px;
   color: inherit;
-  background: transparent;
-}
-
-.content:not(.contentNoPadding) {
-  background: transparent;
 }
 
 .contentInner {
   margin: 0 auto;
   width: min(100%, 1120px);
-  padding-inline: clamp(16px, 4vw, 32px);
 }
 
 .contentNoPadding {
   padding: 0 !important;
-  background: transparent;
-  width: 100% !important;
-}
-
-.contentNoPadding .contentInner {
-  margin: 0;
-  width: 100% !important;
-  max-width: none !important;
-  padding-inline: 0 !important;
 }
 
 @media (max-width: 600px) {
-  .content:not(.contentNoPadding) .contentInner {
-    padding-inline: clamp(12px, 6vw, 18px);
+  .content {
+    padding-inline: 12px;
   }
 }
 
@@ -254,17 +238,16 @@
   }
 
   .content {
-    padding: 0 0 72px;
+    padding: 0 48px 72px;
   }
 
-  .content:not(.contentNoPadding) .contentInner {
-    padding-inline: clamp(32px, 5vw, 72px);
+  .contentInner {
     width: min(100%, 1180px);
   }
 }
 
 @media (min-width: 1280px) {
-  .content:not(.contentNoPadding) .contentInner {
+  .contentInner {
     width: min(100%, 1240px);
   }
 }

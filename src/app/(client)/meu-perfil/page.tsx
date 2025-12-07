@@ -20,54 +20,18 @@ import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 import { useLavaLamp } from '@/components/LavaLampProvider'
 import {
   ClientGlassPanel,
-  ClientPageHeader,
   ClientPageShell,
   ClientSection,
 } from '@/components/client/ClientPageLayout'
-
-type Profile = {
-  full_name: string | null
-  whatsapp: string | null
-  email: string | null
-  birth_date: string | null
-  role?: 'admin' | 'adminsuper' | 'adminmaster' | 'client'
-}
-
-type ThemeState = {
-  innerTop: string
-  innerBottom: string
-  cardBorderHex: string
-  cardBorderAlpha: number
-  bgTop: string
-  bgBottom: string
-  glassColor: string
-  glassAlpha: number
-  glassBorderHex: string
-  glassBorderAlpha: number
-  bubbleDark: string
-  bubbleLight: string
-  bubbleAlphaMin: number
-  bubbleAlphaMax: number
-}
+import {
+  AvatarUploader,
+  ProfileForm,
+  ProfileHeader,
+  ThemePreferencesPanel,
+} from './@components'
+import { defaultTheme, type Profile, type ThemeState } from './types'
 
 const AVATAR_STORAGE_KEY = 'rb_meu_perfil_avatar'
-
-const defaultTheme: ThemeState = {
-  innerTop: '#EAF7EF',
-  innerBottom: '#DAEFE2',
-  cardBorderHex: '#FFFFFF',
-  cardBorderAlpha: 0.86,
-  bgTop: '#CFE6D5',
-  bgBottom: '#EEF3E6',
-  glassColor: '#ECFAF1',
-  glassAlpha: 0.34,
-  glassBorderHex: '#FFFFFF',
-  glassBorderAlpha: 0.78,
-  bubbleDark: '#7AA98A',
-  bubbleLight: '#BCD6C3',
-  bubbleAlphaMin: 0.4,
-  bubbleAlphaMax: 0.85,
-}
 
 const HEX_REGEX = /^#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/
 
@@ -763,19 +727,11 @@ export default function MeuPerfil() {
     apply(value)
   }
 
+
   return (
     <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
       <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-        <ClientPageHeader
-          hideDiamond
-          className={`${styles.revealSeq} ${styles.revealTitle}`}
-          data-visible={revealStage >= REVEAL_STAGE.TITLE}
-          title={(
-            <>
-              Meu <span className="muted2">Perfil</span>
-            </>
-          )}
-        />
+        <ProfileHeader revealStage={revealStage} />
 
         <ClientGlassPanel
           className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
@@ -790,147 +746,39 @@ export default function MeuPerfil() {
           <form onSubmit={handleSubmit} className="profile-form">
             <div className={styles.profileGrid}>
               <div className={styles.avatarColumn}>
-                <div className={styles.avatarWrap}>
-                  <div
-                    className={styles.avatar}
-                    id="avatarBox"
-                    ref={avatarBoxRef}
-                    onClick={toggleAvatarMenu}
-                    onKeyDown={handleAvatarKeyDown}
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Abrir ações do avatar"
-                    aria-expanded={isAvatarMenuOpen}
-                    aria-controls="avatarActions"
-                  >
-                    {avatarDataUrl ? (
-                      <img src={avatarDataUrl} alt="" title="" />
-                    ) : (
-                      <div className={styles.avatarPlaceholder} aria-hidden="true">
-                        <svg
-                          width="56"
-                          height="56"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                        >
-                          <circle cx="12" cy="8" r="4" />
-                          <path d="M4 20c2-3 5-5 8-5s6 2 8 5" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className={styles.avatarActionsOverlay} data-open={isAvatarMenuOpen}>
-                      <div className={styles.avatarActions} id="avatarActions" ref={avatarActionsRef}>
-                        <label className={styles.btn}>
-                          <input
-                            id="avatarInput"
-                            type="file"
-                            accept="image/*"
-                            hidden
-                            ref={avatarInputRef}
-                            onChange={handleAvatarChange}
-                          />
-                          Enviar foto
-                        </label>
-                        <button type="button" className={styles.btn} onClick={handleRemoveAvatar}>
-                          Remover foto
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  {resolvedName ? <p className={styles.profileName}>{resolvedName}</p> : null}
-                </div>
+                <AvatarUploader
+                  avatarDataUrl={avatarDataUrl}
+                  resolvedName={resolvedName}
+                  isAvatarMenuOpen={isAvatarMenuOpen}
+                  avatarBoxRef={avatarBoxRef}
+                  avatarActionsRef={avatarActionsRef}
+                  avatarInputRef={avatarInputRef}
+                  onToggle={toggleAvatarMenu}
+                  onKeyDown={handleAvatarKeyDown}
+                  onChange={handleAvatarChange}
+                  onRemove={handleRemoveAvatar}
+                />
               </div>
 
-              <div className={styles.fieldsColumn}>
-                <div className={styles.fields}>
-                  <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
-                    <label htmlFor="nome">Nome</label>
-                    <input
-                      id="nome"
-                      className={styles.input}
-                      type="text"
-                      placeholder="Seu nome"
-                      value={fullName}
-                      onChange={(event) => setFullName(event.target.value)}
-                      disabled={loading || saving}
-                      required
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="email">E-mail</label>
-                    <input
-                      id="email"
-                      className={styles.input}
-                      type="email"
-                      placeholder="voce@exemplo.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      disabled={loading || saving}
-                      required
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="nascimento">Data de nascimento</label>
-                    <input
-                      id="nascimento"
-                      className={styles.input}
-                      type="date"
-                      value={birthDate}
-                      onChange={(event) => setBirthDate(event.target.value)}
-                      disabled={loading || saving}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="whatsapp">WhatsApp</label>
-                    <input
-                      id="whatsapp"
-                      className={styles.input}
-                      type="tel"
-                      placeholder="(11) 99999-9999"
-                      value={whatsapp}
-                      onChange={(event) => setWhatsapp(event.target.value)}
-                      disabled={loading || saving}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="senha">Atualizar senha</label>
-                    <input
-                      id="senha"
-                      className={styles.input}
-                      type="password"
-                      placeholder="Deixe em branco para manter"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      disabled={loading || saving}
-                    />
-                  </div>
-                </div>
-
-                {loading ? <p className={styles.statusMessage}>Carregando suas informações…</p> : null}
-                {error ? <div className={`${styles.alert} ${styles.error}`}>{error}</div> : null}
-                {success ? <div className={`${styles.alert} ${styles.success}`}>{success}</div> : null}
-                {signOutError ? <div className={`${styles.alert} ${styles.error}`}>{signOutError}</div> : null}
-
-                <div className={styles.actions}>
-                  <button
-                    className={`${styles.btn} ${styles.primary}`}
-                    type="submit"
-                    disabled={saving || loading}
-                  >
-                    {saving ? 'Salvando…' : 'Salvar alterações'}
-                  </button>
-                  <button
-                    className={`${styles.btn} ${styles.secondary}`}
-                    type="button"
-                    onClick={handleSignOut}
-                    disabled={signingOut}
-                  >
-                    {signingOut ? 'Saindo…' : 'Encerrar sessão'}
-                  </button>
-                </div>
-              </div>
+              <ProfileForm
+                fullName={fullName}
+                email={email}
+                whatsapp={whatsapp}
+                birthDate={birthDate}
+                password={password}
+                loading={loading}
+                saving={saving}
+                signingOut={signingOut}
+                error={error}
+                success={success}
+                signOutError={signOutError}
+                onFullNameChange={setFullName}
+                onEmailChange={setEmail}
+                onWhatsappChange={setWhatsapp}
+                onBirthDateChange={setBirthDate}
+                onPasswordChange={setPassword}
+                onSignOut={handleSignOut}
+              />
             </div>
           </form>
         </ClientGlassPanel>
@@ -943,450 +791,49 @@ export default function MeuPerfil() {
         </footer>
       </ClientSection>
 
-      {canEditAppearance ? (
-        <>
-          <button
-            id="paletteBtn"
-            type="button"
-            title="Personalizar"
-            onClick={() => setIsPaletteOpen((open) => !open)}
-            className={`${styles.revealSeq} ${styles.revealContent}`}
-            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M14.8 14.8a3 3 0 1 1-4.6-3.6" />
-              <path d="M7.2 7.2l1.8 1.8" />
-              <path d="M16.8 7.2l-1.8 1.8" />
-            </svg>
-          </button>
-
-          <div
-            id="palettePanel"
-            className={`${isPaletteOpen ? 'open' : ''} ${styles.revealSeq} ${styles.revealContent}`}
-            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          >
-            <div id="panelScroll">
-              <div className="pal-section">
-            <h3>Cards (livre)</h3>
-            <div className="row">
-              <span className="small">Superior</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="cardTop"
-                value={theme.innerTop}
-                onChange={handleCardTopColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Inferior</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="cardBottom"
-                value={theme.innerBottom}
-                onChange={handleCardBottomColor}
-              />
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="cardTopHex"
-                placeholder="#RRGGBB"
-                ref={cardTopHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="addCardTop"
-                onClick={() => applyHexFromRef(cardTopHexRef, applyCardTop)}
-              >
-                Aplicar sup.
-              </button>
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="cardBottomHex"
-                placeholder="#RRGGBB"
-                ref={cardBottomHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="addCardBottom"
-                onClick={() => applyHexFromRef(cardBottomHexRef, applyCardBottom)}
-              >
-                Aplicar inf.
-              </button>
-            </div>
-            <div className="row">
-              <span className="small">Borda card</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="cardBorderColor"
-                value={theme.cardBorderHex}
-                onChange={handleCardBorderColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Opacidade borda</span>
-              <input
-                type="range"
-                className="range"
-                id="cardBorderAlpha"
-                min="0"
-                max="1"
-                step="0.01"
-                value={theme.cardBorderAlpha}
-                onChange={handleCardBorderAlpha}
-              />
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="cardBorderHex"
-                placeholder="#RRGGBB"
-                ref={cardBorderHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="applyCardBorderHex"
-                onClick={() =>
-                  applyHexFromRef(cardBorderHexRef, (value) =>
-                    applyCardBorder(value, theme.cardBorderAlpha),
-                  )
-                }
-              >
-                Aplicar borda
-              </button>
-            </div>
-          </div>
-
-          <div className="pal-section">
-            <h3>Container (fundo)</h3>
-            <div className="pal-options">
-              <div
-                className="swatch"
-                style={{ background: '#cfe6d5' }}
-                onClick={() =>
-                  handlePaletteSwatch(
-                    '--bg-top:#cfe6d5;--bg-bottom:#eef3e6',
-                  )
-                }
-              />
-              <div
-                className="swatch"
-                style={{ background: '#e3e8df' }}
-                onClick={() =>
-                  handlePaletteSwatch(
-                    '--bg-top:#e3e8df;--bg-bottom:#f2f3ef',
-                  )
-                }
-              />
-              <div
-                className="swatch"
-                style={{ background: '#dbece3' }}
-                onClick={() =>
-                  handlePaletteSwatch(
-                    '--bg-top:#dbece3;--bg-bottom:#eef4ec',
-                  )
-                }
-              />
-            </div>
-            <div className="row">
-              <span className="small">Topo</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="bgTop"
-                value={theme.bgTop}
-                onChange={handleBackgroundTopColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Base</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="bgBottom"
-                value={theme.bgBottom}
-                onChange={handleBackgroundBottomColor}
-              />
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="bgTopHex"
-                placeholder="#RRGGBB"
-                ref={bgTopHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="addBgTop"
-                onClick={() => applyHexFromRef(bgTopHexRef, applyBackgroundTop)}
-              >
-                Aplicar topo
-              </button>
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="bgBottomHex"
-                placeholder="#RRGGBB"
-                ref={bgBottomHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="addBgBottom"
-                onClick={() =>
-                  applyHexFromRef(bgBottomHexRef, applyBackgroundBottom)
-                }
-              >
-                Aplicar base
-              </button>
-            </div>
-            <div className="hr" />
-            <div className="row">
-              <span className="small">Borda vidro</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="glassBorderColor"
-                value={theme.glassBorderHex}
-                onChange={handleGlassBorderColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Opacidade borda</span>
-              <input
-                type="range"
-                className="range"
-                id="glassBorderAlpha"
-                min="0"
-                max="1"
-                step="0.01"
-                value={theme.glassBorderAlpha}
-                onChange={handleGlassBorderAlpha}
-              />
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="glassBorderHex"
-                placeholder="#RRGGBB"
-                ref={glassBorderHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="applyGlassBorderHex"
-                onClick={() =>
-                  applyHexFromRef(glassBorderHexRef, (value) =>
-                    applyGlassBorder(value, theme.glassBorderAlpha),
-                  )
-                }
-              >
-                Aplicar borda
-              </button>
-            </div>
-          </div>
-
-          <div className="pal-section">
-            <h3>Overlay (vidro)</h3>
-            <div className="pal-options">
-              <div
-                className="swatch"
-                style={{ background: 'rgba(236,250,241,.34)' }}
-                onClick={() => handlePaletteSwatch('--glass:rgba(236,250,241,.34)')}
-              />
-              <div
-                className="swatch"
-                style={{ background: 'rgba(240,245,240,.42)' }}
-                onClick={() => handlePaletteSwatch('--glass:rgba(240,245,240,.42)')}
-              />
-              <div
-                className="swatch"
-                style={{ background: 'rgba(230,240,235,.50)' }}
-                onClick={() => handlePaletteSwatch('--glass:rgba(230,240,235,.50)')}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Cor</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="glassColor"
-                value={theme.glassColor}
-                onChange={handleGlassColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Opacidade</span>
-              <input
-                type="range"
-                className="range"
-                id="glassAlpha"
-                min="0"
-                max="1"
-                step="0.01"
-                value={theme.glassAlpha}
-                onChange={handleGlassAlpha}
-              />
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="glassHex"
-                placeholder="#RRGGBB"
-                ref={glassHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="applyGlassHex"
-                onClick={() => applyHexFromRef(glassHexRef, (value) => applyGlass(value, theme.glassAlpha))}
-              >
-                Aplicar cor
-              </button>
-            </div>
-          </div>
-
-          <div className="pal-section">
-            <h3>Bolhas</h3>
-            <div className="pal-options">
-              <div
-                className="swatch"
-                style={{ background: '#7aa98a' }}
-                onClick={() =>
-                  handlePaletteSwatch(
-                    '--dark:#7aa98a;--light:#bcd6c3',
-                  )
-                }
-              />
-              <div
-                className="swatch"
-                style={{ background: '#86b79c' }}
-                onClick={() =>
-                  handlePaletteSwatch(
-                    '--dark:#86b79c;--light:#cae0cf',
-                  )
-                }
-              />
-              <div
-                className="swatch"
-                style={{ background: '#9ccbb1' }}
-                onClick={() =>
-                  handlePaletteSwatch(
-                    '--dark:#9ccbb1;--light:#d7ede1',
-                  )
-                }
-              />
-            </div>
-            <div className="row">
-              <span className="small">Escura</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="bubbleDark"
-                value={theme.bubbleDark}
-                onChange={handleBubbleDarkColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Clara</span>
-              <input
-                type="color"
-                className="colorpicker"
-                id="bubbleLight"
-                value={theme.bubbleLight}
-                onChange={handleBubbleLightColor}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Opac. mín</span>
-              <input
-                type="range"
-                className="range"
-                id="bubbleAlphaMin"
-                min="0"
-                max="1"
-                step="0.01"
-                value={theme.bubbleAlphaMin}
-                onChange={handleBubbleAlphaMin}
-              />
-            </div>
-            <div className="row">
-              <span className="small">Opac. máx</span>
-              <input
-                type="range"
-                className="range"
-                id="bubbleAlphaMax"
-                min="0"
-                max="1"
-                step="0.01"
-                value={theme.bubbleAlphaMax}
-                onChange={handleBubbleAlphaMax}
-              />
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="bubbleDarkHex"
-                placeholder="#RRGGBB"
-                ref={bubbleDarkHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="applyBubbleDark"
-                onClick={() =>
-                  applyHexFromRef(bubbleDarkHexRef, applyBubbleDark)
-                }
-              >
-                Aplicar escura
-              </button>
-            </div>
-            <div className="row">
-              <input
-                type="text"
-                className="input-hex"
-                id="bubbleLightHex"
-                placeholder="#RRGGBB"
-                ref={bubbleLightHexRef}
-              />
-              <button
-                className="btn-mini"
-                type="button"
-                id="applyBubbleLight"
-                onClick={() =>
-                  applyHexFromRef(bubbleLightHexRef, applyBubbleLight)
-                }
-              >
-                Aplicar clara
-              </button>
-            </div>
-          </div>
-        </div>
-        <button id="saveBtn" type="button" onClick={() => setIsPaletteOpen(false)}>
-          Fechar painel
-        </button>
-      </div>
-        </>
-      ) : null}
+      <ThemePreferencesPanel
+        theme={theme}
+        isPaletteOpen={isPaletteOpen}
+        revealStage={revealStage}
+        canEditAppearance={canEditAppearance}
+        onToggle={() => setIsPaletteOpen((open) => !open)}
+        onClose={() => setIsPaletteOpen(false)}
+        onPaletteSwatch={handlePaletteSwatch}
+        handleCardTopColor={handleCardTopColor}
+        handleCardBottomColor={handleCardBottomColor}
+        handleCardBorderColor={handleCardBorderColor}
+        handleCardBorderAlpha={handleCardBorderAlpha}
+        handleBackgroundTopColor={handleBackgroundTopColor}
+        handleBackgroundBottomColor={handleBackgroundBottomColor}
+        handleGlassBorderColor={handleGlassBorderColor}
+        handleGlassBorderAlpha={handleGlassBorderAlpha}
+        handleGlassColor={handleGlassColor}
+        handleGlassAlpha={handleGlassAlpha}
+        handleBubbleDarkColor={handleBubbleDarkColor}
+        handleBubbleLightColor={handleBubbleLightColor}
+        handleBubbleAlphaMin={handleBubbleAlphaMin}
+        handleBubbleAlphaMax={handleBubbleAlphaMax}
+        applyHexFromRef={applyHexFromRef}
+        applyCardTop={applyCardTop}
+        applyCardBottom={applyCardBottom}
+        applyCardBorder={applyCardBorder}
+        applyBackgroundTop={applyBackgroundTop}
+        applyBackgroundBottom={applyBackgroundBottom}
+        applyGlassBorder={applyGlassBorder}
+        applyGlass={applyGlass}
+        applyBubbleDark={applyBubbleDark}
+        applyBubbleLight={applyBubbleLight}
+        cardTopHexRef={cardTopHexRef}
+        cardBottomHexRef={cardBottomHexRef}
+        cardBorderHexRef={cardBorderHexRef}
+        bgTopHexRef={bgTopHexRef}
+        bgBottomHexRef={bgBottomHexRef}
+        glassBorderHexRef={glassBorderHexRef}
+        glassHexRef={glassHexRef}
+        bubbleDarkHexRef={bubbleDarkHexRef}
+        bubbleLightHexRef={bubbleLightHexRef}
+      />
     </ClientPageShell>
   )
 }
+

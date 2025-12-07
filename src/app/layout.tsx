@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./procedimento.css";
 
@@ -7,10 +7,6 @@ export const metadata: Metadata = {
   title: "Agenda de Cílios",
   description: "Plataforma de agendamento com pagamentos e lembretes automáticos.",
   manifest: "/manifest.webmanifest",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
-  ],
   appleWebApp: {
     capable: true,
     title: "Agenda de Cílios",
@@ -24,6 +20,13 @@ export const metadata: Metadata = {
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     shortcut: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
 };
 
 export default async function RootLayout({

@@ -21,4 +21,7 @@
 ## Riscos e oportunidades
 - Alterações em variáveis de tema (meu-perfil) impactam o fundo global das páginas de cliente; validar regressões visuais ao mudar paleta.
 - Novos usos do `LashIcon` podem seguir o padrão atual sem duplicar SVGs.
-- Futuras refatorações poderiam avaliar extração de lógica de disponibilidade/slots (presente em `/procedimento` e `/agendamentos`) para um helper compartilhado, mantendo o cuidado de não alterar comportamento.
+- O hook de disponibilidade compartilhado deve ser validado ao ajustar buffers/regras para evitar regressões simultâneas em `/procedimento` e `/agendamentos`.
+
+## Atualizações recentes
+- Lógica de disponibilidade/slots de `/procedimento` e `/agendamentos` foi centralizada no hook `useClientAvailability` (`src/hooks/useClientAvailability.ts`), mantendo filtros, buffers e dados exibidos inalterados.

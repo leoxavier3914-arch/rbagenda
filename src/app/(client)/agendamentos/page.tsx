@@ -4,12 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
-import {
-  buildAvailabilityData,
-  DEFAULT_FALLBACK_BUFFER_MINUTES,
-  DEFAULT_TIMEZONE,
-  type AvailabilityAppointment,
-} from '@/lib/availability'
+import { DEFAULT_FALLBACK_BUFFER_MINUTES, DEFAULT_TIMEZONE } from '@/lib/availability'
 import { LashIcon } from '@/components/client/LashIcon'
 import {
   ClientGlassPanel,
@@ -17,6 +12,7 @@ import {
   ClientPageShell,
   ClientSection,
 } from '@/components/client/ClientPageLayout'
+import { useClientAvailability } from '@/hooks/useClientAvailability'
 
 import styles from './agendamentos.module.css'
 
@@ -187,8 +183,6 @@ type CalendarDayEntry = {
   state: 'available' | 'booked' | 'full' | 'mine' | 'disabled'
   isOutsideCurrentMonth: boolean
 }
-
-type AvailabilitySnapshot = ReturnType<typeof buildAvailabilityData>
 
 const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
   if (Array.isArray(value)) return value
@@ -480,9 +474,15 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [availability, setAvailability] = useState<AvailabilitySnapshot | null>(null)
-  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
-  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false)
+  const { availability, availabilityError, isLoadingAvailability } = useClientAvailability({
+    serviceId: appointment.serviceId,
+    enabled: Boolean(appointment.serviceId),
+    fallbackBufferMinutes: DEFAULT_FALLBACK_BUFFER_MINUTES,
+    timezone: DEFAULT_TIMEZONE,
+    errorMessage:
+      'Não foi possível carregar a disponibilidade. Alguns dias podem não refletir a ocupação real.',
+    initialLoading: false,
+  })
   const appointmentIsoDay = useMemo(() => appointment.startsAt.slice(0, 10), [appointment.startsAt])
 
   useEffect(() => {
@@ -493,78 +493,6 @@ function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: Resche
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointment.id, appointmentIsoDay])
 
-  useEffect(() => {
-    let active = true
-
-    const loadAvailability = async () => {
-      if (!appointment.serviceId) {
-        if (active) {
-          setAvailability(null)
-          setAvailabilityError(null)
-          setIsLoadingAvailability(false)
-        }
-        return
-      }
-
-      if (active) {
-        setIsLoadingAvailability(true)
-        setAvailabilityError(null)
-      }
-
-      try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) throw sessionError
-
-        const session = sessionData.session
-        if (!session?.user?.id) {
-          window.location.href = '/login'
-          return
-        }
-
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const limit = new Date(today)
-        limit.setDate(limit.getDate() + 60)
-
-        const { data, error } = await supabase
-          .from('appointments')
-          .select('id, scheduled_at, starts_at, ends_at, status, customer_id, services(buffer_min)')
-          .eq('service_id', appointment.serviceId)
-          .gte('starts_at', today.toISOString())
-          .lte('starts_at', limit.toISOString())
-          .in('status', ['pending', 'reserved', 'confirmed'])
-          .returns<AvailabilityAppointment[]>()
-
-        if (error) throw error
-
-        if (!active) return
-
-        const computed = buildAvailabilityData(data ?? [], session.user.id, {
-          fallbackBufferMinutes: DEFAULT_FALLBACK_BUFFER_MINUTES,
-          timezone: DEFAULT_TIMEZONE,
-        })
-        setAvailability(computed)
-      } catch (err) {
-        console.error('Failed to load availability for reschedule modal', err)
-        if (active) {
-          setAvailability(null)
-          setAvailabilityError(
-            'Não foi possível carregar a disponibilidade. Alguns dias podem não refletir a ocupação real.',
-          )
-        }
-      } finally {
-        if (active) {
-          setIsLoadingAvailability(false)
-        }
-      }
-    }
-
-    void loadAvailability()
-
-    return () => {
-      active = false
-    }
-  }, [appointment.serviceId])
 
   const calendarHeaderDays = useMemo(() => {
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)

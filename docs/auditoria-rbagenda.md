@@ -14,7 +14,7 @@
 - Classes globais esperadas pelos wrappers (`client-hero-wrapper`, `page`, `glass`, etc.) continuam sendo aplicadas via o shell padrão e pelos módulos das páginas.
 
 ## Comportamento das páginas
-- `/procedimento` guia a escolha de tipo, técnica, dia e horário; controla disponibilidade via Supabase/Stripe e mostra um resumo fixo. Mantém animações condicionais a `prefers-reduced-motion` e força a persistência do fundo animado.
+- `/procedimento` guia a escolha de tipo, técnica, dia e horário; controla disponibilidade via Supabase/Stripe e mostra um resumo fixo. Mantém animações condicionais a `prefers-reduced-motion` e força a persistência do fundo animado. UI agora está dividida em subcomponentes internos (`@components`) mantendo a mesma lógica e uso de `useClientAvailability`.
 - `/agendamentos` lista e filtra agendamentos por status, permitindo pagar sinal, reagendar ou cancelar conforme regras de horário; usa o mesmo shell e cards de vidro.
 - `/meu-perfil` permite editar dados pessoais e customizar a paleta do fundo/lava via CSS variables e Supabase; usa o reveal stage para sincronizar animações com o hero.
 
@@ -25,3 +25,4 @@
 
 ## Atualizações recentes
 - Lógica de disponibilidade/slots de `/procedimento` e `/agendamentos` foi centralizada no hook `useClientAvailability` (`src/hooks/useClientAvailability.ts`), mantendo filtros, buffers e dados exibidos inalterados.
+- `/procedimento` foi modularizado em subcomponentes internos para melhorar legibilidade sem alterar lógica, layout ou integração com `useClientAvailability`.

@@ -4,19 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
-import { DEFAULT_FALLBACK_BUFFER_MINUTES, DEFAULT_TIMEZONE } from '@/lib/availability'
-import { LashIcon } from '@/components/client/LashIcon'
-import {
-  ClientGlassPanel,
-  ClientPageHeader,
-  ClientPageShell,
-  ClientSection,
-} from '@/components/client/ClientPageLayout'
-import { useClientAvailability } from '@/hooks/useClientAvailability'
+import { ClientPageShell, ClientSection } from '@/components/client/ClientPageLayout'
+
+import { AppointmentsHeader } from './@components/AppointmentsHeader'
+import { AppointmentsList } from './@components/AppointmentsList'
+import { BlockedModal } from './@components/BlockedModal'
+import { ConfirmCancelModal } from './@components/ConfirmCancelModal'
+import { RescheduleModal } from './@components/RescheduleModal'
+import { StatusFiltersBar } from './@components/StatusFiltersBar'
+import { SuccessModal } from './@components/SuccessModal'
+import type {
+  AppointmentStatus,
+  CancelDialogState,
+  NormalizedAppointment,
+  SelectedStatusCategory,
+  StatusCategory,
+  SuccessDialogState,
+} from './types'
 
 import styles from './agendamentos.module.css'
 
-const statusLabels = {
+const statusLabels: Record<AppointmentStatus, string> = {
   pending: 'Pendente',
   reserved: 'Reservado',
   confirmed: 'Confirmado',
@@ -24,13 +32,7 @@ const statusLabels = {
   completed: 'Finalizado',
 } as const
 
-type AppointmentStatus = keyof typeof statusLabels
-
 const knownStatusKeys = new Set<AppointmentStatus>(Object.keys(statusLabels) as AppointmentStatus[])
-
-type StatusCategory = 'ativos' | 'pendentes' | 'cancelados' | 'concluidos'
-
-type SelectedStatusCategory = StatusCategory | null
 
 const STATUS_FILTERS: Record<StatusCategory, AppointmentStatus[]> = {
   ativos: ['reserved', 'confirmed'],
@@ -38,13 +40,6 @@ const STATUS_FILTERS: Record<StatusCategory, AppointmentStatus[]> = {
   cancelados: ['canceled'],
   concluidos: ['completed'],
 }
-
-const statusCards: Array<{ key: StatusCategory; title: string }> = [
-  { key: 'ativos', title: 'Ativos' },
-  { key: 'pendentes', title: 'Pendentes' },
-  { key: 'cancelados', title: 'Cancelados' },
-  { key: 'concluidos', title: 'Concluídos' },
-]
 
 const statusEmptyMessages: Record<StatusCategory, string> = {
   ativos: 'Você ainda não tem agendamentos ativos.',
@@ -146,42 +141,6 @@ type AppointmentRecord = {
 type AppointmentTotalsRecord = {
   appointment_id: string
   paid_cents: number | string | null
-}
-
-type NormalizedAppointment = {
-  id: string
-  serviceId: string | null
-  serviceTypeId: string | null
-  startsAt: string
-  endsAt: string | null
-  status: AppointmentStatus
-  serviceType: string
-  serviceTechnique: string | null
-  totalValue: number
-  depositValue: number
-  paidValue: number
-}
-
-type CancelDialogState = {
-  variant: 'standard' | 'penalty'
-  appointment: NormalizedAppointment
-} | null
-
-type SuccessDialogState = {
-  title: string
-  message: string
-} | null
-
-type SlotsResponse = {
-  slots?: string[]
-}
-
-type CalendarDayEntry = {
-  iso: string
-  day: string
-  isDisabled: boolean
-  state: 'available' | 'booked' | 'full' | 'mine' | 'disabled'
-  isOutsideCurrentMonth: boolean
 }
 
 const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
@@ -324,440 +283,6 @@ const canShowPay = (appointment: NormalizedAppointment) => {
 const canShowEdit = (appointment: NormalizedAppointment) => {
   if (!['pending', 'reserved'].includes(appointment.status)) return false
   return hoursUntil(appointment.startsAt) >= CANCEL_THRESHOLD_HOURS
-}
-
-type ConfirmCancelModalProps = {
-  dialog: CancelDialogState
-  onClose: () => void
-  onConfirm: (dialog: CancelDialogState) => void
-  isProcessing: boolean
-  errorMessage: string | null
-}
-
-function ConfirmCancelModal({ dialog, onClose, onConfirm, isProcessing, errorMessage }: ConfirmCancelModalProps) {
-  if (!dialog) return null
-
-  const isPenalty = dialog.variant === 'penalty'
-  const title = 'Cancelar agendamento?'
-  const message = isPenalty
-    ? 'Você pode cancelar este agendamento, mas o valor do sinal será perdido e não será reembolsado. Deseja continuar?'
-    : 'Seu agendamento está dentro das regras de cancelamento. Deseja realmente cancelar seu horário?'
-
-  return (
-    <div className={styles.modal} aria-hidden="false">
-      <div className={styles.modalBackdrop} onClick={isProcessing ? undefined : onClose} />
-      <div className={`${styles.modalContent} ${styles.modalWarning}`} role="dialog" aria-modal="true">
-        <div className={`${styles.iconWrap} ${isPenalty ? styles.iconWrapWarning : ''}`} aria-hidden="true">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d1a13b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="13" />
-            <circle cx="12" cy="16.5" r="1" />
-          </svg>
-        </div>
-        <h2 className={styles.modalTitle}>{title}</h2>
-        <p className={styles.modalText}>
-          {message}
-        </p>
-        {errorMessage ? <div className={styles.modalError}>{errorMessage}</div> : null}
-        <div className={styles.btnRow}>
-          <button type="button" className={`${styles.btn} ${styles.btnYes}`} disabled={isProcessing} onClick={() => onConfirm(dialog)}>
-            {isProcessing ? 'Cancelando…' : isPenalty ? 'Sim, cancela' : 'Sim, cancelar'}
-          </button>
-          <button type="button" className={`${styles.btn} ${styles.btnNo}`} disabled={isProcessing} onClick={onClose}>
-            Não
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type SuccessModalProps = {
-  dialog: SuccessDialogState
-  onClose: () => void
-}
-
-function SuccessModal({ dialog, onClose }: SuccessModalProps) {
-  if (!dialog) return null
-  return (
-    <div className={styles.modal} aria-hidden="false">
-      <div className={styles.modalBackdrop} onClick={onClose} />
-      <div className={`${styles.modalContent} ${styles.modalSuccess}`} role="dialog" aria-modal="true">
-        <div className={`${styles.iconWrap} ${styles.iconWrapSuccess}`} aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f8a70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </div>
-        <h2 className={styles.modalTitle}>{dialog.title}</h2>
-        <p className={styles.modalText}>{dialog.message}</p>
-        <div className={styles.btnRowCenter}>
-          <button type="button" className={`${styles.btn} ${styles.btnOk}`} onClick={onClose}>
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type BlockedModalProps = {
-  appointment: NormalizedAppointment | null
-  onClose: () => void
-}
-
-function BlockedModal({ appointment, onClose }: BlockedModalProps) {
-  if (!appointment) return null
-  return (
-    <div className={styles.modal} aria-hidden="false">
-      <div className={styles.modalBackdrop} onClick={onClose} />
-      <div className={`${styles.modalContent} ${styles.modalWarning}`} role="dialog" aria-modal="true">
-        <div className={`${styles.iconWrap} ${styles.iconWrapWarning}`} aria-hidden="true">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d1a13b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="13" />
-            <circle cx="12" cy="16.5" r="1" />
-          </svg>
-        </div>
-        <h2 className={styles.modalTitle}>Alteração não permitida</h2>
-        <p className={styles.modalText}>
-          A alteração deste agendamento não pode ser realizada, pois faltam menos de 24h para o horário marcado.
-        </p>
-        <div className={styles.btnRowCenter}>
-          <button type="button" className={`${styles.btn} ${styles.btnOk}`} onClick={onClose}>
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type RescheduleModalProps = {
-  appointment: NormalizedAppointment
-  onClose: () => void
-  onSuccess: (payload: { starts_at: string; ends_at: string | null }) => void
-  ensureAuth: () => Promise<string | null>
-}
-
-type SlotOption = {
-  iso: string
-  label: string
-  disabled: boolean
-}
-
-function RescheduleModal({ appointment, onClose, onSuccess, ensureAuth }: RescheduleModalProps) {
-  const today = useMemo(() => {
-    const base = new Date()
-    base.setHours(0, 0, 0, 0)
-    return base
-  }, [])
-
-  const initialMonth = useMemo(() => {
-    const start = new Date(appointment.startsAt)
-    if (Number.isNaN(start.getTime())) {
-      const fallback = new Date()
-      fallback.setHours(0, 0, 0, 0)
-      fallback.setDate(1)
-      return fallback
-    }
-    start.setDate(1)
-    start.setHours(0, 0, 0, 0)
-    if (start < today) return new Date(today.getFullYear(), today.getMonth(), 1)
-    return start
-  }, [appointment.startsAt, today])
-
-  const [currentMonth, setCurrentMonth] = useState<Date>(initialMonth)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [slotOptions, setSlotOptions] = useState<SlotOption[]>([])
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [slotsMessage, setSlotsMessage] = useState<string>('Selecione um dia disponível para ver horários.')
-  const [isLoadingSlots, setIsLoadingSlots] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-  const { availability, availabilityError, isLoadingAvailability } = useClientAvailability({
-    serviceId: appointment.serviceId,
-    enabled: Boolean(appointment.serviceId),
-    fallbackBufferMinutes: DEFAULT_FALLBACK_BUFFER_MINUTES,
-    timezone: DEFAULT_TIMEZONE,
-    errorMessage:
-      'Não foi possível carregar a disponibilidade. Alguns dias podem não refletir a ocupação real.',
-    initialLoading: false,
-  })
-  const appointmentIsoDay = useMemo(() => appointment.startsAt.slice(0, 10), [appointment.startsAt])
-
-  useEffect(() => {
-    if (hoursUntil(appointment.startsAt) >= CANCEL_THRESHOLD_HOURS) {
-      setSelectedDate(appointmentIsoDay)
-      void loadSlots(appointmentIsoDay)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointment.id, appointmentIsoDay])
-
-
-  const calendarHeaderDays = useMemo(() => {
-    const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-    const startWeekday = firstDay.getDay()
-    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
-    return Array.from({ length: 7 }, (_, index) => labels[(startWeekday + index) % 7])
-  }, [currentMonth])
-
-  const calendarDays = useMemo(() => {
-    const year = currentMonth.getFullYear()
-    const month = currentMonth.getMonth()
-    const totalDays = new Date(year, month + 1, 0).getDate()
-
-    const dayEntries: CalendarDayEntry[] = []
-
-    for (let day = 1; day <= totalDays; day += 1) {
-      const date = new Date(year, month, day)
-      date.setHours(0, 0, 0, 0)
-      const iso = toIsoDate(date)
-
-      let state: CalendarDayEntry['state'] = 'available'
-      if (availability) {
-        if (availability.myDays.has(iso)) state = 'mine'
-        else if (availability.bookedDays.has(iso)) state = 'full'
-        else if (availability.partiallyBookedDays.has(iso)) state = 'booked'
-        else if (availability.availableDays.has(iso)) state = 'available'
-      }
-      if (iso === appointmentIsoDay) {
-        state = 'mine'
-      }
-
-      const isPastOrToday = date <= today
-      const isDisabled = isPastOrToday || state === 'full'
-
-      dayEntries.push({
-        iso,
-        day: String(day),
-        isDisabled,
-        state,
-        isOutsideCurrentMonth: false,
-      })
-    }
-
-    const trailingSpacers = (7 - (dayEntries.length % 7)) % 7
-    for (let index = 1; index <= trailingSpacers; index += 1) {
-      dayEntries.push({
-        iso: `trailing-${year}-${month}-${index}`,
-        day: '',
-        isDisabled: true,
-        state: 'disabled',
-        isOutsideCurrentMonth: true,
-      })
-    }
-
-    return { dayEntries }
-  }, [appointmentIsoDay, availability, currentMonth, today])
-
-  async function loadSlots(iso: string) {
-    if (!appointment.serviceId) {
-      setErrorMessage('Este agendamento não possui serviço associado para remarcar.')
-      return
-    }
-
-    setIsLoadingSlots(true)
-    setSelectedSlot(null)
-    setSlotOptions([])
-    setErrorMessage(null)
-    setSlotsMessage('Carregando horários disponíveis…')
-
-    try {
-      const res = await fetch(`/api/slots?service_id=${encodeURIComponent(appointment.serviceId)}&date=${encodeURIComponent(iso)}`)
-      if (!res.ok) {
-        setSlotsMessage('Não foi possível carregar os horários disponíveis.')
-        return
-      }
-      const data = (await res.json()) as SlotsResponse
-      const slots = (data.slots ?? []).map((slotIso) => {
-        const label = formatTime(slotIso)
-        const disabled = hoursUntil(slotIso) < CANCEL_THRESHOLD_HOURS
-        return { iso: slotIso, label, disabled }
-      })
-      setSlotOptions(slots)
-      if (slots.length === 0) {
-        setSlotsMessage('Sem horários para este dia.')
-      } else {
-        setSlotsMessage('Selecione um horário:')
-      }
-    } catch (error) {
-      console.error('Failed to load slots', error)
-      setSlotsMessage('Não foi possível carregar os horários disponíveis.')
-    } finally {
-      setIsLoadingSlots(false)
-    }
-  }
-
-  const goToPreviousMonth = () => {
-    const previous = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-    if (previous < today) {
-      setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1))
-    } else {
-      setCurrentMonth(previous)
-    }
-  }
-
-
-  const goToNextMonth = () => {
-    const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-    setCurrentMonth(next)
-  }
-
-  const monthTitle = useMemo(
-    () =>
-      currentMonth.toLocaleDateString('pt-BR', {
-        month: 'long',
-        year: 'numeric',
-      }),
-    [currentMonth],
-  )
-
-  const handleDayClick = (iso: string | null, disabled: boolean) => {
-    if (!iso || disabled || iso.length !== 10) return
-    setSelectedDate(iso)
-    void loadSlots(iso)
-  }
-
-  const handleSlotClick = (option: SlotOption) => {
-    if (option.disabled) return
-    setSelectedSlot(option.iso)
-  }
-
-  const handleSubmit = async () => {
-    if (!selectedSlot) return
-    const token = await ensureAuth()
-    if (!token) return
-
-    setIsSaving(true)
-    setErrorMessage(null)
-    try {
-      const res = await fetch(`/api/appointments/${appointment.id}/reschedule`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ starts_at: selectedSlot }),
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: 'Não foi possível salvar as alterações.' }))
-        const message = typeof body.error === 'string' ? body.error : 'Não foi possível salvar as alterações.'
-        setErrorMessage(message)
-        return
-      }
-
-      const payload = await res.json().catch(() => ({ starts_at: selectedSlot, ends_at: null }))
-      onSuccess({
-        starts_at: typeof payload.starts_at === 'string' ? payload.starts_at : selectedSlot,
-        ends_at: typeof payload.ends_at === 'string' ? payload.ends_at : null,
-      })
-    } catch (error) {
-      console.error('Failed to reschedule appointment', error)
-      setErrorMessage('Erro inesperado ao salvar as alterações.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  return (
-    <div className={styles.modal} aria-hidden="false">
-      <div className={styles.modalBackdrop} onClick={isSaving ? undefined : onClose} />
-      <div className={`${styles.modalContent} ${styles.modalEdit}`} role="dialog" aria-modal="true">
-        <h2 className={styles.modalTitle}>Alterar data e horário</h2>
-
-        <div className={styles.calHead}>
-          <button
-            type="button"
-            className={styles.btnNav}
-            onClick={goToPreviousMonth}
-            aria-label="Mês anterior"
-          >
-            ‹
-          </button>
-          <div className={styles.calTitle}>{monthTitle}</div>
-          <button
-            type="button"
-            className={styles.btnNav}
-            onClick={goToNextMonth}
-            aria-label="Próximo mês"
-          >
-            ›
-          </button>
-        </div>
-
-        {isLoadingAvailability ? (
-          <div className={styles.meta}>Carregando disponibilidade…</div>
-        ) : availabilityError ? (
-          <div className={styles.meta}>{availabilityError}</div>
-        ) : null}
-
-        <div className={styles.grid} aria-hidden="true">
-          {calendarHeaderDays.map((label, index) => (
-            <div key={`dow-${index}`} className={styles.gridDow}>
-              {label}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.grid}>
-          {calendarDays.dayEntries.map((entry) => (
-            <button
-              key={entry.iso}
-              type="button"
-              className={styles.day}
-              data-state={entry.state}
-              data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
-              data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}
-              aria-disabled={entry.isDisabled}
-              disabled={entry.isDisabled}
-              onClick={() => handleDayClick(entry.iso, entry.isDisabled || entry.isOutsideCurrentMonth)}
-            >
-              {entry.day}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.label}>Horários disponíveis</div>
-        <div className={styles.slots}>
-          {isLoadingSlots ? (
-            <div className={styles.meta}>{slotsMessage}</div>
-          ) : slotOptions.length > 0 ? (
-            slotOptions.map((option) => (
-              <button
-                key={option.iso}
-                type="button"
-                className={styles.slot}
-                data-selected={selectedSlot === option.iso}
-                aria-disabled={option.disabled}
-                disabled={option.disabled}
-                onClick={() => handleSlotClick(option)}
-              >
-                {option.label}
-              </button>
-            ))
-          ) : (
-            <div className={styles.meta}>{slotsMessage}</div>
-          )}
-        </div>
-        {errorMessage ? <div className={styles.modalError}>{errorMessage}</div> : null}
-
-        <div className={styles.btnRow}>
-          <button type="button" className={`${styles.btn} ${styles.btnNo}`} disabled={isSaving} onClick={onClose}>
-            Cancelar
-          </button>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnYes}`}
-            disabled={!selectedSlot || isSaving}
-            onClick={handleSubmit}
-          >
-            {isSaving ? 'Salvando…' : 'Salvar alterações'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default function MyAppointments() {
@@ -1070,212 +595,74 @@ export default function MyAppointments() {
 
   return (
     <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
-        <ClientSection>
-          <ClientPageHeader
-            title="Meus agendamentos"
-            subtitle="Veja seus horários ativos e históricos"
-            subtitleClassName={styles.subtitle}
-          />
+      <ClientSection>
+        <AppointmentsHeader />
 
-          <ClientGlassPanel label="STATUS">
-            <div className="grid tipo-grid" role="group" aria-label="Filtro de agendamentos">
-              {statusCards.map((card) => (
-                <button
-                  key={card.key}
-                  type="button"
-                  className="card"
-                  data-active={selectedCategory === card.key ? 'true' : 'false'}
-                  onClick={() => handleCategorySelect(card.key)}
-                >
-                  <div className="card-inner">
-                    <LashIcon />
-                    <span>{card.title}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </ClientGlassPanel>
+        <StatusFiltersBar selectedCategory={selectedCategory} onSelect={handleCategorySelect} />
 
-          <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+        <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
 
-          {selectedCategory ? (
-            <ClientGlassPanel ref={resultsRef} className={styles.resultsCard}>
-              {loading ? (
-                <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
-              ) : error ? (
-                <div className={`${styles.stateCard} ${styles.stateError}`}>{error}</div>
-              ) : !hasAppointments ? (
-                <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
-                  <p>Você ainda não tem agendamentos cadastrados.</p>
-                  <span className={styles.stateHint}>Agende um horário para vê-lo aqui.</span>
-                </div>
-              ) : filteredAppointments.length === 0 ? (
-                <div className={`${styles.stateCard} ${styles.stateEmpty}`}>
-                  <p>{statusEmptyMessages[selectedCategory]}</p>
-                  <span className={styles.stateHint}>Altere o filtro para ver outros status.</span>
-                </div>
-              ) : (
-                <>
-                  {selectedCategory === 'concluidos' && filteredAppointments.length > 0 ? (
-                    <div className={styles.summaryGrid}>
-                      <div className={styles.summaryCard}>
-                        <div className={styles.summaryLabel}>Cancelados</div>
-                        <div className={styles.summaryValue}>{completionSummary.canceledCount}</div>
-                      </div>
-                      <div className={styles.summaryCard}>
-                        <div className={styles.summaryLabel}>Finalizados</div>
-                        <div className={styles.summaryValue}>{completionSummary.completedCount}</div>
-                      </div>
-                      <div className={styles.summaryCard}>
-                        <div className={styles.summaryLabel}>Valor total finalizado</div>
-                        <div className={styles.summaryValue}>{toCurrency(completionSummary.totalCompletedValue)}</div>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className={styles.cards}>
-                    {paginatedAppointments.map((appointment) => {
-                      const statusLabel = statusLabels[appointment.status] ?? appointment.status
-                      const statusClass =
-                        styles[`status${appointment.status.charAt(0).toUpperCase()}${appointment.status.slice(1)}`] ||
-                        styles.statusDefault
-                      const depositLabel = depositStatusLabel(appointment.depositValue, appointment.paidValue)
-                      const showPay = canShowPay(appointment)
-                      const showCancel = canShowCancel(appointment.status)
-                      const showEdit = canShowEdit(appointment)
-                      const actions = [showPay, showEdit, showCancel].filter(Boolean)
-                      const shouldShowPayError = payError && lastPayAttemptId === appointment.id
-
-                      return (
-                        <article key={appointment.id} className={styles.card}>
-                          <div className={styles.cardHeader}>
-                            <div className={styles.cardInfo}>
-                              <div className={styles.serviceType}>{appointment.serviceType}</div>
-                              {appointment.serviceTechnique ? (
-                                <div className={styles.serviceTechnique}>{appointment.serviceTechnique}</div>
-                              ) : null}
-                            </div>
-                            <span className={`${styles.status} ${statusClass}`}>{statusLabel}</span>
-                          </div>
-
-                          <div className={styles.cardBody}>
-                            <div className={styles.detail}>
-                              <div className={styles.detailLabel}>Data</div>
-                              <div className={styles.detailValue}>{formatDate(appointment.startsAt)}</div>
-                            </div>
-                            <div className={styles.detail}>
-                              <div className={styles.detailLabel}>Horário</div>
-                              <div className={styles.detailValue}>{formatTime(appointment.startsAt)}</div>
-                            </div>
-                            <div className={styles.detail}>
-                              <div className={styles.detailLabel}>Valor</div>
-                              <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
-                            </div>
-                            <div className={styles.detail}>
-                              <div className={styles.detailLabel}>Sinal</div>
-                              <div className={styles.detailValue}>
-                                {appointment.depositValue > 0
-                                  ? `${toCurrency(appointment.depositValue)} (${depositLabel})`
-                                  : 'Não necessário'}
-                              </div>
-                            </div>
-                          </div>
-
-                          {actions.length > 0 && (
-                            <div className={styles.cardFooter}>
-                              {showPay && (
-                                <button
-                                  type="button"
-                                  className={`${styles.btn} ${styles.btnPay}`}
-                                  onClick={() => {
-                                    void startDepositPayment(appointment.id)
-                                  }}
-                                  disabled={payingApptId === appointment.id}
-                                >
-                                  {payingApptId === appointment.id ? 'Abrindo…' : '💳 Pagar'}
-                                </button>
-                              )}
-                              {showEdit && (
-                                <button
-                                  type="button"
-                                  className={`${styles.btn} ${styles.btnEdit}`}
-                                  onClick={() => handleEditRequest(appointment)}
-                                >
-                                  ✎ Alterar
-                                </button>
-                              )}
-                              {showCancel && (
-                                <button
-                                  type="button"
-                                  className={`${styles.btn} ${styles.btnCancel}`}
-                                  onClick={() => handleCancelRequest(appointment)}
-                                  disabled={cancelingId === appointment.id}
-                                >
-                                  {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}
-                                </button>
-                              )}
-                            </div>
-                          )}
-
-                          {shouldShowPayError ? <div className={styles.inlineError}>{payError}</div> : null}
-                        </article>
-                      )
-                    })}
-                  </div>
-
-                  {totalPages > 1 ? (
-                    <div className={styles.pagination} role="navigation" aria-label="Paginação de agendamentos">
-                      <div className={styles.paginationRow}>
-                        <button
-                          type="button"
-                          className={styles.paginationButton}
-                          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                          disabled={currentPage === 1}
-                        >
-                          ← Página anterior
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.paginationButton}
-                          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                          disabled={currentPage === totalPages}
-                        >
-                          Próxima página →
-                        </button>
-                      </div>
-                      <span className={styles.paginationInfo}>
-                        {currentPage} de {totalPages}
-                      </span>
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </ClientGlassPanel>
-          ) : null}
-        </ClientSection>
-
-        <ConfirmCancelModal
-          dialog={cancelDialog}
-          onClose={closeCancelDialog}
-          onConfirm={handleCancelConfirm}
-          isProcessing={Boolean(cancelDialog && cancelingId === cancelDialog.appointment.id)}
-          errorMessage={cancelError}
-        />
-
-        <SuccessModal dialog={successDialog} onClose={closeSuccessDialog} />
-
-        <BlockedModal appointment={blockedAppointment} onClose={() => setBlockedAppointment(null)} />
-
-        {editingAppointment ? (
-          <RescheduleModal
-            appointment={editingAppointment}
-            onClose={() => setEditingAppointment(null)}
-            ensureAuth={ensureAuth}
-            onSuccess={({ starts_at, ends_at }) =>
-              handleRescheduleSuccess(editingAppointment.id, starts_at, ends_at)
-            }
+        {selectedCategory ? (
+          <AppointmentsList
+            ref={resultsRef}
+            selectedCategory={selectedCategory}
+            loading={loading}
+            error={error}
+            hasAppointments={hasAppointments}
+            filteredAppointments={filteredAppointments}
+            statusEmptyMessages={statusEmptyMessages}
+            completionSummary={completionSummary}
+            toCurrency={toCurrency}
+            paginatedAppointments={paginatedAppointments}
+            statusLabels={statusLabels}
+            formatDate={formatDate}
+            formatTime={formatTime}
+            depositStatusLabel={depositStatusLabel}
+            canShowPay={canShowPay}
+            canShowCancel={canShowCancel}
+            canShowEdit={canShowEdit}
+            payError={payError}
+            lastPayAttemptId={lastPayAttemptId}
+            payingApptId={payingApptId}
+            onStartDepositPayment={(appointmentId) => {
+              void startDepositPayment(appointmentId)
+            }}
+            onEdit={handleEditRequest}
+            onCancel={handleCancelRequest}
+            cancelingId={cancelingId}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            onChangePage={(page) => setCurrentPage(page)}
           />
         ) : null}
-      </ClientPageShell>
-    )
-  }
+      </ClientSection>
+
+      <ConfirmCancelModal
+        dialog={cancelDialog}
+        onClose={closeCancelDialog}
+        onConfirm={handleCancelConfirm}
+        isProcessing={Boolean(cancelDialog && cancelingId === cancelDialog.appointment.id)}
+        errorMessage={cancelError}
+      />
+
+      <SuccessModal dialog={successDialog} onClose={closeSuccessDialog} />
+
+      <BlockedModal appointment={blockedAppointment} onClose={() => setBlockedAppointment(null)} />
+
+      {editingAppointment ? (
+        <RescheduleModal
+          appointment={editingAppointment}
+          onClose={() => setEditingAppointment(null)}
+          ensureAuth={ensureAuth}
+          onSuccess={({ starts_at, ends_at }) =>
+            handleRescheduleSuccess(editingAppointment.id, starts_at, ends_at)
+          }
+          formatTime={formatTime}
+          hoursUntil={hoursUntil}
+          toIsoDate={toIsoDate}
+          cancelThresholdHours={CANCEL_THRESHOLD_HOURS}
+        />
+      ) : null}
+    </ClientPageShell>
+  )
+}

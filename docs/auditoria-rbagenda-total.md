@@ -65,14 +65,17 @@
 
 ## 9. Riscos e pontos fracos
 - Dependência de variáveis globais para tema/lava: ajustes incorretos em `/meu-perfil` podem afetar todas as páginas do shell.
-- Lógica de disponibilidade e manipulação de slots é duplicada entre `/procedimento` e `/agendamentos`, aumentando custo de manutenção.
+- Lógica de disponibilidade e manipulação de slots agora está centralizada no hook compartilhado `useClientAvailability`; ajustes de regra precisam considerar impacto simultâneo em `/procedimento` e `/agendamentos`.
 - Páginas sensíveis são `use client` pesadas com muita lógica inline; difícil testar isoladamente e arriscado para regressões de UX.
 - `ClientLayout` controla exceções de shell via lista estática de rotas (ex.: `/checkout`); novas rotas fullscreen podem exigir ajustes manuais.
 - APIs dependem de acesso service role; configuração incorreta de env bloqueia boot (db.ts lança erro se variáveis faltarem).
 
 ## 10. Oportunidades de melhoria e sugestões
-- Extrair um hook/helper compartilhado para disponibilidade/slots (carregamento, buffers, filtragem) reduzindo duplicação entre agendamentos e procedimento.
-- Consolidar controle de tema/lava em contexto dedicado (com validação/limites) para evitar corrupção de CSS vars e facilitar reset global.
-- Modularizar páginas grandes (`/procedimento`, `/agendamentos`, `/meu-perfil`) em subcomponentes/hook por etapa (estado, Supabase, Stripe) para melhorar testabilidade.
-- Tornar a lista de rotas que ocultam menu configurável (ex.: via prop/contexto) evitando edits manuais em `ClientLayout` e `ClientFullScreenLayout`.
-- Adicionar testes de integração para APIs críticas (payments, webhooks, cron) e para o fluxo de agendamento completo, cobrindo Stripe + Supabase.
+ - Consolidar controle de tema/lava em contexto dedicado (com validação/limites) para evitar corrupção de CSS vars e facilitar reset global.
+ - Modularizar páginas grandes (`/procedimento`, `/agendamentos`, `/meu-perfil`) em subcomponentes/hook por etapa (estado, Supabase, Stripe) para melhorar testabilidade.
+ - Tornar a lista de rotas que ocultam menu configurável (ex.: via prop/contexto) evitando edits manuais em `ClientLayout` e `ClientFullScreenLayout`.
+ - Adicionar testes de integração para APIs críticas (payments, webhooks, cron) e para o fluxo de agendamento completo, cobrindo Stripe + Supabase.
+ - Incluir testes e monitoramento do hook `useClientAvailability` para garantir buffers/filtros idênticos em páginas sensíveis.
+
+## 11. Atualizações recentes
+- Extraído hook compartilhado `useClientAvailability` (`src/hooks/useClientAvailability.ts`) para centralizar carregamento e montagem de disponibilidade com buffers e filtros aplicados; páginas `/procedimento` e `/agendamentos` passaram a usá-lo sem alterar regras de negócio ou UI.

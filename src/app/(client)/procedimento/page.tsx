@@ -25,10 +25,10 @@ import {
   DEFAULT_TIMEZONE,
   buildAvailabilityData,
   formatDateToIsoDay,
-  type AvailabilityAppointment,
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
 import { useLavaLamp } from '@/components/LavaLampProvider'
+import { useClientAvailability } from '@/hooks/useClientAvailability'
 
 type ServiceTechnique = {
   id: string
@@ -66,8 +66,6 @@ type TechniqueSummary = {
 type ServiceOption = ServiceTechnique & {
   techniques: TechniqueSummary[]
 }
-
-type LoadedAppointment = Parameters<typeof buildAvailabilityData>[0][number]
 
 type SummarySnapshot = {
   typeId: string
@@ -1159,10 +1157,7 @@ export default function ProcedimentoPage() {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
   const [selectedTechniqueId, setSelectedTechniqueId] = useState<string | null>(null)
   const [showAllTechniques, setShowAllTechniques] = useState(false)
-  const [appointments, setAppointments] = useState<LoadedAppointment[]>([])
   const [userId, setUserId] = useState<string | null>(null)
-  const [isLoadingAvailability, setIsLoadingAvailability] = useState(true)
-  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [summarySnapshot, setSummarySnapshot] = useState<SummarySnapshot | null>(null)
@@ -1181,6 +1176,19 @@ export default function ProcedimentoPage() {
     'technique' | 'date' | 'time' | null
   >(null)
   const [heroReady, setHeroReady] = useState(false)
+
+  const {
+    availability: availabilitySnapshot,
+    isLoadingAvailability,
+    availabilityError,
+  } = useClientAvailability({
+    enabled: Boolean(userId),
+    subscribe: true,
+    channel: 'procedimento-appointments',
+    fallbackBufferMinutes: FALLBACK_BUFFER_MINUTES,
+    timezone: DEFAULT_TIMEZONE,
+    errorMessage: 'Não foi possível carregar a disponibilidade. Tente novamente mais tarde.',
+  })
 
   const router = useRouter()
   const { refreshPalette } = useLavaLamp()
@@ -1373,111 +1381,6 @@ export default function ProcedimentoPage() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!userId) return
-
-    let isMounted = true
-
-    const relevantStatuses = new Set(['pending', 'reserved', 'confirmed'])
-
-    type AppointmentRecord = Partial<AvailabilityAppointment> | null | undefined
-
-    const isRecordRelevant = (record: AppointmentRecord) => {
-      if (!record) return false
-
-      const status = record.status
-      if (!status || !relevantStatuses.has(status)) return false
-
-      const rawStart: string | null = record.scheduled_at ?? record.starts_at ?? null
-      if (!rawStart) return false
-
-      const start = new Date(rawStart)
-      if (Number.isNaN(start.getTime())) return false
-
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const limit = new Date(today)
-      limit.setDate(limit.getDate() + 60)
-
-      return start >= today && start <= limit
-    }
-
-    const loadAvailability = async (options: { withLoading?: boolean } = {}) => {
-      const { withLoading = true } = options
-
-      if (withLoading) {
-        setIsLoadingAvailability(true)
-        setAvailabilityError(null)
-      }
-
-      try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) throw sessionError
-
-        const session = sessionData.session
-        if (!session?.user?.id) {
-          window.location.href = '/login'
-          return
-        }
-
-        if (!isMounted) return
-
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const limit = new Date(today)
-        limit.setDate(limit.getDate() + 60)
-
-        const { data, error } = await supabase
-          .from('appointments')
-          .select('id, scheduled_at, starts_at, ends_at, status, customer_id, services(buffer_min)')
-          .gte('starts_at', today.toISOString())
-          .lte('starts_at', limit.toISOString())
-          .in('status', ['pending', 'reserved', 'confirmed'])
-          .order('starts_at', { ascending: true })
-
-        if (error) throw error
-        if (!isMounted) return
-
-        setAppointments(data ?? [])
-        setAvailabilityError(null)
-      } catch (err) {
-        console.error('Erro ao carregar disponibilidade', err)
-        if (isMounted) {
-          setAvailabilityError('Não foi possível carregar a disponibilidade. Tente novamente mais tarde.')
-          setAppointments([])
-        }
-      } finally {
-        if (withLoading && isMounted) {
-          setIsLoadingAvailability(false)
-        }
-      }
-    }
-
-    void loadAvailability({ withLoading: true })
-
-    const channel = supabase
-      .channel('procedimento-appointments')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'appointments' },
-        (payload) => {
-          if (!isMounted) return
-
-          const { new: newRecord, old: oldRecord } = payload
-
-          if (isRecordRelevant(newRecord as AppointmentRecord) || isRecordRelevant(oldRecord as AppointmentRecord)) {
-            void loadAvailability({ withLoading: false })
-          }
-        },
-      )
-      .subscribe()
-
-    return () => {
-      isMounted = false
-      void supabase.removeChannel(channel)
-    }
-  }, [userId])
-
   const techniqueMap = useMemo(() => {
     const map = new Map<string, TechniqueCatalogEntry>()
     techniqueCatalog.forEach((technique) => {
@@ -1607,11 +1510,12 @@ export default function ProcedimentoPage() {
 
   const availability = useMemo(
     () =>
-      buildAvailabilityData(appointments, userId, {
+      availabilitySnapshot ??
+      buildAvailabilityData([], userId, {
         fallbackBufferMinutes: FALLBACK_BUFFER_MINUTES,
         timezone: DEFAULT_TIMEZONE,
       }),
-    [appointments, userId],
+    [availabilitySnapshot, userId],
   )
 
   const monthTitle = useMemo(() => {

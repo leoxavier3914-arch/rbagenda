@@ -79,3 +79,4 @@
 
 ## 11. Atualizações recentes
 - Extraído hook compartilhado `useClientAvailability` (`src/hooks/useClientAvailability.ts`) para centralizar carregamento e montagem de disponibilidade com buffers e filtros aplicados; páginas `/procedimento` e `/agendamentos` passaram a usá-lo sem alterar regras de negócio ou UI.
+- `/procedimento` modularizado em subcomponentes internos no grupo `@components`, mantendo layout e integrações existentes.

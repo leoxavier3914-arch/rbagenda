@@ -148,7 +148,7 @@ export default function Login() {
                     />
                     <div className={styles.helpRow}>
                       <span>Esqueceu sua senha?</span>
-                      <Link href="#" className={styles.link}>
+                      <Link href="/suporte" className={styles.link}>
                         Clique aqui
                       </Link>
                     </div>

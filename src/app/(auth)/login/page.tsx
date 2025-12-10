@@ -115,37 +115,47 @@ export default function Login() {
                 <form className={styles.form} onSubmit={submit}>
                   <div className={styles.field}>
                     <label
-                      className={styles.label}
+                      className={`${styles.label} ${styles.visuallyHidden}`}
                       htmlFor="email"
                     >
                       E-mail
                     </label>
-                    <input
-                      id="email"
-                      className={`input-field ${styles.input}`}
-                      placeholder="nome@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={loading}
-                    />
+                    <div className={styles.inputControl}>
+                      <span aria-hidden className={styles.inputIcon}>
+                        ✉️
+                      </span>
+                      <input
+                        id="email"
+                        className={styles.input}
+                        placeholder="nome@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
                   </div>
 
                   <div className={styles.field}>
                     <label
-                      className={styles.label}
+                      className={`${styles.label} ${styles.visuallyHidden}`}
                       htmlFor="password"
                     >
                       Senha
                     </label>
-                    <input
-                      id="password"
-                      className={`input-field ${styles.input}`}
-                      type="password"
-                      placeholder="Digite sua senha"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={loading}
-                    />
+                    <div className={styles.inputControl}>
+                      <span aria-hidden className={styles.inputIcon}>
+                        🔒
+                      </span>
+                      <input
+                        id="password"
+                        className={styles.input}
+                        type="password"
+                        placeholder="Digite sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
                     <div className={styles.helpRow}>
                       <span>Esqueceu sua senha?</span>
                       <Link href="/suporte" className={styles.link}>
@@ -158,7 +168,7 @@ export default function Login() {
                     <div className={styles.feedback}>{msg}</div>
                   )}
 
-                  <button className="btn-primary w-full" disabled={loading}>
+                  <button className={styles.submitButton} disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
                 </form>

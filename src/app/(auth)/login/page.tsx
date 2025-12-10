@@ -36,15 +36,23 @@ export default function Login() {
     let active = true
 
     async function verifySession() {
-      const { data } = await supabase.auth.getSession()
-      if (!active) return
+      try {
+        const { data } = await supabase.auth.getSession()
+        if (!active) return
 
-      if (data.session) {
-        redirectByRole(data.session)
-        return
+        if (data.session) {
+          redirectByRole(data.session)
+          return
+        }
+
+        setCheckingSession(false)
+      } catch (error) {
+        if (!active) return
+
+        console.error('Erro ao verificar sessão', error)
+        setMsg('Não foi possível verificar a sessão. Tente novamente.')
+        setCheckingSession(false)
       }
-
-      setCheckingSession(false)
     }
 
     const {

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout";
 import styles from "./rules.module.css";
 
@@ -32,8 +34,14 @@ const ruleSections = [
 ];
 
 export default function DashboardRulesPage() {
+  const [heroReady, setHeroReady] = useState(false);
+
+  useEffect(() => {
+    setHeroReady(true);
+  }, []);
+
   return (
-    <ClientPageShell>
+    <ClientPageShell heroReady={heroReady}>
       <ClientSection>
         <div className={styles.page}>
           <div className={styles.content}>

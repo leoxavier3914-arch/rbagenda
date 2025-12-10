@@ -31,6 +31,11 @@
 ### 2.4 `/login`
 - **Layout/UX**: página usa `LavaLampProvider` + shell compartilhado (`ClientPageShell`/`ClientSection`/`ClientGlassPanel`) com cartão “liquid glass” (fundo quase transparente com blur e saturação, borda branca sólida, sombra interna molhada, glow superior em `::before` e bordas de 28px), logo “ROMEIKE BEAUTY” em pílula translúcida, inputs em pílula com fundo branco translúcido, borda branca, sombra interna leve e ícones embutidos (✉️ para e-mail, 🔒 para senha), placeholders cinza elegante, link de recuperação centralizado, botão “Entrar” em degradê premium de verdes com texto levemente brilhante e CTA inferior “Criar conta” sublinhada.
 
+### 2.5 `/suporte`
+- **Objetivo**: rota pública para exibir contatos de atendimento de forma simples.
+- **Arquivos principais**: `src/app/(client)/suporte/page.tsx` usa `SupportContent` em `@components/SupportContent.tsx` com CSS local em `suporte.module.css`.
+- **Layout/UX**: segue o shell padrão (`LavaLampProvider` → `ClientPageShell` → `ClientSection` → `ClientGlassPanel`), painel centralizado e texto genérico “em construção”, lista de canais (WhatsApp, e-mail, horário) marcada como “Em breve”.
+
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e flag de loading inicial. Retorna snapshot de disponibilidade (`buildAvailabilityData`), estados de loading/erro e `reloadAvailability`. Busca agendamentos futuros (60 dias) no Supabase, aplica buffers por serviço e normaliza para conjuntos de dias/slots; pode subscrever a mudanças em `appointments` para recarregar. Falhas do Supabase zeram snapshot e mostram mensagem configurável; timezone e buffer padronizados garantem consistência entre `/procedimento` e `/agendamentos`.
 - Tema/Lava: `LavaLampProvider` lê variáveis globais, monta paleta gradiente (`--dark`/`--light`) e redesenha blobs; `useLavaLamp.refreshPalette` é usado em `/procedimento` (painel admin) e `/meu-perfil` (preferências de tema). Globais em `globals.css` (cores base e classes `client-hero-wrapper`, `page`, `glass`).

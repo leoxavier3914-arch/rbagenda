@@ -1,84 +1,80 @@
-# Auditoria total rbagenda – 2025-12-07
+# Auditoria técnica completa – rbagenda
 
-## 1. Visão geral da arquitetura
-- **App Router (src/app):** organizado por grupos de rotas: `(client)` concentra a experiência do cliente (agendamentos, procedimento, perfil, checkout, etc.), `(auth)` lida com login/signup, `(admin)` traz páginas administrativas, e demais rotas de sistema (api/, success) ficam na raiz do App Router.
-- **Layouts:** `RootLayout` aplica fontes/cores globais, textura fixa (`brand-texture-overlay`) e marca o `body` com a classe `client-fullscreen` para rotas do shell do cliente. O grupo `(client)` envolve as páginas em `ClientLayout`, que liga o `LavaLampProvider` e, quando aplicável, o shell `ClientFullScreenLayout` com menu e padding condicionado por rota.
-- **Fundo animado:** `LavaLampProvider` injeta o canvas duplo (camadas dark/light) com paleta derivada de CSS vars (`--dark`, `--light`, `--lava-alpha-*`), respeita `prefers-reduced-motion`, expõe `refreshPalette` e sincroniza com ajustes de tema das páginas. Rotas de cliente incluem a textura/gradiente global de `globals.css` e estilos específicos de procedimento via `procedimento.css`.
-- **Componentes compartilhados:** wrappers do cliente (`ClientPageShell`, `ClientSection`, `ClientPageHeader`, `ClientGlassPanel`) vivem em `src/components/client` e são usados nos fluxos principais. O menu/painel `ClientMenu` e o layout `ClientFullScreenLayout` ficam em `src/components/` e compõem o shell contínuo do app cliente.
+## 1. Visão geral da arquitetura de cliente
+- **Rotas**: vivem em `src/app/(client)`; cada página sensível é `use client` e renderiza no cliente.
+- **Shell visual**: componentes em `src/components/client/ClientPageLayout` fornecem `ClientPageShell` (wrapper `client-hero-wrapper` + `page`), `ClientSection` (centering + `stack`) e `ClientGlassPanel` (classe `glass`/`label`).
+- **Fundo/tema**: `LavaLampProvider` (`src/components/LavaLampProvider.tsx`) lê variáveis CSS (`--dark`, `--light`, `--lava-alpha-*`, `--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`) e redesenha blobs; `useLavaLamp.refreshPalette` força reseed. `globals.css` mantém classes globais esperadas.
+- **Páginas sensíveis**: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero animado, grid `page`/`stack`, cartões de vidro e tipografia.
 
-## 2. Estrutura de pastas e responsabilidade por área
-- `src/app/(client)/`: rotas de cliente (`/procedimento`, `/agendamentos`, `/meu-perfil`, `/checkout`, `/configuracoes`, `/suporte`, `/regras`, `/indice`). `ClientLayout` aplica LavaLamp e o shell fullscreen.
-- `src/app/(auth)/`: páginas de autenticação (`/login`, `/signup`).
-- `src/app/(admin)/`: visão administrativa (`/admin`, `/admin/adminsuper`) com estilos próprios.
-- `src/app/api/`: rotas de backend (agendamentos, slots, pagamentos, webhooks Stripe, cron de lembretes e manutenção de appointments).
-- `src/components/`: infraestrutura compartilhada do cliente (menu, shell fullscreen, LavaLampProvider, CheckoutPage, FlowShell, BookingFlow) e design system mínimo (`client/ClientPageLayout`, `client/LashIcon`).
-- `src/lib/`: utilitários de domínio (auth, db Supabase, disponibilidade, agendamentos, pagamentos, lembretes, WhatsApp, Stripe client-side, hook `useLavaRevealStage`).
-- `src/app/globals.css` e `src/app/procedimento.css`: estilos globais, resets, gradientes, variáveis de tema e ajustes específicos do fluxo de procedimento.
-- `docs/`: documentação anterior (auditoria parcial e notas visuais) e o presente documento.
+## 2. Comportamento detalhado das páginas sensíveis
+### 2.1 `/procedimento`
+- **Objetivo**: conduzir escolha de serviço/técnica, seleção de data/horário, criação de agendamento e início de pagamento de sinal (Stripe).
+- **Arquivos**: `page.tsx` centraliza estado; CSS em `procedimento.module.css`; subcomponentes em `@components` (`TypeSelectionSection`, `TechniqueSelectionSection`, `DateSelectionSection`, `TimeSelectionSection`, `SummaryBar`, `SummaryModal`, `PayLaterNotice`, `AdminCustomizationPanel`, `ProcedimentoWrapper`, `ProcedimentoCard/Grid/Header`). Tipos em `types.ts` (`ServiceTechnique`, `TechniqueCatalogEntry`, `ServiceOption`, `SummarySnapshot`).
+- **Fluxo de dados/estado**:
+  - Carrega sessão Supabase; redireciona para `/login` se ausente.
+  - Busca catálogo em `service_types` com `service_type_assignments` e `services`; normaliza números (preço, duração, buffer, depósito), filtra ativos e ordena.
+  - Usa `useClientAvailability` com `subscribe: true`, canal `procedimento-appointments`, `fallbackBufferMinutes` padrão, timezone padrão e mensagem customizada. `availabilitySnapshot` cai para `buildAvailabilityData` vazio com fallback se erro.
+  - Estados: seleção de tipo/técnica/dia/slot, controle de mês (year/month), catálogo (`catalogStatus/error`), admin flag, hero readiness, mensagens e modais (summary, pay later). Slots calculados combinando `availability.daySlots`/`busyIntervals`, duração + buffer do serviço, fechamento `18:00`, eliminação de horários passados (mesmo dia) e sobreposição.
+  - Cria agendamento via POST `/api/appointments` com token Supabase; guarda `appointmentId` e snapshot. Pagamento de sinal: POST `/api/payments/create` (mode deposit) e redirect para `/checkout?client_secret=...&appointment_id=...`. Botão “Pagar depois” abre aviso e direciona para `/agendamentos`.
+- **Layout/UX**: wrapper `ProcedimentoWrapper` aplica hero + page; seções com cards de vidro e ícones `LashIcon`; legenda de calendário com estados (available/booked/full/mine/disabled). Barra de resumo fixa em viewport quando há seleção. Respeita `prefers-reduced-motion` e força classe `force-motion` (removível via hash `nomotion`).
+- **Invariantes**: manter sequência tipo→técnica→dia→horário; preservar filtros de disponibilidade (buffer, timezone, janela de 60 dias, interseção com busy intervals); não permitir slots passados/fora do fechamento; exigir sessão antes de criar/pagar; reutilizar snapshot para evitar duplicidade; manter canal de subscribe para atualizações em tempo real.
 
-## 3. Layouts, fundo e providers
-- **RootLayout (`src/app/layout.tsx`):** importa `globals.css` e `procedimento.css`, define metadados/manifesto PWA, calcula rota atual para aplicar `body.client-fullscreen` em rotas do shell do cliente e renderiza a `brand-texture-overlay` fixa sob todo o conteúdo.
-- **ClientLayout (`src/app/(client)/layout.tsx`):** client component que ativa `LavaLampProvider` para todas as rotas do grupo, omitindo o shell de menu em `/checkout` (importante para o fluxo de pagamento embutido).
-- **ClientFullScreenLayout (`src/components/ClientFullScreenLayout.tsx`):** adiciona `body.client-fullscreen`, esconde `brand-texture-overlay`, injeta `ClientMenu` e controla padding para rotas sensíveis (`/agendamentos`, `/procedimento`, `/meu-perfil`).
-- **LavaLampProvider:** cria canvases de lava em camadas dark/light, usa CSS vars (`--dark`, `--light`, `--lava-alpha-min/max`) para gerar paleta dinâmica, re-semente blobs em resize e oferece `refreshPalette` para páginas que editam tema. Respeita `prefers-reduced-motion` e remove listeners no cleanup.
-- **Ciclo do fundo:** `/procedimento`, `/agendamentos` e `/meu-perfil` vivem dentro do shell fullscreen com lava ativa e gradiente fixo; `/checkout` mantém LavaLamp mas sem menu; páginas auxiliares (`/configuracoes`, `/suporte`, `/regras`, `/indice`) usam o mesmo body class e textura.
+### 2.2 `/agendamentos`
+- **Objetivo**: listar agendamentos do cliente, filtrar por status, pagar sinal, cancelar e reagendar respeitando janelas de segurança.
+- **Arquivos**: `page.tsx`, CSS `agendamentos.module.css`, subcomponentes `@components` (`AppointmentsHeader`, `StatusFiltersBar`, `AppointmentsList`, `ConfirmCancelModal`, `RescheduleModal`, `BlockedModal`, `SuccessModal`). Tipos em `types.ts` (status, categorias, `NormalizedAppointment`, `CalendarDayEntry`, `SlotOption`).
+- **Fluxo de dados/estado**:
+  - Sessão Supabase obrigatória; redireciona para `/login` se faltante.
+  - Busca `appointments` do cliente com relações de serviços/tipos e totais pagos (`appointment_payment_totals`); normaliza valores (total, sinal, pago) e nomes de serviço/técnica (preferindo relacionamentos explícitos e caindo para assignments). Ordena por `starts_at` asc.
+  - Mantém filtros de status (`STATUS_FILTERS`), paginação (`ITEMS_PER_PAGE=5`), mensagens e diálogos (pagamento, cancelamento, bloqueio por prazo, sucesso, edição). Determina se pode cancelar/editar com base em `CANCEL_THRESHOLD_HOURS` (env var, default 24h) e status.
+  - Pagamento de sinal: POST `/api/payments/create` e redirect para `/checkout` se `client_secret`. Cancelamento: POST `/api/appointments/{id}/cancel`. Sucesso/cancelamento abrem modais informativos.
+  - Reagendamento: `RescheduleModal` usa `useClientAvailability` com `serviceId` filtrado, fallback de buffer/timezone, sem subscribe. Calendário marca dias `mine/full/booked/available`; bloqueia hoje/passado e fora do limite de cancelamento. Carrega slots via `/api/slots?service_id=...&date=...`; converte para rótulos e marca desabilitados se `hoursUntil` < limite. POST `/api/appointments/{id}/reschedule` salva.
+- **Layout/UX**: shell padrão (PageShell + Section), rodapé `ROMEIKE BEAUTY`. Lista mostra status com labels, valores formatados, badge de sinal pago/parcial/aguardando. Modais de confirmação/bloqueio/sucesso seguem estilo vidro.
+- **Invariantes**: respeitar janela mínima (`CANCEL_THRESHOLD_HOURS`) para cancelamento/reagendamento; impedir pagamento se depósito quitado ou status cancelado/completado; manter sincronização de disponibilidade do `RescheduleModal` para evitar conflitos de slots; preservar paginação e filtros existentes.
 
-## 4. Fluxos de negócio principais
-- **Autenticação/sessão:** Home (`/`) verifica a sessão via `supabase.auth.getSession`, redireciona para login se ausente; resolve o `role` pela tabela `profiles` e direciona para `/procedimento` (cliente) ou `/admin/adminsuper`/painel admin. Páginas de login/signup no grupo `(auth)` são client-side simples.
-- **Agendamentos (`/agendamentos`):** página client-side lista agendamentos do Supabase, normaliza status, pagina 5 itens, permite filtrar (ativos/pendentes/cancelados/concluídos), recalcula disponibilidade com `buildAvailabilityData` para reagendamento, suporta cancelamento e pagamento de sinal via Stripe (usando `stripePromise`). UI agora está segmentada em subcomponentes locais (`@components`) sobre o shell `ClientPageShell`/`ClientSection`, mantendo os mesmos cards e lógica existentes.
-- **Procedimento (`/procedimento`):** fluxo multi-etapas (tipo → técnica → dia → horário → resumo). Carrega catálogo de serviços/técnicas do Supabase, gera slots com `buildAvailabilityData`/`DEFAULT_SLOT_TEMPLATE`, trata buffers (`DEFAULT_FALLBACK_BUFFER_MINUTES`), integra com Stripe (`stripePromise`) para iniciar checkout e usa `useLavaLamp` para resemear paleta ao entrar/sair. UI usa wrappers `ProcedimentoWrapper`, `ProcedimentoGrid`, `ProcedimentoCard`, header e CSS específico.
-- **Meu perfil (`/meu-perfil`):** lê/escreve perfil no Supabase (nome, WhatsApp, email, aniversário), permite salvar preferências de paleta/fundo ajustando CSS vars (card, glass, background, bolhas, opacidades) e persistindo em `localStorage`; usa `useLavaLamp` e `useLavaRevealStage` para sincronizar revelação do fundo. Inclui upload de avatar (storage local) e reset de paleta. A tela foi modularizada em subcomponentes locais (`@components`) sem alterar lógica ou integrações.
-- **Checkout (`/checkout`):** servidor resolve `searchParams` (client_secret, appointment_id) e renderiza `CheckoutPage`, que injeta Stripe Elements com tema customizado e `FlowShell`; permite finalizar pagamento ligado ao agendamento.
-- **Configurações/Suporte/Regras/Índice:** páginas informativas ou de preferências locais com `card` e conteúdo estático; mantêm o shell do cliente.
-- **Área admin:** `/admin` exibe painel de bookings via `BookingFlow` e exige papel admin; `/admin/adminsuper` traz visão ampliada (detalhes definidos na página), ambos fora do menu do cliente.
-- **APIs:**
-  - `/api/appointments`: cria agendamentos (serviço ou experiência) validando body com Zod; resolve staff disponível; grava em `appointments` com status `pending` e valores de preço/sinal.
-  - `/api/slots`: expõe disponibilidade usando helpers de `availability.ts` (considera buffers e zona padrão).
-  - `/api/payments/create`: gera sessões de pagamento/intent para Stripe.
-  - `/api/webhooks/stripe`: recebe eventos `checkout.session.*` e `charge.refunded` para atualizar estado de pagamento/agendamento.
-  - `/api/cron/appointments` e `/api/cron/reminders`: funções para manter/cancelar agendamentos e disparar lembretes (usam service role via `getSupabaseAdmin`).
+### 2.3 `/meu-perfil`
+- **Objetivo**: permitir ao cliente editar perfil, senha, avatar local e paleta do tema/lava.
+- **Arquivos**: `page.tsx`, CSS `meu-perfil.module.css`, subcomponentes `@components` (`ProfileHeader`, `ProfileForm`, `AvatarUploader`, `ThemePreferencesPanel`). Tipos em `types.ts` (`Profile`, `ThemeState`, `defaultTheme`).
+- **Fluxo de dados/estado**:
+  - Carrega sessão Supabase e perfil (`profiles` com `full_name`, `whatsapp`, `email`, `birth_date`, `role`); redireciona para `/login` se ausente. Armazena campos de formulário, estados de salvar/sair, erros e sucesso.
+  - Avatar: lido/salvo em `localStorage` (`rb_meu_perfil_avatar`); refs controlam área de avatar e ações.
+  - Tema: sincroniza CSS vars atuais via `getComputedStyle` (`--inner-top/bottom`, `--card-stroke`, `--bg-top/bottom`, `--glass`, `--glass-stroke`, `--dark/light`, `--lava-alpha-*`), normaliza hex/alpha, aplica via `document.documentElement.style.setProperty`, usa `refreshPalette` para redesenhar fundo. Apenas perfis admin* podem editar aparência; painel fecha se permissão faltar.
+  - Usa `REVEAL_STAGE` via `useLavaRevealStage` para coordenar animações. Mantém `force-motion` no root durante a página.
+- **Layout/UX**: shell padrão com painéis de vidro (`ClientGlassPanel`); header com ações de sign-out, formulário de perfil, uploader e painel de cores com sliders/inputs hex. Valida HEX e alpha antes de aplicar; normaliza `rgbaFromHexAlpha`.
+- **Invariantes**: preferências de tema persistem via CSS vars; `refreshPalette` deve ser chamado após mudanças relevantes; avatar permanece apenas local; admins controlam tema; validações de cor/alpha devem permanecer para evitar valores inválidos.
 
-## 5. Componentes compartilhados
-- **ClientPageLayout (`src/components/client`):** fornece `ClientPageShell` (wrapper com classes globais e hero), `ClientSection` (stack/padding), `ClientPageHeader` (título, subtítulo, losango), `ClientGlassPanel` (cartão “glass” com label). Base para páginas do cliente.
-- **ClientFullScreenLayout/ClientMenu:** shell fullscreen com menu lateral (icones de calendário, plus, perfil, admin, suporte, settings). `ClientMenu` carrega perfil do Supabase para nome/role, calcula iniciais, destaca rota ativa, permite logout e controla padding de conteúdo.
-- **LavaLampProvider/useLavaLamp:** provider + hook para animar fundo e resemear paleta conforme variáveis de tema.
-- **Ícones e auxiliares:** `LashIcon` centraliza o SVG de cílios usado em cards/listas; `FlowShell` (usado em checkout) padroniza caixas de fluxo com sombras/gradiente; `BookingFlow` compõe interface do painel admin.
-- **Procedimento components (`src/app/(client)/procedimento/@components`):** cards, grids, header e wrappers reutilizados entre etapas e ajustados ao tema.
+## 3. Hooks e helpers compartilhados
+### 3.1 `useClientAvailability` (`src/hooks/useClientAvailability.ts`)
+- **Interface**: opções `serviceId?`, `enabled` (default true), `subscribe` (default false), `channel` (canal Supabase opcional), `fallbackBufferMinutes` (default `DEFAULT_FALLBACK_BUFFER_MINUTES`), `timezone` (default `DEFAULT_TIMEZONE`), `errorMessage`, `initialLoading` (default true). Retorna `{ availability, isLoadingAvailability, availabilityError, reloadAvailability }`.
+- **Lógica**: busca sessão; se ausente redireciona `/login`. Consulta `appointments` futuros (0–60 dias) com status relevantes (`pending/reserved/confirmed`), opcionalmente filtrando por `serviceId`; inclui `services(buffer_min)` para buffers. Normaliza com `buildAvailabilityData` (mapas de dias disponíveis, parcialmente ocupados, slots, busy intervals) considerando buffer e timezone. Pode subscrever mudanças em `appointments` via Realtime (se `subscribe`), recarregando snapshot quando registros relevantes forem alterados.
+- **Pontos sensíveis**: falhas Supabase limpam snapshot e setam `availabilityError`. Timezone/buffer vêm de defaults; ajustes impactam simultaneamente `/procedimento` e `RescheduleModal` em `/agendamentos`. Assumem janela de 60 dias e status relevantes fixos.
+- **Riscos de alteração**: mudar filtros de status, janela ou buffer altera disponibilidade das duas páginas; remover redirecionamento de login pode exibir erros silenciosos; alterar estrutura do snapshot quebra cálculos locais de slots/calendários.
 
-## 6. Estilos e CSS
-- **Globais:** `src/app/globals.css` define Tailwind layers, variáveis de cor/tipografia, gradiente de fundo, classes utilitárias (`client-hero-wrapper`, `page`, `glass`, `card`, grids) e estiliza o corpo quando `client-fullscreen` está ativo. Inclui reset para seleção, links e tipografia.
-- **Procedimento:** `src/app/procedimento.css` complementa com estilos otimizados para mobile (painel de paleta, sliders, calendário/slots, navegação de técnicas), controlando overlays e animações.
-- **CSS Modules:** cada página sensível possui módulo próprio (ex.: `procedimento.module.css`, `agendamentos.module.css`, `meu-perfil.module.css`, `configuracoes.module.css`, etc.), encapsulando layout e evitando bleed. `ClientFullScreenLayout.module.css` esconde a textura global quando o shell está ativo.
-- **Tema/lava:** variáveis `--dark`, `--light`, `--glass*`, `--inner*`, `--lava-alpha-*` são usadas pelo LavaLampProvider e pelos wrappers; `/meu-perfil` altera essas variáveis em runtime e persiste em storage/local CSS.
+### 3.2 Tema e shell
+- `LavaLampProvider` depende de variáveis globais; `refreshPalette` é usado em `/procedimento` (painel admin) e `/meu-perfil` (preferências). Mudanças nos nomes de vars quebram renderização do fundo.
+- `ClientPageLayout` fornece estrutura e classes esperadas por CSS modules das páginas; alterações podem desalinhá-las simultaneamente.
 
-## 7. Integrações externas e infraestrutura
-- **Supabase:** usado para auth (`supabase.auth` no cliente, `getSupabaseAdmin` server-side com service role), tabelas de `profiles`, `services`, `service_type_assignments`, `appointments`, `appointment_payment_totals`, `staff`. Cron functions (Edge/Scheduler) em `/api/cron/*` replicam lógica de manutenção/cancelamento descrita no README.
-- **Stripe:** checkout client-side via `@stripe/react-stripe-js`/Elements com `stripePromise`; server-side em `/api/payments/create` cria sessões, e `/api/webhooks/stripe` sincroniza eventos (pagamento aprovado, expirado, estorno) com Supabase.
-- **Outros:** lembretes/WhatsApp tratados por helpers (`whatsapp.ts`, `reminders.ts`), e cron GitHub Actions/Edge para manutenção de appointments conforme README.
+## 4. Tema, layout e experiência visual
+- Tema global baseado em variáveis CSS; `/meu-perfil` permite editar diretamente e sincronizar com animação lava. `/procedimento` e `/agendamentos` consomem passivamente essas variáveis para seus cards de vidro e hero.
+- Dependência forte de `glass`/`label`/`page`/`stack` para manter estilo consistente; alterações globais afetam todas as rotas sensíveis.
+- `LavaLampProvider` lê `--dark`/`--light` para gerar gradientes; alteração dessas vars sem atualizar preferências pode resultar em contraste quebrado.
 
-## 8. Pontos fortes da arquitetura atual
-- Separação clara por grupos do App Router (cliente, auth, admin) com layouts dedicados.
-- Shell de cliente consistente via `ClientFullScreenLayout` + `ClientMenu` e wrappers de página, garantindo UX uniforme nas rotas sensíveis.
-- Fundo animado encapsulado em provider único com paleta derivada de CSS vars, permitindo personalização controlada.
-- Uso extensivo de CSS Modules para isolar estilos e manter a identidade visual.
-- Utilitários de disponibilidade/pagamentos separados em `src/lib`, facilitando reuso em páginas e APIs.
+## 5. Riscos, pontos fracos e oportunidades
+- Alterar `useClientAvailability` sem testes pode introduzir slots incorretos em `/procedimento` e reagendamentos; falta suite de integração.
+- Ausência de persistência de avatar server-side; risco de perda ao trocar de dispositivo.
+- Lógica de pagamento distribuída nos handlers das páginas; poderia ser extraída para helper/hook com tratamento de erros e loading unificado.
+- Tema depende de manipulação manual de CSS vars; sem validação adicional, entradas inválidas podem quebrar visual. Poderia haver esquema/preview isolado.
+- Forte dependência de classes globais; sugerido encapsular mais estilos em módulos ou storybook para validar regressões.
 
-## 9. Riscos e pontos fracos
-- Dependência de variáveis globais para tema/lava: ajustes incorretos em `/meu-perfil` podem afetar todas as páginas do shell.
-- Lógica de disponibilidade e manipulação de slots agora está centralizada no hook compartilhado `useClientAvailability`; ajustes de regra precisam considerar impacto simultâneo em `/procedimento` e `/agendamentos`.
-- Páginas sensíveis são `use client` pesadas com muita lógica inline; difícil testar isoladamente e arriscado para regressões de UX.
-- `ClientLayout` controla exceções de shell via lista estática de rotas (ex.: `/checkout`); novas rotas fullscreen podem exigir ajustes manuais.
-- APIs dependem de acesso service role; configuração incorreta de env bloqueia boot (db.ts lança erro se variáveis faltarem).
+## 6. Atualizações recentes
+- Disponibilidade centralizada em `useClientAvailability` com subscribe opcional e fallback de buffer/timezone.
+- `/procedimento` modularizado em subcomponentes locais preservando fluxo e integração com Supabase/Stripe.
+- `/agendamentos` reorganizado em subcomponentes; reagendamento consolidado em `RescheduleModal` com hook compartilhado e API de slots.
+- `/meu-perfil` estruturado em subcomponentes; tema/cores expostos no painel e sincronizados com lava; avatar segue em `localStorage`.
 
-## 10. Oportunidades de melhoria e sugestões
- - Consolidar controle de tema/lava em contexto dedicado (com validação/limites) para evitar corrupção de CSS vars e facilitar reset global.
- - Modularizar páginas grandes (`/procedimento`, `/agendamentos`, `/meu-perfil`) em subcomponentes/hook por etapa (estado, Supabase, Stripe) para melhorar testabilidade.
- - Tornar a lista de rotas que ocultam menu configurável (ex.: via prop/contexto) evitando edits manuais em `ClientLayout` e `ClientFullScreenLayout`.
- - Adicionar testes de integração para APIs críticas (payments, webhooks, cron) e para o fluxo de agendamento completo, cobrindo Stripe + Supabase.
- - Incluir testes e monitoramento do hook `useClientAvailability` para garantir buffers/filtros idênticos em páginas sensíveis.
-
-## 11. Atualizações recentes
-- Extraído hook compartilhado `useClientAvailability` (`src/hooks/useClientAvailability.ts`) para centralizar carregamento e montagem de disponibilidade com buffers e filtros aplicados; páginas `/procedimento` e `/agendamentos` passaram a usá-lo sem alterar regras de negócio ou UI.
-- `/procedimento` modularizado em subcomponentes internos no grupo `@components`, mantendo layout e integrações existentes.
-- `/agendamentos` reorganizado em subcomponentes locais (`@components`) sem alterar regras de negócio, filtros ou integrações de disponibilidade/pagamento.
-- `/meu-perfil` reorganizado em subcomponentes internos (`@components`), preservando integrações de tema, lava, perfil e avatar.
+## Cheat sheet
+- Shell: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars.
+- Disponibilidade: `useClientAvailability` (60 dias, status pending/reserved/confirmed, buffer por serviço, timezone padrão, subscribe opcional).
+- `/procedimento`: sequência tipo→técnica→dia→horário; cria agendamento (`/api/appointments`) e inicia Stripe deposit (`/api/payments/create`).
+- `/agendamentos`: filtros por status, paginação, pagar/cancelar/reagendar; `RescheduleModal` usa hook + `/api/slots`; respeita `CANCEL_THRESHOLD_HOURS`.
+- `/meu-perfil`: edita perfil Supabase, avatar local, tema via CSS vars + `refreshPalette` (admins para aparência); mantém `force-motion`.
+- Riscos: mudanças em CSS vars/tema ou hook de disponibilidade impactam todas as rotas sensíveis; pagamentos dependem de endpoints locais sem camada de abstração.

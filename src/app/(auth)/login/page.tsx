@@ -1,31 +1,19 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useCallback, useEffect, useState } from 'react'
-import { supabase } from '@/lib/db'
 import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
 
-type Rgb = { r: number; g: number; b: number }
+import { LavaLampProvider } from '@/components/LavaLampProvider'
+import {
+  ClientGlassPanel,
+  ClientPageShell,
+  ClientSection,
+} from '@/components/client/ClientPageLayout'
+import { supabase } from '@/lib/db'
 
-const hexToRgb = (hex: string): Rgb => {
-  const raw = hex.replace('#', '')
-  const normalized = raw.length === 3 ? raw.split('').map((char) => char + char).join('') : raw
-  const value = parseInt(normalized, 16)
-  return {
-    r: (value >> 16) & 255,
-    g: (value >> 8) & 255,
-    b: value & 255,
-  }
-}
-
-const mixHexColors = (colorA: string, colorB: string, ratio: number): string => {
-  const a = hexToRgb(colorA)
-  const b = hexToRgb(colorB)
-  const mix = (channelA: number, channelB: number) => Math.round(channelA + (channelB - channelA) * ratio)
-  return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)]
-    .map((channel) => channel.toString(16).padStart(2, '0'))
-    .join('')}`
-}
+import styles from './login.module.css'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -43,124 +31,6 @@ export default function Login() {
     },
     [router],
   )
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined
-
-    const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
-
-    const LAVA_CONFIG = {
-      dark: { count: 22, radius: [90, 150] as [number, number], speed: 1.2 },
-      light: { count: 18, radius: [80, 130] as [number, number], speed: 1.0 },
-    }
-
-    const steps = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.85, 0.92, 0.97]
-
-    const buildPalette = () => {
-      const style = getComputedStyle(document.documentElement)
-      const dark = style.getPropertyValue('--dark').trim() || '#7aa98a'
-      const light = style.getPropertyValue('--light').trim() || '#bcd6c3'
-      return steps.map((step) => mixHexColors(dark, light, step))
-    }
-
-    const palette = buildPalette()
-
-    const rand = (min: number, max: number) => min + Math.random() * (max - min)
-    const pick = <T,>(values: readonly T[]) => values[Math.floor(Math.random() * values.length)]
-
-    const cleanups: Array<() => void> = []
-
-    const createLayer = (canvasId: string, type: 'dark' | 'light') => {
-      const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null
-      if (!canvas) return
-      const context = canvas.getContext('2d')
-      if (!context) return
-
-      const state = {
-        width: 0,
-        height: 0,
-        blobs: [] as Array<{
-          x: number
-          y: number
-          r: number
-          a: number
-          vx: number
-          vy: number
-          color: string
-          opacity: number
-        }>,
-        raf: 0,
-        destroyed: false,
-      }
-
-      const resize = () => {
-        const rect = canvas.getBoundingClientRect()
-        state.width = Math.ceil(rect.width * devicePixelRatio)
-        state.height = Math.ceil(rect.height * devicePixelRatio)
-        canvas.width = state.width
-        canvas.height = state.height
-        canvas.style.transform = 'translateZ(0)'
-      }
-
-      const reseed = () => {
-        const config = LAVA_CONFIG[type]
-        const minOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-min')) || 0.4
-        const maxOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lava-alpha-max')) || 0.85
-        resize()
-        state.blobs = []
-        for (let index = 0; index < config.count; index += 1) {
-          state.blobs.push({
-            x: rand(0, state.width),
-            y: rand(0, state.height),
-            r: rand(config.radius[0], config.radius[1]) * devicePixelRatio,
-            a: rand(0, Math.PI * 2),
-            vx: rand(-1, 1) * config.speed * devicePixelRatio,
-            vy: rand(-1, 1) * config.speed * devicePixelRatio,
-            color: pick(palette),
-            opacity: rand(minOpacity, maxOpacity),
-          })
-        }
-      }
-
-      const tick = () => {
-        if (state.destroyed) return
-        context.clearRect(0, 0, state.width, state.height)
-        context.globalCompositeOperation = 'lighter'
-        for (const blob of state.blobs) {
-          blob.x += blob.vx
-          blob.y += blob.vy
-          const bounds = 200 * devicePixelRatio
-          if (blob.x < -bounds || blob.x > state.width + bounds) blob.vx *= -1
-          if (blob.y < -bounds || blob.y > state.height + bounds) blob.vy *= -1
-          const projectedRadius = blob.r * (1 + Math.sin(blob.a + performance.now() * 0.002) * 0.05)
-          context.globalAlpha = blob.opacity
-          context.fillStyle = blob.color
-          context.beginPath()
-          context.arc(blob.x, blob.y, projectedRadius, 0, Math.PI * 2)
-          context.fill()
-        }
-        state.raf = window.requestAnimationFrame(tick)
-      }
-
-      const resizeHandler = () => resize()
-      window.addEventListener('resize', resizeHandler)
-      cleanups.push(() => window.removeEventListener('resize', resizeHandler))
-      cleanups.push(() => {
-        state.destroyed = true
-        if (state.raf) window.cancelAnimationFrame(state.raf)
-      })
-
-      reseed()
-      tick()
-    }
-
-    createLayer('lavaDark', 'dark')
-    createLayer('lavaLight', 'light')
-
-    return () => {
-      cleanups.forEach((fn) => fn())
-    }
-  }, [])
 
   useEffect(() => {
     let active = true
@@ -216,164 +86,84 @@ export default function Login() {
     setLoading(false)
   }
 
-  const cardContent = checkingSession ? (
-    <div className="text-center text-sm text-[color:rgba(31,45,40,0.8)]">Verificando sessão…</div>
-  ) : (
-    <>
-      <div className="space-y-2 text-center">
-        <span className="badge inline-flex login-welcome">Bem-vinda de volta</span>
-        <h1 className="text-3xl font-semibold text-[#1f2d28]">Acessar conta</h1>
-        <p className="muted-text">
-          Entre para acompanhar seus agendamentos e garantir uma rotina mais tranquila.
-        </p>
-      </div>
-      <div className="space-y-4">
-        <div className="space-y-1 text-center">
-          <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="email">
-            E-mail
-          </label>
-          <input
-            id="email"
-            className="input-field"
-            placeholder="nome@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        <div className="space-y-2 text-center">
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="password">
-              Senha
-            </label>
-            <input
-              id="password"
-              className="input-field"
-              type="password"
-              placeholder="Digite sua senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          <p className="text-center text-sm text-[color:rgba(31,45,40,0.8)]">
-            esqueceu sua senha?{' '}
-            <a
-              href="#"
-              className="cursor-pointer font-semibold text-[#1f2d28] underline underline-offset-4 transition-colors hover:text-[#153227]"
-            >
-              Clique aqui
-            </a>
-          </p>
-        </div>
-      </div>
-      {msg && (
-        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-          {msg}
-        </div>
-      )}
-    </>
-  )
-
   return (
-    <main className="min-h-screen flex-1 overflow-hidden">
-      <div className="procedimento-root">
-        <div className="texture" aria-hidden="true">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <filter id="mottle" x="-50%" y="-50%" width="200%" height="200%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="turb" />
-                <feGaussianBlur stdDeviation="18" in="turb" result="blur" />
-                <feBlend in="SourceGraphic" in2="blur" mode="multiply" />
-              </filter>
-            </defs>
-            <rect x="0" y="0" width="100" height="100" fill="#e9f3ee" filter="url(#mottle)" />
-          </svg>
-        </div>
+    <LavaLampProvider>
+      <ClientPageShell className={styles.shell}>
+        <ClientSection className={styles.section}>
+          <ClientGlassPanel className={styles.card} label="LOGIN">
+            <div className={styles.logoBlock}>
+              <div className={styles.logoBadge}>ROMEIKE BEAUTY</div>
+              <p className={styles.logoSubtitle}>
+                Acesse para acompanhar seus agendamentos e novidades.
+              </p>
+            </div>
 
-        <div className="lamp" aria-hidden="true">
-          <canvas id="lavaDark" className="lava dark" />
-          <canvas id="lavaLight" className="lava light" />
-        </div>
+            {checkingSession ? (
+              <div className={styles.sessionMessage}>Verificando sessão…</div>
+            ) : (
+              <>
+                <form className={styles.form} onSubmit={submit}>
+                  <div className={styles.field}>
+                    <label
+                      className={styles.label}
+                      htmlFor="email"
+                    >
+                      E-mail
+                    </label>
+                    <input
+                      id="email"
+                      className={`input-field ${styles.input}`}
+                      placeholder="nome@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
 
-        <div className="page">
-          <section className="center">
-            <form className="w-full max-w-md space-y-6" onSubmit={submit}>
-              <div className="w-full space-y-6 rounded-3xl bg-transparent p-6">{cardContent}</div>
-              {!checkingSession && (
-                <div className="button-stack flex flex-col gap-4 pt-1">
-                  <button className="login-button login-enter" disabled={loading}>
+                  <div className={styles.field}>
+                    <label
+                      className={styles.label}
+                      htmlFor="password"
+                    >
+                      Senha
+                    </label>
+                    <input
+                      id="password"
+                      className={`input-field ${styles.input}`}
+                      type="password"
+                      placeholder="Digite sua senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={loading}
+                    />
+                    <div className={styles.helpRow}>
+                      <span>Esqueceu sua senha?</span>
+                      <Link href="#" className={styles.link}>
+                        Clique aqui
+                      </Link>
+                    </div>
+                  </div>
+
+                  {msg && (
+                    <div className={styles.feedback}>{msg}</div>
+                  )}
+
+                  <button className="btn-primary w-full" disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
-                  <button
-                    type="button"
-                    className="login-button login-create"
-                    onClick={() => router.push('/signup')}
-                    disabled={loading}
-                  >
+                </form>
+
+                <p className={styles.signupText}>
+                  Ainda não tem uma conta?{' '}
+                  <Link href="/signup" className={styles.link}>
                     Criar conta
-                  </button>
-                </div>
-              )}
-            </form>
-          </section>
-        </div>
-      </div>
-      <style jsx>{`
-        .button-stack {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        @supports not (gap: 1rem) {
-          .button-stack > * + * {
-            margin-top: 1rem;
-          }
-        }
-
-        .login-button {
-          display: inline-flex;
-          width: 100%;
-          align-items: center;
-          justify-content: center;
-          gap: 0.375rem;
-          border-radius: 14px;
-          border: 1px solid #fff;
-          padding: 0.75rem 1.25rem;
-          font-size: 0.9375rem;
-          font-weight: 600;
-          color: #fff;
-          box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.45);
-          transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-        }
-
-        .login-button:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 14px 32px -16px rgba(0, 0, 0, 0.5);
-          filter: brightness(1.02);
-        }
-
-        .login-button:disabled {
-          cursor: not-allowed;
-          opacity: 0.65;
-          transform: none;
-        }
-
-        .login-enter {
-          background-color: #556b2f;
-        }
-
-        .login-create {
-          background-color: #d4e3ba;
-        }
-
-        .login-welcome {
-          color: #fff;
-          border-color: #fff;
-          background: rgba(255, 255, 255, 0.08);
-        }
-      `}</style>
-    </main>
+                  </Link>
+                </p>
+              </>
+            )}
+          </ClientGlassPanel>
+        </ClientSection>
+      </ClientPageShell>
+    </LavaLampProvider>
   )
 }

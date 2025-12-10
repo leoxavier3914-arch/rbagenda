@@ -70,6 +70,7 @@
 - `/procedimento` modularizado em subcomponentes locais preservando fluxo e integração com Supabase/Stripe.
 - `/agendamentos` reorganizado em subcomponentes; reagendamento consolidado em `RescheduleModal` com hook compartilhado e API de slots.
 - `/meu-perfil` estruturado em subcomponentes; tema/cores expostos no painel e sincronizados com lava; avatar segue em `localStorage`.
+- `/login` reorganizado visualmente com shell `ClientPageShell` + `LavaLampProvider`, card de vidro centralizado, logo destacado e formulário com links de recuperação/cadastro preservando lógica de autenticação existente.
 
 ## Cheat sheet
 - Shell: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars.

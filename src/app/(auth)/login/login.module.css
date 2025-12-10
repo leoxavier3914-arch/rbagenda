@@ -1,0 +1,113 @@
+.shell {
+  padding: 0;
+}
+
+.section {
+  min-height: 100vh;
+  align-items: center;
+  padding: clamp(48px, 6vw, 96px) clamp(18px, 4vw, 32px) clamp(56px, 8vw, 104px);
+}
+
+.card {
+  width: min(480px, 100%);
+  display: grid;
+  gap: clamp(14px, 2vw, 18px);
+}
+
+.logoBlock {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+  padding: 6px 8px 2px;
+}
+
+.logoBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--glass-stroke) 80%, transparent);
+  background: color-mix(in srgb, var(--glass) 70%, rgba(255, 255, 255, 0.6));
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.logoSubtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.4;
+  max-width: 360px;
+}
+
+.form {
+  display: grid;
+  gap: clamp(12px, 2vw, 16px);
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--ink) 86%, transparent);
+  text-align: left;
+}
+
+.input {
+  width: 100%;
+}
+
+.helpRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.link {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 36%, transparent);
+  padding-bottom: 2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.link:hover {
+  color: color-mix(in srgb, var(--ink) 86%, transparent);
+  border-color: color-mix(in srgb, var(--ink) 72%, transparent);
+}
+
+.feedback {
+  border-radius: 14px;
+  border: 1px solid rgba(244, 129, 129, 0.45);
+  background: rgba(255, 237, 237, 0.75);
+  color: #a43d3d;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.signupText {
+  text-align: center;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.97rem;
+}
+
+.sessionMessage {
+  text-align: center;
+  color: color-mix(in srgb, var(--ink) 78%, transparent);
+  padding: 12px;
+  font-size: 0.98rem;
+}

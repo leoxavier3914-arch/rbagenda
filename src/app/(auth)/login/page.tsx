@@ -24,6 +24,8 @@ export default function Login() {
   const [heroReady, setHeroReady] = useState(false)
   const router = useRouter()
 
+  const isFormDisabled = loading || checkingSession
+
   const redirectByRole = useCallback(
     async (session: Session | null) => {
       if (!session?.user?.id) return
@@ -108,80 +110,78 @@ export default function Login() {
           </div>
 
           <ClientGlassPanel className={styles.card} label="LOGIN">
-            {checkingSession ? (
-              <div className={styles.sessionMessage}>Verificando sessão…</div>
-            ) : (
-              <>
-                <form className={styles.form} onSubmit={submit}>
-                  <div className={styles.field}>
-                    <label
-                      className={`${styles.label} ${styles.visuallyHidden}`}
-                      htmlFor="email"
-                    >
-                      E-mail
-                    </label>
-                    <div className={styles.inputControl}>
-                      <span aria-hidden className={styles.inputIcon}>
-                        ✉️
-                      </span>
-                      <input
-                        id="email"
-                        className={styles.input}
-                        placeholder="nome@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.field}>
-                    <label
-                      className={`${styles.label} ${styles.visuallyHidden}`}
-                      htmlFor="password"
-                    >
-                      Senha
-                    </label>
-                    <div className={styles.inputControl}>
-                      <span aria-hidden className={styles.inputIcon}>
-                        🔒
-                      </span>
-                      <input
-                        id="password"
-                        className={styles.input}
-                        type="password"
-                        placeholder="Digite sua senha"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-
-                  {msg && (
-                    <div className={styles.feedback}>{msg}</div>
-                  )}
-
-                  <button className={styles.submitButton} disabled={loading}>
-                    {loading ? 'Entrando…' : 'Entrar'}
-                  </button>
-
-                  <div className={styles.helpRow}>
-                    <span>Esqueceu sua senha?</span>
-                    <Link href="/suporte" className={styles.link}>
-                      Clique aqui
-                    </Link>
-                  </div>
-                </form>
-
-                <p className={styles.signupText}>
-                  Ainda não tem uma conta?{' '}
-                  <Link href="/signup" className={styles.link}>
-                    Criar conta
-                  </Link>
-                </p>
-              </>
+            {checkingSession && (
+              <div className={styles.sessionInfo}>
+                Validando sessão ativa. O formulário ficará disponível em instantes.
+              </div>
             )}
+
+            <form className={styles.form} onSubmit={submit}>
+              <div className={styles.field}>
+                <label
+                  className={`${styles.label} ${styles.visuallyHidden}`}
+                  htmlFor="email"
+                >
+                  E-mail
+                </label>
+                <div className={styles.inputControl}>
+                  <span aria-hidden className={styles.inputIcon}>
+                    ✉️
+                  </span>
+                  <input
+                    id="email"
+                    className={styles.input}
+                    placeholder="nome@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isFormDisabled}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label
+                  className={`${styles.label} ${styles.visuallyHidden}`}
+                  htmlFor="password"
+                >
+                  Senha
+                </label>
+                <div className={styles.inputControl}>
+                  <span aria-hidden className={styles.inputIcon}>
+                    🔒
+                  </span>
+                  <input
+                    id="password"
+                    className={styles.input}
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isFormDisabled}
+                  />
+                </div>
+              </div>
+
+              {msg && <div className={styles.feedback}>{msg}</div>}
+
+              <button className={styles.submitButton} disabled={isFormDisabled}>
+                {loading ? 'Entrando…' : 'Entrar'}
+              </button>
+
+              <div className={styles.helpRow}>
+                <span>Esqueceu sua senha?</span>
+                <Link href="/suporte" className={styles.link}>
+                  Clique aqui
+                </Link>
+              </div>
+            </form>
+
+            <p className={styles.signupText}>
+              Ainda não tem uma conta?{' '}
+              <Link href="/signup" className={styles.link}>
+                Criar conta
+              </Link>
+            </p>
           </ClientGlassPanel>
         </ClientSection>
       </ClientPageShell>

@@ -39,7 +39,7 @@
 ### 2.6 `/regras`
 - **Objetivo**: exibir as regras de agendamento de forma pública.
 - **Arquivos principais**: `src/app/(client)/regras/page.tsx` e estilos em `rules.module.css`.
-- **Layout/UX**: agora usa o shell de cliente (`ClientPageShell` + `ClientSection`) para alinhar com as demais páginas, mas mantém o conteúdo direto no fundo (sem `ClientGlassPanel`). Mantém cabeçalho, divisor ornamental, cards de regras e divisórias brancas intactos.
+- **Layout/UX**: usa o shell de cliente (`ClientPageShell` + `ClientSection`) com `heroReady` aplicado após o mount para liberar a classe `client-hero-ready` e a transição de opacidade. Conteúdo segue direto no fundo (sem `ClientGlassPanel`), preservando cabeçalho, divisor ornamental, cards de regras e divisórias brancas.
 - **Lógica**: não exige sessão nem hooks adicionais; apenas renderização estática das regras.
 
 ## 3. Hooks e helpers compartilhados
@@ -59,7 +59,7 @@
 - `/agendamentos`: lista e modais reorganizados em subcomponentes; reagendamento centralizado em `RescheduleModal` usando `useClientAvailability` e slots via API.
 - `/meu-perfil`: extração de subcomponentes, persistência de avatar em `localStorage` e sincronização de tema com `LavaLampProvider`.
 - Hook `useClientAvailability`: consolidado para busca/subscribe em Supabase e normalização de dias/slots com buffer padrão.
-- `/regras`: alinhada ao shell de cliente (`ClientPageShell` + `ClientSection`) mantendo ornamento, divisórias e cards diretos no fundo, sem painel de vidro.
+- `/regras`: alinhada ao shell de cliente (`ClientPageShell` + `ClientSection`) com `heroReady` pós-mount para habilitar a transição de hero, mantendo ornamento, divisórias e cards diretos no fundo, sem painel de vidro.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + `glass`/`label`; fundo lava via `LavaLampProvider` e CSS vars.

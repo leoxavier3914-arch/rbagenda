@@ -103,14 +103,11 @@ export default function Login() {
     <LavaLampProvider>
       <ClientPageShell heroReady={heroReady} className={styles.shell}>
         <ClientSection className={styles.section}>
-          <ClientGlassPanel className={styles.card} label="LOGIN">
-            <div className={styles.logoBlock}>
-              <div className={styles.logoBadge}>ROMEIKE BEAUTY</div>
-              <p className={styles.logoSubtitle}>
-                Acesse para acompanhar seus agendamentos e novidades.
-              </p>
-            </div>
+          <div className={styles.logoArea}>
+            <div className={styles.logoBadge}>ROMEIKE BEAUTY</div>
+          </div>
 
+          <ClientGlassPanel className={styles.card} label="LOGIN">
             {checkingSession ? (
               <div className={styles.sessionMessage}>Verificando sessão…</div>
             ) : (

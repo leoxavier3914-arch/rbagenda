@@ -47,7 +47,9 @@ export default function Login() {
       setCheckingSession(false)
     }
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return
       if (session) {
         redirectByRole(session)
@@ -60,7 +62,7 @@ export default function Login() {
 
     return () => {
       active = false
-      subscription.subscription.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [redirectByRole])
 

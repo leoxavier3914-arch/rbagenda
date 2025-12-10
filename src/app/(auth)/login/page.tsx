@@ -21,6 +21,7 @@ export default function Login() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
+  const [heroReady, setHeroReady] = useState(false)
   const router = useRouter()
 
   const redirectByRole = useCallback(
@@ -34,6 +35,8 @@ export default function Login() {
 
   useEffect(() => {
     let active = true
+
+    setHeroReady(true)
 
     async function verifySession() {
       try {
@@ -98,7 +101,7 @@ export default function Login() {
 
   return (
     <LavaLampProvider>
-      <ClientPageShell className={styles.shell}>
+      <ClientPageShell heroReady={heroReady} className={styles.shell}>
         <ClientSection className={styles.section}>
           <ClientGlassPanel className={styles.card} label="LOGIN">
             <div className={styles.logoBlock}>

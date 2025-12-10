@@ -156,12 +156,6 @@ export default function Login() {
                         disabled={loading}
                       />
                     </div>
-                    <div className={styles.helpRow}>
-                      <span>Esqueceu sua senha?</span>
-                      <Link href="/suporte" className={styles.link}>
-                        Clique aqui
-                      </Link>
-                    </div>
                   </div>
 
                   {msg && (
@@ -171,6 +165,13 @@ export default function Login() {
                   <button className={styles.submitButton} disabled={loading}>
                     {loading ? 'Entrando…' : 'Entrar'}
                   </button>
+
+                  <div className={styles.helpRow}>
+                    <span>Esqueceu sua senha?</span>
+                    <Link href="/suporte" className={styles.link}>
+                      Clique aqui
+                    </Link>
+                  </div>
                 </form>
 
                 <p className={styles.signupText}>

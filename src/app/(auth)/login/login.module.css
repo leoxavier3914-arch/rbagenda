@@ -139,10 +139,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.95rem;
   color: var(--muted);
-  margin-top: 6px;
+  margin-top: clamp(12px, 1.8vw, 18px);
+  text-align: center;
 }
 
 .link {

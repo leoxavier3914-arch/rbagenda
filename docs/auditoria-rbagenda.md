@@ -29,6 +29,7 @@
 - **Invariantes**: preferências de tema devem persistir via CSS vars e refletir no fundo lava; avatar continua armazenado em `localStorage`; manter validações de hex/alpha e sincronização com `refreshPalette`; admins únicos podem alterar aparência.
 
 ### 2.4 `/login`
+- **Layout/UX**: página usa `LavaLampProvider` + shell compartilhado (`ClientPageShell`/`ClientSection`/`ClientGlassPanel`) com cartão glass premium (borda branca sutil, blur e sombra difusa), logo “ROMEIKE BEAUTY” em pílula translúcida sobre o card, inputs em formato pílula com ícones (✉️ para e-mail, 🔒 para senha) e placeholders verde-acinzentados. Link de recuperação fica abaixo do botão “Entrar” com espaçamento mais amplo e alinhamento central consistente com o CTA inferior “Criar conta”, que segue sublinhada.
 - **Layout/UX**: página usa `LavaLampProvider` + shell compartilhado (`ClientPageShell`/`ClientSection`/`ClientGlassPanel`) com cartão “Liquid Glass” (fundo quase transparente, blur/saturação, borda branca sólida, sombras interna/externa e brilho superior em `::before`), logo “ROMEIKE BEAUTY” em pílula translúcida sobre o card, inputs-pílula de vidro (fundo translúcido branco, borda branca sólida, sombra interna, ícones embutidos de e-mail/cadeado e placeholders cinza elegante), link de recuperação centralizado, botão “Entrar” em degradê premium de verdes com formato pill e glow, CTA inferior “Criar conta” sublinhada.
 
 ## 3. Hooks e helpers compartilhados

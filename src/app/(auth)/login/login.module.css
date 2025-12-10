@@ -41,12 +41,17 @@
   gap: clamp(16px, 2vw, 24px);
   padding: clamp(18px, 2.4vw, 24px) clamp(18px, 2.8vw, 26px) clamp(22px, 3vw, 30px);
   border-radius: 28px;
-  border: 1px solid #ffffff;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px) saturate(180%);
+  border: 1.5px solid #ffffff;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.18)
+  );
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   box-shadow:
-    inset 0 0 25px rgba(255, 255, 255, 0.06),
-    0 0 30px rgba(0, 0, 0, 0.15);
+    inset 0 1px 22px rgba(255, 255, 255, 0.22),
+    0 18px 38px rgba(13, 60, 44, 0.18);
 }
 
 .card > * {
@@ -59,9 +64,10 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.25),
-    rgba(255, 255, 255, 0)
+    180deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.1) 32%,
+    rgba(255, 255, 255, 0) 100%
   );
   pointer-events: none;
   z-index: 0;
@@ -80,7 +86,7 @@
 .label {
   font-size: 0.95rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--ink) 86%, transparent);
+  color: color-mix(in srgb, var(--ink) 90%, #0d3c2c 10%);
   text-align: left;
 }
 
@@ -105,17 +111,24 @@
   padding: 14px 18px;
   border-radius: 999px;
   border: 1px solid #ffffff;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.9);
   box-shadow:
-    inset 0 1px 10px rgba(255, 255, 255, 0.35),
-    0 10px 22px rgba(13, 60, 44, 0.08);
+    inset 0 1px 12px rgba(255, 255, 255, 0.4),
+    0 10px 24px rgba(13, 60, 44, 0.12);
   z-index: 1;
+}
+
+.inputControl:focus-within {
+  box-shadow:
+    inset 0 1px 12px rgba(255, 255, 255, 0.46),
+    0 12px 26px rgba(13, 60, 44, 0.16);
+  border-color: #ffffff;
 }
 
 .inputIcon {
   font-size: 1.05rem;
-  color: #0f5f44;
-  filter: drop-shadow(0 2px 4px rgba(13, 60, 44, 0.18));
+  color: #0d3c2c;
+  filter: drop-shadow(0 2px 4px rgba(13, 60, 44, 0.2));
 }
 
 .input {
@@ -128,7 +141,7 @@
 }
 
 .input::placeholder {
-  color: #5f6d65;
+  color: rgba(13, 60, 44, 0.54);
 }
 
 .input:focus {

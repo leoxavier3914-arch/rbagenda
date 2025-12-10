@@ -1,3 +1,4 @@
+import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout";
 import styles from "./rules.module.css";
 
 const ruleSections = [
@@ -32,54 +33,58 @@ const ruleSections = [
 
 export default function DashboardRulesPage() {
   return (
-    <main className={styles.page}>
-      <div className={styles.content}>
-        <header className={styles.heading}>
-          <span className={styles.mark}>◆</span>
-          <div className="space-y-2">
-            <h1 className={styles.title}>
-              Antes de confirmar, <span>leia com atenção:</span>
-            </h1>
-            <p className={styles.subtitle}>
-              Cada regra fica em um card único, alinhado em coluna, no mesmo acabamento do procedimento.
-            </p>
-          </div>
-        </header>
-
-        <div className={styles.ornamentalDivider} aria-hidden="true">
-          <span className={styles.flourish} />
-          <span className={styles.diamond} />
-          <span className={styles.flourish} />
-        </div>
-
-        <div className={styles.cardList}>
-          {ruleSections.map((section, index) => (
-            <div key={section.label}>
-              <div className={styles.card}>
-                <div className={styles.cardInner}>
-                  <p className={styles.eyebrow}>{section.eyebrow}</p>
-                  <h2 className={styles.cardTitle}>{section.label}</h2>
-                  <div className={styles.inlineList}>
-                    {section.items.map((item) => (
-                      <span key={item} className={styles.inlineItem}>
-                        <span className={styles.inlineItemText}>{item}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
+    <ClientPageShell>
+      <ClientSection>
+        <div className={styles.page}>
+          <div className={styles.content}>
+            <header className={styles.heading}>
+              <span className={styles.mark}>◆</span>
+              <div className="space-y-2">
+                <h1 className={styles.title}>
+                  Antes de confirmar, <span>leia com atenção:</span>
+                </h1>
+                <p className={styles.subtitle}>
+                  Cada regra fica em um card único, alinhado em coluna, no mesmo acabamento do procedimento.
+                </p>
               </div>
+            </header>
 
-              {index < ruleSections.length - 1 && (
-                <div className={styles.sectionDivider} aria-hidden="true">
-                  <span className={styles.sectionLine} />
-                </div>
-              )}
+            <div className={styles.ornamentalDivider} aria-hidden="true">
+              <span className={styles.flourish} />
+              <span className={styles.diamond} />
+              <span className={styles.flourish} />
             </div>
-          ))}
-        </div>
 
-        <p className={styles.footerMark}>ROMEIKE BEAUTY</p>
-      </div>
-    </main>
+            <div className={styles.cardList}>
+              {ruleSections.map((section, index) => (
+                <div key={section.label}>
+                  <div className={styles.card}>
+                    <div className={styles.cardInner}>
+                      <p className={styles.eyebrow}>{section.eyebrow}</p>
+                      <h2 className={styles.cardTitle}>{section.label}</h2>
+                      <div className={styles.inlineList}>
+                        {section.items.map((item) => (
+                          <span key={item} className={styles.inlineItem}>
+                            <span className={styles.inlineItemText}>{item}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {index < ruleSections.length - 1 && (
+                    <div className={styles.sectionDivider} aria-hidden="true">
+                      <span className={styles.sectionLine} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <p className={styles.footerMark}>ROMEIKE BEAUTY</p>
+          </div>
+        </div>
+      </ClientSection>
+    </ClientPageShell>
   );
 }

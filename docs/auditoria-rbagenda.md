@@ -36,6 +36,12 @@
 - **Arquivos principais**: `src/app/(client)/suporte/page.tsx` usa `SupportContent` em `@components/SupportContent.tsx` com CSS local em `suporte.module.css`.
 - **Layout/UX**: segue o shell padrão (`LavaLampProvider` → `ClientPageShell` → `ClientSection` → `ClientGlassPanel`), painel centralizado e texto genérico “em construção”, lista de canais (WhatsApp, e-mail, horário) marcada como “Em breve”.
 
+### 2.6 `/regras`
+- **Objetivo**: exibir as regras de agendamento de forma pública.
+- **Arquivos principais**: `src/app/(client)/regras/page.tsx` e estilos em `rules.module.css`.
+- **Layout/UX**: agora usa o shell de cliente (`ClientPageShell` + `ClientSection`) para alinhar com as demais páginas, mas mantém o conteúdo direto no fundo (sem `ClientGlassPanel`). Mantém cabeçalho, divisor ornamental, cards de regras e divisórias brancas intactos.
+- **Lógica**: não exige sessão nem hooks adicionais; apenas renderização estática das regras.
+
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e flag de loading inicial. Retorna snapshot de disponibilidade (`buildAvailabilityData`), estados de loading/erro e `reloadAvailability`. Busca agendamentos futuros (60 dias) no Supabase, aplica buffers por serviço e normaliza para conjuntos de dias/slots; pode subscrever a mudanças em `appointments` para recarregar. Falhas do Supabase zeram snapshot e mostram mensagem configurável; timezone e buffer padronizados garantem consistência entre `/procedimento` e `/agendamentos`.
 - Tema/Lava: `LavaLampProvider` lê variáveis globais, monta paleta gradiente (`--dark`/`--light`) e redesenha blobs; `useLavaLamp.refreshPalette` é usado em `/procedimento` (painel admin) e `/meu-perfil` (preferências de tema). Globais em `globals.css` (cores base e classes `client-hero-wrapper`, `page`, `glass`).
@@ -53,6 +59,7 @@
 - `/agendamentos`: lista e modais reorganizados em subcomponentes; reagendamento centralizado em `RescheduleModal` usando `useClientAvailability` e slots via API.
 - `/meu-perfil`: extração de subcomponentes, persistência de avatar em `localStorage` e sincronização de tema com `LavaLampProvider`.
 - Hook `useClientAvailability`: consolidado para busca/subscribe em Supabase e normalização de dias/slots com buffer padrão.
+- `/regras`: alinhada ao shell de cliente (`ClientPageShell` + `ClientSection`) mantendo ornamento, divisórias e cards diretos no fundo, sem painel de vidro.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + `glass`/`label`; fundo lava via `LavaLampProvider` e CSS vars.

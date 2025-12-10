@@ -29,7 +29,7 @@
 - **Invariantes**: preferências de tema devem persistir via CSS vars e refletir no fundo lava; avatar continua armazenado em `localStorage`; manter validações de hex/alpha e sincronização com `refreshPalette`; admins únicos podem alterar aparência.
 
 ### 2.4 `/login`
-- **Layout/UX**: página usa `LavaLampProvider` + shell compartilhado (`ClientPageShell`/`ClientSection`/`ClientGlassPanel`) com card de vidro centralizado, bloco de logo “ROMEIKE BEAUTY” no topo, formulário com e-mail/senha (placeholders padronizados), link “Esqueceu sua senha? Clique aqui”, CTA principal “Entrar” e link inferior “Ainda não tem uma conta? Criar conta” para cadastro.
+- **Layout/UX**: página usa `LavaLampProvider` + shell compartilhado (`ClientPageShell`/`ClientSection`/`ClientGlassPanel`) com card de vidro centralizado, logo textual “ROMEIKE BEAUTY” acima do card, formulário com e-mail/senha (placeholders padronizados) e link “Esqueceu sua senha? Clique aqui” centralizado; CTA principal “Entrar” e link inferior “Ainda não tem uma conta? Criar conta” para cadastro.
 
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e flag de loading inicial. Retorna snapshot de disponibilidade (`buildAvailabilityData`), estados de loading/erro e `reloadAvailability`. Busca agendamentos futuros (60 dias) no Supabase, aplica buffers por serviço e normaliza para conjuntos de dias/slots; pode subscrever a mudanças em `appointments` para recarregar. Falhas do Supabase zeram snapshot e mostram mensagem configurável; timezone e buffer padronizados garantem consistência entre `/procedimento` e `/agendamentos`.

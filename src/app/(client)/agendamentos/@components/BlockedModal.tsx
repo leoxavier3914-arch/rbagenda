@@ -1,6 +1,7 @@
+import { ClientBaseModal } from '@/components/client/ClientBaseModal'
+
 import styles from '../agendamentos.module.css'
 import type { NormalizedAppointment } from '../types'
-import { BaseModal } from './BaseModal'
 
 type BlockedModalProps = {
   appointment: NormalizedAppointment | null
@@ -10,7 +11,13 @@ type BlockedModalProps = {
 export function BlockedModal({ appointment, onClose }: BlockedModalProps) {
   if (!appointment) return null
   return (
-    <BaseModal isOpen onClose={onClose} contentClassName={styles.modalWarning}>
+    <ClientBaseModal
+      isOpen
+      onClose={onClose}
+      className={styles.modal}
+      backdropClassName={styles.modalBackdrop}
+      contentClassName={`${styles.modalContent} ${styles.modalWarning}`}
+    >
       <div className={`${styles.iconWrap} ${styles.iconWrapWarning}`} aria-hidden="true">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d1a13b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
@@ -27,6 +34,6 @@ export function BlockedModal({ appointment, onClose }: BlockedModalProps) {
           OK
         </button>
       </div>
-    </BaseModal>
+    </ClientBaseModal>
   )
 }

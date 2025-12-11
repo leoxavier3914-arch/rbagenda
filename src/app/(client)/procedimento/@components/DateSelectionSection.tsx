@@ -1,5 +1,7 @@
 import { ForwardedRef, forwardRef } from 'react'
 
+import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
+
 import { ProcedimentoHeader } from './ProcedimentoHeader'
 import styles from '../procedimento.module.css'
 
@@ -52,8 +54,12 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
         <ProcedimentoHeader className={styles.procedimentoHeader}>
           <>Escolha <span className={styles.subtitle}>o</span> Dia:</>
         </ProcedimentoHeader>
-        <div className={styles.glass} aria-label="Escolha do dia">
-          <div className={styles.label}>DIA</div>
+        <ClientGlassPanel
+          className={styles.glass}
+          label="DIA"
+          labelClassName={styles.label}
+          aria-label="Escolha do dia"
+        >
           {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
           {!availabilityError && isLoadingAvailability && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
@@ -122,7 +128,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
               <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
             </span>
           </div>
-        </div>
+        </ClientGlassPanel>
       </div>
     </section>
   )

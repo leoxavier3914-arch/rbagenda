@@ -43,13 +43,13 @@
 - **Recomendações**: adicionar tratamento de erros por código; validar form antes de submit; mover redirecionamento por role para helper compartilhado.
 
 ### 2.5 `/regras` (`src/app/(client)/regras/page.tsx`)
-- **Objetivo**: exibir regras públicas da agenda.
-- **Arquivos e componentes**: rota `page.tsx`; CSS `rules.module.css`.
-- **Fluxo de dados/estado**: estático, sem sessão nem hooks extras.
-- **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo fica direto no fundo. Mantém divisórias brancas entre blocos, e ornamento (flourish + diamond) na abertura — devem ser preservados. Subtítulo evita hifenização/quebras abruptas.
-- **Organização**: simples e estático, focado em tipografia/divisores.
-- **Pontos fortes/fracos**: clareza visual e alinhamento com hero; ausência de vidro é intencional. Falta consistência de spacing compartilhado com outras páginas e nenhum teste visual automatizado.
-- **Recomendações**: garantir que futuras refactors mantenham divisórias/ornamento; considerar extrair layout estático para componente compartilhado de páginas públicas.
+- **Objetivo**: exibir regras públicas da agenda para usuários autenticados.
+- **Arquivos e componentes**: rota `page.tsx`; CSS `rules.module.css`; subcomponentes locais em `@components` (`RulesHeader`, `RulesSectionList`, `RulesSectionCard`, `RulesSectionDivider`); tipos em `types.ts`.
+- **Fluxo de dados/estado**: checa sessão Supabase no mount (`getSession`); se ausente ou erro, redireciona para `/login`. `heroReady` ativa animações do shell.
+- **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Ajustes de CSS permitem quebra natural de linhas sem cortar texto.
+- **Organização**: modularizada em header, lista e cartões; array de regras tipado para facilitar manutenção sem alterar conteúdo.
+- **Pontos fortes/fracos**: clareza visual mantida e alinhamento com padrão de autenticação. Risco baixo; depende apenas do Supabase para sessão.
+- **Recomendações**: monitorar responsividade para garantir que textos longos continuem sem truncamento; manter ornamento e ausência de glass em futuros ajustes.
 
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e `initialLoading`. Retorna snapshot de disponibilidade (dias, slots, busy intervals), loading, erro e `reloadAvailability`. Redireciona para `/login` sem sessão, busca `appointments` (status `pending/reserved/confirmed`) de 0–60 dias e inclui buffers por serviço; pode assinar Realtime para recarregar.

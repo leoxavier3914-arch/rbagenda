@@ -51,8 +51,9 @@
   font-size: clamp(14px, 2.6vw, 16px);
   color: color-mix(in srgb, var(--ink) 72%, transparent);
   hyphens: none;
-  overflow-wrap: normal;
-  word-break: keep-all;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 
@@ -128,6 +129,9 @@
 .inlineItemText {
   display: block;
   text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .footerMark {

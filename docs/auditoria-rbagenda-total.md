@@ -57,6 +57,8 @@
 - `LavaLampProvider` e painel de tema refinados; `/meu-perfil` passa a aplicar `refreshPalette` após ajustes de cor.
 - Página de login recebeu shell completo, cartão de vidro consistente, verificação de sessão antes do formulário e `heroReady` ativado no mount para evitar “sumir” do formulário.
 - `/suporte` e `/regras` alinhadas ao shell; `/regras` mantém conteúdo direto no fundo com ornamentos/divisórias preservados.
+- `/regras` modularizada em subcomponentes locais, tipagem dedicada e alinhamento de autenticação; ajustes de CSS evitam texto
+  cortado sem alterar o visual.
 
 ## Cheat sheet
 - **Shell**: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars. Exceção: `checkout` apenas com provider.

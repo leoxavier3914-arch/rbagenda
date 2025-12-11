@@ -1,11 +1,17 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
-import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout";
-import styles from "./rules.module.css";
+import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout"
+import { supabase } from "@/lib/db"
 
-const ruleSections = [
+import { RulesHeader } from "./@components/RulesHeader"
+import { RulesSectionList } from "./@components/RulesSectionList"
+import type { RuleSection } from "./types"
+import styles from "./rules.module.css"
+
+const ruleSections: RuleSection[] = [
   {
     label: "Antes de agendar",
     eyebrow: "ANTES DE AGENDAR",
@@ -33,68 +39,52 @@ const ruleSections = [
       "Siga as orientações pós-procedimento enviadas no app para melhores resultados.",
     ],
   },
-];
+]
 
 export default function DashboardRulesPage() {
-  const [heroReady, setHeroReady] = useState(false);
+  const [heroReady, setHeroReady] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    setHeroReady(true);
-  }, []);
+    setHeroReady(true)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const verifySession = async () => {
+      const { data, error } = await supabase.auth.getSession()
+      if (!active) return
+
+      if (error) {
+        console.error("Erro ao obter sessão", error)
+        router.replace("/login")
+        return
+      }
+
+      if (!data.session) {
+        router.replace("/login")
+      }
+    }
+
+    void verifySession()
+
+    return () => {
+      active = false
+    }
+  }, [router])
 
   return (
     <ClientPageShell heroReady={heroReady}>
       <ClientSection>
         <div className={styles.page}>
           <div className={styles.content}>
-            <header className={styles.heading}>
-              <span className={styles.mark}>◆</span>
-              <div className="space-y-2">
-                <h1 className={styles.title}>
-                  Antes de confirmar, <span>leia com atenção:</span>
-                </h1>
-                <p className={styles.subtitle}>
-                  Cada regra fica em um card único, alinhado em coluna, no mesmo acabamento do procedimento.
-                </p>
-              </div>
-            </header>
-
-            <div className={styles.ornamentalDivider} aria-hidden="true">
-              <span className={styles.flourish} />
-              <span className={styles.diamond} />
-              <span className={styles.flourish} />
-            </div>
-
-            <div className={styles.cardList}>
-              {ruleSections.map((section, index) => (
-                <div key={section.label}>
-                  <div className={styles.card}>
-                    <div className={styles.cardInner}>
-                      <p className={styles.eyebrow}>{section.eyebrow}</p>
-                      <h2 className={styles.cardTitle}>{section.label}</h2>
-                      <div className={styles.inlineList}>
-                        {section.items.map((item) => (
-                          <span key={item} className={styles.inlineItem}>
-                            <span className={styles.inlineItemText}>{item}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {index < ruleSections.length - 1 && (
-                    <div className={styles.sectionDivider} aria-hidden="true">
-                      <span className={styles.sectionLine} />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
+            <RulesHeader />
+            <RulesSectionList sections={ruleSections} />
             <p className={styles.footerMark}>ROMEIKE BEAUTY</p>
           </div>
         </div>
       </ClientSection>
     </ClientPageShell>
-  );
+  )
 }

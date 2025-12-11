@@ -317,7 +317,7 @@ export default function MyAppointments() {
 
         const session = sessionData.session
         if (!session?.user?.id) {
-          window.location.href = '/login'
+          router.replace('/login')
           return
         }
 
@@ -363,16 +363,16 @@ export default function MyAppointments() {
         setLoading(false)
       }
     })()
-  }, [])
+  }, [router])
 
   const ensureAuth = useCallback(async () => {
     const { data } = await supabase.auth.getSession()
     if (!data.session) {
-      window.location.href = '/login'
+      router.replace('/login')
       return null
     }
     return data.session.access_token ?? null
-  }, [])
+  }, [router])
 
   const scrollToResults = useCallback(() => {
     if (typeof window === 'undefined') return

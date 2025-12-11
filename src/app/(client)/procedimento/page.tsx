@@ -147,7 +147,7 @@ export default function ProcedimentoPage() {
 
   useEffect(() => {
     setHeroReady(true)
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -164,7 +164,7 @@ export default function ProcedimentoPage() {
     return () => {
       media.removeEventListener('change', syncPreference)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     document.documentElement.classList.add('force-motion')
@@ -193,7 +193,7 @@ export default function ProcedimentoPage() {
 
       const session = data.session
       if (!session) {
-        window.location.href = '/login'
+        router.replace('/login')
         return
       }
 
@@ -223,7 +223,7 @@ export default function ProcedimentoPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     let active = true
@@ -758,12 +758,12 @@ export default function ProcedimentoPage() {
 
     const session = data.session
     if (!session) {
-      window.location.href = '/login'
+      router.replace('/login')
       throw new Error('Faça login para continuar.')
     }
 
     return session
-  }, [])
+  }, [router])
 
   const closeSummaryModal = useCallback(() => {
     setIsSummaryModalOpen(false)

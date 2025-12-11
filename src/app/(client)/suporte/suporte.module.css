@@ -10,6 +10,12 @@
   width: 100%;
 }
 
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .content {
   display: flex;
   flex-direction: column;
@@ -24,6 +30,9 @@
 .subtitle {
   font-size: 1rem;
   opacity: 0.8;
+  max-width: 48ch;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .list {
@@ -35,13 +44,30 @@
 .item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.95rem;
+  flex-wrap: wrap;
 }
 
 .itemLabel {
   font-weight: 600;
 }
 
+.itemValueWrapper {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
 .itemValue {
   opacity: 0.85;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.itemHelper {
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--ink) 60%, transparent);
 }

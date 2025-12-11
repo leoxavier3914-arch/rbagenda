@@ -149,8 +149,8 @@
   display: block;
   text-align: center;
   white-space: normal;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
   hyphens: none;
   max-width: 100%;
 }

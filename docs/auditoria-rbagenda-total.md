@@ -6,7 +6,7 @@
   - **(auth)**: `login` e `signup`, ambos com `LavaLampProvider` dedicado.
   - **(admin)**: `/admin` isolado em `(admin)/admin` com estilo próprio.
   - **Raiz**: `page.tsx` (landing estática), `success/page.tsx` (retorno de pagamento), APIs internas em `src/app/api` (`appointments`, `slots`).
-- **Shell de cliente**: `src/components/client/ClientPageLayout` expõe `ClientPageShell` (hero wrapper + `client-hero-ready`), `ClientSection` (centro + grid `page`/`stack`) e `ClientGlassPanel` (aplica classe `glass`/`label`). Usado em todas as rotas sensíveis; `ClientFullScreenLayout` injeta header/rodapé e é acionado pelo layout de `(client)`. `checkout` é exceção e recebe apenas `LavaLampProvider` pleno.
+- **Shell de cliente**: `src/components/client/ClientPageLayout` expõe `ClientPageShell` (hero wrapper + `client-hero-ready`), `ClientSection` (centro + grid `page`/`stack`) e `ClientGlassPanel` (aplica classe `glass`/`label`). Usado em todas as rotas sensíveis; `ClientFullScreenLayout` injeta header/rodapé e é acionado pelo layout de `(client)`. `checkout` é exceção e recebe apenas `LavaLampProvider` pleno. `Procedimento` passou a usar explicitamente `ClientPageShell`/`ClientSection` via wrapper dedicado.
 - **Fundo animado**: `LavaLampProvider` (`src/components/LavaLampProvider.tsx`) lê variáveis CSS (`--dark`, `--light`, `--lava-alpha-*`, `--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`) e gera blobs; `refreshPalette` força reseed. Mantém respeito a `prefers-reduced-motion` e usa classe `force-motion` quando necessária.
 - **Hooks globais**: `useClientAvailability` centraliza disponibilidade; hooks de tema/lava (`useLavaLamp`, `useLavaRevealStage`) coordenam animações e mudanças de paleta. `globals.css` ancora classes estruturais (`client-hero-wrapper`, `page`, `glass`, `label`) e tokens de cor.
 
@@ -41,7 +41,7 @@
 ## 4. Tema, layout e sistema de “glass”
 - **Glass**: classe global `.glass` + `.label` em `globals.css`; `ClientGlassPanel` envolve seções principais das páginas. CSS Modules (ex.: `procedimento.module.css`, `agendamentos.module.css`, `meu-perfil.module.css`, `login.module.css`) aplicam ajustes locais sem quebrar o vidro.
 - **Fundo**: variáveis CSS controlam gradientes de fundo (`--bg-*`), inner glow (`--inner-*`), bordas (`--glass-stroke`, `--card-stroke`) e opacidades do lava (`--lava-alpha-*`). `LavaLampProvider` redesenha ao iniciar e quando `refreshPalette` é chamado (painel admin de procedimento, painel de tema do perfil).
-- **Shell**: `ClientPageShell` coordena hero animado (`client-hero-wrapper`) e aplica classe `client-hero-ready` após ready; `ClientSection` organiza largura e espaçamento; `ClientFullScreenLayout` adiciona header/rodapé padrão. `/regras` usa shell mas propositalmente não usa `ClientGlassPanel`, exibindo conteúdo direto no fundo.
+- **Shell**: `ClientPageShell` coordena hero animado (`client-hero-wrapper`) e aplica classe `client-hero-ready` após ready; `ClientSection` organiza largura e espaçamento; `ClientFullScreenLayout` adiciona header/rodapé padrão. `/regras` usa shell mas propositalmente não usa `ClientGlassPanel`, exibindo conteúdo direto no fundo. `/suporte` segue shell completo com painel de vidro.
 
 ## 5. Riscos, pontos fracos e oportunidades
 - **Disponibilidade**: alterações em `useClientAvailability` (status filtrados, janela de 60 dias, buffers ou timezone) impactam simultaneamente `/procedimento` e reagendamento em `/agendamentos`; ausência de testes automatizados amplia risco.
@@ -51,15 +51,12 @@
 - **Acessibilidade/UX**: modais e listas dependem de estados manuais; faltam testes de teclado/leitura de tela. Layouts baseados em classes globais podem regredir caso `globals.css` mude.
 
 ## 6. Atualizações recentes
-- Modularização de `/procedimento`, `/agendamentos` e `/meu-perfil` em subcomponentes locais, mantendo integração com Supabase/Stripe e reuse do shell.
-- Criação/uso do `ClientPageLayout` em todo o eixo de cliente, com `ClientFullScreenLayout` orquestrando header/rodapé.
-- `useClientAvailability` centralizado com subscribe opcional, filtros de buffer/timezone e fallback robusto.
-- `LavaLampProvider` e painel de tema refinados; `/meu-perfil` passa a aplicar `refreshPalette` após ajustes de cor.
-- Página de login recebeu shell completo, cartão de vidro consistente, verificação de sessão antes do formulário e `heroReady` ativado no mount para evitar “sumir” do formulário.
-- `/suporte` e `/regras` alinhadas ao shell; `/regras` mantém conteúdo direto no fundo com ornamentos/divisórias preservados.
-- `/regras` modularizada em subcomponentes locais, tipagem dedicada e alinhamento de autenticação; ajustes de CSS evitam texto
-  cortado sem alterar o visual.
-
+- `/procedimento`: wrapper utiliza `ClientPageShell`/`ClientSection`, mantendo animação `heroReady` e vidro existente.
+- `/agendamentos`: redirecionamento de sessão passa a usar `router.replace` (sem reload) mantendo fluxo de lista/modais.
+- `/meu-perfil`: sem alterações nesta revisão (mantém painel de tema/vidro anteriores).
+- `/login`: permanece com shell completo, checagem de sessão antes do formulário e `heroReady` ligado no mount.
+- `/suporte`: passa a seguir shell completo com card de vidro, autenticação no mount e canais modularizados (header/lista/tipos locais).
+- `/regras`: reforço de `word-break` para evitar truncamento mantendo ornamentos/divisórias e ausência de glass.
 ## Cheat sheet
 - **Shell**: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars. Exceção: `checkout` apenas com provider.
 - **Disponibilidade**: `useClientAvailability` (status pending/reserved/confirmed, 60 dias, buffer por serviço, timezone default, subscribe opcional). Usado em `/procedimento` (com subscribe) e `RescheduleModal` em `/agendamentos` (sem subscribe).

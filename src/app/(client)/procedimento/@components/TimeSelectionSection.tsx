@@ -1,6 +1,6 @@
-import { ForwardedRef, forwardRef, type RefObject } from 'react'
+import { ForwardedRef, forwardRef } from 'react'
+import type { RefObject } from 'react'
 
-import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { ProcedimentoHeader } from './ProcedimentoHeader'
 import styles from '../procedimento.module.css'
 
@@ -41,12 +41,12 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
       data-step="horario"
       aria-label="Escolha do horário"
     >
-      <div className="stack">
+      <div className={styles.stack}>
         <ProcedimentoHeader className={styles.procedimentoHeader}>
           <>Escolha <span className={styles.subtitle}>o</span> Horário:</>
         </ProcedimentoHeader>
-
-        <ClientGlassPanel label="HORÁRIO" aria-label="Escolha do horário">
+        <div className={styles.glass} aria-label="Escolha do horário">
+          <div className={styles.label}>HORÁRIO</div>
           <div ref={slotsContainerRef} className={styles.slots}>
             {!selectedDate ? (
               <div className={`${styles.status} ${styles.statusInfo}`}>
@@ -90,7 +90,7 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
           >
             {continueButtonLabel}
           </button>
-        </ClientGlassPanel>
+        </div>
       </div>
     </section>
   )

@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 
-import { ClientPageHeader } from '@/components/client/ClientPageLayout'
+import styles from '../procedimento.module.css'
 
 type ProcedimentoHeaderProps = {
   children: ReactNode
@@ -8,5 +8,14 @@ type ProcedimentoHeaderProps = {
 }
 
 export function ProcedimentoHeader({ children, className }: ProcedimentoHeaderProps) {
-  return <ClientPageHeader title={children} className={className} />
+  const headerClassName = [styles.header, className].filter(Boolean).join(' ')
+  return (
+    <header className={headerClassName}>
+      <svg aria-hidden="true" className={styles.diamond} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M12 3l4 4-4 4-4-4 4-4Z" />
+        <path d="M12 13l4 4-4 4-4-4 4-4Z" />
+      </svg>
+      <h1 className={styles.title}>{children}</h1>
+    </header>
+  )
 }

@@ -1,6 +1,5 @@
 import { ForwardedRef, forwardRef } from 'react'
 
-import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { ProcedimentoHeader } from './ProcedimentoHeader'
 import styles from '../procedimento.module.css'
 
@@ -49,17 +48,16 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
       data-step="dia"
       aria-label="Escolha do dia"
     >
-      <div className="stack">
+      <div className={styles.stack}>
         <ProcedimentoHeader className={styles.procedimentoHeader}>
           <>Escolha <span className={styles.subtitle}>o</span> Dia:</>
         </ProcedimentoHeader>
-
-        <ClientGlassPanel label="DIA" aria-label="Escolha do dia">
+        <div className={styles.glass} aria-label="Escolha do dia">
+          <div className={styles.label}>DIA</div>
           {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
           {!availabilityError && isLoadingAvailability && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
           )}
-
           <div className={styles.calendarHead}>
             <button
               type="button"
@@ -83,7 +81,6 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
               ›
             </button>
           </div>
-
           <div className={styles.calendarGrid} aria-hidden="true">
             {calendarHeaderDays.map((label, index) => (
               <div key={`dow-${index}`} className={`${styles.calendarDay} ${styles.calendarDayHeader}`}>
@@ -91,7 +88,6 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
               </div>
             ))}
           </div>
-
           <div className={styles.calendarGrid} role="grid">
             {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
               <button
@@ -109,7 +105,6 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
               </button>
             ))}
           </div>
-
           <div className={styles.calendarLegend}>
             <span className={styles.calendarLegendItem}>
               <span className={`${styles.dot} ${styles.dotAvailable}`} /> Disponível
@@ -127,7 +122,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
               <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
             </span>
           </div>
-        </ClientGlassPanel>
+        </div>
       </div>
     </section>
   )

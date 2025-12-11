@@ -10,19 +10,6 @@
 - **Fundo animado**: `LavaLampProvider` (`src/components/LavaLampProvider.tsx`) lê variáveis CSS (`--dark`, `--light`, `--lava-alpha-*`, `--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`) e gera blobs; `refreshPalette` força reseed. Mantém respeito a `prefers-reduced-motion` e usa classe `force-motion` quando necessária.
 - **Hooks globais**: `useClientAvailability` centraliza disponibilidade; hooks de tema/lava (`useLavaLamp`, `useLavaRevealStage`) coordenam animações e mudanças de paleta. `globals.css` ancora classes estruturais (`client-hero-wrapper`, `page`, `glass`, `label`) e tokens de cor.
 
-## Auditoria final de layout (global x local)
-- **Global**: `globals.css` concentra tokens e classes estruturais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) com padding vertical padrão (64px topo, 32px base + safe-area) e altura mínima no wrapper. O `LavaLampProvider` continua como fonte do fundo animado, agora com a classe base renomeada para `lava-root` para refletir seu escopo global.
-- **Local**: somente tipografia e ornamentações específicas permanecem nos módulos de cada rota. `/procedimento` agora depende apenas do shell global para respiro/altura e mantém cartões/grids/scroll-margins no `procedimento.module.css`; `/regras` removeu padding próprio e depende apenas do shell para espaçamento vertical.
-
-### Tabela por rota
-| Rota | Shell padrão | Autenticação | Herdado do global | Personalizações locais |
-| --- | --- | --- | --- | --- |
-| `/procedimento` | Sim (`ClientPageShell`/`ClientSection` + `ClientGlassPanel` em cada seção) | Sim | Padding/altura do shell (mesmo respiro de `/agendamentos`), vidro e grids globais | Calendário, legendas, botões de slot, barra de resumo, scroll-margins e painéis admin no CSS local |
-| `/agendamentos` | Sim | Sim | Padding do shell, classes `card`/`grid` globais | Listas/cards, filtros, paginação e rodapé no módulo `agendamentos.module.css` |
-| `/meu-perfil` | Sim | Sim | Shell/glass herdados; sem min-height extra | Layout do formulário, avatar, painel de tema e animações locais |
-| `/regras` | Sim (sem vidro) | Sim | Apenas padding vertical do shell | Ornamentos, divisórias e tipografia específicos em `rules.module.css` |
-| `/suporte` | Sim (`ClientGlassPanel` para o conteúdo) | Sim | Padding/altura padrão e vidro global | Header/subtítulo, lista de canais e espaçamento interno no `suporte.module.css` |
-
 ## 2. Fluxos principais de negócio
 ### 2.1 Agendamento de procedimento
 - **Origem dos dados**: Supabase `service_types` + `service_type_assignments` + `services` compõem catálogo; horários ocupados vêm de `appointments` (status `pending/reserved/confirmed`, janela 0–60 dias) com `services.buffer_min` para cálculos de folga.
@@ -65,7 +52,7 @@
 
 ## 6. Atualizações recentes
 - Shell e espaçamento: padding do shell reduzido (64px topo, 32px base + safe-area) com gap menor e sem min-height forçada no `ClientSection`, cortando área de lava vazia em telas curtas.
-- `/procedimento`: wrapper utiliza apenas `ClientPageShell`/`ClientSection`, mantendo animação `heroReady` e vidro existente, sem wrappers auxiliares; respiro/altura seguem globais, com cartões/grids e scroll-margins no módulo local.
+- `/procedimento`: wrapper utiliza `ClientPageShell`/`ClientSection`, mantendo animação `heroReady` e vidro existente, agora sem min-heights/padding duplicados.
 - `/agendamentos`: redirecionamento de sessão passa a usar `router.replace` (sem reload) mantendo fluxo de lista/modais; wrapper sem min-height extra e rodapé/mark estilizado apenas no CSS Module (classe global removida).
 - `/meu-perfil`: mantém painel de tema/vidro e remove min-height custom para seguir o shell.
 - `/login`: permanece com shell completo, checagem de sessão antes do formulário e `heroReady` ligado no mount.

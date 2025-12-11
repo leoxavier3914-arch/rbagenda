@@ -1,5 +1,7 @@
 import { type ReactNode } from 'react'
 
+import styles from '../procedimento.module.css'
+
 type ProcedimentoCardProps = {
   children: ReactNode
   active?: boolean
@@ -13,11 +15,11 @@ export function ProcedimentoCard({ children, active, as = 'button', onClick }: P
   return (
     <Component
       type={as === 'button' ? 'button' : undefined}
-      className="card"
+      className={styles.card}
       data-active={active ? 'true' : 'false'}
       onClick={onClick}
     >
-      <div className="card-inner">{children}</div>
+      <div className={styles.cardInner}>{children}</div>
     </Component>
   )
 }

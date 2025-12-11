@@ -36,20 +36,17 @@
   align-items: flex-start;
   padding: 0;
   min-height: auto;
+  min-height: calc(100vh - 200px);
 }
 
 .section + .section {
- margin-top: clamp(40px, 5vw, 64px);
+ margin-top: clamp(56px, 7vh, 80px);
 }
 
-.section[data-step='tecnica'] {
-  scroll-margin-top: 220px;
-  scroll-margin-bottom: 0;
-}
-
+.section[data-step='tecnica'],
 .section[data-step='dia'],
 .section[data-step='horario'] {
-  scroll-margin-top: 160px;
+  scroll-margin-top: 140px;
   scroll-margin-bottom: 0;
 }
 

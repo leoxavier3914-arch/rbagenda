@@ -2,12 +2,12 @@
 
 ## 1. Visão geral da arquitetura de cliente
 - Rotas de cliente vivem em `src/app/(client)` com páginas client-side. Layout padrão fornecido por `ClientPageLayout` (`ClientPageShell`, `ClientSection`, `ClientGlassPanel`) e `ClientFullScreenLayout` no layout de `(client)`. `checkout` é exceção: recebe só `LavaLampProvider`.
-- Fundo animado controlado por `LavaLampProvider` e variáveis CSS globais (`--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`); `refreshPalette` redesenha blobs. Classes globais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) estão em `globals.css` e agora definem padding vertical mais enxuto (topo 64px + safe-area, base 26px) com gaps menores.
+- Fundo animado controlado por `LavaLampProvider` e variáveis CSS globais (`--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`); `refreshPalette` redesenha blobs. Classes globais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) estão em `globals.css` e agora definem padding vertical mais enxuto (topo 64px + safe-area, base 26px) com gaps menores. Estilos específicos de cartões/ornamentos de `/procedimento` voltaram ao módulo local.
 - Páginas sensíveis: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero, vidro e tipografia; `/login` e `/regras` têm observações específicas abaixo. Estilos globais continuam focados em tokens/layout padrão e o que for específico de uma rota fica no CSS Module local.
 
 ## Auditoria final de layout (global x local)
 - **Responsabilidade global**: `globals.css` mantém tokens e o shell (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) com padding vertical padrão (topo 64px + safe-area; base 32px + safe-area) e mínimo de 100vh no wrapper. O `LavaLampProvider` agora usa a classe global renomeada `lava-root`, centralizando a textura e os canvases de lava apenas no provider.
-- **Responsabilidade local**: somente tipografia, grids e ornamentos específicos de cada página continuam nos módulos CSS. Removemos min-height/paddings duplicados e cabeçalhos customizados de `/procedimento`, que agora dependem do shell e de `ClientGlassPanel` para os painéis.
+- **Responsabilidade local**: tipografia, grids, cartões e ornamentos específicos de cada página permanecem nos módulos CSS. No `/procedimento`, os estilos de cartões (hover/active/outline) e ajustes de grid retornaram ao `procedimento.module.css` (via seletores `:global`), eliminando dependência do bloco em `globals.css`.
 
 ### Tabela por rota
 | Rota | Shell padrão | Autenticação | Herdado do global | Personalizações locais |
@@ -23,7 +23,7 @@
 - **Objetivo**: fluxo completo de agendamento (tipo → técnica → dia → horário → criação de appointment + início do pagamento de sinal via Stripe).
 - **Arquivos e componentes**: rota `page.tsx`; CSS `procedimento.module.css`; subcomponentes em `@components` (`TypeSelectionSection`, `TechniqueSelectionSection`, `DateSelectionSection`, `TimeSelectionSection`, `SummaryBar`, `SummaryModal`, `PayLaterNotice`, `AdminCustomizationPanel`, `ProcedimentoWrapper`, `ProcedimentoCard/Grid/Header`); tipos em `types.ts`.
 - **Fluxo de dados/estado**: carrega sessão Supabase e catálogo (`service_types` + assignments + `services`), normaliza preços/duração/buffer. Usa `useClientAvailability` com `subscribe: true`, canal `procedimento-appointments`, buffer/timezone padrão e fallback por `buildAvailabilityData` se erro. Estados: seleção de tipo/técnica/dia/slot, controle de mês, flags de admin/hero, catálogo e modais (summary, pay later). Cria appointment via `/api/appointments` com token; inicia depósito via `/api/payments/create` e redireciona para `/checkout`; “Pagar depois” leva a `/agendamentos`.
-- **Layout e UX**: `ProcedimentoWrapper` agora usa `ClientPageShell` + `ClientSection` mantendo a transição `heroReady`; seções em vidro com ícones `LashIcon`; legenda de calendário (available/booked/full/mine/disabled); barra de resumo fixa. Respeita `prefers-reduced-motion` e força `force-motion` salvo se removido manualmente.
+- **Layout e UX**: `ProcedimentoWrapper` usa `ClientPageShell` + `ClientSection` mantendo a transição `heroReady`; seções em vidro com ícones `LashIcon`; legenda de calendário (available/booked/full/mine/disabled); barra de resumo fixa. Respeita `prefers-reduced-motion` e força `force-motion` salvo se removido manualmente. Cartões/grids de escolha voltaram a ser estilizados localmente no módulo, com overrides aplicados via `:global` para não depender de `globals.css`.
 - **Organização**: modularizado em seções e tipos; lógica de disponibilidade isolada no hook; cálculo de slots local usando snapshot. Mantém padrão de outras páginas (shell + glass + lava).
 - **Pontos fortes/fracos**: forte clareza do fluxo e reuso de hook; risco em ajustes do buffer/timezone/assinatura de `useClientAvailability` e na criação/pagamento distribuída. Falta testes e centralização de erros.
 - **Recomendações**: extrair camada de serviço para pagamentos; validar slots no servidor; adicionar testes de integração para a cadeia tipo→técnica→slot; considerar reutilizar components de resumo em outros fluxos.
@@ -86,7 +86,7 @@
 
 ## 5. Atualizações recentes
 - Shell e spacing: padding vertical do shell reduzido (64px topo, 32px base + safe-area) e gaps menores na `.page`; `ClientSection` perdeu min-height forçada para evitar blocos de lava vazios em telas curtas.
-- `/procedimento`: wrapper agora usa `ClientPageShell` + `ClientSection` mantendo hero, sem alterar fluxo ou glass existente, e removeu min-heights/padding duplicados do módulo local.
+- `/procedimento`: wrapper usa `ClientPageShell` + `ClientSection` mantendo hero; cartões de seleção e grid voltaram ao `procedimento.module.css` (com `:global`), removendo o bloco específico que estava em `globals.css` e mantendo hover/active/outline locais.
 - `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista; wrapper local sem min-height extra e rodapé/mark agora estilizado apenas no CSS Module (classe global removida).
 - `/meu-perfil`: extratos anteriores mantidos, agora sem min-height custom no wrapper para seguir o shell enxuto.
 - `/login`: shell de cliente aplicado; `heroReady` ativado no mount e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.

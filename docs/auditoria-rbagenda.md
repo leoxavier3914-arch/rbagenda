@@ -90,7 +90,7 @@
 
 ## 5. Atualizações recentes
 - Shell e spacing: padding vertical do shell reduzido (64px topo, 32px base + safe-area) e gaps menores na `.page`; `ClientSection` perdeu min-height forçada para evitar blocos de lava vazios em telas curtas.
-- `/procedimento`: wrapper agora usa `ClientPageShell` + `ClientSection` mantendo hero, sem alterar fluxo ou glass existente, e removeu min-heights/padding duplicados do módulo local.
+- `/procedimento`: wrapper agora usa `ClientPageShell` + `ClientSection` mantendo hero, sem alterar fluxo ou glass existente, e removeu min-heights/padding duplicados do módulo local. Espaço vertical entre as etapas (tipo → técnica → dia → horário) passou a usar `margin-top` progressiva para separar visualmente cada bloco.
 - `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista; wrapper local sem min-height extra e rodapé/mark agora estilizado apenas no CSS Module (classe global removida). Layout da `.pageSection`/`.page` alinhado ao `/procedimento` para centralizar cartões e dar respiro idêntico ao footer.
 - `/meu-perfil`: extratos anteriores mantidos, agora sem min-height custom no wrapper para seguir o shell enxuto.
 - `/login`: shell de cliente aplicado; `heroReady` agora via hook e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.

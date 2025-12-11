@@ -3,10 +3,10 @@
   display: flex;
   justify-content: center;
   position: relative;
-  min-height: 85vh;
+  min-height: 100vh;
   width: 100%;
   overflow: hidden;
-  padding: 48px 16px 64px;
+  padding: 0 16px clamp(48px, 6vw, 64px);
   color: var(--ink);
   word-break: normal;
   overflow-wrap: normal;
@@ -22,7 +22,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 24px;
+  gap: clamp(18px, 2.4vw, 24px);
 }
 
 .textReset,

@@ -50,6 +50,9 @@
   margin: 10px 0 0;
   font-size: clamp(14px, 2.6vw, 16px);
   color: color-mix(in srgb, var(--ink) 72%, transparent);
+  hyphens: none;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 

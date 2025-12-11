@@ -10,7 +10,6 @@
 }
 
 .wrapper {
-  min-height: 100vh;
   position: relative;
   color: var(--appointments-ink);
 }

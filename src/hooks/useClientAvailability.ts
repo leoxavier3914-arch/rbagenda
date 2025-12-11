@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { getSessionOrRedirect } from './useClientSessionGuard'
+
 import { supabase } from '@/lib/db'
 import {
   DEFAULT_FALLBACK_BUFFER_MINUTES,
@@ -74,14 +76,8 @@ export function useClientAvailability(options: UseClientAvailabilityOptions): Us
       }
 
       try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) throw sessionError
-
-        const session = sessionData.session
-        if (!session?.user?.id) {
-          window.location.href = '/login'
-          return
-        }
+        const session = await getSessionOrRedirect()
+        if (!session?.user?.id) return
 
         if (!isMountedRef.current) return
 

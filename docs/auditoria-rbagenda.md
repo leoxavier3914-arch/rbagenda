@@ -46,7 +46,7 @@
 - **Objetivo**: exibir regras públicas da agenda para usuários autenticados.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `rules.module.css`; subcomponentes locais em `@components` (`RulesHeader`, `RulesSectionList`, `RulesSectionCard`, `RulesSectionDivider`); tipos em `types.ts`.
 - **Fluxo de dados/estado**: checa sessão Supabase no mount (`getSession`); se ausente ou erro, redireciona para `/login`. `heroReady` ativa animações do shell.
-- **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Ajustes de CSS permitem quebra natural de linhas sem cortar texto.
+- **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Containers agora esticam para a largura disponível (limites de 720/960px) para evitar shrink-to-fit com `overflow` escondendo linhas em telas estreitas, garantindo quebra natural de texto.
 - **Organização**: modularizada em header, lista e cartões; array de regras tipado para facilitar manutenção sem alterar conteúdo.
 - **Pontos fortes/fracos**: clareza visual mantida e alinhamento com padrão de autenticação. Risco baixo; depende apenas do Supabase para sessão.
 - **Recomendações**: monitorar responsividade para garantir que textos longos continuem sem truncamento; manter ornamento e ausência de glass em futuros ajustes.
@@ -68,7 +68,7 @@
 - `/agendamentos`: subcomponentes para filtros/lista/modais; reagendamento centralizado em `RescheduleModal` com `useClientAvailability` + `/api/slots`.
 - `/meu-perfil`: extração de subcomponentes, painel de tema alinhado ao `LavaLampProvider`, avatar em `localStorage`.
 - `/login`: shell de cliente aplicado; `heroReady` ativado no mount e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.
-- `/regras`: alinhada ao shell mantendo conteúdo direto no fundo, divisórias brancas e ornamento (flourish + diamond) preservados.
+- `/regras`: alinhada ao shell mantendo conteúdo direto no fundo, divisórias brancas e ornamento (flourish + diamond) preservados; largura do header e dos grupos de regras agora respeita o espaço útil para não truncar textos longos no mobile.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); exceção `checkout` sem shell.

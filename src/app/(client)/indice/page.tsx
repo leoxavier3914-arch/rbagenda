@@ -1,4 +1,16 @@
+'use client'
+
 import Link from 'next/link'
+
+import {
+  ClientPageHeader,
+  ClientPageShell,
+  ClientSection,
+} from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
+import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
+
+import styles from './indice.module.css'
 
 const quickLinks = [
   {
@@ -19,35 +31,41 @@ const quickLinks = [
 ]
 
 export default function DashboardIndexPage() {
+  const heroReady = useClientPageReady()
+  useClientSessionGuard()
+
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      <section className="card space-y-5">
-        <div className="space-y-3">
-          <span className="badge">Central rápida</span>
-          <h1 className="text-3xl font-semibold text-[#1f2d28] sm:text-4xl">Índice do estúdio</h1>
-          <p className="muted-text">
-            Acesse rapidamente as áreas principais do aplicativo. Tudo organizado para facilitar o seu dia a dia.
-          </p>
+    <ClientPageShell heroReady={heroReady} forceMotion>
+      <ClientSection>
+        <div className={styles.panel}>
+          <div className={styles.headerArea}>
+            <span className="badge">Central rápida</span>
+            <ClientPageHeader
+              title="Índice do estúdio"
+              subtitle="Acesse rapidamente as áreas principais do aplicativo. Tudo organizado para facilitar o seu dia a dia."
+              hideDiamond
+              className={styles.header}
+              subtitleClassName={styles.subtitle}
+            />
+          </div>
+
+          <ul className={styles.quickLinks}>
+            {quickLinks.map((link) => (
+              <li key={link.href} className={styles.quickLink}>
+                <div className={styles.quickLinkContent}>
+                  <h2 className={styles.quickLinkTitle}>{link.title}</h2>
+                  <p className={styles.quickLinkDescription}>{link.description}</p>
+                </div>
+
+                <Link className={styles.quickLinkAction} href={link.href}>
+                  Acessar
+                  <span aria-hidden>→</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {quickLinks.map((link) => (
-            <li
-              key={link.href}
-              className="rounded-3xl border border-white/40 bg-white/90 p-5 shadow-sm transition hover:border-white/60 hover:shadow-lg"
-            >
-              <h2 className="text-lg font-semibold text-[#1f2d28]">{link.title}</h2>
-              <p className="mt-2 text-sm text-[color:rgba(31,45,40,0.7)]">{link.description}</p>
-              <Link
-                className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 transition hover:text-emerald-600"
-                href={link.href}
-              >
-                Acessar
-                <span aria-hidden>→</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
+      </ClientSection>
+    </ClientPageShell>
   )
 }

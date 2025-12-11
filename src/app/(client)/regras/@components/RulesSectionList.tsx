@@ -4,7 +4,7 @@ import { RulesSectionCard } from "./RulesSectionCard"
 import { RulesSectionDivider } from "./RulesSectionDivider"
 import { type RuleSection } from "../types"
 
-import styles from "../rules.module.css"
+import styles from "../regras.module.css"
 
 type RulesSectionListProps = {
   sections: RuleSection[]

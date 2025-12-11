@@ -9,13 +9,15 @@ import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
-import { AppointmentsHeader } from './@components/AppointmentsHeader'
-import { AppointmentsList } from './@components/AppointmentsList'
-import { BlockedModal } from './@components/BlockedModal'
-import { ConfirmCancelModal } from './@components/ConfirmCancelModal'
-import { RescheduleModal } from './@components/RescheduleModal'
-import { StatusFiltersBar } from './@components/StatusFiltersBar'
-import { SuccessModal } from './@components/SuccessModal'
+import {
+  AppointmentsHeader,
+  AppointmentsList,
+  BlockedModal,
+  ConfirmCancelModal,
+  RescheduleModal,
+  StatusFiltersBar,
+  SuccessModal,
+} from './@components'
 import type {
   AppointmentStatus,
   CancelDialogState,

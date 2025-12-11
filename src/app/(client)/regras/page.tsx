@@ -1,15 +1,12 @@
 "use client"
 
-import { useEffect } from "react"
-
 import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout"
 import { useClientSessionGuard } from "@/hooks/useClientSessionGuard"
 import { useClientPageReady } from "@/hooks/useClientPageReady"
 
-import { RulesHeader } from "./@components/RulesHeader"
-import { RulesSectionList } from "./@components/RulesSectionList"
+import { RulesHeader, RulesSectionList } from "./@components"
 import type { RuleSection } from "./types"
-import styles from "./rules.module.css"
+import styles from "./regras.module.css"
 
 const ruleSections: RuleSection[] = [
   {
@@ -45,16 +42,8 @@ export default function DashboardRulesPage() {
   useClientSessionGuard()
   const heroReady = useClientPageReady()
 
-  useEffect(() => {
-    if (typeof document === "undefined") return
-    document.documentElement.classList.add("force-motion")
-    return () => {
-      document.documentElement.classList.remove("force-motion")
-    }
-  }, [])
-
   return (
-    <ClientPageShell heroReady={heroReady}>
+    <ClientPageShell heroReady={heroReady} forceMotion>
       <ClientSection>
         <div className={styles.page}>
           <div className={`${styles.content} ${styles.textReset}`}>

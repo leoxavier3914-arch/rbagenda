@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 
+import { ClientPageHeader, ClientPageShell, ClientSection } from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
+import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
+
 import styles from './configuracoes.module.css'
 
 const preferenceOptions = [
@@ -23,18 +27,25 @@ export default function DashboardSettingsPage() {
     news: false,
   })
 
+  const heroReady = useClientPageReady()
+  useClientSessionGuard()
+
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.content}>
-        <section className="card space-y-5">
-          <div className="space-y-3">
+    <ClientPageShell heroReady={heroReady} forceMotion>
+      <ClientSection>
+        <div className={`${styles.panel} card`}>
+          <div className={styles.headerArea}>
             <span className="badge">Seu jeito</span>
-            <h1 className="text-3xl font-semibold text-[#1f2d28] sm:text-4xl">Configurações</h1>
-            <p className="muted-text">
-              Personalize notificações e preferências de contato. As alterações são salvas automaticamente.
-            </p>
+            <ClientPageHeader
+              title="Configurações"
+              subtitle="Personalize notificações e preferências de contato. As alterações são salvas automaticamente."
+              hideDiamond
+              className={styles.header}
+              subtitleClassName={styles.subtitle}
+            />
           </div>
-          <form className="space-y-4">
+
+          <form className={styles.preferencesForm}>
             {preferenceOptions.map((option) => {
               const isChecked = preferences[option.key]
               return (
@@ -63,8 +74,8 @@ export default function DashboardSettingsPage() {
               )
             })}
           </form>
-        </section>
-      </div>
-    </div>
+        </div>
+      </ClientSection>
+    </ClientPageShell>
   )
 }

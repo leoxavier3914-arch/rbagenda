@@ -2,6 +2,7 @@ import {
   type ComponentPropsWithoutRef,
   type ReactNode,
   forwardRef,
+  useEffect,
 } from 'react'
 
 function joinClasses(...values: Array<string | undefined | null | false>) {
@@ -10,15 +11,39 @@ function joinClasses(...values: Array<string | undefined | null | false>) {
 
 type ClientPageShellProps = ComponentPropsWithoutRef<'main'> & {
   heroReady?: boolean
+  forceMotion?: boolean
+  respectNoMotionHash?: boolean
   children: ReactNode
 }
 
-export function ClientPageShell({ heroReady, className, children, ...rest }: ClientPageShellProps) {
+export function ClientPageShell({
+  heroReady,
+  className,
+  forceMotion = false,
+  respectNoMotionHash = false,
+  children,
+  ...rest
+}: ClientPageShellProps) {
   const wrapperClassName = joinClasses(
     'client-hero-wrapper',
     heroReady ? 'client-hero-ready' : undefined,
     className,
   )
+
+  useEffect(() => {
+    if (!forceMotion) return
+
+    const root = document.documentElement
+    root.classList.add('force-motion')
+
+    if (respectNoMotionHash && window.location.hash.includes('nomotion')) {
+      root.classList.remove('force-motion')
+    }
+
+    return () => {
+      root.classList.remove('force-motion')
+    }
+  }, [forceMotion, respectNoMotionHash])
 
   return (
     <main className={wrapperClassName} {...rest}>

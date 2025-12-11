@@ -11,15 +11,17 @@ import {
 import { useRouter } from 'next/navigation'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
-import { AdminCustomizationPanel } from './@components/AdminCustomizationPanel'
-import { DateSelectionSection } from './@components/DateSelectionSection'
-import { PayLaterNotice } from './@components/PayLaterNotice'
-import { ProcedimentoWrapper } from './@components/ProcedimentoWrapper'
-import { SummaryBar } from './@components/SummaryBar'
-import { SummaryModal } from './@components/SummaryModal'
-import { TechniqueSelectionSection } from './@components/TechniqueSelectionSection'
-import { TimeSelectionSection } from './@components/TimeSelectionSection'
-import { TypeSelectionSection } from './@components/TypeSelectionSection'
+import {
+  AdminCustomizationPanel,
+  DateSelectionSection,
+  PayLaterNotice,
+  ProcedimentoWrapper,
+  SummaryBar,
+  SummaryModal,
+  TechniqueSelectionSection,
+  TimeSelectionSection,
+  TypeSelectionSection,
+} from './@components'
 
 import { supabase } from '@/lib/db'
 import {
@@ -164,17 +166,6 @@ export default function ProcedimentoPage() {
       media.removeEventListener('change', syncPreference)
     }
   }, [router])
-
-  useEffect(() => {
-    document.documentElement.classList.add('force-motion')
-    if (typeof window !== 'undefined' && window.location.hash.includes('nomotion')) {
-      document.documentElement.classList.remove('force-motion')
-    }
-
-    return () => {
-      document.documentElement.classList.remove('force-motion')
-    }
-  }, [])
 
   useEffect(() => {
     if (!isSessionReady) return

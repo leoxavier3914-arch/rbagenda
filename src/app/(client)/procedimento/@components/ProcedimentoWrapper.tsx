@@ -10,12 +10,10 @@ type ProcedimentoWrapperProps = {
 }
 
 export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapperProps) {
-  const wrapperClassName = `${styles.wrapper} ${heroReady ? styles.heroReady : ''}`
-
   return (
-    <ClientPageShell heroReady={heroReady} className={wrapperClassName}>
-      <ClientSection className={styles.pageSection}>
-        <div className={styles.page}>{children}</div>
+    <ClientPageShell heroReady={heroReady}>
+      <ClientSection className={styles.contentSection}>
+        <div className={styles.pageContent}>{children}</div>
       </ClientSection>
     </ClientPageShell>
   )

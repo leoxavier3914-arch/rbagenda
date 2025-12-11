@@ -5,7 +5,7 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  padding: 0 16px clamp(28px, 5vw, 44px);
+  padding: 0 16px;
   color: var(--ink);
   word-break: normal;
   overflow-wrap: normal;

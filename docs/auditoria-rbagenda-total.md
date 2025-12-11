@@ -10,6 +10,19 @@
 - **Fundo animado**: `LavaLampProvider` (`src/components/LavaLampProvider.tsx`) lê variáveis CSS (`--dark`, `--light`, `--lava-alpha-*`, `--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`) e gera blobs; `refreshPalette` força reseed. Mantém respeito a `prefers-reduced-motion` e usa classe `force-motion` quando necessária.
 - **Hooks globais**: `useClientAvailability` centraliza disponibilidade; hooks de tema/lava (`useLavaLamp`, `useLavaRevealStage`) coordenam animações e mudanças de paleta. `globals.css` ancora classes estruturais (`client-hero-wrapper`, `page`, `glass`, `label`) e tokens de cor.
 
+## Auditoria final de layout (global x local)
+- **Global**: `globals.css` concentra tokens e classes estruturais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) com padding vertical padrão (64px topo, 32px base + safe-area) e altura mínima no wrapper. O `LavaLampProvider` continua como fonte do fundo animado, agora com a classe base renomeada para `lava-root` para refletir seu escopo global.
+- **Local**: somente tipografia e ornamentações específicas permanecem nos módulos de cada rota. `/procedimento` migrou cabeçalhos/painéis para `ClientGlassPanel`, eliminando paddings/min-heights redundantes; `/regras` removeu padding próprio e depende apenas do shell para espaçamento vertical.
+
+### Tabela por rota
+| Rota | Shell padrão | Autenticação | Herdado do global | Personalizações locais |
+| --- | --- | --- | --- | --- |
+| `/procedimento` | Sim (`ClientPageShell`/`ClientSection` + `ClientGlassPanel` em cada seção) | Sim | Padding/altura do shell, vidro e grids globais | Calendário, legendas, botões de slot, barra de resumo e painéis admin no CSS local |
+| `/agendamentos` | Sim | Sim | Padding do shell, classes `card`/`grid` globais | Listas/cards, filtros, paginação e rodapé no módulo `agendamentos.module.css` |
+| `/meu-perfil` | Sim | Sim | Shell/glass herdados; sem min-height extra | Layout do formulário, avatar, painel de tema e animações locais |
+| `/regras` | Sim (sem vidro) | Sim | Apenas padding vertical do shell | Ornamentos, divisórias e tipografia específicos em `rules.module.css` |
+| `/suporte` | Sim (`ClientGlassPanel` para o conteúdo) | Sim | Padding/altura padrão e vidro global | Header/subtítulo, lista de canais e espaçamento interno no `suporte.module.css` |
+
 ## 2. Fluxos principais de negócio
 ### 2.1 Agendamento de procedimento
 - **Origem dos dados**: Supabase `service_types` + `service_type_assignments` + `services` compõem catálogo; horários ocupados vêm de `appointments` (status `pending/reserved/confirmed`, janela 0–60 dias) com `services.buffer_min` para cálculos de folga.

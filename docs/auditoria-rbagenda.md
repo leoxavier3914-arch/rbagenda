@@ -5,6 +5,19 @@
 - Fundo animado controlado por `LavaLampProvider` e variáveis CSS globais (`--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`); `refreshPalette` redesenha blobs. Classes globais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) estão em `globals.css` e agora definem padding vertical mais enxuto (topo 64px + safe-area, base 26px) com gaps menores.
 - Páginas sensíveis: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero, vidro e tipografia; `/login` e `/regras` têm observações específicas abaixo. Estilos globais continuam focados em tokens/layout padrão e o que for específico de uma rota fica no CSS Module local.
 
+## Auditoria final de layout (global x local)
+- **Responsabilidade global**: `globals.css` mantém tokens e o shell (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) com padding vertical padrão (topo 64px + safe-area; base 32px + safe-area) e mínimo de 100vh no wrapper. O `LavaLampProvider` agora usa a classe global renomeada `lava-root`, centralizando a textura e os canvases de lava apenas no provider.
+- **Responsabilidade local**: somente tipografia, grids e ornamentos específicos de cada página continuam nos módulos CSS. Removemos min-height/paddings duplicados e cabeçalhos customizados de `/procedimento`, que agora dependem do shell e de `ClientGlassPanel` para os painéis.
+
+### Tabela por rota
+| Rota | Shell padrão | Autenticação | Herdado do global | Personalizações locais |
+| --- | --- | --- | --- | --- |
+| `/procedimento` | Sim (`ClientPageShell`/`ClientSection` + painéis `ClientGlassPanel` via seções) | Sim (`getSession` com redirect) | Padding/altura do shell, cartões/glass e grid padrão | Grade e cartões de seleção, calendário e legendas, botões de horário e avisos/admin ficam no módulo `procedimento.module.css` |
+| `/agendamentos` | Sim | Sim | Padding/altura padrão e classes globais `card`/`grid` | Cards/listas, filtros, paginação e rodapé “ROMEIKE BEAUTY” no módulo local |
+| `/meu-perfil` | Sim | Sim | Shell/glass herdados; sem min-height extra | Grid do formulário, avatar, painel de tema e reveais locais |
+| `/regras` | Sim (sem `ClientGlassPanel`) | Sim | Padding vertical apenas do shell; sem min-height duplicado | Ornamentos, divisórias e tipografia próprios no `rules.module.css` |
+| `/suporte` | Sim (`ClientGlassPanel` para o card) | Sim | Padding/altura padrão e vidro global | Cabeçalho/subtítulo, lista de canais e espaçamentos internos no módulo local |
+
 ## 2. Comportamento das páginas sensíveis
 ### 2.1 `/procedimento` (`src/app/(client)/procedimento/page.tsx`)
 - **Objetivo**: fluxo completo de agendamento (tipo → técnica → dia → horário → criação de appointment + início do pagamento de sinal via Stripe).

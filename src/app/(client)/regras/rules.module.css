@@ -17,10 +17,11 @@
   position: relative;
   z-index: 1;
   margin: 0 auto;
+  width: min(960px, 100%);
   max-width: 960px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 24px;
 }
 
@@ -36,7 +37,9 @@
   gap: 10px;
   justify-items: center;
   text-align: center;
+  width: 100%;
   max-width: 720px;
+  margin: 0 auto;
 }
 
 .mark {
@@ -72,7 +75,9 @@
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2vw, 18px);
-  width: clamp(320px, 92vw, 720px);
+  width: 100%;
+  max-width: 720px;
+  min-width: 0;
   margin: 0 auto;
   position: relative;
   z-index: 1;

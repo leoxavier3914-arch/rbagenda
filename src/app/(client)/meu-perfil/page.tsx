@@ -2,7 +2,6 @@
 
 import {
   type ChangeEvent,
-  type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type RefObject,
   useCallback,
@@ -10,11 +9,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useRouter } from 'next/navigation'
-import styles from './meu-perfil.module.css'
-import type { Session } from '@supabase/supabase-js'
 
-import { supabase } from '@/lib/db'
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 import { useLavaLamp } from '@/components/LavaLampProvider'
 import {
@@ -22,13 +17,16 @@ import {
   ClientPageShell,
   ClientSection,
 } from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
+import { useProfileForm } from './useProfileForm'
 import {
   AvatarUploader,
   ProfileForm,
   ProfileHeader,
   ThemePreferencesPanel,
 } from './@components'
-import { defaultTheme, type Profile, type ThemeState } from './types'
+import { defaultTheme, type ThemeState } from './types'
+import styles from './meu-perfil.module.css'
 
 const AVATAR_STORAGE_KEY = 'rb_meu_perfil_avatar'
 
@@ -128,26 +126,33 @@ const parseColorString = (value: string) => {
   return { hex: '#000000', alpha: 1 }
 }
 
-export default function MeuPerfil() {
-  const router = useRouter()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [whatsapp, setWhatsapp] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [signingOut, setSigningOut] = useState(false)
-  const [signOutError, setSignOutError] = useState<string | null>(null)
+export default function MeuPerfilPage() {
+  const {
+    profile,
+    fullName,
+    setFullName,
+    email,
+    setEmail,
+    whatsapp,
+    setWhatsapp,
+    birthDate,
+    setBirthDate,
+    password,
+    setPassword,
+    loading,
+    saving,
+    error,
+    success,
+    signingOut,
+    signOutError,
+    handleSubmit,
+    handleSignOut,
+  } = useProfileForm()
   const [avatarDataUrl, setAvatarDataUrl] = useState<string>('')
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false)
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
-  const [heroReady, setHeroReady] = useState(false)
+  const heroReady = useClientPageReady()
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
 
@@ -242,10 +247,6 @@ export default function MeuPerfil() {
   }, [refreshPalette, syncThemeFromComputed])
 
   useEffect(() => {
-    setHeroReady(true)
-  }, [])
-
-  useEffect(() => {
     const root = document.documentElement
     root.classList.add('force-motion')
 
@@ -272,60 +273,6 @@ export default function MeuPerfil() {
       setIsPaletteOpen(false)
     }
   }, [canEditAppearance])
-
-  useEffect(() => {
-    let active = true
-
-    async function loadProfile() {
-      setLoading(true)
-      setError(null)
-
-      const { data: sess, error: sessionError } = await supabase.auth.getSession()
-      if (!active) return
-
-      if (sessionError) {
-        setError('Não foi possível carregar seus dados. Tente novamente.')
-        setLoading(false)
-        return
-      }
-
-      const currentSession = sess.session
-
-      if (!currentSession) {
-        router.replace('/login')
-        return
-      }
-
-      setSession(currentSession)
-
-      const { data: me, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name, whatsapp, email, birth_date, role')
-        .eq('id', currentSession.user.id)
-        .maybeSingle()
-
-      if (!active) return
-
-      if (profileError || !me) {
-        setError('Não foi possível carregar seus dados. Tente novamente.')
-        setLoading(false)
-        return
-      }
-
-      setProfile(me)
-      setFullName(me.full_name ?? '')
-      setEmail(me.email ?? '')
-      setWhatsapp(me.whatsapp ?? '')
-      setBirthDate(me.birth_date ?? '')
-      setLoading(false)
-    }
-
-    loadProfile()
-
-    return () => {
-      active = false
-    }
-  }, [router])
 
   const applyCardTop = useCallback(
     (value: string) => {
@@ -558,99 +505,6 @@ export default function MeuPerfil() {
       document.removeEventListener('keydown', handleEscape)
     }
   }, [isAvatarMenuOpen])
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (saving) return
-
-    if (!session?.user?.id) {
-      setError('Sua sessão expirou. Entre novamente para atualizar seus dados.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
-
-    const userId = session.user.id
-    const normalizedEmail = email.trim()
-    const updates = {
-      full_name: fullName.trim() || null,
-      whatsapp: whatsapp.trim() || null,
-      email: normalizedEmail || null,
-      birth_date: birthDate || null,
-    }
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId)
-
-    if (profileError) {
-      setError('Não foi possível atualizar seus dados. Tente novamente.')
-      setSaving(false)
-      return
-    }
-
-    const authPayload: { email?: string; password?: string } = {}
-    if (normalizedEmail && normalizedEmail !== session.user.email) {
-      authPayload.email = normalizedEmail
-    }
-    if (password) {
-      authPayload.password = password
-    }
-
-    if (Object.keys(authPayload).length > 0) {
-      const { error: authError } = await supabase.auth.updateUser(authPayload)
-      if (authError) {
-        setError(
-          authError.message ||
-            'Não foi possível atualizar seus dados de acesso.',
-        )
-        setSaving(false)
-        return
-      }
-    }
-
-    const { data: refreshed } = await supabase.auth.getSession()
-    if (refreshed.session) {
-      setSession(refreshed.session)
-    }
-
-    const updatedProfile: Profile = {
-      full_name: updates.full_name,
-      whatsapp: updates.whatsapp,
-      email: updates.email,
-      birth_date: updates.birth_date,
-      role: profile?.role ?? 'client',
-    }
-
-    setProfile(updatedProfile)
-    setPassword('')
-    setSuccess('Dados atualizados com sucesso.')
-    setSaving(false)
-  }
-
-  const handleSignOut = async () => {
-    if (signingOut) return
-
-    setSigningOut(true)
-    setSignOutError(null)
-
-    const { error: signOutError } = await supabase.auth.signOut()
-
-    if (signOutError) {
-      setSignOutError(
-        signOutError.message ||
-          'Não foi possível encerrar a sessão. Tente novamente.',
-      )
-      setSigningOut(false)
-      return
-    }
-
-    router.replace('/login')
-    setSigningOut(false)
-  }
 
   const handleCardTopColor = (event: ChangeEvent<HTMLInputElement>) => {
     applyCardTop(event.target.value)

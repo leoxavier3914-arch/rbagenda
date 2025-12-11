@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout"
-import { supabase } from "@/lib/db"
+import { useClientSessionGuard } from "@/hooks/useClientSessionGuard"
 
 import { RulesHeader } from "./@components/RulesHeader"
 import { RulesSectionList } from "./@components/RulesSectionList"
@@ -44,35 +44,15 @@ const ruleSections: RuleSection[] = [
 export default function DashboardRulesPage() {
   const [heroReady, setHeroReady] = useState(false)
   const router = useRouter()
+  const { isReady } = useClientSessionGuard()
 
   useEffect(() => {
     setHeroReady(true)
   }, [])
 
   useEffect(() => {
-    let active = true
-
-    const verifySession = async () => {
-      const { data, error } = await supabase.auth.getSession()
-      if (!active) return
-
-      if (error) {
-        console.error("Erro ao obter sessão", error)
-        router.replace("/login")
-        return
-      }
-
-      if (!data.session) {
-        router.replace("/login")
-      }
-    }
-
-    void verifySession()
-
-    return () => {
-      active = false
-    }
-  }, [router])
+    if (!isReady) return
+  }, [isReady, router])
 
   return (
     <ClientPageShell heroReady={heroReady}>

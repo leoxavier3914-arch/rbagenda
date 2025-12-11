@@ -38,6 +38,10 @@
   min-height: auto;
 }
 
+.section + .section {
+  margin-top: clamp(26px, 3.4vw, 40px);
+}
+
 .section[data-step='tecnica'] {
   scroll-margin-top: 220px;
   scroll-margin-bottom: 0;

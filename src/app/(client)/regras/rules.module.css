@@ -24,11 +24,19 @@
   gap: 24px;
 }
 
+.textReset,
+.textReset * {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
 .heading {
   display: grid;
   gap: 10px;
   justify-items: center;
   text-align: center;
+  max-width: 720px;
 }
 
 .mark {
@@ -119,6 +127,8 @@
   font-size: clamp(14px, 2.6vw, 16px);
   color: color-mix(in srgb, var(--ink) 90%, transparent);
   line-height: 1.5;
+  max-width: 720px;
+  width: 100%;
 }
 
 .inlineItem {
@@ -126,7 +136,8 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-width: 0;
+  min-width: min(320px, 100%);
+  max-width: 100%;
 }
 
 .inlineItemText {
@@ -136,6 +147,7 @@
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
+  max-width: 100%;
 }
 
 .footerMark {

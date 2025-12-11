@@ -78,7 +78,7 @@ export default function DashboardRulesPage() {
     <ClientPageShell heroReady={heroReady}>
       <ClientSection>
         <div className={styles.page}>
-          <div className={styles.content}>
+          <div className={`${styles.content} ${styles.textReset}`}>
             <RulesHeader />
             <RulesSectionList sections={ruleSections} />
             <p className={styles.footerMark}>ROMEIKE BEAUTY</p>

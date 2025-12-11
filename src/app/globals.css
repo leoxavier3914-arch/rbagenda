@@ -158,8 +158,7 @@
     gap: clamp(12px, 2vw, 18px);
   }
 
-  .client-hero-wrapper footer,
-  .client-hero-wrapper .procedimento-footer {
+  .client-hero-wrapper footer {
     text-align: center;
     font-size: 12px;
     letter-spacing: 0.34em;

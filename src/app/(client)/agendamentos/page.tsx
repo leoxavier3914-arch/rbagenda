@@ -600,7 +600,7 @@ export default function MyAppointments() {
 
         <StatusFiltersBar selectedCategory={selectedCategory} onSelect={handleCategorySelect} />
 
-        <footer className="procedimento-footer">ROMEIKE BEAUTY</footer>
+        <footer className={styles.footerMark}>ROMEIKE BEAUTY</footer>
 
         {selectedCategory ? (
           <AppointmentsList

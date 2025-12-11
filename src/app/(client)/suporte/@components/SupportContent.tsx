@@ -1,5 +1,4 @@
 import { SupportChannelsList } from "./SupportChannelsList";
-import { SupportHeader } from "./SupportHeader";
 import type { SupportChannel } from "../types";
 import styles from "../suporte.module.css";
 
@@ -12,7 +11,6 @@ const supportChannels: SupportChannel[] = [
 export function SupportContent() {
   return (
     <div className={styles.content}>
-      <SupportHeader />
       <SupportChannelsList channels={supportChannels} />
     </div>
   );

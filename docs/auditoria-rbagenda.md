@@ -46,7 +46,7 @@
 - **Objetivo**: exibir regras públicas da agenda para usuários autenticados.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `rules.module.css`; subcomponentes locais em `@components` (`RulesHeader`, `RulesSectionList`, `RulesSectionCard`, `RulesSectionDivider`); tipos em `types.ts`.
 - **Fluxo de dados/estado**: checa sessão Supabase no mount (`getSession`); se ausente ou erro, redireciona para `/login`. `heroReady` ativa animações do shell.
-- **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Containers agora esticam para a largura disponível (limites de 720/960px) para evitar shrink-to-fit com `overflow` escondendo linhas em telas estreitas, garantindo quebra natural de texto; reforço de `word-break` evita truncamento em telas menores.
+- **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Containers agora esticam para a largura disponível (limites de 720/960px) para evitar shrink-to-fit com `overflow` escondendo linhas em telas estreitas, garantindo quebra natural de texto; reforço de `word-break` evita truncamento em telas menores. O topo deixou de ter padding próprio: a altura/min-height e o espaçamento inicial seguem apenas o `ClientSection`, alinhando o hero com as outras rotas de cliente.
 - **Organização**: modularizada em header, lista e cartões; array de regras tipado para facilitar manutenção sem alterar conteúdo.
 - **Pontos fortes/fracos**: clareza visual mantida e alinhamento com padrão de autenticação. Risco baixo; depende apenas do Supabase para sessão.
 - **Recomendações**: monitorar responsividade para garantir que textos longos continuem sem truncamento; manter ornamento e ausência de glass em futuros ajustes.
@@ -55,14 +55,14 @@
 - **Objetivo**: centralizar canais de atendimento (em construção).
 - **Arquivos e componentes**: rota `page.tsx`; CSS `suporte.module.css`; subcomponentes locais `SupportHeader`, `SupportChannelsList`, `SupportContent`; tipos em `types.ts`.
 - **Fluxo de dados/estado**: checa sessão Supabase no mount via `getSession` e `router.replace('/login')` em ausência/erro; `heroReady` ativa animações do shell.
-- **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; lista de canais em vidro com texto quebrando naturalmente em telas estreitas.
+- **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; lista de canais em vidro com texto quebrando naturalmente em telas estreitas. A seção não sobrescreve mais padding/min-height e herda o espaçamento padrão do shell para manter o hero alinhado às demais rotas.
 - **Organização**: canais definidos em array tipado, separados em header + lista reutilizável.
 - **Recomendações**: preencher dados reais e acoplar ações (deep-links para WhatsApp/e-mail) quando disponíveis.
 
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e `initialLoading`. Retorna snapshot de disponibilidade (dias, slots, busy intervals), loading, erro e `reloadAvailability`. Redireciona para `/login` sem sessão, busca `appointments` (status `pending/reserved/confirmed`) de 0–60 dias e inclui buffers por serviço; pode assinar Realtime para recarregar.
 - Tema/Lava: `useLavaLamp.refreshPalette` usado no painel admin de `/procedimento` e no painel de tema do `/meu-perfil`; `useLavaRevealStage` coordena transições (`heroReady`). Dependem de CSS vars globais.
-- Layout: `ClientPageLayout` mantém grid `page`/`stack`, vidro e labels; `ClientFullScreenLayout` injeta header/rodapé; `/regras` é exceção sem painel de vidro.
+- Layout: `ClientPageLayout` mantém grid `page`/`stack`, vidro e labels; `ClientFullScreenLayout` injeta header/rodapé; `/regras` é exceção sem painel de vidro. `ClientSection` é a referência única de espaçamento vertical (padding top/bottom 72px/40px e min-height 100vh); páginas que tinham padding próprio (ex.: `/regras`, `/suporte`) passaram a herdar esse padrão para alinhar o hero.
 
 ## 4. Riscos, pontos fracos e oportunidades
 - `useClientAvailability` é ponto crítico para `/procedimento` e reagendamento; mudar status/buffer/timezone ou remover redirecionamento pode quebrar slots ou segurança de janela.
@@ -76,11 +76,11 @@
 - `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista.
 - `/meu-perfil`: extratos anteriores mantidos (sem mudanças nesta revisão).
 - `/login`: shell de cliente aplicado; `heroReady` ativado no mount e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.
-- `/regras`: reforço de quebra de linha para evitar truncamento mantendo ornamentos/divisórias.
-- `/suporte`: agora protegido por sessão, usa shell completo (lava + glass), canais modularizados em header/lista com tipos locais.
+- `/regras`: reforço de quebra de linha para evitar truncamento mantendo ornamentos/divisórias. Padding próprio removido para alinhar início do hero ao padrão do shell.
+- `/suporte`: agora protegido por sessão, usa shell completo (lava + glass), canais modularizados em header/lista com tipos locais e sem padding custom na section (usa apenas o `ClientSection`).
 
 ## Cheat sheet (para PRs futuras)
-- Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); exceção `checkout` sem shell.
+- Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); `ClientSection` define padding top/bottom 72px/40px e min-height 100vh (não sobrescrever). Exceção `checkout` sem shell.
 - `/procedimento`: sequência tipo → técnica → dia → horário; usa `useClientAvailability` com subscribe e filtros de buffer/duração; pagamento inicia via `/api/payments/create`.
 - `/agendamentos`: filtros + paginação; pagar/cancelar/reagendar; `RescheduleModal` usa `useClientAvailability` (60 dias, buffer padrão) e `/api/slots`; respeita `CANCEL_THRESHOLD_HOURS`.
 - `/meu-perfil`: edita perfil Supabase, avatar em `localStorage`, tema via CSS vars + `refreshPalette`; apenas admins alteram aparência.

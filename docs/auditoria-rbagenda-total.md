@@ -41,7 +41,7 @@
 ## 4. Tema, layout e sistema de “glass”
 - **Glass**: classe global `.glass` + `.label` em `globals.css`; `ClientGlassPanel` envolve seções principais das páginas. CSS Modules (ex.: `procedimento.module.css`, `agendamentos.module.css`, `meu-perfil.module.css`, `login.module.css`) aplicam ajustes locais sem quebrar o vidro.
 - **Fundo**: variáveis CSS controlam gradientes de fundo (`--bg-*`), inner glow (`--inner-*`), bordas (`--glass-stroke`, `--card-stroke`) e opacidades do lava (`--lava-alpha-*`). `LavaLampProvider` redesenha ao iniciar e quando `refreshPalette` é chamado (painel admin de procedimento, painel de tema do perfil).
-- **Shell**: `ClientPageShell` coordena hero animado (`client-hero-wrapper`) e aplica classe `client-hero-ready` após ready; `ClientSection` organiza largura e espaçamento; `ClientFullScreenLayout` adiciona header/rodapé padrão. `/regras` usa shell mas propositalmente não usa `ClientGlassPanel`, exibindo conteúdo direto no fundo. `/suporte` segue shell completo com painel de vidro.
+- **Shell**: `ClientPageShell` coordena hero animado (`client-hero-wrapper`) e aplica classe `client-hero-ready` após ready; `ClientSection` organiza largura e espaçamento (padding top/bottom 72px/40px, min-height 100vh) e funciona como referência de alinhamento vertical do hero. `ClientFullScreenLayout` adiciona header/rodapé padrão. `/regras` usa shell mas propositalmente não usa `ClientGlassPanel`, exibindo conteúdo direto no fundo e agora depende apenas do padding do shell. `/suporte` segue shell completo com painel de vidro e sem padding próprio na section.
 
 ## 5. Riscos, pontos fracos e oportunidades
 - **Disponibilidade**: alterações em `useClientAvailability` (status filtrados, janela de 60 dias, buffers ou timezone) impactam simultaneamente `/procedimento` e reagendamento em `/agendamentos`; ausência de testes automatizados amplia risco.
@@ -55,10 +55,10 @@
 - `/agendamentos`: redirecionamento de sessão passa a usar `router.replace` (sem reload) mantendo fluxo de lista/modais.
 - `/meu-perfil`: sem alterações nesta revisão (mantém painel de tema/vidro anteriores).
 - `/login`: permanece com shell completo, checagem de sessão antes do formulário e `heroReady` ligado no mount.
-- `/suporte`: passa a seguir shell completo com card de vidro, autenticação no mount e canais modularizados (header/lista/tipos locais).
-- `/regras`: reforço de `word-break` para evitar truncamento mantendo ornamentos/divisórias e ausência de glass.
+- `/suporte`: passa a seguir shell completo com card de vidro, autenticação no mount e canais modularizados (header/lista/tipos locais). Padding custom da section removido para aderir ao espaçamento do shell.
+- `/regras`: reforço de `word-break` para evitar truncamento mantendo ornamentos/divisórias e ausência de glass. Padding próprio removido e min-height alinhada ao `ClientSection`.
 ## Cheat sheet
-- **Shell**: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars. Exceção: `checkout` apenas com provider.
+- **Shell**: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars. `ClientSection` define padding top/bottom 72px/40px e min-height 100vh como referência de hero; evitar overrides locais. Exceção: `checkout` apenas com provider.
 - **Disponibilidade**: `useClientAvailability` (status pending/reserved/confirmed, 60 dias, buffer por serviço, timezone default, subscribe opcional). Usado em `/procedimento` (com subscribe) e `RescheduleModal` em `/agendamentos` (sem subscribe).
 - **Fluxos**: `/procedimento` cria appointment e inicia depósito Stripe; `/agendamentos` lista/filtro/paga/cancela/reagenda com `CANCEL_THRESHOLD_HOURS`; `/meu-perfil` edita perfil, avatar local e tema com `refreshPalette`.
 - **Tema**: vars globais controlam glass/gradientes; painel de tema (admins) e painel admin do procedimento podem alterá-las.

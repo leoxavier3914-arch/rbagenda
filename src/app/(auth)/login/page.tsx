@@ -86,7 +86,14 @@ export default function Login() {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setMsg(error.message)
+      const msg = error.message.toLowerCase()
+
+      if (msg.includes('confirm') || msg.includes('not confirmed')) {
+        setMsg('Seu e-mail ainda não foi confirmado. Abra o link enviado ao seu e-mail antes de entrar.')
+      } else {
+        setMsg(error.message)
+      }
+
       setLoading(false)
       return
     }

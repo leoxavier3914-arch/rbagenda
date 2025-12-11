@@ -28,7 +28,13 @@ export default function SignUp() {
     e.preventDefault()
     setMsg('')
 
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
+      },
+    })
     if (error) return setMsg(error.message)
 
     const { data: sessionData } = await supabase.auth.getSession()

@@ -39,7 +39,7 @@
 ### 2.6 `/regras`
 - **Objetivo**: exibir as regras de agendamento de forma pública.
 - **Arquivos principais**: `src/app/(client)/regras/page.tsx` e estilos em `rules.module.css`.
-- **Layout/UX**: usa o shell de cliente (`ClientPageShell` + `ClientSection`) com `heroReady` aplicado após o mount para liberar a classe `client-hero-ready` e a transição de opacidade. Conteúdo segue direto no fundo (sem `ClientGlassPanel`), preservando cabeçalho, divisor ornamental, cards de regras e divisórias brancas.
+- **Layout/UX**: usa o shell de cliente (`ClientPageShell` + `ClientSection`) com `heroReady` aplicado após o mount para liberar a classe `client-hero-ready` e a transição de opacidade. Conteúdo segue direto no fundo (sem `ClientGlassPanel`), preservando cabeçalho, divisor ornamental, cards de regras e divisórias brancas. Subtítulo agora impede hifenização/quebra arbitrária para manter palavras intactas em telas pequenas.
 - **Lógica**: não exige sessão nem hooks adicionais; apenas renderização estática das regras.
 
 ## 3. Hooks e helpers compartilhados

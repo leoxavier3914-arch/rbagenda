@@ -1,7 +1,7 @@
 # Auditoria rbagenda
 
 ## 1. Visão geral da arquitetura de cliente
-- Rotas de cliente vivem em `src/app/(client)` com páginas client-side. Layout padrão fornecido por `ClientPageLayout` (`ClientPageShell`, `ClientSection`, `ClientGlassPanel`) e `ClientFullScreenLayout` no layout de `(client)`. `checkout` é exceção: recebe só `LavaLampProvider`.
+- Rotas de cliente vivem em `src/app/(client)` com páginas client-side. Layout padrão fornecido por `ClientPageLayout` (`ClientPageShell`, `ClientSection`, `ClientGlassPanel`) e `ClientFullScreenLayout` no layout de `(client)`. `checkout` é exceção: recebe só `LavaLampProvider`. `ClientPageShell` agora pode forçar a classe `force-motion` (com suporte a `#nomotion`) para centralizar o comportamento das animações.
 - Fundo animado controlado por `LavaLampProvider` e variáveis CSS globais (`--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`); `refreshPalette` redesenha blobs. Classes globais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) estão em `globals.css` e agora definem padding vertical mais enxuto (topo 64px + safe-area, base 26px) com gaps menores.
 - Páginas sensíveis: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero, vidro e tipografia; `/login` e `/regras` têm observações específicas abaixo. Estilos globais continuam focados em tokens/layout padrão e o que for específico de uma rota fica no CSS Module local.
 
@@ -44,8 +44,8 @@
 
 ### 2.5 `/regras` (`src/app/(client)/regras/page.tsx`)
 - **Objetivo**: exibir regras públicas da agenda para usuários autenticados.
-- **Arquivos e componentes**: rota `page.tsx`; CSS `rules.module.css`; subcomponentes locais em `@components` (`RulesHeader`, `RulesSectionList`, `RulesSectionCard`, `RulesSectionDivider`); tipos em `types.ts`.
-- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`.
+- **Arquivos e componentes**: rota `page.tsx`; CSS `regras.module.css`; subcomponentes locais em `@components` (`RulesHeader`, `RulesSectionList`, `RulesSectionCard`, `RulesSectionDivider`); tipos em `types.ts`.
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`; classe `force-motion` aplicada via `ClientPageShell`.
 - **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Containers agora esticam para a largura disponível (limites de 720/960px) para evitar shrink-to-fit com `overflow` escondendo linhas em telas estreitas, garantindo quebra natural de texto; reforço de `word-break` evita truncamento em telas menores. O topo e o rodapé usam apenas o padding padrão do shell (64px/26px) sem min-height extra, evitando blocos de fundo vazio.
 - **Organização**: modularizada em header, lista e cartões; array de regras tipado para facilitar manutenção sem alterar conteúdo.
 - **Pontos fortes/fracos**: clareza visual mantida e alinhamento com padrão de autenticação. Risco baixo; depende apenas do Supabase para sessão.
@@ -54,10 +54,25 @@
 ### 2.6 `/suporte` (`src/app/(client)/suporte/page.tsx`)
 - **Objetivo**: centralizar canais de atendimento (em construção).
 - **Arquivos e componentes**: rota `page.tsx`; CSS `suporte.module.css`; subcomponentes locais `SupportHeader`, `SupportChannelsList`, `SupportContent`; tipos em `types.ts`.
-- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`.
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`; classe `force-motion` aplicada pelo shell.
 - **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel` e agora abre com `ClientPageHeader` para alinhar hero/tipografia às demais páginas. Lista de canais em vidro com texto quebrando naturalmente em telas estreitas; a seção não sobrescreve padding/min-height e herda o espaçamento padrão do shell. Todo ajuste visual (incluindo subtítulo) está no CSS Module local.
 - **Organização**: canais definidos em array tipado, separados em header + lista reutilizável.
 - **Recomendações**: preencher dados reais e acoplar ações (deep-links para WhatsApp/e-mail) quando disponíveis.
+
+### 2.7 `/configuracoes` (`src/app/(client)/configuracoes/page.tsx`)
+- **Objetivo**: permitir que a cliente ajuste preferências de contato/notificação.
+- **Arquivos e componentes**: rota `page.tsx`; CSS `configuracoes.module.css`; usa `ClientPageShell` + `ClientSection` com header via `ClientPageHeader` e formulário simples.
+- **Fluxo de dados/estado**: formulário controlado localmente; protegido por `useClientSessionGuard`; `heroReady` aplicado via hook.
+- **Layout e UX**: card centralizado com badge, header padrão e lista de toggles estilizados localmente. Mantém fundo/padding do shell e aplica `force-motion` via shell.
+- **Riscos**: mudanças de estilo não afetam lógica; guardar consistência das cores personalizadas nos inputs.
+
+### 2.8 `/indice` (`src/app/(client)/indice/page.tsx`)
+- **Objetivo**: hub rápido para links principais.
+- **Arquivos e componentes**: rota `page.tsx`; CSS `indice.module.css`; usa `ClientPageShell` + `ClientSection` + `ClientPageHeader`.
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` via hook; somente renderiza links estáticos.
+- **Layout e UX**: badge + header padrão com cards de links em grade responsiva; vidro claro local nos cartões. Mantém `force-motion` pelo shell para animações consistentes.
+- **Riscos**: baixos; apenas grid/responsividade.
+
 
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e `initialLoading`. Retorna snapshot de disponibilidade (dias, slots, busy intervals), loading, erro e `reloadAvailability`. Redireciona para `/login` sem sessão, busca `appointments` (status `pending/reserved/confirmed`) de 0–60 dias e inclui buffers por serviço; pode assinar Realtime para recarregar.
@@ -84,6 +99,10 @@
 - Sessão e shell: páginas protegidas usam `useClientSessionGuard` + `useClientPageReady`, eliminando `getSession` duplicado e padronizando a liberação do hero.
 - Modais: `ConfirmCancelModal`, `BlockedModal`, `SuccessModal` e `RescheduleModal` agora apoiam-se em `BaseModal`, reduzindo duplicação de backdrop/estrutura.
 - Perfil: lógica de formulário centralizada em `useProfileForm`, mantendo a página focada no layout e temas.
+- Força de animação: `ClientPageShell` passou a controlar `force-motion` (com hash `#nomotion`), removendo effects duplicados em `/regras`, `/suporte`, `/meu-perfil` e `/procedimento`.
+- `/configuracoes` e `/indice`: agora usam `ClientPageShell` + `ClientSection`, headers padronizados (`ClientPageHeader`), guard de sessão e CSS Modules dedicados.
+- Signup: ganhou shell/lava (`ClientPageShell` + `LavaLampProvider`), `ClientGlassPanel` e CSS Module (`signup.module.css`) para alinhar visualmente ao login, mantendo lógica intacta.
+- Organização: `rules.module.css` renomeado para `regras.module.css`; criado barrel exports em `agendamentos/@components`, `procedimento/@components` e `regras/@components`; novos CSS Modules (`indice.module.css`) e ajustes no `configuracoes.module.css` para centralizar estilos locais.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); `ClientSection` define padding top 64px, bottom 32px (mais safe-area) sem min-height forçada. Exceção `checkout` sem shell.

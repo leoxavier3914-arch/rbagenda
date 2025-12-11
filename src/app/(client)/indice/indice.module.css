@@ -1,0 +1,91 @@
+.panel {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.headerArea {
+  display: grid;
+  gap: 10px;
+}
+
+.header {
+  text-align: left;
+  display: grid;
+  gap: 10px;
+}
+
+.subtitle {
+  color: color-mix(in srgb, var(--ink) 72%, transparent);
+}
+
+.quickLinks {
+  list-style: none;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  padding: 0;
+  margin: 0;
+}
+
+.quickLink {
+  display: grid;
+  gap: 12px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  box-shadow: 0 14px 34px -18px rgba(0, 0, 0, 0.32);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.quickLink:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 16px 36px -16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.quickLinkContent {
+  display: grid;
+  gap: 6px;
+}
+
+.quickLinkTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2d28;
+}
+
+.quickLinkDescription {
+  margin: 0;
+  font-size: 14px;
+  color: color-mix(in srgb, #1f2d28 70%, transparent);
+  line-height: 1.6;
+}
+
+.quickLinkAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #047857;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.quickLinkAction:hover {
+  color: #065f46;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    gap: 16px;
+  }
+
+  .quickLink {
+    padding: 18px;
+  }
+}

@@ -1,17 +1,33 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useState } from 'react'
+
+import { LavaLampProvider } from '@/components/LavaLampProvider'
+import {
+  ClientGlassPanel,
+  ClientPageHeader,
+  ClientPageShell,
+  ClientSection,
+} from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { supabase } from '@/lib/db'
 
-export default function SignUp() {
-  const [email,setEmail]=useState('');
-  const [password,setPassword]=useState('');
-  const [full_name,setFull]=useState('');
-  const [whatsapp,setWa]=useState('')
-  const [msg,setMsg]=useState('')
+import styles from './signup.module.css'
 
-  async function submit(e: FormEvent<HTMLFormElement>){
+export default function SignUp() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [msg, setMsg] = useState('')
+
+  const heroReady = useClientPageReady()
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setMsg('')
+
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) return setMsg(error.message)
 
@@ -20,13 +36,13 @@ export default function SignUp() {
     const uid = session?.user.id || data.user?.id
     if (uid) {
       await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/rest/v1/profiles`, {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-          'Authorization': `Bearer ${session?.access_token}`
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+          Authorization: `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({ id: uid, email, full_name, whatsapp, role: 'client' })
+        body: JSON.stringify({ id: uid, email, full_name: fullName, whatsapp, role: 'client' }),
       })
     }
 
@@ -34,73 +50,91 @@ export default function SignUp() {
   }
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
-      <div className="card w-full max-w-md space-y-6">
-        <div className="space-y-2 text-center">
-          <span className="badge inline-flex">Boas-vindas</span>
-          <h1 className="text-3xl font-semibold text-[#1f2d28]">Criar conta</h1>
-          <p className="muted-text">
-            Cadastre-se para reservar horários com praticidade e receber lembretes automáticos.
-          </p>
-        </div>
-        <form className="space-y-4" onSubmit={submit}>
-          <div className="space-y-1 text-left">
-            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="full_name">
-              Nome completo
-            </label>
-            <input
-              id="full_name"
-              className="input-field"
-              placeholder="Como devemos te chamar?"
-              value={full_name}
-              onChange={e=>setFull(e.target.value)}
+    <LavaLampProvider>
+      <ClientPageShell heroReady={heroReady} className={styles.shell} forceMotion>
+        <ClientSection className={styles.section}>
+          <ClientGlassPanel className={styles.card} label="CADASTRO">
+            <ClientPageHeader
+              title="Criar conta"
+              subtitle="Cadastre-se para reservar horários com praticidade e receber lembretes automáticos."
+              hideDiamond
+              className={styles.header}
+              subtitleClassName={styles.subtitle}
             />
-          </div>
-          <div className="space-y-1 text-left">
-            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="whatsapp">
-              WhatsApp (com DDD)
-            </label>
-            <input
-              id="whatsapp"
-              className="input-field"
-              placeholder="(00) 00000-0000"
-              value={whatsapp}
-              onChange={e=>setWa(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1 text-left">
-            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="signup-email">
-              E-mail
-            </label>
-            <input
-              id="signup-email"
-              className="input-field"
-              placeholder="nome@email.com"
-              value={email}
-              onChange={e=>setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1 text-left">
-            <label className="text-sm font-medium text-[color:rgba(31,45,40,0.8)]" htmlFor="signup-password">
-              Senha
-            </label>
-            <input
-              id="signup-password"
-              className="input-field"
-              type="password"
-              placeholder="Crie uma senha segura"
-              value={password}
-              onChange={e=>setPassword(e.target.value)}
-            />
-          </div>
-          <button className="btn-primary w-full">Criar conta</button>
-        </form>
-        {msg && (
-          <div className="rounded-2xl border border-[color:rgba(47,109,79,0.4)] bg-[color:rgba(247,242,231,0.7)] px-4 py-3 text-sm text-[#2f6d4f]">
-            {msg}
-          </div>
-        )}
-      </div>
-    </main>
+
+            <form className={styles.form} onSubmit={submit}>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="full_name">
+                  Nome completo
+                </label>
+                <input
+                  id="full_name"
+                  className={`${styles.input} input-field`}
+                  placeholder="Como devemos te chamar?"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="whatsapp">
+                  WhatsApp (com DDD)
+                </label>
+                <input
+                  id="whatsapp"
+                  className={`${styles.input} input-field`}
+                  placeholder="(00) 00000-0000"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="signup-email">
+                  E-mail
+                </label>
+                <input
+                  id="signup-email"
+                  className={`${styles.input} input-field`}
+                  placeholder="nome@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  required
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="signup-password">
+                  Senha
+                </label>
+                <input
+                  id="signup-password"
+                  className={`${styles.input} input-field`}
+                  type="password"
+                  placeholder="Crie uma senha segura"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button className={styles.submitButton}>Criar conta</button>
+            </form>
+
+            {msg && <div className={styles.feedback}>{msg}</div>}
+
+            <p className={styles.linkRow}>
+              Já tem uma conta?{' '}
+              <Link href="/login" className={styles.link}>
+                Entrar
+              </Link>
+            </p>
+          </ClientGlassPanel>
+        </ClientSection>
+      </ClientPageShell>
+    </LavaLampProvider>
   )
 }

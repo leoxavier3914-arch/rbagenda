@@ -1,7 +1,7 @@
 "use client"
 
 import { type RuleSection } from "../types"
-import styles from "../rules.module.css"
+import styles from "../regras.module.css"
 
 type RulesSectionCardProps = {
   section: RuleSection

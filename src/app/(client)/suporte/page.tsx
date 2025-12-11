@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
 import { ClientPageShell, ClientSection, ClientGlassPanel } from "@/components/client/ClientPageLayout";
 import { useClientSessionGuard } from "@/hooks/useClientSessionGuard";
 import { useClientPageReady } from "@/hooks/useClientPageReady";
@@ -13,16 +11,8 @@ export default function SuportePage() {
   const heroReady = useClientPageReady();
   useClientSessionGuard();
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    document.documentElement.classList.add("force-motion");
-    return () => {
-      document.documentElement.classList.remove("force-motion");
-    };
-  }, []);
-
   return (
-    <ClientPageShell heroReady={heroReady}>
+    <ClientPageShell heroReady={heroReady} forceMotion>
       <ClientSection>
         <SupportHeader />
 

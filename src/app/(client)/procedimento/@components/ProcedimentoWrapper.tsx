@@ -13,7 +13,12 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
   const wrapperClassName = `${styles.wrapper} ${heroReady ? styles.heroReady : ''}`
 
   return (
-    <ClientPageShell heroReady={heroReady} className={wrapperClassName}>
+    <ClientPageShell
+      heroReady={heroReady}
+      className={wrapperClassName}
+      forceMotion
+      respectNoMotionHash
+    >
       <ClientSection className={styles.pageSection}>
         <div className={styles.page}>{children}</div>
       </ClientSection>

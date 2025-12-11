@@ -247,15 +247,6 @@ export default function MeuPerfilPage() {
   }, [refreshPalette, syncThemeFromComputed])
 
   useEffect(() => {
-    const root = document.documentElement
-    root.classList.add('force-motion')
-
-    return () => {
-      root.classList.remove('force-motion')
-    }
-  }, [])
-
-  useEffect(() => {
     if (typeof window === 'undefined') return
 
     try {
@@ -582,7 +573,7 @@ export default function MeuPerfilPage() {
 
 
   return (
-    <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
+    <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
       <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
         <ProfileHeader revealStage={revealStage} />
 

@@ -1,6 +1,6 @@
 "use client"
 
-import styles from "../rules.module.css"
+import styles from "../regras.module.css"
 
 export function RulesSectionDivider() {
   return (

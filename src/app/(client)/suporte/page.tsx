@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ClientPageShell, ClientSection, ClientGlassPanel } from "@/components/client/ClientPageLayout";
 import { supabase } from "@/lib/db";
 
-import { SupportContent } from "./@components";
+import { SupportContent, SupportHeader } from "./@components";
 import styles from "./suporte.module.css";
 
 export default function SuportePage() {
@@ -38,7 +38,9 @@ export default function SuportePage() {
 
   return (
     <ClientPageShell heroReady={heroReady}>
-      <ClientSection className={styles.section}>
+      <ClientSection>
+        <SupportHeader />
+
         <ClientGlassPanel label="SUPORTE" className={styles.card}>
           <SupportContent />
         </ClientGlassPanel>

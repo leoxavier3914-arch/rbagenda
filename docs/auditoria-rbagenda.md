@@ -3,7 +3,7 @@
 ## 1. Visão geral da arquitetura de cliente
 - Rotas de cliente vivem em `src/app/(client)` com páginas client-side. Layout padrão fornecido por `ClientPageLayout` (`ClientPageShell`, `ClientSection`, `ClientGlassPanel`) e `ClientFullScreenLayout` no layout de `(client)`. `checkout` é exceção: recebe só `LavaLampProvider`.
 - Fundo animado controlado por `LavaLampProvider` e variáveis CSS globais (`--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`); `refreshPalette` redesenha blobs. Classes globais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) estão em `globals.css` e agora definem padding vertical mais enxuto (topo 64px + safe-area, base 26px) com gaps menores.
-- Páginas sensíveis: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero, vidro e tipografia; `/login` e `/regras` têm observações específicas abaixo.
+- Páginas sensíveis: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero, vidro e tipografia; `/login` e `/regras` têm observações específicas abaixo. Estilos globais continuam focados em tokens/layout padrão e o que for específico de uma rota fica no CSS Module local.
 
 ## 2. Comportamento das páginas sensíveis
 ### 2.1 `/procedimento` (`src/app/(client)/procedimento/page.tsx`)
@@ -19,7 +19,7 @@
 - **Objetivo**: listar agendamentos, filtrar por status, pagar sinal, cancelar e reagendar respeitando janela de segurança.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `agendamentos.module.css`; componentes `AppointmentsHeader`, `StatusFiltersBar`, `AppointmentsList`, `ConfirmCancelModal`, `RescheduleModal`, `BlockedModal`, `SuccessModal`; tipos em `types.ts`.
 - **Fluxo de dados/estado**: requer sessão (redirect para `/login` se ausente). Busca `appointments` + `services`/`service_types` + `appointment_payment_totals`; normaliza valores e nomes. Estados de filtro/paginação (ITEMS_PER_PAGE=5), modais de pagamento/cancelamento/bloqueio/sucesso/edição e mensagens. `RescheduleModal` usa `useClientAvailability` (sem subscribe, filtrado por serviço, buffer/timezone padrão, fallback), busca slots via `/api/slots`, bloqueia hoje/passado e horários fora de `CANCEL_THRESHOLD_HOURS` (env ou 24h). Pagamento via `/api/payments/create` → `/checkout`; cancelamento via `/api/appointments/{id}/cancel`; reagendamento via `/api/appointments/{id}/reschedule`.
-- **Layout e UX**: shell padrão com painel de vidro e rodapé; lista mostra status, valores (total/sinal/pago) e badges de depósito; modais seguem vidro. Calendário do modal marca `mine/full/booked/available`.
+- **Layout e UX**: shell padrão com painel de vidro e rodapé; lista mostra status, valores (total/sinal/pago) e badges de depósito; modais seguem vidro. Calendário do modal marca `mine/full/booked/available`. O rodapé/mark da página está estilizado apenas no CSS Module (nada mais fica em `globals.css`).
 - **Organização**: fluxo dividido em componentes; lógica de disponibilidade encapsulada no hook. Mantém padrão estrutural do shell e redirecionamento de sessão agora feito via `router.replace` (evita reload).
 - **Pontos fortes/fracos**: boa separação de UI vs. dados; risco em consistência de disponibilidade/buffer; pagamentos e cancelamentos distribuídos sem camada de serviço nem testes; lógica de janela de cancelamento replicada.
 - **Recomendações**: unificar tratamento de erros e loading de pagamentos; validar cancelamento/reagendamento também no backend; adicionar testes de paginação e filtros; compartilhar componentes de badge/valor entre lista e modais.
@@ -55,7 +55,7 @@
 - **Objetivo**: centralizar canais de atendimento (em construção).
 - **Arquivos e componentes**: rota `page.tsx`; CSS `suporte.module.css`; subcomponentes locais `SupportHeader`, `SupportChannelsList`, `SupportContent`; tipos em `types.ts`.
 - **Fluxo de dados/estado**: checa sessão Supabase no mount via `getSession` e `router.replace('/login')` em ausência/erro; `heroReady` ativa animações do shell.
-- **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; lista de canais em vidro com texto quebrando naturalmente em telas estreitas. A seção não sobrescreve padding/min-height e herda o espaçamento padrão do shell para manter o hero alinhado às demais rotas.
+- **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel` e agora abre com `ClientPageHeader` para alinhar hero/tipografia às demais páginas. Lista de canais em vidro com texto quebrando naturalmente em telas estreitas; a seção não sobrescreve padding/min-height e herda o espaçamento padrão do shell. Todo ajuste visual (incluindo subtítulo) está no CSS Module local.
 - **Organização**: canais definidos em array tipado, separados em header + lista reutilizável.
 - **Recomendações**: preencher dados reais e acoplar ações (deep-links para WhatsApp/e-mail) quando disponíveis.
 
@@ -74,11 +74,11 @@
 ## 5. Atualizações recentes
 - Shell e spacing: padding vertical do shell reduzido (64px topo, 32px base + safe-area) e gaps menores na `.page`; `ClientSection` perdeu min-height forçada para evitar blocos de lava vazios em telas curtas.
 - `/procedimento`: wrapper agora usa `ClientPageShell` + `ClientSection` mantendo hero, sem alterar fluxo ou glass existente, e removeu min-heights/padding duplicados do módulo local.
-- `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista; wrapper local sem min-height extra.
+- `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista; wrapper local sem min-height extra e rodapé/mark agora estilizado apenas no CSS Module (classe global removida).
 - `/meu-perfil`: extratos anteriores mantidos, agora sem min-height custom no wrapper para seguir o shell enxuto.
 - `/login`: shell de cliente aplicado; `heroReady` ativado no mount e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.
 - `/regras`: reforço de quebra de linha para evitar truncamento mantendo ornamentos/divisórias. Padding próprio removido e espaçamento final reduzido para alinhar início do hero ao padrão do shell.
-- `/suporte`: agora protegido por sessão, usa shell completo (lava + glass), canais modularizados em header/lista com tipos locais e sem padding custom na section (usa apenas o `ClientSection`).
+- `/suporte`: agora protegido por sessão, usa shell completo (lava + glass) e abre com `ClientPageHeader` para alinhar hero e tipografia. Canais modularizados em lista com tipos locais e sem padding custom na section (usa apenas o `ClientSection`). Subtítulo/ajustes visuais vivem no CSS Module.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); `ClientSection` define padding top 64px, bottom 32px (mais safe-area) sem min-height forçada. Exceção `checkout` sem shell.

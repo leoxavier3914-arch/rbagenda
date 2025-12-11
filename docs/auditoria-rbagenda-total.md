@@ -39,9 +39,9 @@
 - **Helpers de API**: rotas locais `/api/appointments`, `/api/slots`, `/api/payments/create` recebem tokens Supabase e encapsulam acesso a Supabase/Stripe; páginas chamam via `fetch`/POST diretamente.
 
 ## 4. Tema, layout e sistema de “glass”
-- **Glass**: classe global `.glass` + `.label` em `globals.css`; `ClientGlassPanel` envolve seções principais das páginas. CSS Modules (ex.: `procedimento.module.css`, `agendamentos.module.css`, `meu-perfil.module.css`, `login.module.css`) aplicam ajustes locais sem quebrar o vidro.
+- **Glass**: classe global `.glass` + `.label` em `globals.css`; `ClientGlassPanel` envolve seções principais das páginas. `globals.css` mantém apenas tokens/shared layout; ajustes específicos (rodapés, espaçamentos finos) ficam em CSS Modules (`procedimento.module.css`, `agendamentos.module.css`, `meu-perfil.module.css`, `login.module.css`, `suporte.module.css`, `rules.module.css`).
 - **Fundo**: variáveis CSS controlam gradientes de fundo (`--bg-*`), inner glow (`--inner-*`), bordas (`--glass-stroke`, `--card-stroke`) e opacidades do lava (`--lava-alpha-*`). `LavaLampProvider` redesenha ao iniciar e quando `refreshPalette` é chamado (painel admin de procedimento, painel de tema do perfil).
-- **Shell**: `ClientPageShell` coordena hero animado (`client-hero-wrapper`) e aplica classe `client-hero-ready` após ready; `ClientSection` organiza largura e espaçamento com padding mais curto (64px no topo, 32px na base + safe-area) e sem min-height forçada, servindo de referência de alinhamento vertical do hero. `ClientFullScreenLayout` adiciona header/rodapé padrão. `/regras` usa shell mas propositalmente não usa `ClientGlassPanel`, exibindo conteúdo direto no fundo e agora depende apenas do padding do shell. `/suporte` segue shell completo com painel de vidro e sem padding próprio na section.
+- **Shell**: `ClientPageShell` coordena hero animado (`client-hero-wrapper`) e aplica classe `client-hero-ready` após ready; `ClientSection` organiza largura e espaçamento com padding mais curto (64px no topo, 32px na base + safe-area) e sem min-height forçada, servindo de referência de alinhamento vertical do hero. `ClientFullScreenLayout` adiciona header/rodapé padrão. `/regras` usa shell mas propositalmente não usa `ClientGlassPanel`, exibindo conteúdo direto no fundo e agora depende apenas do padding do shell. `/suporte` segue shell completo, abre com `ClientPageHeader` e não define padding próprio na section.
 
 ## 5. Riscos, pontos fracos e oportunidades
 - **Disponibilidade**: alterações em `useClientAvailability` (status filtrados, janela de 60 dias, buffers ou timezone) impactam simultaneamente `/procedimento` e reagendamento em `/agendamentos`; ausência de testes automatizados amplia risco.
@@ -53,10 +53,10 @@
 ## 6. Atualizações recentes
 - Shell e espaçamento: padding do shell reduzido (64px topo, 32px base + safe-area) com gap menor e sem min-height forçada no `ClientSection`, cortando área de lava vazia em telas curtas.
 - `/procedimento`: wrapper utiliza `ClientPageShell`/`ClientSection`, mantendo animação `heroReady` e vidro existente, agora sem min-heights/padding duplicados.
-- `/agendamentos`: redirecionamento de sessão passa a usar `router.replace` (sem reload) mantendo fluxo de lista/modais; wrapper sem min-height extra.
+- `/agendamentos`: redirecionamento de sessão passa a usar `router.replace` (sem reload) mantendo fluxo de lista/modais; wrapper sem min-height extra e rodapé/mark estilizado apenas no CSS Module (classe global removida).
 - `/meu-perfil`: mantém painel de tema/vidro e remove min-height custom para seguir o shell.
 - `/login`: permanece com shell completo, checagem de sessão antes do formulário e `heroReady` ligado no mount.
-- `/suporte`: passa a seguir shell completo com card de vidro, autenticação no mount e canais modularizados (header/lista/tipos locais). Padding custom da section removido para aderir ao espaçamento do shell.
+- `/suporte`: passa a seguir shell completo com card de vidro, autenticação no mount e canais modularizados (header/lista/tipos locais). Abre com `ClientPageHeader` para alinhar hero/tipografia e mantém padding padrão do `ClientSection`; subtítulo e ajustes ficam no CSS Module.
 - `/regras`: reforço de `word-break` para evitar truncamento mantendo ornamentos/divisórias e ausência de glass. Padding próprio removido e min-height alinhada ao `ClientSection`.
 ## Cheat sheet
 - **Shell**: `ClientPageShell` + `ClientSection` + `ClientGlassPanel`; fundo lava via `LavaLampProvider` e CSS vars. `ClientSection` define padding top 64px e bottom 32px (com safe-area) sem min-height forçada como referência de hero; evitar overrides locais. Exceção: `checkout` apenas com provider.

@@ -24,6 +24,15 @@
   margin-top: 12px;
 }
 
+.footerMark {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.34em;
+  color: color-mix(in srgb, var(--appointments-ink) 74%, transparent);
+  border: none;
+  background: transparent;
+}
+
 .filterCard {
   position: relative;
   appearance: none;

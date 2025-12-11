@@ -701,12 +701,27 @@
 
 :global(.client-hero-wrapper .grid) {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 18px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 18px);
+  width: min(100%, 880px);
+  margin: 0 auto;
+  justify-items: center;
+  align-items: stretch;
 }
 
 :global(.client-hero-wrapper .grid.tipo-grid) {
   gap: clamp(12px, 2vw, 18px);
+}
+
+.tipoGrid {
+  gap: clamp(12px, 2vw, 18px);
+  justify-items: center;
 }
 
 :global(.client-hero-wrapper .card) {

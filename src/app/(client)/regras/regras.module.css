@@ -1,4 +1,15 @@
 
+.wrapper {
+  position: relative;
+  color: var(--ink);
+}
+
+.pageSection {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .page {
   display: flex;
   justify-content: center;
@@ -6,7 +17,6 @@
   width: 100%;
   overflow: hidden;
   padding: 0 16px clamp(28px, 5vw, 44px);
-  color: var(--ink);
   word-break: normal;
   overflow-wrap: normal;
   hyphens: none;

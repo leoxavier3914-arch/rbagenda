@@ -1,20 +1,48 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import { ClientPageShell, ClientSection, ClientGlassPanel } from "@/components/client/ClientPageLayout";
-import { LavaLampProvider } from "@/components/LavaLampProvider";
-import styles from "./suporte.module.css";
+import { supabase } from "@/lib/db";
+
 import { SupportContent } from "./@components";
+import styles from "./suporte.module.css";
 
 export default function SuportePage() {
+  const router = useRouter();
+  const [heroReady, setHeroReady] = useState(false);
+
+  useEffect(() => {
+    setHeroReady(true);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const verifySession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!active) return;
+
+      if (error || !data.session) {
+        router.replace("/login");
+      }
+    };
+
+    void verifySession();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
   return (
-    <LavaLampProvider>
-      <ClientPageShell>
-        <ClientSection className={styles.section}>
-          <ClientGlassPanel label="SUPORTE" className={styles.card}>
-            <SupportContent />
-          </ClientGlassPanel>
-        </ClientSection>
-      </ClientPageShell>
-    </LavaLampProvider>
+    <ClientPageShell heroReady={heroReady}>
+      <ClientSection className={styles.section}>
+        <ClientGlassPanel label="SUPORTE" className={styles.card}>
+          <SupportContent />
+        </ClientGlassPanel>
+      </ClientSection>
+    </ClientPageShell>
   );
 }

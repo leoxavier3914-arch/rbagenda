@@ -1,1 +1,3 @@
-export { SupportContent } from "./SupportContent";
+export * from "./SupportChannelsList";
+export * from "./SupportContent";
+export * from "./SupportHeader";

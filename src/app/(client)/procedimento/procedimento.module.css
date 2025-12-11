@@ -26,6 +26,12 @@
   padding: calc(72px + env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));
 }
 
+.pageSection {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .section {
   width: 100%;
   display: flex;

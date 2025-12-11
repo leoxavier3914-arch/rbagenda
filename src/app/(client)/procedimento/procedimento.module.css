@@ -39,7 +39,7 @@
 }
 
 .section + .section {
-  margin-top: clamp(26px, 3.4vw, 40px);
+ margin-top: clamp(40px, 5vw, 64px);
 }
 
 .section[data-step='tecnica'] {

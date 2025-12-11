@@ -18,6 +18,7 @@ import {
   ClientSection,
 } from '@/components/client/ClientPageLayout'
 import { useClientPageReady } from '@/hooks/useClientPageReady'
+import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { useProfileForm } from './useProfileForm'
 import {
   AvatarUploader,
@@ -153,6 +154,7 @@ export default function MeuPerfilPage() {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
   const heroReady = useClientPageReady()
+  useClientSessionGuard()
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
 

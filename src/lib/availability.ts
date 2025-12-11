@@ -45,7 +45,7 @@ function normalizeNumber(value: unknown): number | null {
   return null
 }
 
-export function makeSlots(start = '09:00', end = '18:00', stepMinutes = 30) {
+function makeSlots(start = '09:00', end = '18:00', stepMinutes = 30) {
   const [startHour, startMinute] = start.split(':').map(Number)
   const [endHour, endMinute] = end.split(':').map(Number)
   const slots: string[] = []

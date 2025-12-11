@@ -1,6 +1,7 @@
+import { ClientBaseModal } from '@/components/client/ClientBaseModal'
+
 import styles from '../agendamentos.module.css'
 import type { CancelDialogState } from '../types'
-import { BaseModal } from './BaseModal'
 
 type ConfirmCancelModalProps = {
   dialog: CancelDialogState
@@ -20,10 +21,12 @@ export function ConfirmCancelModal({ dialog, onClose, onConfirm, isProcessing, e
     : 'Seu agendamento está dentro das regras de cancelamento. Deseja realmente cancelar seu horário?'
 
   return (
-    <BaseModal
+    <ClientBaseModal
       isOpen
       onClose={onClose}
-      contentClassName={styles.modalWarning}
+      className={styles.modal}
+      backdropClassName={styles.modalBackdrop}
+      contentClassName={`${styles.modalContent} ${styles.modalWarning}`}
       disableBackdropClose={isProcessing}
     >
       <div className={`${styles.iconWrap} ${isPenalty ? styles.iconWrapWarning : ''}`} aria-hidden="true">
@@ -46,6 +49,6 @@ export function ConfirmCancelModal({ dialog, onClose, onConfirm, isProcessing, e
           Não
         </button>
       </div>
-    </BaseModal>
+    </ClientBaseModal>
   )
 }

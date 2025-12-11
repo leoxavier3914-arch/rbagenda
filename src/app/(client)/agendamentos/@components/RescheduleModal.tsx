@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { ClientBaseModal } from '@/components/client/ClientBaseModal'
 import { useClientAvailability } from '@/hooks/useClientAvailability'
 import { DEFAULT_FALLBACK_BUFFER_MINUTES, DEFAULT_TIMEZONE } from '@/lib/availability'
 
 import styles from '../agendamentos.module.css'
 import type { CalendarDayEntry, NormalizedAppointment, SlotOption } from '../types'
-import { BaseModal } from './BaseModal'
 
 type RescheduleModalProps = {
   appointment: NormalizedAppointment
@@ -248,10 +248,12 @@ export function RescheduleModal({
   }
 
   return (
-    <BaseModal
+    <ClientBaseModal
       isOpen
       onClose={onClose}
-      contentClassName={styles.modalEdit}
+      className={styles.modal}
+      backdropClassName={styles.modalBackdrop}
+      contentClassName={`${styles.modalContent} ${styles.modalEdit}`}
       disableBackdropClose={isSaving}
     >
       <h2 className={styles.modalTitle}>Alterar data e horário</h2>
@@ -345,6 +347,6 @@ export function RescheduleModal({
           {isSaving ? 'Salvando…' : 'Salvar alterações'}
         </button>
       </div>
-    </BaseModal>
+    </ClientBaseModal>
   )
 }

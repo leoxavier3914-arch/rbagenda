@@ -1,8 +1,8 @@
-export { AppointmentsHeader } from "./AppointmentsHeader"
-export { AppointmentsList } from "./AppointmentsList"
-export { BaseModal } from "./BaseModal"
-export { BlockedModal } from "./BlockedModal"
-export { ConfirmCancelModal } from "./ConfirmCancelModal"
-export { RescheduleModal } from "./RescheduleModal"
-export { StatusFiltersBar } from "./StatusFiltersBar"
-export { SuccessModal } from "./SuccessModal"
+export { AppointmentsHeader } from './AppointmentsHeader'
+export { AppointmentsList } from './AppointmentsList'
+export { AppointmentsWrapper } from './AppointmentsWrapper'
+export { BlockedModal } from './BlockedModal'
+export { ConfirmCancelModal } from './ConfirmCancelModal'
+export { RescheduleModal } from './RescheduleModal'
+export { StatusFiltersBar } from './StatusFiltersBar'
+export { SuccessModal } from './SuccessModal'

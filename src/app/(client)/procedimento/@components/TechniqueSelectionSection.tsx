@@ -1,5 +1,6 @@
 import { ForwardedRef, forwardRef } from 'react'
 
+import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
 
 import { ProcedimentoCard } from './ProcedimentoCard'
@@ -44,8 +45,12 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
         <ProcedimentoHeader className={styles.procedimentoHeader}>
           <>Escolha <span className={styles.subtitle}>sua</span> Técnica:</>
         </ProcedimentoHeader>
-        <div className={styles.glass} aria-label="Técnicas de cílios">
-          <div className={styles.label}>TÉCNICA</div>
+        <ClientGlassPanel
+          className={styles.glass}
+          label="TÉCNICA"
+          labelClassName={styles.label}
+          aria-label="Técnicas de cílios"
+        >
           {catalogStatus === 'ready' && selectedService ? (
             <>
               {selectedService.techniques.length > 0 ? (
@@ -77,7 +82,7 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
               Selecione um tipo para ver as técnicas disponíveis.
             </div>
           )}
-        </div>
+        </ClientGlassPanel>
       </div>
     </section>
   )

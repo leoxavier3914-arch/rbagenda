@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { ClientPageShell, ClientSection } from '@/components/client/ClientPageLayout'
 import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
 
 import {
+  AppointmentsWrapper,
   AppointmentsHeader,
   AppointmentsList,
   BlockedModal,
@@ -592,48 +592,46 @@ export default function MyAppointments() {
   }
 
   return (
-    <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
-      <ClientSection>
-        <AppointmentsHeader />
+    <AppointmentsWrapper heroReady={heroReady}>
+      <AppointmentsHeader />
 
-        <StatusFiltersBar selectedCategory={selectedCategory} onSelect={handleCategorySelect} />
+      <StatusFiltersBar selectedCategory={selectedCategory} onSelect={handleCategorySelect} />
 
-        <footer className={styles.footerMark}>ROMEIKE BEAUTY</footer>
+      <footer className={styles.footerMark}>ROMEIKE BEAUTY</footer>
 
-        {selectedCategory ? (
-          <AppointmentsList
-            ref={resultsRef}
-            selectedCategory={selectedCategory}
-            loading={loading}
-            error={error}
-            hasAppointments={hasAppointments}
-            filteredAppointments={filteredAppointments}
-            statusEmptyMessages={statusEmptyMessages}
-            completionSummary={completionSummary}
-            toCurrency={toCurrency}
-            paginatedAppointments={paginatedAppointments}
-            statusLabels={statusLabels}
-            formatDate={formatDate}
-            formatTime={formatTime}
-            depositStatusLabel={depositStatusLabel}
-            canShowPay={canShowPay}
-            canShowCancel={canShowCancel}
-            canShowEdit={canShowEdit}
-            payError={payError}
-            lastPayAttemptId={lastPayAttemptId}
-            payingApptId={payingApptId}
-            onStartDepositPayment={(appointmentId) => {
-              void startDepositPayment(appointmentId)
-            }}
-            onEdit={handleEditRequest}
-            onCancel={handleCancelRequest}
-            cancelingId={cancelingId}
-            totalPages={totalPages}
-            currentPage={currentPage}
-            onChangePage={(page) => setCurrentPage(page)}
-          />
-        ) : null}
-      </ClientSection>
+      {selectedCategory ? (
+        <AppointmentsList
+          ref={resultsRef}
+          selectedCategory={selectedCategory}
+          loading={loading}
+          error={error}
+          hasAppointments={hasAppointments}
+          filteredAppointments={filteredAppointments}
+          statusEmptyMessages={statusEmptyMessages}
+          completionSummary={completionSummary}
+          toCurrency={toCurrency}
+          paginatedAppointments={paginatedAppointments}
+          statusLabels={statusLabels}
+          formatDate={formatDate}
+          formatTime={formatTime}
+          depositStatusLabel={depositStatusLabel}
+          canShowPay={canShowPay}
+          canShowCancel={canShowCancel}
+          canShowEdit={canShowEdit}
+          payError={payError}
+          lastPayAttemptId={lastPayAttemptId}
+          payingApptId={payingApptId}
+          onStartDepositPayment={(appointmentId) => {
+            void startDepositPayment(appointmentId)
+          }}
+          onEdit={handleEditRequest}
+          onCancel={handleCancelRequest}
+          cancelingId={cancelingId}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onChangePage={(page) => setCurrentPage(page)}
+        />
+      ) : null}
 
       <ConfirmCancelModal
         dialog={cancelDialog}
@@ -661,6 +659,6 @@ export default function MyAppointments() {
           cancelThresholdHours={CANCEL_THRESHOLD_HOURS}
         />
       ) : null}
-    </ClientPageShell>
+    </AppointmentsWrapper>
   )
 }

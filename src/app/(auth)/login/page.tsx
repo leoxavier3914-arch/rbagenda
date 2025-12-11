@@ -11,6 +11,7 @@ import {
   ClientPageShell,
   ClientSection,
 } from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { supabase } from '@/lib/db'
 
 import styles from './login.module.css'
@@ -21,8 +22,8 @@ export default function Login() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
-  const [heroReady, setHeroReady] = useState(false)
   const router = useRouter()
+  const heroReady = useClientPageReady()
 
   const isFormDisabled = loading || checkingSession
 
@@ -37,8 +38,6 @@ export default function Login() {
 
   useEffect(() => {
     let active = true
-
-    setHeroReady(true)
 
     async function verifySession() {
       try {

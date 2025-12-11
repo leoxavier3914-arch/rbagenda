@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 import { ClientPageShell, ClientSection } from "@/components/client/ClientPageLayout"
 import { useClientSessionGuard } from "@/hooks/useClientSessionGuard"
+import { useClientPageReady } from "@/hooks/useClientPageReady"
 
 import { RulesHeader } from "./@components/RulesHeader"
 import { RulesSectionList } from "./@components/RulesSectionList"
@@ -42,17 +42,16 @@ const ruleSections: RuleSection[] = [
 ]
 
 export default function DashboardRulesPage() {
-  const [heroReady, setHeroReady] = useState(false)
-  const router = useRouter()
-  const { isReady } = useClientSessionGuard()
+  useClientSessionGuard()
+  const heroReady = useClientPageReady()
 
   useEffect(() => {
-    setHeroReady(true)
+    if (typeof document === "undefined") return
+    document.documentElement.classList.add("force-motion")
+    return () => {
+      document.documentElement.classList.remove("force-motion")
+    }
   }, [])
-
-  useEffect(() => {
-    if (!isReady) return
-  }, [isReady, router])
 
   return (
     <ClientPageShell heroReady={heroReady}>

@@ -18,16 +18,16 @@
 ### 2.2 `/agendamentos` (`src/app/(client)/agendamentos/page.tsx`)
 - **Objetivo**: listar agendamentos, filtrar por status, pagar sinal, cancelar e reagendar respeitando janela de segurança.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `agendamentos.module.css`; componentes `AppointmentsHeader`, `StatusFiltersBar`, `AppointmentsList`, `ConfirmCancelModal`, `RescheduleModal`, `BlockedModal`, `SuccessModal`; tipos em `types.ts`.
-- **Fluxo de dados/estado**: requer sessão (redirect para `/login` se ausente). Busca `appointments` + `services`/`service_types` + `appointment_payment_totals`; normaliza valores e nomes. Estados de filtro/paginação (ITEMS_PER_PAGE=5), modais de pagamento/cancelamento/bloqueio/sucesso/edição e mensagens. `RescheduleModal` usa `useClientAvailability` (sem subscribe, filtrado por serviço, buffer/timezone padrão, fallback), busca slots via `/api/slots`, bloqueia hoje/passado e horários fora de `CANCEL_THRESHOLD_HOURS` (env ou 24h). Pagamento via `/api/payments/create` → `/checkout`; cancelamento via `/api/appointments/{id}/cancel`; reagendamento via `/api/appointments/{id}/reschedule`.
-- **Layout e UX**: shell padrão com painel de vidro e rodapé; lista mostra status, valores (total/sinal/pago) e badges de depósito; modais seguem vidro. Calendário do modal marca `mine/full/booked/available`. O rodapé/mark da página está estilizado apenas no CSS Module (nada mais fica em `globals.css`).
-- **Organização**: fluxo dividido em componentes; lógica de disponibilidade encapsulada no hook. Mantém padrão estrutural do shell e redirecionamento de sessão agora feito via `router.replace` (evita reload).
+- **Fluxo de dados/estado**: requer sessão via `useClientSessionGuard` (redirect para `/login` se ausente). Busca `appointments` + `services`/`service_types` + `appointment_payment_totals`; normaliza valores e nomes. Estados de filtro/paginação (ITEMS_PER_PAGE=5), modais de pagamento/cancelamento/bloqueio/sucesso/edição e mensagens. `RescheduleModal` usa `useClientAvailability` (sem subscribe, filtrado por serviço, buffer/timezone padrão, fallback), busca slots via `/api/slots`, bloqueia hoje/passado e horários fora de `CANCEL_THRESHOLD_HOURS` (env ou 24h). Pagamento via `/api/payments/create` → `/checkout`; cancelamento via `/api/appointments/{id}/cancel`; reagendamento via `/api/appointments/{id}/reschedule`.
+- **Layout e UX**: shell padrão com painel de vidro e rodapé; lista mostra status, valores (total/sinal/pago) e badges de depósito; modais seguem vidro com `BaseModal` para backdrop/conteúdo consistentes. Calendário do modal marca `mine/full/booked/available`. O rodapé/mark da página está estilizado apenas no CSS Module (nada mais fica em `globals.css`).
+- **Organização**: fluxo dividido em componentes; lógica de disponibilidade encapsulada no hook. Mantém padrão estrutural do shell e redirecionamento de sessão agora feito via hook. Modais compartilham `BaseModal` para evitar duplicação.
 - **Pontos fortes/fracos**: boa separação de UI vs. dados; risco em consistência de disponibilidade/buffer; pagamentos e cancelamentos distribuídos sem camada de serviço nem testes; lógica de janela de cancelamento replicada.
 - **Recomendações**: unificar tratamento de erros e loading de pagamentos; validar cancelamento/reagendamento também no backend; adicionar testes de paginação e filtros; compartilhar componentes de badge/valor entre lista e modais.
 
 ### 2.3 `/meu-perfil` (`src/app/(client)/meu-perfil/page.tsx`)
 - **Objetivo**: editar dados pessoais, senha, avatar local e preferências de tema/lava.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `meu-perfil.module.css`; `ProfileHeader`, `ProfileForm`, `AvatarUploader`, `ThemePreferencesPanel`; tipos em `types.ts` (`Profile`, `ThemeState`, `defaultTheme`).
-- **Fluxo de dados/estado**: obtém sessão e perfil em `profiles`; guarda campos e estados de salvar/sair. Avatar em `localStorage` (`rb_meu_perfil_avatar`). Painel de tema lê vars CSS (`--inner-*`, `--bg-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`), valida/normaliza, aplica via `setProperty` e chama `refreshPalette`; painel só aparece para perfis admin*. Usa `REVEAL_STAGE` para transições e mantém `force-motion`.
+- **Fluxo de dados/estado**: `useProfileForm` (envolvendo `useClientSessionGuard`) carrega sessão/perfil (`profiles`), preenche campos e controla salvar/sair. Avatar em `localStorage` (`rb_meu_perfil_avatar`). Painel de tema lê vars CSS (`--inner-*`, `--bg-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`), valida/normaliza, aplica via `setProperty` e chama `refreshPalette`; painel só aparece para perfis admin*. Usa `REVEAL_STAGE` para transições e mantém `force-motion`.
 - **Layout e UX**: shell padrão com painéis de vidro; header com ações de sign-out; formulário e painel de cor em cartões separados.
 - **Organização**: lógica de tema isolada no painel; tipos compartilhados; UI modular. Avatar permanece acoplado ao storage local.
 - **Pontos fortes/fracos**: controles de cor completos e alinhados ao lava; risco de valores inválidos quebrando contraste; falta persistência remota do avatar e testes de validação de cor.
@@ -36,7 +36,7 @@
 ### 2.4 `/login` (`src/app/(auth)/login/page.tsx`)
 - **Objetivo**: autenticar usuário e redirecionar para `/meu-perfil`.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `login.module.css`; usa `ClientPageShell`, `ClientSection`, `ClientGlassPanel` e `LavaLampProvider`.
-- **Fluxo de dados/estado**: `supabase.auth.getSession` roda no mount para evitar flicker; se houver sessão, redireciona. `onAuthStateChange` mantém sync. Estados: email, password, msg, `loading`, `checkingSession`, `heroReady`. `heroReady` é ativado no mount para liberar animações; enquanto `checkingSession` é true, o formulário permanece visível com aviso (evita “sumir” atrás de skeleton). Submit usa `signInWithPassword`; em sucesso chama `redirectByRole` (perfil) e trata ausência de sessão com aviso.
+- **Fluxo de dados/estado**: `supabase.auth.getSession` roda no mount para evitar flicker; se houver sessão, redireciona. `onAuthStateChange` mantém sync. Estados: email, password, msg, `loading`, `checkingSession`; `heroReady` vem de `useClientPageReady`. Enquanto `checkingSession` é true, o formulário permanece visível com aviso (evita “sumir” atrás de skeleton). Submit usa `signInWithPassword`; em sucesso chama `redirectByRole` (perfil) e trata ausência de sessão com aviso.
 - **Layout e UX**: cartão “liquid glass” com logo em pílula, inputs com ícones, botão degradê e links de suporte/signup. Usa shell completo com lava; card centralizado.
 - **Organização**: estado todo na página; lógica de sessão encapsulada em hooks Supabase; layout segue padrão de vidro.
 - **Pontos fortes/fracos**: fluxo de sessão agora estável (formulário permanece visível); ainda falta feedback granular de erros Supabase e testes de autenticação.
@@ -45,7 +45,7 @@
 ### 2.5 `/regras` (`src/app/(client)/regras/page.tsx`)
 - **Objetivo**: exibir regras públicas da agenda para usuários autenticados.
 - **Arquivos e componentes**: rota `page.tsx`; CSS `rules.module.css`; subcomponentes locais em `@components` (`RulesHeader`, `RulesSectionList`, `RulesSectionCard`, `RulesSectionDivider`); tipos em `types.ts`.
-- **Fluxo de dados/estado**: checa sessão Supabase no mount (`getSession`); se ausente ou erro, redireciona para `/login`. `heroReady` ativa animações do shell.
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`.
 - **Layout e UX**: usa `ClientPageShell` + `ClientSection`, mas **não** usa `ClientGlassPanel`; conteúdo permanece direto no fundo com lava. Ornamento (flourish + diamond) e divisórias brancas entre cards foram preservados. Containers agora esticam para a largura disponível (limites de 720/960px) para evitar shrink-to-fit com `overflow` escondendo linhas em telas estreitas, garantindo quebra natural de texto; reforço de `word-break` evita truncamento em telas menores. O topo e o rodapé usam apenas o padding padrão do shell (64px/26px) sem min-height extra, evitando blocos de fundo vazio.
 - **Organização**: modularizada em header, lista e cartões; array de regras tipado para facilitar manutenção sem alterar conteúdo.
 - **Pontos fortes/fracos**: clareza visual mantida e alinhamento com padrão de autenticação. Risco baixo; depende apenas do Supabase para sessão.
@@ -54,13 +54,15 @@
 ### 2.6 `/suporte` (`src/app/(client)/suporte/page.tsx`)
 - **Objetivo**: centralizar canais de atendimento (em construção).
 - **Arquivos e componentes**: rota `page.tsx`; CSS `suporte.module.css`; subcomponentes locais `SupportHeader`, `SupportChannelsList`, `SupportContent`; tipos em `types.ts`.
-- **Fluxo de dados/estado**: checa sessão Supabase no mount via `getSession` e `router.replace('/login')` em ausência/erro; `heroReady` ativa animações do shell.
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`.
 - **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel` e agora abre com `ClientPageHeader` para alinhar hero/tipografia às demais páginas. Lista de canais em vidro com texto quebrando naturalmente em telas estreitas; a seção não sobrescreve padding/min-height e herda o espaçamento padrão do shell. Todo ajuste visual (incluindo subtítulo) está no CSS Module local.
 - **Organização**: canais definidos em array tipado, separados em header + lista reutilizável.
 - **Recomendações**: preencher dados reais e acoplar ações (deep-links para WhatsApp/e-mail) quando disponíveis.
 
 ## 3. Hooks e helpers compartilhados
 - `useClientAvailability` (`src/hooks/useClientAvailability.ts`): recebe `serviceId`, `enabled`, `subscribe`, `channel`, `fallbackBufferMinutes`, `timezone`, mensagem de erro e `initialLoading`. Retorna snapshot de disponibilidade (dias, slots, busy intervals), loading, erro e `reloadAvailability`. Redireciona para `/login` sem sessão, busca `appointments` (status `pending/reserved/confirmed`) de 0–60 dias e inclui buffers por serviço; pode assinar Realtime para recarregar.
+- `useClientPageReady` (`src/hooks/useClientPageReady.ts`): aplica classe `client-hero-ready` após mount para liberar animação do shell sem duplicar `useEffect` em cada página.
+- `useProfileForm` (`src/app/(client)/meu-perfil/useProfileForm.ts`): carrega sessão/perfil, controla campos, submit e sign-out do `/meu-perfil` com validações compartilhadas.
 - Tema/Lava: `useLavaLamp.refreshPalette` usado no painel admin de `/procedimento` e no painel de tema do `/meu-perfil`; `useLavaRevealStage` coordena transições (`heroReady`). Dependem de CSS vars globais.
 - Layout: `ClientPageLayout` mantém grid `page`/`stack`, vidro e labels; `ClientFullScreenLayout` injeta header/rodapé; `/regras` é exceção sem painel de vidro. `ClientSection` agora é referência de espaçamento vertical com padding mais curto (64px no topo, 32px na base + safe-area) e sem min-height forçada; páginas que tinham padding próprio (ex.: `/regras`, `/suporte`) herdaram o padrão para alinhar o hero e reduzir fundo vazio.
 
@@ -76,9 +78,12 @@
 - `/procedimento`: wrapper agora usa `ClientPageShell` + `ClientSection` mantendo hero, sem alterar fluxo ou glass existente, e removeu min-heights/padding duplicados do módulo local.
 - `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista; wrapper local sem min-height extra e rodapé/mark agora estilizado apenas no CSS Module (classe global removida).
 - `/meu-perfil`: extratos anteriores mantidos, agora sem min-height custom no wrapper para seguir o shell enxuto.
-- `/login`: shell de cliente aplicado; `heroReady` ativado no mount e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.
+- `/login`: shell de cliente aplicado; `heroReady` agora via hook e `checkingSession` mostra aviso em vez de esconder o form, evitando flicker.
 - `/regras`: reforço de quebra de linha para evitar truncamento mantendo ornamentos/divisórias. Padding próprio removido e espaçamento final reduzido para alinhar início do hero ao padrão do shell.
 - `/suporte`: agora protegido por sessão, usa shell completo (lava + glass) e abre com `ClientPageHeader` para alinhar hero e tipografia. Canais modularizados em lista com tipos locais e sem padding custom na section (usa apenas o `ClientSection`). Subtítulo/ajustes visuais vivem no CSS Module.
+- Sessão e shell: páginas protegidas usam `useClientSessionGuard` + `useClientPageReady`, eliminando `getSession` duplicado e padronizando a liberação do hero.
+- Modais: `ConfirmCancelModal`, `BlockedModal`, `SuccessModal` e `RescheduleModal` agora apoiam-se em `BaseModal`, reduzindo duplicação de backdrop/estrutura.
+- Perfil: lógica de formulário centralizada em `useProfileForm`, mantendo a página focada no layout e temas.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); `ClientSection` define padding top 64px, bottom 32px (mais safe-area) sem min-height forçada. Exceção `checkout` sem shell.

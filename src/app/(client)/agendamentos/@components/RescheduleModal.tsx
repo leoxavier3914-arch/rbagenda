@@ -6,6 +6,7 @@ import { DEFAULT_FALLBACK_BUFFER_MINUTES, DEFAULT_TIMEZONE } from '@/lib/availab
 
 import styles from '../agendamentos.module.css'
 import type { CalendarDayEntry, NormalizedAppointment, SlotOption } from '../types'
+import { BaseModal } from './BaseModal'
 
 type RescheduleModalProps = {
   appointment: NormalizedAppointment
@@ -247,101 +248,103 @@ export function RescheduleModal({
   }
 
   return (
-    <div className={styles.modal} aria-hidden="false">
-      <div className={styles.modalBackdrop} onClick={isSaving ? undefined : onClose} />
-      <div className={`${styles.modalContent} ${styles.modalEdit}`} role="dialog" aria-modal="true">
-        <h2 className={styles.modalTitle}>Alterar data e horário</h2>
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      contentClassName={styles.modalEdit}
+      disableBackdropClose={isSaving}
+    >
+      <h2 className={styles.modalTitle}>Alterar data e horário</h2>
 
-        <div className={styles.calHead}>
-          <button
-            type="button"
-            className={styles.btnNav}
-            onClick={goToPreviousMonth}
-            aria-label="Mês anterior"
-          >
-            ‹
-          </button>
-          <div className={styles.calTitle}>{monthTitle}</div>
-          <button
-            type="button"
-            className={styles.btnNav}
-            onClick={goToNextMonth}
-            aria-label="Próximo mês"
-          >
-            ›
-          </button>
-        </div>
-
-        {isLoadingAvailability ? (
-          <div className={styles.meta}>Carregando disponibilidade…</div>
-        ) : availabilityError ? (
-          <div className={styles.meta}>{availabilityError}</div>
-        ) : null}
-
-        <div className={styles.grid} aria-hidden="true">
-          {calendarHeaderDays.map((label, index) => (
-            <div key={`dow-${index}`} className={styles.gridDow}>
-              {label}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.grid}>
-          {calendarDays.dayEntries.map((entry) => (
-            <button
-              key={entry.iso}
-              type="button"
-              className={styles.day}
-              data-state={entry.state}
-              data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
-              data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}
-              aria-disabled={entry.isDisabled}
-              disabled={entry.isDisabled}
-              onClick={() => handleDayClick(entry.iso, entry.isDisabled || entry.isOutsideCurrentMonth)}
-            >
-              {entry.day}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.label}>Horários disponíveis</div>
-        <div className={styles.slots}>
-          {isLoadingSlots ? (
-            <div className={styles.meta}>{slotsMessage}</div>
-          ) : slotOptions.length > 0 ? (
-            slotOptions.map((option) => (
-              <button
-                key={option.iso}
-                type="button"
-                className={styles.slot}
-                data-selected={selectedSlot === option.iso}
-                aria-disabled={option.disabled}
-                disabled={option.disabled}
-                onClick={() => handleSlotClick(option)}
-              >
-                {option.label}
-              </button>
-            ))
-          ) : (
-            <div className={styles.meta}>{slotsMessage}</div>
-          )}
-        </div>
-        {errorMessage ? <div className={styles.modalError}>{errorMessage}</div> : null}
-
-        <div className={styles.btnRow}>
-          <button type="button" className={`${styles.btn} ${styles.btnNo}`} disabled={isSaving} onClick={onClose}>
-            Cancelar
-          </button>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnYes}`}
-            disabled={!selectedSlot || isSaving}
-            onClick={handleSubmit}
-          >
-            {isSaving ? 'Salvando…' : 'Salvar alterações'}
-          </button>
-        </div>
+      <div className={styles.calHead}>
+        <button
+          type="button"
+          className={styles.btnNav}
+          onClick={goToPreviousMonth}
+          aria-label="Mês anterior"
+        >
+          ‹
+        </button>
+        <div className={styles.calTitle}>{monthTitle}</div>
+        <button
+          type="button"
+          className={styles.btnNav}
+          onClick={goToNextMonth}
+          aria-label="Próximo mês"
+        >
+          ›
+        </button>
       </div>
-    </div>
+
+      {isLoadingAvailability ? (
+        <div className={styles.meta}>Carregando disponibilidade…</div>
+      ) : availabilityError ? (
+        <div className={styles.meta}>{availabilityError}</div>
+      ) : null}
+
+      <div className={styles.grid} aria-hidden="true">
+        {calendarHeaderDays.map((label, index) => (
+          <div key={`dow-${index}`} className={styles.gridDow}>
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.grid}>
+        {calendarDays.dayEntries.map((entry) => (
+          <button
+            key={entry.iso}
+            type="button"
+            className={styles.day}
+            data-state={entry.state}
+            data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
+            data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}
+            aria-disabled={entry.isDisabled}
+            disabled={entry.isDisabled}
+            onClick={() => handleDayClick(entry.iso, entry.isDisabled || entry.isOutsideCurrentMonth)}
+          >
+            {entry.day}
+          </button>
+        ))}
+      </div>
+
+      <div className={styles.label}>Horários disponíveis</div>
+      <div className={styles.slots}>
+        {isLoadingSlots ? (
+          <div className={styles.meta}>{slotsMessage}</div>
+        ) : slotOptions.length > 0 ? (
+          slotOptions.map((option) => (
+            <button
+              key={option.iso}
+              type="button"
+              className={styles.slot}
+              data-selected={selectedSlot === option.iso}
+              aria-disabled={option.disabled}
+              disabled={option.disabled}
+              onClick={() => handleSlotClick(option)}
+            >
+              {option.label}
+            </button>
+          ))
+        ) : (
+          <div className={styles.meta}>{slotsMessage}</div>
+        )}
+      </div>
+      {errorMessage ? <div className={styles.modalError}>{errorMessage}</div> : null}
+
+      <div className={styles.btnRow}>
+        <button type="button" className={`${styles.btn} ${styles.btnNo}`} disabled={isSaving} onClick={onClose}>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className={`${styles.btn} ${styles.btnYes}`}
+          disabled={!selectedSlot || isSaving}
+          onClick={handleSubmit}
+        >
+          {isSaving ? 'Salvando…' : 'Salvar alterações'}
+        </button>
+      </div>
+    </BaseModal>
   )
 }

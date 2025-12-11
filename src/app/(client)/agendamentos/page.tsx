@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+import { ClientPageShell, ClientSection } from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
+import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
-import { ClientPageShell, ClientSection } from '@/components/client/ClientPageLayout'
 
 import { AppointmentsHeader } from './@components/AppointmentsHeader'
 import { AppointmentsList } from './@components/AppointmentsList'
@@ -301,26 +304,20 @@ export default function MyAppointments() {
   const [selectedCategory, setSelectedCategory] = useState<SelectedStatusCategory>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [shouldScrollToResults, setShouldScrollToResults] = useState(false)
-  const [heroReady, setHeroReady] = useState(false)
   const resultsRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
+  const heroReady = useClientPageReady()
+  const { session, isReady: isSessionReady } = useClientSessionGuard()
 
   useEffect(() => {
-    setHeroReady(true)
-  }, [])
+    if (!isSessionReady) return
+    if (!session?.user?.id) {
+      setLoading(false)
+      return
+    }
 
-  useEffect(() => {
     ;(async () => {
       try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) throw sessionError
-
-        const session = sessionData.session
-        if (!session?.user?.id) {
-          router.replace('/login')
-          return
-        }
-
         const { data, error: fetchError } = await supabase
           .from('appointments')
           .select(
@@ -363,16 +360,15 @@ export default function MyAppointments() {
         setLoading(false)
       }
     })()
-  }, [router])
+  }, [isSessionReady, session?.user?.id])
 
   const ensureAuth = useCallback(async () => {
-    const { data } = await supabase.auth.getSession()
-    if (!data.session) {
+    if (!session?.access_token) {
       router.replace('/login')
       return null
     }
-    return data.session.access_token ?? null
-  }, [router])
+    return session.access_token ?? null
+  }, [router, session?.access_token])
 
   const scrollToResults = useCallback(() => {
     if (typeof window === 'undefined') return

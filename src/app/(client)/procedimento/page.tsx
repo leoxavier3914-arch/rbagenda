@@ -31,6 +31,8 @@ import {
 } from '@/lib/availability'
 import { stripePromise } from '@/lib/stripeClient'
 import { useLavaLamp } from '@/components/LavaLampProvider'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
+import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { useClientAvailability } from '@/hooks/useClientAvailability'
 import type {
   ServiceOption,
@@ -121,7 +123,6 @@ export default function ProcedimentoPage() {
   const [pendingScrollTarget, setPendingScrollTarget] = useState<
     'technique' | 'date' | 'time' | null
   >(null)
-  const [heroReady, setHeroReady] = useState(false)
 
   const {
     availability: availabilitySnapshot,
@@ -138,16 +139,14 @@ export default function ProcedimentoPage() {
 
   const router = useRouter()
   const { refreshPalette } = useLavaLamp()
+  const heroReady = useClientPageReady()
+  const { session, isReady: isSessionReady } = useClientSessionGuard()
   const typeSectionRef = useRef<HTMLDivElement | null>(null)
   const techniqueSectionRef = useRef<HTMLDivElement | null>(null)
   const dateSectionRef = useRef<HTMLDivElement | null>(null)
   const timeSectionRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
   const summaryRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    setHeroReady(true)
-  }, [router])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -178,27 +177,19 @@ export default function ProcedimentoPage() {
   }, [])
 
   useEffect(() => {
+    if (!isSessionReady) return
     let active = true
 
-    const loadSessionAndProfile = async () => {
-      const { data, error } = await supabase.auth.getSession()
-      if (!active) return
+    setUserId(session?.user?.id ?? null)
 
-      if (error) {
-        console.error('Erro ao obter sessão', error)
-        setUserId(null)
-        setIsAdmin(false)
-        return
+    if (!session?.user?.id) {
+      setIsAdmin(false)
+      return () => {
+        active = false
       }
+    }
 
-      const session = data.session
-      if (!session) {
-        router.replace('/login')
-        return
-      }
-
-      setUserId(session.user.id)
-
+    const loadProfile = async () => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
@@ -218,12 +209,12 @@ export default function ProcedimentoPage() {
       setIsAdmin(isAdminRole)
     }
 
-    void loadSessionAndProfile()
+    void loadProfile()
 
     return () => {
       active = false
     }
-  }, [router])
+  }, [isSessionReady, session?.user?.id])
 
   useEffect(() => {
     let active = true

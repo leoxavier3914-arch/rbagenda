@@ -8,6 +8,9 @@
   overflow: hidden;
   padding: 48px 16px 64px;
   color: var(--ink);
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .content {
@@ -52,7 +55,7 @@
   color: color-mix(in srgb, var(--ink) 72%, transparent);
   hyphens: none;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
 }
 
@@ -130,8 +133,9 @@
   display: block;
   text-align: center;
   white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .footerMark {

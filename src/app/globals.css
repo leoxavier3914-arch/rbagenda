@@ -274,18 +274,18 @@
     gap: clamp(12px, 2vw, 18px);
   }
 
-  .procedimento-root {
+  .lava-root {
     position: relative;
     min-height: 100vh;
     z-index: 0;
     color: var(--ink);
   }
 
-  .procedimento-root * {
+  .lava-root * {
     box-sizing: border-box;
   }
 
-  .procedimento-root .texture {
+  .lava-root .texture {
     position: fixed;
     inset: -20%;
     z-index: 0;
@@ -294,13 +294,13 @@
     mix-blend-mode: multiply;
   }
 
-  .procedimento-root .texture svg {
+  .lava-root .texture svg {
     width: 100%;
     height: 100%;
     display: block;
   }
 
-  .procedimento-root .lamp {
+  .lava-root .lamp {
     position: fixed;
     inset: -12vh -12vw;
     z-index: 0;
@@ -308,7 +308,7 @@
     overflow: hidden;
   }
 
-  .procedimento-root .lava {
+  .lava-root .lava {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -316,12 +316,12 @@
     display: block;
   }
 
-  .procedimento-root .lava.dark {
+  .lava-root .lava.dark {
     mix-blend-mode: multiply;
     filter: blur(26px) contrast(1.05);
   }
 
-  .procedimento-root .lava.light {
+  .lava-root .lava.light {
     mix-blend-mode: screen;
     filter: blur(30px) contrast(1.04);
   }

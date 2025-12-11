@@ -1,6 +1,7 @@
 import { ForwardedRef, forwardRef } from 'react'
 
 import { LashIcon } from '@/components/client/LashIcon'
+import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 
 import { ProcedimentoCard } from './ProcedimentoCard'
 import { ProcedimentoGrid } from './ProcedimentoGrid'
@@ -24,12 +25,11 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
 ) {
   return (
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
-      <div className={styles.stack}>
+      <div className="stack">
         <ProcedimentoHeader>
           <>Escolha <span className={styles.subtitle}>seu</span> Procedimento:</>
         </ProcedimentoHeader>
-        <div className={styles.glass} aria-label="Tipos de procedimento">
-          <div className={styles.label}>TIPO</div>
+        <ClientGlassPanel label="TIPO" aria-label="Tipos de procedimento">
           {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
           {catalogStatus === 'ready' && availableServices.length === 0 && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
@@ -55,8 +55,8 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
               ))
             )}
           </ProcedimentoGrid>
-        </div>
-        <footer className={styles.footer}>ROMEIKE BEAUTY</footer>
+        </ClientGlassPanel>
+        <footer className={styles.footerMark}>ROMEIKE BEAUTY</footer>
       </div>
     </section>
   )

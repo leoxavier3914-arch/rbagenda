@@ -246,7 +246,7 @@ export function LavaLampProvider({ children }: LavaLampProviderProps) {
 
   return (
     <LavaLampContext.Provider value={contextValue}>
-      <div className="procedimento-root">
+      <div className="lava-root">
         <div className="texture" aria-hidden="true">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>

@@ -78,21 +78,25 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    })
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
 
     if (error) {
-      console.error('Erro ao atualizar senha', error)
+      const msg = error.message?.toLowerCase() || ''
+
+      if (msg.includes('samepassword') || msg.includes('should differ')) {
+        setError('A nova senha deve ser diferente da anterior.')
+        setLoading(false)
+        return
+      }
+
       setError('Não foi possível atualizar sua senha. Solicite um novo link e tente novamente.')
       setLoading(false)
       return
     }
 
-    setMessage('Senha atualizada com sucesso. Você já pode acessar sua conta.')
+    setMessage('Senha atualizada com sucesso! Você já pode fazer login.')
     setLoading(false)
-
-    setTimeout(() => router.push('/login'), 1600)
+    router.push('/login')
   }
 
   const isDisabled = loading || checkingSession

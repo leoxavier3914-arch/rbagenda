@@ -47,6 +47,7 @@ export default function SupportThreadPage({ params }: ThreadPageProps) {
 
   useEffect(() => {
     let active = true;
+    let unsubscribe: (() => void) | undefined;
 
     const loadThread = async () => {
       setIsLoading(true);
@@ -77,10 +78,37 @@ export default function SupportThreadPage({ params }: ThreadPageProps) {
       setIsLoading(false);
     };
 
-    void loadThread();
+    const ensureSessionAndLoad = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!active) return;
+
+      if (session) {
+        await loadThread();
+        return;
+      }
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (!active) return;
+
+        if (nextSession) {
+          void loadThread();
+          subscription.unsubscribe();
+        }
+      });
+
+      unsubscribe = subscription.unsubscribe;
+    };
+
+    void ensureSessionAndLoad();
 
     return () => {
       active = false;
+      if (unsubscribe) unsubscribe();
     };
   }, [threadId]);
 

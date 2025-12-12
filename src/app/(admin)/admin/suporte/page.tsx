@@ -41,6 +41,7 @@ export default function AdminSuportePage() {
 
   useEffect(() => {
     let active = true;
+    let unsubscribe: (() => void) | undefined;
 
     const loadThreads = async () => {
       setIsLoading(true);
@@ -64,10 +65,37 @@ export default function AdminSuportePage() {
       setIsLoading(false);
     };
 
-    void loadThreads();
+    const ensureSessionAndLoad = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!active) return;
+
+      if (session) {
+        await loadThreads();
+        return;
+      }
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (!active) return;
+
+        if (nextSession) {
+          void loadThreads();
+          subscription.unsubscribe();
+        }
+      });
+
+      unsubscribe = subscription.unsubscribe;
+    };
+
+    void ensureSessionAndLoad();
 
     return () => {
       active = false;
+      if (unsubscribe) unsubscribe();
     };
   }, []);
 

@@ -17,7 +17,7 @@ $$;
 -- Perfis (mapeia usuários do Auth)
 create table if not exists profiles (
   id uuid primary key, -- igual a auth.uid()
-  role text not null default 'client' check (role in ('client','admin','adminmaster')),
+  role text not null default 'client' check (role in ('client','admin','adminsuper','adminmaster')),
   full_name text,
   email text,
   whatsapp text,
@@ -281,7 +281,7 @@ declare
   result boolean;
 begin
   execute 'select exists(' ||
-          'select 1 from public.profiles where id = $1 and role in (''admin'',''adminmaster'')'
+          'select 1 from public.profiles where id = $1 and role in (''admin'',''adminsuper'',''adminmaster'')'
           ')'
     into result
     using uid;
@@ -303,4 +303,59 @@ create policy if not exists appt_select on appointments for select using (
 );
 create policy if not exists appt_insert on appointments for insert with check (
   customer_id = auth.uid() or public.is_admin(auth.uid())
+);
+
+-- Suporte
+create table if not exists public.support_threads (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles(id) on delete set null,
+  status text not null default 'open' check (status in ('open','closed','escalated')),
+  last_message_preview text,
+  last_actor text check (last_actor in ('user','staff','assistant')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists support_threads_user_id_idx on public.support_threads(user_id);
+create index if not exists support_threads_status_created_at_idx on public.support_threads(status, created_at);
+
+create table if not exists public.support_messages (
+  id uuid primary key default gen_random_uuid(),
+  thread_id uuid not null references public.support_threads(id) on delete cascade,
+  sender_type text not null check (sender_type in ('user','staff','assistant')),
+  sender_id uuid references public.profiles(id) on delete set null,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists support_messages_thread_id_created_at_idx on public.support_messages(thread_id, created_at);
+create index if not exists support_messages_sender_id_idx on public.support_messages(sender_id);
+
+alter table public.support_threads enable row level security;
+alter table public.support_messages enable row level security;
+
+create policy if not exists support_threads_select on public.support_threads for select using (
+  user_id = auth.uid() or public.is_admin(auth.uid())
+);
+
+create policy if not exists support_threads_insert on public.support_threads for insert with check (
+  user_id = auth.uid() or public.is_admin(auth.uid())
+);
+
+create policy if not exists support_threads_update on public.support_threads for update using (
+  user_id = auth.uid() or public.is_admin(auth.uid())
+);
+
+create policy if not exists support_messages_select on public.support_messages for select using (
+  exists (
+    select 1 from public.support_threads t
+    where t.id = thread_id and (t.user_id = auth.uid() or public.is_admin(auth.uid()))
+  )
+);
+
+create policy if not exists support_messages_insert on public.support_messages for insert with check (
+  exists (
+    select 1 from public.support_threads t
+    where t.id = thread_id and (t.user_id = auth.uid() or public.is_admin(auth.uid()))
+  )
 );

@@ -7,6 +7,8 @@ import { supabase } from "@/lib/db";
 
 import styles from "../threadView.module.css";
 
+const MESSAGE_PREVIEW_LIMIT = 120;
+
 type MessageInputProps = {
   threadId: string;
   onMessageSent?: (message: {
@@ -21,6 +23,7 @@ type MessageInputProps = {
 export default function MessageInput({ threadId, onMessageSent }: MessageInputProps) {
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -29,39 +32,49 @@ export default function MessageInput({ threadId, onMessageSent }: MessageInputPr
     if (!trimmed) return;
 
     setIsSending(true);
+    setError(null);
 
-    const { data: sessionResult } = await supabase.auth.getSession();
-    const adminId = sessionResult?.session?.user?.id || null;
+    try {
+      const { data: sessionResult } = await supabase.auth.getSession();
+      const adminId = sessionResult?.session?.user?.id || null;
 
-    const { data: insertedMessage, error: messageError } = await supabase
-      .from("support_messages")
-      .insert({
-        thread_id: threadId,
-        sender_type: "staff",
-        sender_id: adminId,
-        message: trimmed,
-      })
-      .select("id, thread_id, sender_type, message, created_at")
-      .single();
+      const { data: insertedMessage, error: messageError } = await supabase
+        .from("support_messages")
+        .insert({
+          thread_id: threadId,
+          sender_type: "staff",
+          sender_id: adminId,
+          message: trimmed,
+        })
+        .select("id, thread_id, sender_type, message, created_at")
+        .single();
 
-    if (!messageError) {
-      await supabase
+      if (messageError) throw messageError;
+
+      const preview = trimmed.slice(0, MESSAGE_PREVIEW_LIMIT);
+
+      const { error: updateError } = await supabase
         .from("support_threads")
         .update({
-          last_message_preview: trimmed,
+          last_message_preview: preview,
           last_actor: "staff",
           updated_at: new Date().toISOString(),
         })
         .eq("id", threadId);
+
+      if (updateError) throw updateError;
 
       setContent("");
       if (insertedMessage) {
         onMessageSent?.(insertedMessage);
       }
       router.refresh();
+    } catch (err) {
+      console.error("Erro ao enviar resposta de suporte", err);
+      setError("Não foi possível enviar a resposta agora. Tente novamente.");
+    } finally {
+      setIsSending(false);
     }
-
-    setIsSending(false);
   }
 
   return (
@@ -77,6 +90,7 @@ export default function MessageInput({ threadId, onMessageSent }: MessageInputPr
         onChange={(event) => setContent(event.target.value)}
         disabled={isSending}
       />
+      {error ? <p className={styles.emptyMessage}>{error}</p> : null}
       <button type="submit" className={styles.sendButton} disabled={isSending}>
         {isSending ? "Enviando..." : "Enviar"}
       </button>

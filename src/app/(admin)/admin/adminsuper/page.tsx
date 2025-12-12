@@ -666,10 +666,7 @@ export default function AdminMaster(): ReactElement {
       setSigningOut(false)
       return
     }
-
-    router.replace('/login')
-    setSigningOut(false)
-  }, [router, signingOut])
+  }, [signingOut])
 
   const handleBranchAssignmentChange = (branchId: string, ownerId: string) => {
     setBranchAssignments((previous) => ({ ...previous, [branchId]: ownerId }))

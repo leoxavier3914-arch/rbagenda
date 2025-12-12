@@ -498,10 +498,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       setSigningOut(false)
       return
     }
-
-    router.replace('/login')
-    setSigningOut(false)
-  }, [router, signingOut])
+  }, [signingOut])
 
   const handleCreateBranch = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

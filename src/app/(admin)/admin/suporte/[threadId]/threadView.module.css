@@ -1,0 +1,134 @@
+.threadWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 70vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.threadTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.threadMeta {
+  color: #475569;
+  font-size: 14px;
+}
+
+.messagesPanel {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bubbleRow {
+  display: flex;
+}
+
+.bubbleUser {
+  justify-content: flex-start;
+}
+
+.bubbleStaff {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  line-height: 1.5;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.userBubble {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.staffBubble {
+  background: #7c3aed;
+  color: #f8fafc;
+  border: 1px solid #6d28d9;
+}
+
+.inputBar {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.textarea {
+  flex: 1;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 220px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #0f172a;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.sendButton {
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.sendButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sendButton:not(:disabled):hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}
+
+.emptyMessage {
+  color: #94a3b8;
+  text-align: center;
+  padding: 12px 0;
+}

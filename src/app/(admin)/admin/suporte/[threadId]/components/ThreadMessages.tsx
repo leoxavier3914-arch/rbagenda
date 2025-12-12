@@ -4,8 +4,8 @@ import styles from "../threadView.module.css";
 
 type SupportMessage = {
   id: string;
-  sender_type: "user" | "staff";
-  content: string;
+  sender_type: "user" | "staff" | "assistant";
+  message: string;
 };
 
 type ThreadMessagesProps = {
@@ -20,7 +20,7 @@ export default function ThreadMessages({ messages }: ThreadMessagesProps) {
   return (
     <div className={styles.messageList}>
       {messages.map((message) => (
-        <MessageBubble key={message.id} content={message.content} sender_type={message.sender_type} />
+        <MessageBubble key={message.id} message={message.message} sender_type={message.sender_type} />
       ))}
     </div>
   );

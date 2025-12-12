@@ -131,6 +131,7 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
         .update({
           last_message_preview: preview,
           last_actor: "user",
+          updated_at: new Date().toISOString(),
         })
         .eq("id", thread.id)
 

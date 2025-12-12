@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { LavaLampProvider } from '@/components/LavaLampProvider'
 import {
@@ -12,28 +13,50 @@ import {
 import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { supabase } from '@/lib/db'
 
-type Status = 'checking' | 'ok' | 'error'
-
 export default function ConfirmEmailPage() {
   const heroReady = useClientPageReady()
-  const [status, setStatus] = useState('checking')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [status, setStatus] = useState<'checking' | 'ok' | 'error'>('checking')
 
   useEffect(() => {
-    supabase.auth
-      .getUser()
-      .then(({ data, error }) => {
-        if (error) {
+    let active = true
+
+    const resolveConfirmation = async () => {
+      const code = searchParams.get('code') || searchParams.get('token_hash')
+
+      try {
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          if (exchangeError) {
+            throw exchangeError
+          }
+        }
+
+        const { data, error } = await supabase.auth.getSession()
+        if (!active) return
+
+        if (error || !data.session) {
           setStatus('error')
           return
         }
-        if (data.user) {
-          setStatus('ok')
-        } else {
+
+        setStatus('ok')
+        router.replace('/meu-perfil')
+      } catch (exchangeError) {
+        console.error('Erro ao confirmar e-mail', exchangeError)
+        if (active) {
           setStatus('error')
         }
-      })
-      .catch(() => setStatus('error'))
-  }, [])
+      }
+    }
+
+    void resolveConfirmation()
+
+    return () => {
+      active = false
+    }
+  }, [router, searchParams])
 
   return (
     <LavaLampProvider>
@@ -46,9 +69,9 @@ export default function ConfirmEmailPage() {
 
             {status === 'ok' && (
               <>
-                <p>Seu e-mail foi confirmado com sucesso! Agora você já pode fazer login.</p>
+                <p>Seu e-mail foi confirmado com sucesso! Redirecionando para o seu perfil...</p>
                 <p style={{ marginTop: 16 }}>
-                  <Link href="/login">Ir para o login</Link>
+                  <Link href="/meu-perfil">Ir para o seu perfil</Link>
                 </p>
               </>
             )}

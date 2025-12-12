@@ -89,6 +89,7 @@
 - Shell e classes globais são dependências fortes; alterações em `globals.css` impactam todas as páginas.
 
 ## 5. Atualizações recentes
+- Perfil/Supabase: signup agora envia `full_name` e `whatsapp` como `user_metadata`; `/meu-perfil` lê primeiro da tabela `profiles` e, se não existir, cria/upserta com os metadados (incluindo e-mail) antes de preencher o formulário. A confirmação `/confirm` agora troca o código por sessão com `exchangeCodeForSession` e redireciona direto para `/meu-perfil`, garantindo e-mail sempre preenchido.
 - Shell e spacing: padding vertical do shell reduzido (64px topo, 32px base + safe-area) e gaps menores na `.page`; `ClientSection` perdeu min-height forçada para evitar blocos de lava vazios em telas curtas.
 - `/procedimento`: wrapper agora usa `ClientPageShell` + `ClientSection` mantendo hero, sem alterar fluxo ou glass existente, e removeu min-heights/padding duplicados do módulo local. Espaço vertical entre as etapas (tipo → técnica → dia → horário) passou a usar `margin-top` progressiva para separar visualmente cada bloco. Cada seção agora tem altura mínima quase cheia (`min-height: calc(100vh - 200px)`) e âncoras uniformes (`scroll-margin-top: 140px`) para navegação suave.
 - `/agendamentos`: redirecionamentos de sessão via `router.replace` (sem reload) mantendo modais/lista; wrapper local sem min-height extra e rodapé/mark agora estilizado apenas no CSS Module (classe global removida). Layout da `.pageSection`/`.page` alinhado ao `/procedimento` para centralizar cartões e dar respiro idêntico ao footer.

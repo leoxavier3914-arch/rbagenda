@@ -42,26 +42,65 @@ export function useProfileForm() {
       setLoading(true)
       setError(null)
 
+      const user = guardSession.user
       const { data: me, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, whatsapp, email, birth_date, role')
-        .eq('id', guardSession.user.id)
+        .eq('id', user.id)
         .maybeSingle()
 
       if (!active) return
 
-      if (profileError || !me) {
-        setError('Não foi possível carregar seus dados. Tente novamente.')
-        setLoading(false)
-        return
+      if (profileError) {
+        console.error('Erro ao carregar perfil', profileError)
       }
 
-      setProfile(me)
-      setFullName(me.full_name ?? '')
-      setEmail(me.email ?? '')
-      setWhatsapp(me.whatsapp ?? '')
-      setBirthDate(me.birth_date ?? '')
+      let resolvedProfile = me ?? null
+
+      if (!me) {
+        const seedProfile = {
+          id: user.id,
+          email: user.email ?? null,
+          full_name: (user.user_metadata as Record<string, string | null> | null)?.full_name ?? null,
+          whatsapp: (user.user_metadata as Record<string, string | null> | null)?.whatsapp ?? null,
+          birth_date: (user.user_metadata as Record<string, string | null> | null)?.birth_date ?? null,
+          role: 'client' as const,
+        }
+
+        const { data: upserted, error: upsertError } = await supabase
+          .from('profiles')
+          .upsert(seedProfile, { onConflict: 'id' })
+          .select('full_name, whatsapp, email, birth_date, role')
+          .maybeSingle()
+
+        if (!active) return
+
+        if (upsertError) {
+          console.error('Erro ao criar perfil', upsertError)
+          resolvedProfile = seedProfile
+        } else {
+          resolvedProfile = upserted ?? seedProfile
+        }
+      }
+
+      const fallbackFullName =
+        (user.user_metadata as Record<string, string | null> | null)?.full_name ?? ''
+      const fallbackWhatsapp =
+        (user.user_metadata as Record<string, string | null> | null)?.whatsapp ?? ''
+      const fallbackBirthDate =
+        (user.user_metadata as Record<string, string | null> | null)?.birth_date ?? ''
+      const fallbackEmail = user.email ?? ''
+
+      setProfile(resolvedProfile)
+      setFullName(resolvedProfile?.full_name ?? fallbackFullName)
+      setEmail(resolvedProfile?.email ?? fallbackEmail)
+      setWhatsapp(resolvedProfile?.whatsapp ?? fallbackWhatsapp)
+      setBirthDate(resolvedProfile?.birth_date ?? fallbackBirthDate)
       setLoading(false)
+
+      if (profileError && !resolvedProfile) {
+        setError('Não foi possível carregar seus dados. Tente novamente.')
+      }
     }
 
     void loadProfile()
@@ -105,7 +144,13 @@ export function useProfileForm() {
         return
       }
 
-      const authPayload: { email?: string; password?: string } = {}
+      const authPayload: { email?: string; password?: string; data?: Record<string, unknown> } = {
+        data: {
+          full_name: updates.full_name,
+          whatsapp: updates.whatsapp,
+          birth_date: updates.birth_date,
+        },
+      }
       if (normalizedEmail && normalizedEmail !== session.user.email) {
         authPayload.email = normalizedEmail
       }
@@ -113,7 +158,7 @@ export function useProfileForm() {
         authPayload.password = password
       }
 
-      if (Object.keys(authPayload).length > 0) {
+      if (Object.keys(authPayload).length > 0 || authPayload.data) {
         const { error: authError } = await supabase.auth.updateUser(authPayload)
         if (authError) {
           setError(

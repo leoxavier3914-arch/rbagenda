@@ -9,7 +9,7 @@ import styles from "./suporte.module.css";
 
 export default function SuportePage() {
   const heroReady = useClientPageReady();
-  useClientSessionGuard();
+  const { session, isReady: isSessionReady } = useClientSessionGuard();
 
   return (
     <ClientPageShell heroReady={heroReady} forceMotion>
@@ -17,7 +17,7 @@ export default function SuportePage() {
         <SupportHeader />
 
         <ClientGlassPanel label="SUPORTE" className={styles.card}>
-          <SupportContent />
+          <SupportContent session={session} isSessionReady={isSessionReady} />
         </ClientGlassPanel>
       </ClientSection>
     </ClientPageShell>

@@ -207,7 +207,6 @@ export function useProfileForm() {
     }
 
     router.replace('/login')
-    setSigningOut(false)
   }, [router, signingOut])
 
   return {

@@ -12,7 +12,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .subtitle {
@@ -58,4 +58,116 @@
 .itemHelper {
   font-size: 0.85rem;
   color: color-mix(in srgb, var(--ink) 60%, transparent);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--glass) 70%, transparent);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.chatHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chatMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 160px;
+  max-height: 320px;
+  padding: 0.5rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--glass) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-stroke) 70%, transparent);
+  overflow-y: auto;
+}
+
+.chatEmptyState {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.chatMessageRow {
+  align-self: flex-start;
+  max-width: 90%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--glass) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-stroke) 70%, transparent);
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--ink);
+}
+
+.chatMessageUser {
+  margin-left: auto;
+  background: color-mix(in srgb, var(--accent) 15%, var(--glass));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--glass-stroke));
+}
+
+.chatMessageStaff {
+  background: color-mix(in srgb, var(--glass) 80%, transparent);
+}
+
+.chatTimestamp {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.chatInputRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.chatInput {
+  flex: 1;
+  min-height: 64px;
+  padding: 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-stroke);
+  background: color-mix(in srgb, var(--glass) 60%, transparent);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.chatInput:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--glass-stroke));
+}
+
+.chatSendButton {
+  min-width: 96px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--glass-stroke));
+  background: color-mix(in srgb, var(--accent) 20%, var(--glass));
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.chatSendButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .chatInputRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chatSendButton {
+    width: 100%;
+  }
 }

@@ -52,12 +52,12 @@
 - **Recomendações**: monitorar responsividade para garantir que textos longos continuem sem truncamento; manter ornamento e ausência de glass em futuros ajustes.
 
 ### 2.6 `/suporte` (`src/app/(client)/suporte/page.tsx`)
-- **Objetivo**: centralizar canais de atendimento (em construção).
-- **Arquivos e componentes**: rota `page.tsx`; CSS `suporte.module.css`; subcomponentes locais `SupportHeader`, `SupportChannelsList`, `SupportContent`; tipos em `types.ts`.
-- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`; classe `force-motion` aplicada pelo shell.
-- **Layout e UX**: utiliza `ClientPageShell` + `ClientSection` + `ClientGlassPanel` e agora abre com `ClientPageHeader` para alinhar hero/tipografia às demais páginas. Lista de canais em vidro com texto quebrando naturalmente em telas estreitas; a seção não sobrescreve padding/min-height e herda o espaçamento padrão do shell. Todo ajuste visual (incluindo subtítulo) está no CSS Module local.
-- **Organização**: canais definidos em array tipado, separados em header + lista reutilizável.
-- **Recomendações**: preencher dados reais e acoplar ações (deep-links para WhatsApp/e-mail) quando disponíveis.
+- **Objetivo**: centralizar canais de atendimento e chat próprio do suporte.
+- **Arquivos e componentes**: rota `page.tsx`; CSS `suporte.module.css`; subcomponentes locais `SupportHeader`, `SupportChannelsList`, `SupportChat`, `SupportContent`; tipos em `types.ts`; novo schema Supabase (`support_threads`, `support_messages`).
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` vem de `useClientPageReady`; classe `force-motion` aplicada pelo shell. `SupportChat` garante/abre thread ativo do usuário (`support_threads`), carrega histórico (`support_messages`) e insere novas mensagens do cliente enquanto atualiza `last_message_preview/last_actor` do thread.
+- **Layout e UX**: usa `ClientPageShell` + `ClientSection` + `ClientGlassPanel`. Canais permanecem na lista original e o chat aparece logo abaixo, em cartão de vidro com área rolável para mensagens, estado vazio amigável e input + botão responsivos (coluna no mobile). Tipografia e cores seguem tokens globais.
+- **Organização**: canais seguem array tipado; chat encapsula busca/criação de thread e inserção de mensagens com estados locais (`loading/sending`).
+- **Recomendações**: adicionar respostas de staff/IA e deep-links de canais reais; considerar listener em tempo real e paginação de mensagens.
 
 ### 2.7 `/configuracoes` (`src/app/(client)/configuracoes/page.tsx`)
 - **Objetivo**: permitir que a cliente ajuste preferências de contato/notificação.

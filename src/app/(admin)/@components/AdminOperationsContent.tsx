@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/db'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactElement } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/db"
 
-import styles from '../adminPanel.module.css'
+import styles from "../admin/adminPanel.module.css"
 
-type LoadingState = 'idle' | 'loading' | 'ready'
+type LoadingState = "idle" | "loading" | "ready"
 
 type Branch = {
   id: string
@@ -60,30 +60,17 @@ type ClientProfile = {
   created_at: string | null
 }
 
-type AdminSection =
-  | 'filiais'
-  | 'servicos'
-  | 'tipos'
-  | 'agendamentos'
-  | 'clientes'
-  | 'emailjs'
-  | 'configuracoes'
+export type AdminSection = "filiais" | "servicos" | "tipos" | "agendamentos" | "clientes" | "configuracoes"
 
 type ActionFeedback = {
-  type: 'success' | 'error'
+  type: "success" | "error"
   text: string
 }
 
 const headerDescription =
-  'Gerencie todas as operações do estúdio em um painel unificado. Cadastre filiais, organize serviços, acompanhe agendamentos e administre sua base de clientes.'
+  "Gerencie todas as operações do estúdio em um painel unificado. Cadastre filiais, organize serviços, acompanhe agendamentos e administre sua base de clientes."
 
-const timezoneOptions = [
-  'America/Sao_Paulo',
-  'America/Bahia',
-  'America/Manaus',
-  'America/Fortaleza',
-  'America/Recife',
-]
+const timezoneOptions = ["America/Sao_Paulo", "America/Bahia", "America/Manaus", "America/Fortaleza", "America/Recife"]
 
 type AppointmentGroup = {
   key: string
@@ -141,21 +128,25 @@ type ServiceFormState = {
 }
 
 const sections: { key: AdminSection; label: string; description: string }[] = [
-  { key: 'agendamentos', label: 'Agendamentos', description: 'Monitoramento das reservas' },
-  { key: 'filiais', label: 'Filiais', description: 'Unidades e horários' },
-  { key: 'servicos', label: 'Serviços', description: 'Portfólio completo' },
-  { key: 'tipos', label: 'Tipos', description: 'Categorias de serviços' },
-  { key: 'clientes', label: 'Clientes', description: 'Base de clientes' },
-  { key: 'emailjs', label: 'EmailJS', description: 'Integrações de e-mail' },
-  { key: 'configuracoes', label: 'Configurações', description: 'Preferências do painel' },
+  { key: "agendamentos", label: "Agendamentos", description: "Monitoramento das reservas" },
+  { key: "filiais", label: "Filiais", description: "Unidades e horários" },
+  { key: "servicos", label: "Serviços", description: "Portfólio completo" },
+  { key: "tipos", label: "Tipos", description: "Categorias de serviços" },
+  { key: "clientes", label: "Clientes", description: "Base de clientes" },
+  { key: "configuracoes", label: "Configurações", description: "Preferências do painel" },
 ]
 
-export default function Admin() {
+type AdminOperationsContentProps = {
+  section: AdminSection
+  showSectionNav?: boolean
+}
+
+export default function AdminOperationsContent({ section, showSectionNav = false }: AdminOperationsContentProps) {
   const router = useRouter()
-  const [status, setStatus] = useState<LoadingState>('idle')
+  const [status, setStatus] = useState<LoadingState>("idle")
   const [error, setError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<ActionFeedback | null>(null)
-  const [activeSection, setActiveSection] = useState<AdminSection>('agendamentos')
+  const [activeSection, setActiveSection] = useState<AdminSection>(section)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
 
@@ -192,6 +183,12 @@ export default function Admin() {
     active: true,
   })
   const [serviceEdits, setServiceEdits] = useState<Record<string, ServiceFormState>>({})
+
+  useEffect(() => {
+    if (!showSectionNav) {
+      setActiveSection(section)
+    }
+  }, [section, showSectionNav])
 
   const fetchAdminData = useCallback(async () => {
     try {
@@ -448,7 +445,6 @@ export default function Admin() {
     servicos: '💼',
     tipos: '🗂️',
     clientes: '🧑‍🤝‍🧑',
-    emailjs: '✉️',
     configuracoes: '⚙️',
   }
 
@@ -1706,9 +1702,6 @@ export default function Admin() {
     case 'clientes':
       sectionContent = renderClientsSection()
       break
-    case 'emailjs':
-      sectionContent = renderPlaceholderSection('Em breve! Integração com EmailJS em desenvolvimento.')
-      break
     case 'configuracoes':
       sectionContent = renderPlaceholderSection('Em breve! Personalize configurações avançadas do painel.')
       break
@@ -1737,29 +1730,31 @@ export default function Admin() {
           </div>
         </header>
 
-        <div className={styles.inlineNav}>
-          {sections.map((section) => {
-            const isActive = activeSection === section.key
-            return (
-              <button
-                key={section.key}
-                className={`${navButtonBaseClass} ${isActive ? navButtonActiveClass : navButtonInactiveClass}`}
-                onClick={() => {
-                  setActiveSection(section.key)
-                  setActionMessage(null)
-                }}
-              >
-                <div className={styles.navButtonContent}>
-                  <span className={styles.navIcon}>{sectionIcons[section.key]}</span>
-                  <span className={styles.navText}>
-                    <span className={styles.navTitle}>{section.label}</span>
-                    <span className={styles.navDescription}>{section.description}</span>
-                  </span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+        {showSectionNav && (
+          <div className={styles.inlineNav}>
+            {sections.map((section) => {
+              const isActive = activeSection === section.key
+              return (
+                <button
+                  key={section.key}
+                  className={`${navButtonBaseClass} ${isActive ? navButtonActiveClass : navButtonInactiveClass}`}
+                  onClick={() => {
+                    setActiveSection(section.key)
+                    setActionMessage(null)
+                  }}
+                >
+                  <div className={styles.navButtonContent}>
+                    <span className={styles.navIcon}>{sectionIcons[section.key]}</span>
+                    <span className={styles.navText}>
+                      <span className={styles.navTitle}>{section.label}</span>
+                      <span className={styles.navDescription}>{section.description}</span>
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {isDashboardSection ? (
           <header className={styles.headerGrid}>

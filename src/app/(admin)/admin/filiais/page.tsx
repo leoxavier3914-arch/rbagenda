@@ -1,11 +1,5 @@
-import AdminPlaceholderSection from "../../@components/AdminPlaceholderSection";
+import AdminOperationsContent from "../../@components/AdminOperationsContent";
 
 export default function AdminFiliaisPage() {
-  return (
-    <AdminPlaceholderSection
-      title="Filiais"
-      subtitle="Cadastre e organize unidades com fuso horário correto."
-      actions={[{ href: "/admin/operacoes", label: "Gerenciar filiais no painel", icon: "🏢" }]}
-    />
-  );
+  return <AdminOperationsContent section="filiais" />;
 }

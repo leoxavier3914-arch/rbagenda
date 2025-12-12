@@ -1,11 +1,5 @@
-import AdminPlaceholderSection from "../../@components/AdminPlaceholderSection";
+import AdminOperationsContent from "../../@components/AdminOperationsContent";
 
 export default function AdminConfiguracoesPage() {
-  return (
-    <AdminPlaceholderSection
-      title="Configurações"
-      subtitle="Ajustes finos do painel, integrações e políticas."
-      actions={[{ href: "/admin/operacoes", label: "Abrir painel atual", icon: "⚙️" }]}
-    />
-  );
+  return <AdminOperationsContent section="configuracoes" />;
 }

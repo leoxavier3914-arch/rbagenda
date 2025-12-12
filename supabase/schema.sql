@@ -292,10 +292,19 @@ $$;
 
 grant execute on function public.is_admin(uuid) to public;
 
-create policy if not exists profiles_self on profiles for select using (
-  auth.uid() = id or public.is_admin(auth.uid())
+drop policy if exists profiles_self on profiles;
+drop policy if exists profiles_admin_access on profiles;
+drop policy if exists profiles_self_insert on profiles;
+
+create policy profiles_self on profiles for select using (
+  auth.uid() = id
 );
-create policy if not exists profiles_self_insert on profiles for insert with check (
+
+create policy profiles_admin_access on profiles for select using (
+  public.is_admin(auth.uid())
+);
+
+create policy profiles_self_insert on profiles for insert with check (
   auth.uid() = id or public.is_admin(auth.uid())
 );
 create policy if not exists appt_select on appointments for select using (
@@ -334,26 +343,33 @@ create index if not exists support_messages_sender_id_idx on public.support_mess
 alter table public.support_threads enable row level security;
 alter table public.support_messages enable row level security;
 
-create policy if not exists support_threads_select on public.support_threads for select using (
+drop policy if exists support_threads_select on public.support_threads;
+drop policy if exists support_threads_insert on public.support_threads;
+drop policy if exists support_threads_update on public.support_threads;
+
+create policy support_threads_select on public.support_threads for select using (
   user_id = auth.uid() or public.is_admin(auth.uid())
 );
 
-create policy if not exists support_threads_insert on public.support_threads for insert with check (
+create policy support_threads_insert on public.support_threads for insert with check (
   user_id = auth.uid() or public.is_admin(auth.uid())
 );
 
-create policy if not exists support_threads_update on public.support_threads for update using (
+create policy support_threads_update on public.support_threads for update using (
   user_id = auth.uid() or public.is_admin(auth.uid())
 );
 
-create policy if not exists support_messages_select on public.support_messages for select using (
+drop policy if exists support_messages_select on public.support_messages;
+drop policy if exists support_messages_insert on public.support_messages;
+
+create policy support_messages_select on public.support_messages for select using (
   exists (
     select 1 from public.support_threads t
     where t.id = thread_id and (t.user_id = auth.uid() or public.is_admin(auth.uid()))
   )
 );
 
-create policy if not exists support_messages_insert on public.support_messages for insert with check (
+create policy support_messages_insert on public.support_messages for insert with check (
   exists (
     select 1 from public.support_threads t
     where t.id = thread_id and (t.user_id = auth.uid() or public.is_admin(auth.uid()))

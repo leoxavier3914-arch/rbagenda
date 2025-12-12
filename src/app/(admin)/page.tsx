@@ -1,0 +1,83 @@
+import Link from "next/link";
+
+import styles from "./adminHome.module.css";
+
+const SECTIONS = [
+  {
+    href: "/admin/admin",
+    title: "Operações",
+    description: "Painel completo para agendamentos, serviços e filiais.",
+    icon: "🛠️",
+  },
+  {
+    href: "/admin/agendamentos",
+    title: "Agendamentos",
+    description: "Triagem por status e visão rápida das reservas.",
+    icon: "📅",
+  },
+  {
+    href: "/admin/filiais",
+    title: "Filiais",
+    description: "Configure unidades e fuso horário do estúdio.",
+    icon: "🏢",
+  },
+  {
+    href: "/admin/servicos",
+    title: "Serviços",
+    description: "Portfólio, preços e duração dos procedimentos.",
+    icon: "💼",
+  },
+  {
+    href: "/admin/tipos",
+    title: "Tipos",
+    description: "Categorias de serviço para organizar ofertas.",
+    icon: "🗂️",
+  },
+  {
+    href: "/admin/clientes",
+    title: "Clientes",
+    description: "Base de clientes e contatos principais.",
+    icon: "🧑‍🤝‍🧑",
+  },
+  {
+    href: "/admin/configuracoes",
+    title: "Configurações",
+    description: "Preferências gerais do painel e automações.",
+    icon: "⚙️",
+  },
+  {
+    href: "/admin/suporte",
+    title: "Suporte (futuro)",
+    description: "Espaço reservado para mensagens e tickets.",
+    icon: "💬",
+  },
+];
+
+export default function AdminHomePage() {
+  return (
+    <div className={styles.wrapper}>
+      <section className={styles.hero}>
+        <span className={styles.eyebrow}>Área restrita</span>
+        <h2 className={styles.title}>Escolha um módulo do painel</h2>
+        <p className={styles.subtitle}>
+          Painel administrativo com o mesmo fundo lava-lamp e glass das páginas do cliente. Cada módulo pode evoluir de forma
+          independente sem perder a identidade visual.
+        </p>
+      </section>
+
+      <div className={styles.cards}>
+        {SECTIONS.map((section) => (
+          <Link key={section.href} href={section.href} className={styles.card}>
+            <span className={styles.cardIcon} aria-hidden>
+              {section.icon}
+            </span>
+            <div>
+              <p className={styles.cardTitle}>{section.title}</p>
+              <p className={styles.cardDescription}>{section.description}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}

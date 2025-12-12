@@ -156,7 +156,6 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<ActionFeedback | null>(null)
   const [activeSection, setActiveSection] = useState<AdminSection>('agendamentos')
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
 
@@ -223,7 +222,7 @@ export default function Admin() {
         throw new Error('Não foi possível verificar suas permissões. Tente novamente.')
       }
 
-      if (profile?.role !== 'admin') {
+      if (!profile?.role || !['admin', 'adminsuper', 'adminmaster'].includes(profile.role)) {
         setStatus('idle')
         router.replace('/meu-perfil')
         return
@@ -489,75 +488,6 @@ export default function Admin() {
     },
     [fetchAdminData, resetFormStates]
   )
-
-  const toggleMenu = useCallback(() => {
-    setIsMenuOpen((prev) => !prev)
-  }, [])
-
-  const closeMenu = useCallback(() => {
-    setIsMenuOpen(false)
-  }, [])
-
-  useEffect(() => {
-    if (typeof document === 'undefined') {
-      return
-    }
-
-    const { style } = document.body
-    const previousOverflow = style.overflow
-
-    if (isMenuOpen) {
-      style.overflow = 'hidden'
-    }
-
-    return () => {
-      style.overflow = previousOverflow
-    }
-  }, [isMenuOpen])
-
-  useEffect(() => {
-    if (!isMenuOpen) {
-      return
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMenuOpen(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isMenuOpen])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    const mediaQuery = window.matchMedia('(min-width: 1024px)')
-
-    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
-      if (event.matches) {
-        setIsMenuOpen(false)
-      }
-    }
-
-    handleChange(mediaQuery)
-
-    const listener = (event: MediaQueryListEvent) => handleChange(event)
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', listener)
-      return () => mediaQuery.removeEventListener('change', listener)
-    }
-
-    mediaQuery.addListener(listener)
-    return () => mediaQuery.removeListener(listener)
-  }, [])
 
   const handleSignOut = useCallback(async () => {
     if (signingOut) return
@@ -1789,163 +1719,115 @@ export default function Admin() {
   }
 
   return (
-    <main className={styles.page}>
-      <div className={styles.layout}>
-        <div className={styles.topBar}>
-          <button
-            type="button"
-            className={styles.hamburger}
-            onClick={toggleMenu}
-            aria-expanded={isMenuOpen}
-            aria-controls="admin-sidebar"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-            Menu
-          </button>
-          <div className={styles.topBarTitleGroup}>
-            <span className={styles.sidebarEyebrow}>Painel</span>
-            <span className={styles.sidebarTitle}>Administração</span>
+    <section className={styles.page}>
+      <div className={styles.contentShell}>
+        <header className={styles.sectionHeader}>
+          <div className={styles.sectionHeaderTextOnly}>
+            <span className={styles.sidebarEyebrow}>Área interna</span>
+            <h1 className={styles.sectionHeaderTitle}>Painel de operações</h1>
+            <p className={styles.sectionHeaderDescription}>{headerDescription}</p>
           </div>
-        </div>
-
-        {isMenuOpen && <div className={styles.menuOverlay} aria-hidden="true" onClick={closeMenu} />}
-
-        <aside
-          id="admin-sidebar"
-          className={`${styles.sidebar} ${isMenuOpen ? styles.sidebarOpen : ''}`}
-          aria-label="Menu de navegação do painel administrativo"
-        >
-          <div className={styles.sidebarHeader}>
-            <div className={styles.sidebarTitleGroup}>
-              <span className={styles.sidebarEyebrow}>Painel</span>
-              <h1 className={styles.sidebarTitle}>Administração</h1>
-            </div>
-            <button
-              type="button"
-              className={styles.closeButton}
-              onClick={closeMenu}
-              aria-label="Fechar menu de navegação"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
+          <div className={styles.sectionHeaderActions}>
+            <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
+              {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+            </button>
+            <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
+              {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
             </button>
           </div>
-          <nav className={styles.sidebarNav}>
-            {sections.map((section) => {
-              const isActive = activeSection === section.key
-              return (
-                <button
-                  key={section.key}
-                  className={`${navButtonBaseClass} ${isActive ? navButtonActiveClass : navButtonInactiveClass}`}
-                  onClick={() => {
-                    setActiveSection(section.key)
-                    setActionMessage(null)
-                    closeMenu()
-                  }}
-                >
-                  <div className={styles.navButtonContent}>
-                    <span className={styles.navIcon}>{sectionIcons[section.key]}</span>
-                    <span className={styles.navText}>
-                      <span className={styles.navTitle}>{section.label}</span>
-                      <span className={styles.navDescription}>{section.description}</span>
-                    </span>
-                  </div>
-                  <svg className={styles.navChevron} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
-                  </svg>
-                </button>
-              )
-            })}
-          </nav>
-        </aside>
+        </header>
 
-        <section className={styles.contentArea}>
-          <div className={styles.contentShell}>
-            {isDashboardSection ? (
-              <header className={styles.headerGrid}>
-                <div className={glassCardClass}>
-                  <div className={styles.heroIntro}>
-                    <span className={badgeClass}>Painel administrativo</span>
-                    <h2 className={styles.heroTitle}>Controle completo da agenda e operações</h2>
-                    <p className={styles.heroSubtitle}>{headerDescription}</p>
-                  </div>
-                  <dl className={styles.heroMetrics}>
-                    {highlightStats.map((stat) => (
-                      <div key={stat.label} className={styles.heroMetric}>
-                        <dt className={styles.heroMetricLabel}>{stat.label}</dt>
-                        <dd className={styles.heroMetricValue}>{stat.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-                <div className={panelCardClass}>
-                  <div className={styles.quickActionsHeader}>
-                    <h3>Ações rápidas</h3>
-                    <p>Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
-                  </div>
-                  <div className={styles.quickActionsButtons}>
-                    <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
-                      {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
-                    </button>
-                    <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
-                      {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
-                    </button>
-                  </div>
-                  {signOutError && <p className={styles.errorText}>{signOutError}</p>}
-                </div>
-              </header>
-            ) : (
-              <header className={styles.sectionHeader}>
-                <div className={`${panelCardClass} ${styles.sectionHeaderCard}`}>
-                  <div className={styles.sectionHeaderInfo}>
-                    <span className={styles.sectionHeaderIcon}>{currentSectionIcon}</span>
-                    <div className={styles.sectionHeaderText}>
-                      <span className={styles.sectionHeaderEyebrow}>Área selecionada</span>
-                      <h2 className={styles.sectionHeaderTitle}>{activeSectionInfo.label}</h2>
-                      <p className={styles.sectionHeaderDescription}>{activeSectionInfo.description}</p>
-                    </div>
-                  </div>
-                  <div className={styles.sectionHeaderActions}>
-                    <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
-                      {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
-                    </button>
-                    <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
-                      {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
-                    </button>
-                  </div>
-                </div>
-                {signOutError && <p className={styles.errorText}>{signOutError}</p>}
-              </header>
-            )}
-
-            {error && (
-              <div className={`${styles.alert} ${styles.alertError}`}>
-                <p>{error}</p>
-                <div>
-                  <button className={primaryButtonClass} onClick={() => fetchAdminData()}>
-                    Tentar novamente
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {actionMessage && (
-              <div
-                className={`${styles.feedback} ${
-                  actionMessage.type === 'success' ? styles.feedbackSuccess : styles.feedbackError
-                }`}
+        <div className={styles.inlineNav}>
+          {sections.map((section) => {
+            const isActive = activeSection === section.key
+            return (
+              <button
+                key={section.key}
+                className={`${navButtonBaseClass} ${isActive ? navButtonActiveClass : navButtonInactiveClass}`}
+                onClick={() => {
+                  setActiveSection(section.key)
+                  setActionMessage(null)
+                }}
               >
-                {actionMessage.text}
-              </div>
-            )}
+                <div className={styles.navButtonContent}>
+                  <span className={styles.navIcon}>{sectionIcons[section.key]}</span>
+                  <span className={styles.navText}>
+                    <span className={styles.navTitle}>{section.label}</span>
+                    <span className={styles.navDescription}>{section.description}</span>
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
 
-            {sectionContent}
+        {isDashboardSection ? (
+          <header className={styles.headerGrid}>
+            <div className={glassCardClass}>
+              <div className={styles.heroIntro}>
+                <span className={badgeClass}>Painel administrativo</span>
+                <h2 className={styles.heroTitle}>Controle completo da agenda e operações</h2>
+                <p className={styles.heroSubtitle}>{headerDescription}</p>
+              </div>
+              <dl className={styles.heroMetrics}>
+                {highlightStats.map((stat) => (
+                  <div key={stat.label} className={styles.heroMetric}>
+                    <dt className={styles.heroMetricLabel}>{stat.label}</dt>
+                    <dd className={styles.heroMetricValue}>{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <div className={panelCardClass}>
+              <div className={styles.quickActionsHeader}>
+                <h3>Ações rápidas</h3>
+                <p>Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
+              </div>
+              <div className={styles.quickActionsButtons}>
+                <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
+                  {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
+                </button>
+                <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
+                  {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+                </button>
+              </div>
+              {signOutError && <p className={styles.errorText}>{signOutError}</p>}
+            </div>
+          </header>
+        ) : (
+          <div className={`${panelCardClass} ${styles.sectionHeaderCard}`}>
+            <div className={styles.sectionHeaderInfo}>
+              <span className={styles.sectionHeaderIcon}>{currentSectionIcon}</span>
+              <div className={styles.sectionHeaderText}>
+                <span className={styles.sectionHeaderEyebrow}>Área selecionada</span>
+                <h2 className={styles.sectionHeaderTitle}>{activeSectionInfo.label}</h2>
+                <p className={styles.sectionHeaderDescription}>{activeSectionInfo.description}</p>
+              </div>
+            </div>
           </div>
-        </section>
+        )}
+
+        {error && (
+          <div className={`${styles.alert} ${styles.alertError}`}>
+            <p>{error}</p>
+            <div>
+              <button className={primaryButtonClass} onClick={() => fetchAdminData()}>
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        )}
+
+        {actionMessage && (
+          <div
+            className={`${styles.feedback} ${actionMessage.type === 'success' ? styles.feedbackSuccess : styles.feedbackError}`}
+          >
+            {actionMessage.text}
+          </div>
+        )}
+
+        <div className={styles.sectionContent}>{sectionContent}</div>
       </div>
-    </main>
+    </section>
   )
 }

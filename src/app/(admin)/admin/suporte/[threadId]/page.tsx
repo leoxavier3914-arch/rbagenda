@@ -8,7 +8,11 @@ import styles from "./threadView.module.css";
 
 import { supabase } from "@/lib/db";
 
-type ThreadProfile = { name: string | null; email: string | null } | null;
+type ThreadProfile = {
+  full_name: string | null;
+  name?: string | null;
+  email: string | null;
+} | null;
 
 type SupportThread = {
   id: string;
@@ -55,7 +59,7 @@ export default function SupportThreadPage({ params }: ThreadPageProps) {
 
       const { data: threadData, error: threadError } = await supabase
         .from("support_threads")
-        .select("id, user_id, updated_at, last_message_preview, last_actor, profiles(name, email)")
+        .select("id, user_id, updated_at, last_message_preview, last_actor, profiles(full_name, email)")
         .eq("id", threadId)
         .maybeSingle();
 
@@ -126,7 +130,7 @@ export default function SupportThreadPage({ params }: ThreadPageProps) {
         <h2 className={styles.threadTitle}>Ticket #{thread?.id || threadId}</h2>
         {profile && (
           <p className={styles.threadMeta}>
-            Cliente: {profile.name || "Sem nome"} · {profile.email || "Sem e-mail"}
+            Cliente: {profile.full_name || profile.name || "Sem nome"} · {profile.email || "Sem e-mail"}
           </p>
         )}
       </header>

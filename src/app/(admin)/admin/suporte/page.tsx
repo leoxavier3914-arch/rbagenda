@@ -7,7 +7,11 @@ import { supabase } from "@/lib/db";
 
 import styles from "./suporteList.module.css";
 
-type ThreadProfile = { name: string | null; email: string | null } | null;
+type ThreadProfile = {
+  full_name: string | null;
+  name?: string | null;
+  email: string | null;
+} | null;
 
 type SupportThread = {
   id: string;
@@ -49,7 +53,7 @@ export default function AdminSuportePage() {
 
       const { data, error: queryError } = await supabase
         .from("support_threads")
-        .select("id, user_id, last_message_preview, last_actor, updated_at, profiles(name, email)")
+        .select("id, user_id, last_message_preview, last_actor, updated_at, profiles(full_name, email)")
         .order("updated_at", { ascending: false });
 
       if (!active) return;
@@ -127,7 +131,7 @@ export default function AdminSuportePage() {
               <Link key={thread.id} href={`/admin/suporte/${thread.id}`} className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div>
-                    <p className={styles.clientName}>{profile?.name || "Cliente"}</p>
+                    <p className={styles.clientName}>{profile?.full_name || profile?.name || "Cliente"}</p>
                     <p className={styles.clientEmail}>{profile?.email || "Sem e-mail"}</p>
                   </div>
                   <span className={styles.updatedAt}>{formatDate(thread.updated_at)}</span>

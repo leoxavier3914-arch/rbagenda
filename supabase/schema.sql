@@ -17,7 +17,7 @@ $$;
 -- Perfis (mapeia usuários do Auth)
 create table if not exists profiles (
   id uuid primary key, -- igual a auth.uid()
-  role text not null default 'client' check (role in ('client','admin','adminmaster')),
+  role text not null default 'client' check (role in ('client','admin','adminmaster','adminsuper')),
   full_name text,
   email text,
   whatsapp text,
@@ -281,7 +281,7 @@ declare
   result boolean;
 begin
   execute 'select exists(' ||
-          'select 1 from public.profiles where id = $1 and role in (''admin'',''adminmaster'')'
+          'select 1 from public.profiles where id = $1 and role in (''admin'',''adminmaster'',''adminsuper'')'
           ')'
     into result
     using uid;

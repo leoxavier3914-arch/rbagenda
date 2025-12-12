@@ -175,9 +175,8 @@ export default function Login() {
               </button>
 
               <div className={styles.helpRow}>
-                <span>Esqueceu sua senha?</span>
-                <Link href="/suporte" className={styles.link}>
-                  Clique aqui
+                <Link href="/forgot-password" className={styles.link}>
+                  Esqueci minha senha
                 </Link>
               </div>
             </form>

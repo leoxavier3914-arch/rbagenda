@@ -12,6 +12,7 @@ export type SupportThread = {
   created_at: string
   updated_at: string
   user_id?: string | null
+  branch_id?: string | null
 }
 
 export type SupportMessage = {

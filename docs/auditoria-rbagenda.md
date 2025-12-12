@@ -111,11 +111,11 @@
 - Organização: `rules.module.css` renomeado para `regras.module.css`; criado barrel exports em `agendamentos/@components`, `procedimento/@components` e `regras/@components`; novos CSS Modules (`indice.module.css`) e ajustes no `configuracoes.module.css` para centralizar estilos locais.
 
 ## 6. Área administrativa
-- Estrutura: agrupada em `src/app/(admin)` com layout próprio `layout.tsx` que aplica `LavaLampProvider` e `AdminShell` (fundo lava + painel glass). Navegação lateral/topo compartilhada via `@components/AdminNav` (links para `/admin`, `/admin/operacoes`, `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes`, `/admin/suporte`).
+- Estrutura: agrupada em `src/app/(admin)` com layout próprio `layout.tsx` que aplica `LavaLampProvider` e `AdminShell` (fundo lava + painel glass). Navegação acessada via botão hambúrguer (drawer mobile, fixa no desktop) em `@components/AdminNav` com links para `/admin`, `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes`, `/admin/suporte`.
 - Proteção: hook `useAdminGuard` (mesmo escopo) bloqueia rotas para quem não estiver autenticado ou fora das roles `admin/adminsuper/adminmaster`, redirecionando para login ou `/meu-perfil`. O painel principal ainda valida role antes de carregar dados.
 - Home do painel: `/admin` traz cards de módulos e visual glass/lava alinhado às páginas de cliente.
-- Painel de operações: `/admin/operacoes` mantém gerenciamento de filiais/serviços/tipos/agendamentos/clientes, mas agora usa o shell glass (sem sidebar fixa). A navegação interna virou um grid de botões, hero/lâminas de métricas e cards de ações rápidas dentro do mesmo padrão visual.
-- Módulos futuros: rotas `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes`, `/admin/suporte` recebem placeholders modulares com o mesmo shell, prontos para evolução sem quebrar cliente.
+- Módulos operacionais: rotas `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes` reutilizam `@components/AdminOperationsContent` para exibir as seções reais (dados de Supabase, formulários, métricas) antes concentradas em `/admin/operacoes` (rota removida).
+- Suporte: `/admin/suporte` segue como placeholder declarando que o painel ainda será disponibilizado.
 
 ## Cheat sheet (para PRs futuras)
 - Shell padrão: `ClientPageShell`/`ClientSection` + vidro (`ClientGlassPanel`); `ClientSection` define padding top 64px, bottom 32px (mais safe-area) sem min-height forçada. Exceção `checkout` sem shell.

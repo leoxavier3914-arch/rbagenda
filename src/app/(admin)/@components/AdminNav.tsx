@@ -11,13 +11,13 @@ type AdminNavProps = {
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Início", description: "Resumo rápido do painel", icon: "🏠" },
-  { href: "/admin/operacoes", label: "Operações", description: "Agendamentos, serviços e filiais", icon: "🛠️" },
   { href: "/admin/agendamentos", label: "Agendamentos", description: "Visão geral e triagem", icon: "📅" },
   { href: "/admin/filiais", label: "Filiais", description: "Unidades e timezones", icon: "🏢" },
   { href: "/admin/servicos", label: "Serviços", description: "Portfólio e preços", icon: "💼" },
   { href: "/admin/tipos", label: "Tipos", description: "Categorias e agrupamentos", icon: "🗂️" },
   { href: "/admin/clientes", label: "Clientes", description: "Base e contatos", icon: "🧑‍🤝‍🧑" },
   { href: "/admin/configuracoes", label: "Configurações", description: "Preferências do painel", icon: "⚙️" },
+  { href: "/admin/suporte", label: "Suporte", description: "Em breve tickets e mensagens", icon: "💬" },
 ];
 
 export default function AdminNav({ disabled }: AdminNavProps) {

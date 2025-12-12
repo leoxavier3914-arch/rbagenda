@@ -32,6 +32,10 @@ export default function SignUp() {
       email,
       password,
       options: {
+        data: {
+          full_name: fullName,
+          whatsapp,
+        },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirm`,
       },
     })

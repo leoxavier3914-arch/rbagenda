@@ -34,7 +34,7 @@ BEGIN
     CREATE POLICY support_threads_select
       ON public.support_threads
       FOR SELECT
-      USING (user_id = auth.uid() OR is_admin(auth.uid()));
+      USING (user_id = auth.uid() OR public.is_admin(auth.uid()));
   END IF;
 END
 $$;
@@ -47,7 +47,7 @@ BEGIN
     CREATE POLICY support_threads_insert
       ON public.support_threads
       FOR INSERT
-      WITH CHECK (user_id = auth.uid() OR is_admin(auth.uid()));
+      WITH CHECK (user_id = auth.uid() OR public.is_admin(auth.uid()));
   END IF;
 END
 $$;
@@ -60,7 +60,7 @@ BEGIN
     CREATE POLICY support_threads_update
       ON public.support_threads
       FOR UPDATE
-      USING (user_id = auth.uid() OR is_admin(auth.uid()));
+      USING (user_id = auth.uid() OR public.is_admin(auth.uid()));
   END IF;
 END
 $$;
@@ -76,7 +76,7 @@ BEGIN
       USING (
         EXISTS (
           SELECT 1 FROM public.support_threads t
-          WHERE t.id = thread_id AND (t.user_id = auth.uid() OR is_admin(auth.uid()))
+          WHERE t.id = thread_id AND (t.user_id = auth.uid() OR public.is_admin(auth.uid()))
         )
       );
   END IF;
@@ -94,7 +94,7 @@ BEGIN
       WITH CHECK (
         EXISTS (
           SELECT 1 FROM public.support_threads t
-          WHERE t.id = thread_id AND (t.user_id = auth.uid() OR is_admin(auth.uid()))
+          WHERE t.id = thread_id AND (t.user_id = auth.uid() OR public.is_admin(auth.uid()))
         )
       );
   END IF;

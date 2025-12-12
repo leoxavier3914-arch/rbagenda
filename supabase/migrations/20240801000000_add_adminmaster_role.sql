@@ -4,7 +4,7 @@ alter table public.profiles
 
 alter table public.profiles
   add constraint profiles_role_check
-  check (role in ('client', 'admin', 'adminmaster'));
+  check (role in ('client', 'admin', 'adminmaster', 'adminsuper'));
 
 create or replace function public.is_admin(uid uuid)
 returns boolean
@@ -17,7 +17,7 @@ declare
   result boolean;
 begin
   execute 'select exists(' ||
-          'select 1 from public.profiles where id = $1 and role in (''admin'', ''adminmaster'')'
+          'select 1 from public.profiles where id = $1 and role in (''admin'', ''adminmaster'', ''adminsuper'')'
           ')'
     into result
     using uid;

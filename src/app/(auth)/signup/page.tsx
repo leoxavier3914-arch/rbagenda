@@ -32,7 +32,7 @@ export default function SignUp() {
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirm`,
       },
     })
     if (error) return setMsg(error.message)

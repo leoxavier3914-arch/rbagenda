@@ -3,30 +3,52 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { type AdminRole } from "../useAdminGuard";
+
 import styles from "../adminNav.module.css";
 
 type AdminNavProps = {
   disabled?: boolean;
+  role?: AdminRole | null;
 };
 
-const NAV_ITEMS = [
-  { href: "/admin", label: "Início", description: "Resumo rápido do painel", icon: "🏠" },
-  { href: "/admin/agendamentos", label: "Agendamentos", description: "Visão geral e triagem", icon: "📅" },
-  { href: "/admin/filiais", label: "Filiais", description: "Unidades e timezones", icon: "🏢" },
-  { href: "/admin/servicos", label: "Serviços", description: "Portfólio e preços", icon: "💼" },
-  { href: "/admin/tipos", label: "Tipos", description: "Categorias e agrupamentos", icon: "🗂️" },
-  { href: "/admin/clientes", label: "Clientes", description: "Base e contatos", icon: "🧑‍🤝‍🧑" },
-  { href: "/admin/configuracoes", label: "Configurações", description: "Preferências do painel", icon: "⚙️" },
-  { href: "/admin/suporte", label: "Suporte", description: "Em breve tickets e mensagens", icon: "💬" },
-];
+type NavItem = { href: string; label: string; description: string; icon: string };
 
-export default function AdminNav({ disabled }: AdminNavProps) {
+const NAV_ITEMS: Record<AdminRole, NavItem[]> = {
+  admin: [
+    { href: "/admin", label: "Admin", description: "Início do painel", icon: "🏠" },
+    { href: "/admin/filiais", label: "Filiais", description: "Filial ativa e horário", icon: "🏢" },
+    { href: "/admin/agendamentos", label: "Agendamentos", description: "Reservas da filial", icon: "📅" },
+    { href: "/admin/clientes", label: "Clientes", description: "Clientes por filial", icon: "🧑‍🤝‍🧑" },
+  ],
+  adminsuper: [
+    { href: "/admin/adminsuper", label: "Admin super", description: "Resumo do painel", icon: "🛰️" },
+    { href: "/admin/adminsuper/filiais", label: "Filiais", description: "Filiais que você lidera", icon: "🏢" },
+    { href: "/admin/adminsuper/admins", label: "Admins", description: "Vincular admins às filiais", icon: "🧑‍💼" },
+    { href: "/admin/adminsuper/agendamentos", label: "Agendamentos", description: "Reservas das suas filiais", icon: "📅" },
+    { href: "/admin/adminsuper/clientes", label: "Clientes", description: "Clientes atendidos", icon: "🧑‍🤝‍🧑" },
+  ],
+  adminmaster: [
+    { href: "/admin/adminmaster", label: "Admin master", description: "Visão global", icon: "🌐" },
+    { href: "/admin/adminmaster/filiais", label: "Filiais", description: "Todas as filiais", icon: "🏢" },
+    { href: "/admin/adminmaster/supers", label: "Supers", description: "Gerenciar cargos", icon: "🧭" },
+    { href: "/admin/adminmaster/auditoria", label: "Auditoria", description: "Eventos recentes", icon: "🔍" },
+  ],
+};
+
+export default function AdminNav({ disabled, role }: AdminNavProps) {
   const pathname = usePathname();
+  const navItems = role ? NAV_ITEMS[role] : [];
 
   return (
     <nav className={styles.nav} aria-label="Navegação do painel administrativo">
       <ul className={styles.navList}>
-        {NAV_ITEMS.map((item) => {
+        {navItems.length === 0 ? (
+          <li>
+            <span className={`${styles.navItem} ${styles.navItemDisabled}`}>Carregando navegação...</span>
+          </li>
+        ) : null}
+        {navItems.map((item) => {
           const isActive = pathname === item.href;
 
           return (

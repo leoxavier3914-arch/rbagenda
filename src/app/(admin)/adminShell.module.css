@@ -4,6 +4,7 @@
   color: var(--admin-text);
   display: flex;
   gap: 0;
+  overflow-x: hidden;
 }
 
 .sidebarWrapper {
@@ -99,13 +100,11 @@
 }
 
 .contentArea {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
   min-height: 100vh;
   margin-left: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.06)),
-    var(--admin-bg);
+  background: var(--admin-bg);
   width: 100%;
   min-width: 0;
   overflow: hidden;
@@ -119,10 +118,10 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 14px 18px;
+  padding: 14px clamp(16px, 2vw, 24px);
   border-bottom: 1px solid var(--admin-border);
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 55%), var(--admin-surface);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--admin-shadow-soft);
 }
 
 .menuButton {
@@ -167,10 +166,11 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px;
+  gap: clamp(16px, 2vw, 24px);
+  padding: clamp(16px, 3vw, 28px);
   min-width: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  background: var(--admin-bg);
 }
 
 .pageHeader {
@@ -219,12 +219,10 @@
 
 .pageContent {
   flex: 1;
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: 18px;
-  box-shadow: var(--admin-shadow-strong);
-  padding: clamp(18px, 2vw, 28px);
-  min-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 24px);
+  min-height: 0;
   min-width: 0;
 }
 

@@ -23,19 +23,19 @@
   border: 1px solid var(--admin-border);
   background: var(--admin-surface-alt);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
 }
 
 .navItem:hover {
   border-color: var(--admin-accent);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
-  transform: translateX(3px);
+  box-shadow: var(--admin-shadow-soft);
+  transform: translateX(2px);
 }
 
 .navItemActive {
   border-color: var(--admin-accent);
   background: linear-gradient(135deg, var(--admin-highlight), var(--admin-surface));
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--admin-shadow-soft);
 }
 
 .navItemDisabled {

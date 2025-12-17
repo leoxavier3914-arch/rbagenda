@@ -116,6 +116,7 @@
 - Home do painel: `/admin` traz cards de módulos e visual glass/lava alinhado às páginas de cliente e só permite role `admin` (demais admins são redirecionados para seus painéis).
 - Painéis estratégicos: `/admin/adminsuper` e `/admin/adminmaster` compartilham a mesma tela client-side; o wrapper de cada rota valida role e envia admin → `/admin`, adminsuper → `/admin/adminsuper`, adminmaster → `/admin/adminmaster` (clientes → `/login`). Admin master habilita seções extras (já existentes no componente).
 - Módulos operacionais: rotas `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes` reutilizam `@components/AdminOperationsContent` para exibir as seções reais (dados de Supabase, formulários, métricas) antes concentradas em `/admin/operacoes` (rota removida).
+- Responsividade do painel: formulários e grids dos módulos operacionais agora forçam 1 coluna abaixo de `md`, com wrappers/inputs `min-width: 0` para evitar cortes de selects/múltiplas opções e remover overflow horizontal no mobile (ex.: criação/edição de serviços e tipos em `/admin/servicos`).
 - Suporte: `/admin/suporte` segue como placeholder declarando que o painel ainda será disponibilizado.
 
 ## Cheat sheet (para PRs futuras)

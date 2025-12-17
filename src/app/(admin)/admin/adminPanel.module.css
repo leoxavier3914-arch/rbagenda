@@ -231,6 +231,8 @@
 
 .contentShell {
   max-width: 1140px;
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -417,6 +419,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .quickActionsHeader {
@@ -507,6 +510,7 @@
   flex-direction: column;
   gap: 8px;
   font-size: 0.9rem;
+  min-width: 0;
 }
 
 .fieldLabel {
@@ -521,6 +525,7 @@
 .textarea,
 select.input {
   width: 100%;
+  min-width: 0;
   border: 1px solid rgba(27, 94, 74, 0.22);
   border-radius: var(--admin-radius-sm);
   padding: 12px 16px;
@@ -563,6 +568,7 @@ select.input:focus {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .statCard {
@@ -571,6 +577,7 @@ select.input:focus {
   border: 1px solid rgba(27, 94, 74, 0.18);
   box-shadow: 0 18px 36px rgba(27, 94, 74, 0.18);
   padding: 20px 22px;
+  min-width: 0;
 }
 
 .metaPill {

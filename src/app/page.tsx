@@ -8,7 +8,7 @@ import type { Session } from '@supabase/supabase-js'
 
 import ClientFullScreenLayout from '@/components/ClientFullScreenLayout'
 
-type ResolvedRole = 'admin' | 'adminsuper' | 'client' | null
+type ResolvedRole = 'admin' | 'adminsuper' | 'adminmaster' | 'client' | null
 
 export default function Home(){
   const router = useRouter()
@@ -32,7 +32,8 @@ export default function Home(){
       if (error) throw error
 
       if (data?.role === 'admin') return 'admin'
-      if (data?.role === 'adminsuper' || data?.role === 'adminmaster') return 'adminsuper'
+      if (data?.role === 'adminsuper') return 'adminsuper'
+      if (data?.role === 'adminmaster') return 'adminmaster'
 
       return 'client'
     } catch (error) {
@@ -59,6 +60,8 @@ export default function Home(){
         setAccess('admin')
       } else if (role === 'adminsuper') {
         redirectTo('/admin/adminsuper')
+      } else if (role === 'adminmaster') {
+        redirectTo('/admin/adminmaster')
       } else {
         redirectTo('/procedimento')
       }

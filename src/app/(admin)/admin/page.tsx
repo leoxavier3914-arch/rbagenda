@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
 
 import styles from "../adminHome.module.css";
+import { useAdminGuard } from "../useAdminGuard";
 
 const SECTIONS = [
   { href: "/admin/agendamentos", title: "Agendamentos", description: "Triagem por status e visão rápida das reservas.", icon: "📅" },
@@ -13,6 +17,24 @@ const SECTIONS = [
 ];
 
 export default function AdminHomePage() {
+  const { status } = useAdminGuard({
+    allowedRoles: ["admin"],
+    fallbackRedirects: {
+      adminsuper: "/admin/adminsuper",
+      adminmaster: "/admin/adminmaster",
+      client: "/login",
+      unauthenticated: "/login",
+    },
+  });
+
+  const isAuthorized = status === "authorized";
+
+  const sections = useMemo(() => SECTIONS, []);
+
+  if (!isAuthorized) {
+    return null;
+  }
+
   return (
     <div className={styles.wrapper}>
       <section className={styles.hero}>
@@ -24,7 +46,7 @@ export default function AdminHomePage() {
       </section>
 
       <div className={styles.cards}>
-        {SECTIONS.map((section) => (
+        {sections.map((section) => (
           <Link key={section.href} href={section.href} className={styles.card}>
             <span className={styles.cardIcon} aria-hidden>
               {section.icon}

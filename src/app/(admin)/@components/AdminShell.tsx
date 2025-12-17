@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import { supabase } from "@/lib/db";
@@ -22,6 +22,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -55,12 +56,10 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const mediaQuery = window.matchMedia("(min-width: 900px)");
     const handleChange = (event: MediaQueryListEvent) => {
       setIsDesktop(event.matches);
-      if (event.matches) {
-        setMobileMenuOpen(false);
-      }
+      setMobileMenuOpen(false);
     };
 
     setIsDesktop(mediaQuery.matches);
@@ -87,8 +86,14 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleRootClick = (event: React.MouseEvent) => {
+    if (sidebarRef.current?.contains(event.target as Node)) return;
+    setSidebarExpanded(false);
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <div className={styles.adminRoot} data-expanded={expanded}>
+    <div className={styles.adminRoot} data-expanded={expanded} onClickCapture={handleRootClick}>
       {mobileMenuOpen && !isDesktop ? (
         <div className={styles.backdrop} onClick={() => setMobileMenuOpen(false)} aria-hidden />
       ) : null}
@@ -142,18 +147,10 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <aside
           id="admin-menu"
           className={sidebarClassName}
+          ref={sidebarRef}
           onClick={handleSidebarClick}
         >
           <div className={styles.sidebarHeader}>
-            <button
-              type="button"
-              className={styles.sidebarToggle}
-              onClick={() => setSidebarExpanded((prev) => !prev)}
-              aria-expanded={expanded}
-              aria-controls="admin-nav"
-            >
-              {expanded ? "Recolher" : "Expandir"}
-            </button>
             <div className={styles.sidebarUser}>
               <span className={styles.avatarLarge}>{initials}</span>
               <div className={styles.sidebarUserMeta}>
@@ -168,6 +165,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             disabled={status !== "authorized"}
             onExpand={() => setSidebarExpanded(true)}
             onNavigate={() => {
+              setSidebarExpanded(false);
               setMobileMenuOpen(false);
             }}
           />

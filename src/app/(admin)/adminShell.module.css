@@ -193,13 +193,14 @@
   cursor: pointer;
   align-items: stretch;
   padding: 20px 10px;
-  background: #eaf1fd;
-  border-right: 1px solid #d6e2fb;
-  box-shadow: 10px 0 30px rgba(44, 62, 99, 0.1);
+  background: #2f3546;
+  border-right: 1px solid #252b3a;
+  box-shadow: none;
 }
 
 .sidebarCollapsed .sidebarHeader {
-  display: none;
+  align-items: center;
+  gap: 10px;
 }
 
 .sidebarExpanded {
@@ -259,6 +260,15 @@
   font-weight: 800;
 }
 
+.sidebarCollapsed .sidebarUser {
+  justify-content: center;
+}
+
+.sidebarCollapsed .avatarLarge {
+  width: 40px;
+  height: 40px;
+}
+
 .sidebarUserMeta {
   display: flex;
   flex-direction: column;
@@ -288,7 +298,7 @@
   margin: 0 auto;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 899px) {
   .hamburger {
     display: inline-flex;
   }

@@ -1,88 +1,138 @@
 .wrapper {
-  display: grid;
-  gap: clamp(18px, 3vw, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--admin-text);
 }
 
-.hero {
+.headerRow {
   display: grid;
-  gap: 14px;
-  padding: clamp(18px, 3vw, 30px);
-  background: radial-gradient(circle at 10% 10%, rgba(12, 84, 56, 0.08), transparent 45%),
-    radial-gradient(circle at 80% 0%, rgba(197, 231, 216, 0.3), transparent 50%),
-    rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 24px;
-  box-shadow: 0 26px 72px rgba(6, 18, 12, 0.18);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .headerRow {
+    grid-template-columns: 1.2fr 1.1fr;
+    align-items: center;
+  }
 }
 
 .eyebrow {
-  font-size: 0.85rem;
-  letter-spacing: 0.18em;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(13, 36, 25, 0.65);
-  font-weight: 700;
+  color: var(--admin-muted);
+  font-weight: 800;
 }
 
 .title {
-  font-size: clamp(1.8rem, 3vw, 2.3rem);
+  font-size: clamp(1.9rem, 3vw, 2.3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0d2419;
+  margin: 6px 0;
 }
 
 .subtitle {
-  max-width: 780px;
-  color: rgba(13, 36, 25, 0.78);
+  max-width: 760px;
+  color: var(--admin-muted);
   line-height: 1.6;
+  margin: 0;
 }
 
-.cards {
+.statGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: clamp(14px, 2vw, 20px);
-}
-
-.card {
-  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
-  padding: 16px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(224, 238, 230, 0.9));
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 20px 50px rgba(7, 20, 15, 0.16);
-  color: #0d2419;
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 26px 60px rgba(7, 20, 15, 0.2);
-  border-color: rgba(12, 84, 56, 0.35);
+.gridColumns {
+  display: grid;
+  gap: 14px;
 }
 
-.cardIcon {
-  width: 44px;
-  height: 44px;
+@media (min-width: 900px) {
+  .gridColumns {
+    grid-template-columns: 2fr 1.2fr;
+  }
+}
+
+.badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 12px 18px rgba(0, 0, 0, 0.08);
-}
-
-.cardTitle {
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--admin-highlight);
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
   font-weight: 700;
-  letter-spacing: -0.01em;
-  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
 }
 
-.cardDescription {
-  color: rgba(13, 36, 25, 0.7);
-  font-size: 0.98rem;
-  line-height: 1.5;
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--admin-surface-alt);
+  color: var(--admin-muted);
+  border: 1px solid var(--admin-border);
+}
+
+.quickLinks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.quickLink {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+  text-decoration: none;
+  color: var(--admin-text);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.quickLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--admin-accent);
+}
+
+.quickIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--admin-highlight);
+}
+
+.quickTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.quickSubtitle {
+  margin: 2px 0 0;
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.placeholderCopy {
+  color: var(--admin-muted);
+}
+
+.error {
+  color: #fecdd3;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 12px 14px;
+  border-radius: 12px;
 }

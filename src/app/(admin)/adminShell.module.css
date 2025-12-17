@@ -1,0 +1,235 @@
+.appShell {
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+}
+
+.sidebarWrapper {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--admin-sidebar-width);
+  transform: translateX(-105%);
+  transition: transform 0.28s ease;
+  z-index: 30;
+}
+
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+.sidebarBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 25;
+}
+
+.sidebar {
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  padding: 18px;
+  gap: 16px;
+  box-shadow: var(--admin-shadow-strong);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--admin-gradient);
+  box-shadow: inset 0 0 0 1px var(--admin-border);
+  font-weight: 800;
+}
+
+.brandCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brandName {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.brandSubtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--admin-muted);
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+  color: var(--admin-text);
+  cursor: pointer;
+}
+
+.main {
+  min-height: 100vh;
+  background: radial-gradient(circle at 10% 20%, var(--admin-highlight), transparent 30%),
+    radial-gradient(circle at 80% 10%, var(--admin-highlight), transparent 30%),
+    linear-gradient(140deg, var(--admin-gradient), var(--admin-bg));
+  padding: 18px;
+  margin-left: 0;
+}
+
+.contentFrame {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 20px;
+  box-shadow: var(--admin-shadow-strong);
+  padding: clamp(16px, 2vw, 22px);
+  min-height: calc(100vh - 36px);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.menuButton {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+  color: var(--admin-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pageTitle h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.pageTitle p {
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.branchSelector {
+  margin-left: auto;
+  min-width: 220px;
+}
+
+.selectControl {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-ghost);
+  padding: 10px 12px;
+  color: var(--admin-text);
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--admin-radius-md);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--admin-highlight);
+  font-weight: 800;
+}
+
+.userCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userName {
+  margin: 0;
+  font-weight: 700;
+}
+
+.userRole {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.sidebarFooter {
+  display: grid;
+  gap: 8px;
+}
+
+.inlineActions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (min-width: 1024px) {
+  .inner {
+    grid-template-columns: var(--admin-sidebar-width) 1fr;
+  }
+
+  .sidebarWrapper {
+    position: sticky;
+    top: 0;
+    transform: none;
+    height: 100vh;
+  }
+
+  .sidebarBackdrop,
+  .closeButton,
+  .menuButton {
+    display: none;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+}

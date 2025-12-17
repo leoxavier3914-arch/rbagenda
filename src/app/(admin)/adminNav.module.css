@@ -9,6 +9,14 @@
 
 .navCollapsed .navItem {
   justify-content: center;
+  padding: 12px 10px;
+  border-radius: 14px;
+}
+
+.navCollapsed .navItemActive {
+  background: #e8f2ff;
+  border-color: #b2cffd;
+  box-shadow: 0 10px 24px rgba(23, 43, 77, 0.12);
 }
 
 .navList {

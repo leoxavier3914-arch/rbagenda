@@ -1,35 +1,40 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
-import AdminNav from "./AdminNav";
+import { supabase } from "@/lib/db";
+
+import AdminNav, { NAV_ITEMS } from "./AdminNav";
 import { AdminBranchProvider, useAdminBranch } from "./AdminBranchContext";
 import { useAdminGuard } from "../useAdminGuard";
-import styles from "../admin.module.css";
+import { useAdminTheme } from "./AdminThemeProvider";
+import styles from "../adminShell.module.css";
+
+type ProfileInfo = {
+  name: string;
+  email: string;
+};
 
 function BranchSelector() {
   const { branches, activeBranchId, setActiveBranchId, branchScope, setBranchScope, loading, isMaster } =
     useAdminBranch();
 
-  if (loading || branches.length === 0) {
-    return null;
-  }
-
-  const selectValue =
-    branchScope === "branch" ? activeBranchId ?? "" : branchScope === "no_branch" ? "__NO_BRANCH__" : "";
+  const selectValue = useMemo(() => {
+    if (branchScope === "branch") return activeBranchId ?? "";
+    if (branchScope === "no_branch") return "__NO_BRANCH__";
+    return "";
+  }, [activeBranchId, branchScope]);
 
   return (
-    <div className={styles.branchSelector}>
-      <label className={styles.branchSelectorLabel} htmlFor="admin-active-branch">
-        Filial ativa
-      </label>
+    <label className={styles.branchSelector}>
+      <span className="sr-only">Filtrar por filial</span>
       <select
-        id="admin-active-branch"
-        className={styles.branchSelectorSelect}
+        className={styles.selectControl}
         value={selectValue}
+        disabled={loading || branches.length === 0}
         onChange={(event) => {
-          const { value } = event.target;
-
+          const value = event.target.value;
           if (value === "__NO_BRANCH__") {
             setActiveBranchId(null);
             setBranchScope("no_branch");
@@ -46,7 +51,7 @@ function BranchSelector() {
           setBranchScope("branch");
         }}
       >
-        <option value="">Selecione uma filial</option>
+        <option value="">{loading ? "Carregando filiais…" : "Selecione uma filial"}</option>
         {isMaster ? <option value="__NO_BRANCH__">Tickets sem filial</option> : null}
         {branches.map((branch) => (
           <option key={branch.id} value={branch.id}>
@@ -54,67 +59,118 @@ function BranchSelector() {
           </option>
         ))}
       </select>
+    </label>
+  );
+}
+
+function UserCard({ profile, role }: { profile: ProfileInfo | null; role: string | null }) {
+  const initials = useMemo(() => profile?.name?.slice(0, 2).toUpperCase() || "AD", [profile?.name]);
+  const roleCopy = role ? role.replace("admin", "admin ").trim() : "admin";
+
+  return (
+    <div className={styles.userCard}>
+      <span className={styles.userAvatar} aria-hidden>
+        {initials}
+      </span>
+      <div className={styles.userCopy}>
+        <p className={styles.userName}>{profile?.name || "Administrador"}</p>
+        <p className={styles.userRole}>{profile?.email || "Conta interna"}</p>
+        <p className={styles.userRole}>Perfil: {roleCopy}</p>
+      </div>
     </div>
   );
 }
 
 export default function AdminShell({ children }: { children: ReactNode }) {
-  const { status } = useAdminGuard();
+  const { status, role } = useAdminGuard();
+  const { theme, setTheme, presets } = useAdminTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    let active = true;
+    const loadProfile = async () => {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      if (!userId) return;
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!active) return;
+      setProfile({ name: profileData?.full_name ?? data.user.email ?? "", email: profileData?.email ?? data.user.email ?? "" });
+    };
+
+    void loadProfile();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const currentNav = useMemo(() => NAV_ITEMS.find((item) => pathname.startsWith(item.href)), [pathname]);
+
+  const toggleTheme = () => {
+    const currentIndex = presets.findIndex((preset) => preset.id === theme);
+    const next = presets[(currentIndex + 1) % presets.length];
+    setTheme(next.id);
+  };
 
   const isChecking = status === "checking";
 
   return (
     <AdminBranchProvider>
-      <div className={styles.background}>
-        <div className={styles.shell}>
-          <header className={styles.header}>
-            <div className={styles.headerBar}>
-              <button
-                type="button"
-                className={styles.menuButton}
-                onClick={() => setIsMenuOpen(true)}
-                aria-expanded={isMenuOpen}
-                aria-controls="admin-nav"
-              >
-                <span className="sr-only">Abrir menu do painel</span>
-                ☰
-              </button>
-              <div className={styles.headerCopy}>
-                <p className={styles.headerSubtitle}>Acesso reservado</p>
-                <h1 className={styles.headerTitle}>Painel administrativo</h1>
-                <p className={styles.headerSubtitle}>
-                  Controle total das operações, mantendo o mesmo visual leve e responsivo das páginas do cliente.
-                </p>
+      <div className={styles.appShell}>
+        <div className={styles.inner}>
+          {isMenuOpen ? <div className={styles.sidebarBackdrop} onClick={() => setIsMenuOpen(false)} aria-hidden /> : null}
+          <aside className={`${styles.sidebarWrapper} ${isMenuOpen ? styles.sidebarOpen : ""}`}>
+            <div className={styles.sidebar}>
+              <div className={styles.brand}>
+                <div className={styles.brandMark}>RB</div>
+                <div className={styles.brandCopy}>
+                  <p className={styles.brandName}>Admin Agenda</p>
+                  <p className={styles.brandSubtitle}>Operações e catálogo</p>
+                </div>
+                <button type="button" className={styles.closeButton} onClick={() => setIsMenuOpen(false)} aria-label="Fechar navegação">
+                  ✕
+                </button>
               </div>
-              <BranchSelector />
-            </div>
-          </header>
-
-          <div className={styles.shellBody}>
-            {isMenuOpen && (
-              <button
-                type="button"
-                className={styles.navBackdrop}
-                onClick={() => setIsMenuOpen(false)}
-                aria-label="Fechar menu"
-              />
-            )}
-            <div className={`${styles.navWrapper} ${isMenuOpen ? styles.navOpen : ""}`}>
-              <div className={styles.panel} id="admin-nav">
-                <AdminNav disabled={isChecking} />
+              <AdminNav disabled={isChecking} onNavigate={() => setIsMenuOpen(false)} />
+              <div className={styles.sidebarFooter}>
+                <UserCard profile={profile} role={role} />
+                <div className={styles.inlineActions}>
+                  <button type="button" className={styles.closeButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
+                    🎨
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className={styles.contentPanel}>
-              <div className={styles.contentPanelInner}>{children}</div>
+          </aside>
+          <main className={styles.main}>
+            <div className={styles.contentFrame}>
+              <div className={styles.topbar}>
+                <button
+                  type="button"
+                  className={styles.menuButton}
+                  onClick={() => setIsMenuOpen(true)}
+                  aria-expanded={isMenuOpen}
+                  aria-controls="admin-nav"
+                >
+                  ☰
+                </button>
+                <div className={styles.pageTitle}>
+                  <h1>{currentNav?.label ?? "Painel administrativo"}</h1>
+                  <p>{currentNav?.description ?? "Gerencie operações do estúdio."}</p>
+                </div>
+                <BranchSelector />
+              </div>
+              {children}
             </div>
-          </div>
-
-          <p className={styles.footerNote}>
-            Apenas administradores autenticados podem acessar estas páginas. O layout reutiliza o mesmo fundo lava-lamp do
-            cliente.
-          </p>
+          </main>
         </div>
       </div>
     </AdminBranchProvider>

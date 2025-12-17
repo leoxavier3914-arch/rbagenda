@@ -25,7 +25,7 @@ export default function AdminNav({ disabled, onNavigate }: AdminNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className={styles.nav} aria-label="Navegação do painel administrativo">
+    <nav id="admin-nav" className={styles.nav} aria-label="Navegação do painel administrativo">
       <ul className={styles.navList}>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;

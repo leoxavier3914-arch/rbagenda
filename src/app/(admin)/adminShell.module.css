@@ -2,14 +2,8 @@
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.inner {
-  display: grid;
-  grid-template-columns: 1fr;
-  min-height: 100vh;
+  display: flex;
+  gap: 0;
 }
 
 .sidebarWrapper {
@@ -19,6 +13,14 @@
   transform: translateX(-105%);
   transition: transform 0.28s ease;
   z-index: 30;
+}
+
+.sidebarWrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  pointer-events: none;
 }
 
 .sidebarOpen {
@@ -43,6 +45,7 @@
   padding: 18px;
   gap: 16px;
   box-shadow: var(--admin-shadow-strong);
+  min-width: 0;
 }
 
 .brand {
@@ -95,30 +98,31 @@
   cursor: pointer;
 }
 
-.main {
+.contentArea {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: radial-gradient(circle at 10% 20%, var(--admin-highlight), transparent 30%),
-    radial-gradient(circle at 80% 10%, var(--admin-highlight), transparent 30%),
-    linear-gradient(140deg, var(--admin-gradient), var(--admin-bg));
-  padding: 18px;
   margin-left: 0;
-}
-
-.contentFrame {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: 20px;
-  box-shadow: var(--admin-shadow-strong);
-  padding: clamp(16px, 2vw, 22px);
-  min-height: calc(100vh - 36px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.06)),
+    var(--admin-bg);
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 55%), var(--admin-surface);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
 .menuButton {
@@ -131,6 +135,50 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--admin-shadow-soft);
+}
+
+.breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+}
+
+.breadcrumbRoot {
+  color: var(--admin-muted);
+}
+
+.breadcrumbDivider {
+  color: var(--admin-muted);
+}
+
+.breadcrumbCurrent {
+  color: var(--admin-text);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  min-width: 0;
+  overflow: auto;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .pageTitle {
@@ -148,6 +196,36 @@
 .pageTitle p {
   margin: 0;
   color: var(--admin-muted);
+}
+
+.pageActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconButton {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--admin-shadow-soft);
+}
+
+.pageContent {
+  flex: 1;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  box-shadow: var(--admin-shadow-strong);
+  padding: clamp(18px, 2vw, 28px);
+  min-height: calc(100vh - 140px);
+  min-width: 0;
 }
 
 .branchSelector {
@@ -212,15 +290,13 @@
 }
 
 @media (min-width: 1024px) {
-  .inner {
-    grid-template-columns: var(--admin-sidebar-width) 1fr;
-  }
-
   .sidebarWrapper {
     position: sticky;
-    top: 0;
+    inset: 0 auto 0 0;
     transform: none;
     height: 100vh;
+    width: var(--admin-sidebar-width);
+    flex-shrink: 0;
   }
 
   .sidebarBackdrop,
@@ -228,8 +304,19 @@
   .menuButton {
     display: none;
   }
+}
 
-  .main {
-    margin-left: 0;
+@media (max-width: 640px) {
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .branchSelector {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .pageHeader {
+    align-items: flex-start;
   }
 }

@@ -170,55 +170,55 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       <div className={styles.adminRoot}>
         {isMenuOpen ? <div className={styles.drawerBackdrop} onClick={() => setIsMenuOpen(false)} aria-hidden /> : null}
 
-        <header className={styles.adminHeader}>
-          <div className={styles.headerLeft}>
-            <button
-              type="button"
-              className={styles.menuButton}
-              onClick={() => setIsMenuOpen(true)}
-              aria-expanded={isMenuOpen}
-              aria-controls="admin-nav"
-              aria-label="Abrir menu lateral"
-            >
-              ☰
-            </button>
-            <div className={styles.brandMark} aria-hidden>
-              RB
+        <div className={styles.adminShell}>
+          <header className={styles.adminHeader}>
+            <div className={styles.headerLeft}>
+              <button
+                type="button"
+                className={styles.menuButton}
+                onClick={() => setIsMenuOpen(true)}
+                aria-expanded={isMenuOpen}
+                aria-controls="admin-nav"
+                aria-label="Abrir menu lateral"
+              >
+                ☰
+              </button>
+              <div className={styles.brandMark} aria-hidden>
+                RB
+              </div>
+              <div className={styles.brandCopy}>
+                <p className={styles.brandName}>RB Admin</p>
+                <p className={styles.brandSubtitle}>Painel operacional</p>
+              </div>
+              <div className={styles.headerBreadcrumbs} aria-label="Breadcrumb">
+                <span className={styles.breadcrumbRoot}>Admin</span>
+                <span className={styles.breadcrumbDivider} aria-hidden>
+                  /
+                </span>
+                <span className={styles.breadcrumbCurrent}>{currentNav?.label ?? "Painel"}</span>
+              </div>
             </div>
-            <div className={styles.brandCopy}>
-              <p className={styles.brandName}>RB Admin</p>
-              <p className={styles.brandSubtitle}>Painel operacional</p>
-            </div>
-            <div className={styles.headerBreadcrumbs} aria-label="Breadcrumb">
-              <span className={styles.breadcrumbRoot}>Admin</span>
-              <span className={styles.breadcrumbDivider} aria-hidden>
-                /
-              </span>
-              <span className={styles.breadcrumbCurrent}>{currentNav?.label ?? "Painel"}</span>
-            </div>
-          </div>
 
-          <div className={styles.headerRight}>
-            <BranchSelector />
-            <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
-              🎨
-            </button>
-            <button type="button" className={styles.userMenu} aria-label={`Conta ${profile?.name ?? "Administrador"}`}>
-              <span className={styles.userAvatarSmall} aria-hidden>
-                {initials}
-              </span>
-              <span className={styles.userMeta}>
-                <span className={styles.userName}>{profile?.name || "Administrador"}</span>
-                <span className={styles.userRole}>{profile?.email || "Conta interna"}</span>
-              </span>
-              <span className={styles.userCaret} aria-hidden>
-                ▾
-              </span>
-            </button>
-          </div>
-        </header>
+            <div className={styles.headerRight}>
+              <BranchSelector />
+              <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
+                🎨
+              </button>
+              <button type="button" className={styles.userMenu} aria-label={`Conta ${profile?.name ?? "Administrador"}`}>
+                <span className={styles.userAvatarSmall} aria-hidden>
+                  {initials}
+                </span>
+                <span className={styles.userMeta}>
+                  <span className={styles.userName}>{profile?.name || "Administrador"}</span>
+                  <span className={styles.userRole}>{profile?.email || "Conta interna"}</span>
+                </span>
+                <span className={styles.userCaret} aria-hidden>
+                  ▾
+                </span>
+              </button>
+            </div>
+          </header>
 
-        <div className={styles.adminBody}>
           <aside className={`${styles.adminSidebar} ${isMenuOpen ? styles.sidebarOpen : ""}`} aria-label="Menu do painel administrativo">
             <div className={styles.sidebarHeader}>
               <div className={styles.headerLeft}>

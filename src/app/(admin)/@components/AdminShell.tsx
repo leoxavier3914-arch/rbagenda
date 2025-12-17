@@ -129,51 +129,63 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   return (
     <AdminBranchProvider>
       <div className={styles.appShell}>
-        <div className={styles.inner}>
-          {isMenuOpen ? <div className={styles.sidebarBackdrop} onClick={() => setIsMenuOpen(false)} aria-hidden /> : null}
-          <aside className={`${styles.sidebarWrapper} ${isMenuOpen ? styles.sidebarOpen : ""}`}>
-            <div className={styles.sidebar}>
-              <div className={styles.brand}>
-                <div className={styles.brandMark}>RB</div>
-                <div className={styles.brandCopy}>
-                  <p className={styles.brandName}>Admin Agenda</p>
-                  <p className={styles.brandSubtitle}>Operações e catálogo</p>
-                </div>
-                <button type="button" className={styles.closeButton} onClick={() => setIsMenuOpen(false)} aria-label="Fechar navegação">
-                  ✕
+        {isMenuOpen ? <div className={styles.sidebarBackdrop} onClick={() => setIsMenuOpen(false)} aria-hidden /> : null}
+        <aside className={`${styles.sidebarWrapper} ${isMenuOpen ? styles.sidebarOpen : ""}`}>
+          <div className={styles.sidebar}>
+            <div className={styles.brand}>
+              <div className={styles.brandMark}>RB</div>
+              <div className={styles.brandCopy}>
+                <p className={styles.brandName}>Admin Agenda</p>
+                <p className={styles.brandSubtitle}>Operações e catálogo</p>
+              </div>
+              <button type="button" className={styles.closeButton} onClick={() => setIsMenuOpen(false)} aria-label="Fechar navegação">
+                ✕
+              </button>
+            </div>
+            <AdminNav disabled={isChecking} onNavigate={() => setIsMenuOpen(false)} />
+            <div className={styles.sidebarFooter}>
+              <UserCard profile={profile} role={role} />
+              <div className={styles.inlineActions}>
+                <button type="button" className={styles.closeButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
+                  🎨
                 </button>
               </div>
-              <AdminNav disabled={isChecking} onNavigate={() => setIsMenuOpen(false)} />
-              <div className={styles.sidebarFooter}>
-                <UserCard profile={profile} role={role} />
-                <div className={styles.inlineActions}>
-                  <button type="button" className={styles.closeButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
-                    🎨
-                  </button>
-                </div>
-              </div>
             </div>
-          </aside>
+          </div>
+        </aside>
+        <div className={styles.contentArea}>
+          <header className={styles.topbar}>
+            <button
+              type="button"
+              className={styles.menuButton}
+              onClick={() => setIsMenuOpen(true)}
+              aria-expanded={isMenuOpen}
+              aria-controls="admin-nav"
+            >
+              ☰
+            </button>
+            <div className={styles.breadcrumbs} aria-label="Breadcrumb">
+              <span className={styles.breadcrumbRoot}>Admin</span>
+              <span className={styles.breadcrumbDivider} aria-hidden>
+                /
+              </span>
+              <span className={styles.breadcrumbCurrent}>{currentNav?.label ?? "Painel"}</span>
+            </div>
+            <BranchSelector />
+          </header>
           <main className={styles.main}>
-            <div className={styles.contentFrame}>
-              <div className={styles.topbar}>
-                <button
-                  type="button"
-                  className={styles.menuButton}
-                  onClick={() => setIsMenuOpen(true)}
-                  aria-expanded={isMenuOpen}
-                  aria-controls="admin-nav"
-                >
-                  ☰
-                </button>
-                <div className={styles.pageTitle}>
-                  <h1>{currentNav?.label ?? "Painel administrativo"}</h1>
-                  <p>{currentNav?.description ?? "Gerencie operações do estúdio."}</p>
-                </div>
-                <BranchSelector />
+            <div className={styles.pageHeader}>
+              <div className={styles.pageTitle}>
+                <h1>{currentNav?.label ?? "Painel administrativo"}</h1>
+                <p>{currentNav?.description ?? "Gerencie operações do estúdio."}</p>
               </div>
-              {children}
+              <div className={styles.pageActions}>
+                <button type="button" className={styles.iconButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
+                  🎨
+                </button>
+              </div>
             </div>
+            <div className={styles.pageContent}>{children}</div>
           </main>
         </div>
       </div>

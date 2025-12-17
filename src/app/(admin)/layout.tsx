@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 
-import { LavaLampProvider } from "@/components/LavaLampProvider";
-
 import AdminShell from "./@components/AdminShell";
-import "./admin.module.css";
+import { AdminThemeProvider } from "./@components/AdminThemeProvider";
+import "./admin-theme.css";
 
 export default function AdminLayout({
   children,
@@ -11,8 +10,8 @@ export default function AdminLayout({
   children: ReactNode;
 }>) {
   return (
-    <LavaLampProvider>
+    <AdminThemeProvider>
       <AdminShell>{children}</AdminShell>
-    </LavaLampProvider>
+    </AdminThemeProvider>
   );
 }

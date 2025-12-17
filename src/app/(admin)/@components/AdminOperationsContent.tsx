@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactEl
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/db"
 
+import { AdminCard } from "./ui/AdminCard"
+import { AdminFormSection } from "./ui/AdminFormSection"
+import { AdminStatCard } from "./ui/AdminStatCard"
+import { AdminTable } from "./ui/AdminTable"
+import { AdminToolbar } from "./ui/AdminToolbar"
+import { useAdminTheme } from "./AdminThemeProvider"
 import { useAdminBranch } from "./AdminBranchContext"
 import styles from "../admin/adminPanel.module.css"
 
@@ -169,6 +175,7 @@ type AdminOperationsContentProps = {
 export default function AdminOperationsContent({ section, showSectionNav = false }: AdminOperationsContentProps) {
   const router = useRouter()
   const { activeBranchId, branchScope, loading: branchLoading } = useAdminBranch()
+  const { theme, presets, setTheme } = useAdminTheme()
   const [status, setStatus] = useState<LoadingState>("idle")
   const [error, setError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<ActionFeedback | null>(null)
@@ -186,6 +193,8 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   const [currentProfile, setCurrentProfile] = useState<{ id: string; role: ProfileRole } | null>(null)
   const [ownerSelections, setOwnerSelections] = useState<Record<string, string>>({})
   const [branchAdminSelections, setBranchAdminSelections] = useState<Record<string, string>>({})
+  const [clientQuery, setClientQuery] = useState("")
+  const [appointmentQuery, setAppointmentQuery] = useState("")
 
   const [newBranch, setNewBranch] = useState<BranchFormState>({
     name: '',
@@ -535,12 +544,24 @@ export default function AdminOperationsContent({ section, showSectionNav = false
 
   const isLoading = status !== 'ready' && !error && !branchGuardMessage
 
+  const normalizedAppointmentQuery = appointmentQuery.trim().toLowerCase()
+
+  const filteredAppointments = useMemo(() => {
+    if (!normalizedAppointmentQuery) return appointments
+    return appointments.filter((appt) => {
+      const customer = (appt.profiles?.full_name || "") + (appt.profiles?.email || "")
+      const service = appt.services?.name || ""
+      const target = `${customer} ${service}`.toLowerCase()
+      return target.includes(normalizedAppointmentQuery)
+    })
+  }, [appointments, normalizedAppointmentQuery])
+
   const groupedAppointments = useMemo(() => {
     return appointmentGroups.map((group) => ({
       ...group,
-      items: appointments.filter((appt) => group.statuses.includes(appt.status)),
+      items: filteredAppointments.filter((appt) => group.statuses.includes(appt.status)),
     }))
-  }, [appointments])
+  }, [filteredAppointments])
 
   const upcomingAppointmentsCount = useMemo(
     () => appointments.filter((appt) => ['confirmed', 'reserved'].includes(appt.status)).length,
@@ -567,7 +588,18 @@ export default function AdminOperationsContent({ section, showSectionNav = false
     [upcomingAppointmentsCount, pendingAppointmentsCount, clients.length, activeServicesCount],
   )
 
-  const glassCardClass = styles.heroCard
+  const normalizedClientQuery = clientQuery.trim().toLowerCase()
+  const filteredClients = useMemo(
+    () =>
+      normalizedClientQuery
+        ? clients.filter((client) => {
+            const target = `${client.full_name ?? ''} ${client.email ?? ''} ${client.whatsapp ?? ''}`.toLowerCase()
+            return target.includes(normalizedClientQuery)
+          })
+        : clients,
+    [clients, normalizedClientQuery],
+  )
+
   const panelCardClass = styles.panelCard
   const mutedPanelClass = styles.mutedPanel
   const primaryButtonClass = styles.primaryButton
@@ -1039,14 +1071,11 @@ export default function AdminOperationsContent({ section, showSectionNav = false
 
   const renderBranchSection = () => (
     <section className="space-y-10">
-      <div className={`${panelCardClass} space-y-6`}>
-        <div className="space-y-3">
-          <span className={badgeClass}>Cadastro de filiais</span>
-          <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Cadastrar nova filial</h2>
-          <p className="text-sm text-emerald-900/70">
-            Estruture a expansão do estúdio registrando novas unidades com fuso horário personalizado.
-          </p>
-        </div>
+      <AdminCard
+        title="Cadastrar nova filial"
+        description="Estruture a expansão do estúdio registrando novas unidades com fuso horário personalizado."
+      >
+        <span className={badgeClass}>Cadastro de filiais</span>
         <form
           className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,2fr),minmax(0,2fr),minmax(0,1.2fr)]"
           onSubmit={handleCreateBranch}
@@ -1080,7 +1109,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             </button>
           </div>
         </form>
-      </div>
+      </AdminCard>
 
       <div className="space-y-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -1929,6 +1958,13 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   )
   const renderAppointmentsSection = () => (
     <section className="space-y-10">
+      <AdminToolbar
+        searchPlaceholder="Buscar por cliente ou serviço"
+        searchValue={appointmentQuery}
+        onSearchChange={setAppointmentQuery}
+      >
+        <span className={styles.metaPill}>Filtrando {filteredAppointments.length} registros</span>
+      </AdminToolbar>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {groupedAppointments.map((group) => (
           <div key={group.key} className={`${statCardClass} space-y-3`}>
@@ -2009,43 +2045,95 @@ export default function AdminOperationsContent({ section, showSectionNav = false
           <p className="text-sm text-emerald-900/70">Acompanhe a evolução da sua base e mantenha o relacionamento ativo.</p>
         </div>
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-          {clients.length} {clients.length === 1 ? 'cliente' : 'clientes'}
+          {filteredClients.length} {filteredClients.length === 1 ? 'cliente' : 'clientes'}
         </span>
       </div>
-      {clients.length === 0 ? (
+      <AdminToolbar
+        searchPlaceholder="Buscar por nome, e-mail ou WhatsApp"
+        searchValue={clientQuery}
+        onSearchChange={setClientQuery}
+      />
+      {filteredClients.length === 0 ? (
         <div className={`${mutedPanelClass} text-sm`}>
           Nenhum cliente cadastrado ainda.
         </div>
       ) : (
-        <div className={`${panelCardClass} ${styles.tableCard}`}>
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeadCell}>Nome</th>
-                  <th className={styles.tableHeadCell}>E-mail</th>
-                  <th className={styles.tableHeadCell}>WhatsApp</th>
-                  <th className={styles.tableHeadCell}>Desde</th>
-                  <th className={styles.tableHeadCell}>ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
-                  <tr key={client.id} className={styles.tableBodyRow}>
-                    <td className={`${styles.tableCell} font-semibold`}>{client.full_name ?? '—'}</td>
-                    <td className={styles.tableCell}>{client.email ?? '—'}</td>
-                    <td className={styles.tableCell}>{client.whatsapp ?? '—'}</td>
-                    <td className={styles.tableCell}>
-                      {client.created_at ? new Date(client.created_at).toLocaleString() : '—'}
-                    </td>
-                    <td className={`${styles.tableCell} ${styles.tableId}`}>{client.id}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <AdminCard>
+          <AdminTable
+            columns={[
+              { key: 'name', label: 'Nome' },
+              { key: 'email', label: 'E-mail' },
+              { key: 'whatsapp', label: 'WhatsApp' },
+              { key: 'since', label: 'Desde' },
+              { key: 'id', label: 'ID' },
+            ]}
+            rows={filteredClients.map((client) => ({
+              key: client.id,
+              cells: [
+                <strong key="name">{client.full_name ?? '—'}</strong>,
+                client.email ?? '—',
+                client.whatsapp ?? '—',
+                client.created_at ? new Date(client.created_at).toLocaleString() : '—',
+                <span key="id" className={styles.tableId}>{client.id}</span>,
+              ],
+            }))}
+            emptyMessage="Nenhum cliente corresponde à busca."
+          />
+        </AdminCard>
       )}
+    </section>
+  )
+  const renderConfigSection = () => (
+    <section className="space-y-8">
+      <AdminCard
+        title="Temas do painel"
+        description="Escolha um preset visual para o admin. O tema fica salvo no dispositivo (localStorage)."
+      >
+        <AdminFormSection title="Presets" badge="Temas">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {presets.map((preset) => {
+              const isActive = preset.id === theme
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={`${styles.navButton} ${isActive ? styles.navButtonActive : styles.navButtonInactive}`}
+                  onClick={() => setTheme(preset.id)}
+                  aria-pressed={isActive}
+                >
+                  <div className={styles.navButtonContent}>
+                    <span className={styles.navIcon} aria-hidden>
+                      {isActive ? '🌟' : '🎨'}
+                    </span>
+                    <span className={styles.navText}>
+                      <span className={styles.navTitle}>{preset.name}</span>
+                      <span className={styles.navDescription}>{preset.description}</span>
+                    </span>
+                  </div>
+                  <span className={styles.navChevron} aria-hidden>
+                    {isActive ? 'Ativo' : 'Ativar'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </AdminFormSection>
+      </AdminCard>
+
+      <AdminCard
+        title="Sessão e sincronização"
+        description="Refaça o carregamento dos dados ou encerre a sessão de forma segura."
+      >
+        <div className={styles.quickActionsButtons}>
+          <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
+            {status === 'loading' ? 'Atualizando…' : 'Atualizar dados'}
+          </button>
+          <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
+            {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
+          </button>
+        </div>
+        {signOutError && <p className={styles.errorText}>{signOutError}</p>}
+      </AdminCard>
     </section>
   )
   const renderPlaceholderSection = (message: string) => (
@@ -2079,7 +2167,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         sectionContent = renderClientsSection()
         break
       case 'configuracoes':
-        sectionContent = renderPlaceholderSection('Em breve! Personalize configurações avançadas do painel.')
+        sectionContent = renderConfigSection()
         break
       case 'agendamentos':
       default:
@@ -2135,26 +2223,22 @@ export default function AdminOperationsContent({ section, showSectionNav = false
 
         {isDashboardSection ? (
           <header className={styles.headerGrid}>
-            <div className={glassCardClass}>
-              <div className={styles.heroIntro}>
-                <span className={badgeClass}>Painel administrativo</span>
-                <h2 className={styles.heroTitle}>Controle completo da agenda e operações</h2>
-                <p className={styles.heroSubtitle}>{headerDescription}</p>
-              </div>
-              <dl className={styles.heroMetrics}>
+            <AdminCard
+              title="Controle completo da agenda e operações"
+              description={headerDescription}
+              variant="ghost"
+            >
+              <span className={badgeClass}>Painel administrativo</span>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {highlightStats.map((stat) => (
-                  <div key={stat.label} className={styles.heroMetric}>
-                    <dt className={styles.heroMetricLabel}>{stat.label}</dt>
-                    <dd className={styles.heroMetricValue}>{stat.value}</dd>
-                  </div>
+                  <AdminStatCard key={stat.label} label={stat.label} value={stat.value} />
                 ))}
-              </dl>
-            </div>
-            <div className={panelCardClass}>
-              <div className={styles.quickActionsHeader}>
-                <h3>Ações rápidas</h3>
-                <p>Gerencie sua sessão e atualize os dados do painel quando precisar.</p>
               </div>
+            </AdminCard>
+            <AdminCard
+              title="Ações rápidas"
+              description="Gerencie sua sessão e atualize os dados do painel quando precisar."
+            >
               <div className={styles.quickActionsButtons}>
                 <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
                   {signingOut ? 'Encerrando sessão…' : 'Sair do painel'}
@@ -2164,7 +2248,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                 </button>
               </div>
               {signOutError && <p className={styles.errorText}>{signOutError}</p>}
-            </div>
+            </AdminCard>
           </header>
         ) : (
           <div className={`${panelCardClass} ${styles.sectionHeaderCard}`}>

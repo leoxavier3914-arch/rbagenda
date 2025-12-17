@@ -14,6 +14,9 @@ type Branch = {
   name: string
   timezone: string
   created_at: string
+  owner_id: string | null
+  owner: AdminProfile | null
+  admins: BranchAdminLink[]
 }
 
 type ServiceType = {
@@ -61,6 +64,20 @@ type ClientProfile = {
   created_at: string | null
 }
 
+type ProfileRole = "client" | "admin" | "adminsuper" | "adminmaster"
+
+type AdminProfile = {
+  id: string
+  full_name: string | null
+  email: string | null
+  role: ProfileRole
+}
+
+type BranchAdminLink = {
+  user_id: string
+  profile: AdminProfile | null
+}
+
 export type AdminSection = "filiais" | "servicos" | "tipos" | "agendamentos" | "clientes" | "configuracoes"
 
 type ActionFeedback = {
@@ -92,6 +109,13 @@ const appointmentStatusLabels: Record<AppointmentStatus, string> = {
   confirmed: 'Confirmado',
   canceled: 'Cancelado',
   completed: 'Finalizado',
+}
+
+const roleLabels: Record<ProfileRole, string> = {
+  client: 'Cliente',
+  admin: 'Admin',
+  adminsuper: 'Admin super',
+  adminmaster: 'Admin master',
 }
 
 const normalizeAppointmentStatus = (status: string | null): AppointmentStatus => {
@@ -158,6 +182,10 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   const [services, setServices] = useState<Service[]>([])
   const [appointments, setAppointments] = useState<AdminAppointment[]>([])
   const [clients, setClients] = useState<ClientProfile[]>([])
+  const [adminProfiles, setAdminProfiles] = useState<AdminProfile[]>([])
+  const [currentProfile, setCurrentProfile] = useState<{ id: string; role: ProfileRole } | null>(null)
+  const [ownerSelections, setOwnerSelections] = useState<Record<string, string>>({})
+  const [branchAdminSelections, setBranchAdminSelections] = useState<Record<string, string>>({})
 
   const [newBranch, setNewBranch] = useState<BranchFormState>({
     name: '',
@@ -223,13 +251,17 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         throw new Error('Não foi possível verificar suas permissões. Tente novamente.')
       }
 
-      if (!profile?.role || !['admin', 'adminsuper', 'adminmaster'].includes(profile.role)) {
+      const userRole = (profile?.role ?? null) as ProfileRole | null
+
+      if (!userRole || !['admin', 'adminsuper', 'adminmaster'].includes(userRole)) {
         setStatus('idle')
         router.replace('/meu-perfil')
         return
       }
 
-      const requiresBranch = profile.role === 'admin' || profile.role === 'adminsuper'
+      setCurrentProfile({ id: session.user.id, role: userRole })
+
+      const requiresBranch = userRole === 'admin' || userRole === 'adminsuper'
       const hasBranchSelected = branchScope === 'branch' && Boolean(activeBranchId)
 
       if (branchScope === 'no_branch') {
@@ -238,6 +270,9 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         setServices([])
         setAppointments([])
         setClients([])
+        setAdminProfiles([])
+        setOwnerSelections({})
+        setBranchAdminSelections({})
         setBranchGuardMessage('Operações exigem uma filial. Selecione uma filial para continuar.')
         setStatus('ready')
         return
@@ -249,6 +284,9 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         setServices([])
         setAppointments([])
         setClients([])
+        setAdminProfiles([])
+        setOwnerSelections({})
+        setBranchAdminSelections({})
         setBranchGuardMessage('Selecione uma filial para visualizar e editar os dados.')
         setStatus('ready')
         return
@@ -256,11 +294,14 @@ export default function AdminOperationsContent({ section, showSectionNav = false
 
       const branchFilterId = branchScope === 'branch' ? activeBranchId : null
 
-      const branchesQuery = supabase.from('branches').select('id, name, timezone, created_at').order('created_at', { ascending: false })
+      const branchesQuery = supabase
+        .from('branches')
+        .select('id, name, timezone, created_at, owner_id')
+        .order('created_at', { ascending: false })
       if (branchFilterId) {
         branchesQuery.eq('id', branchFilterId)
       }
-      if (profile.role === 'adminsuper') {
+      if (userRole === 'adminsuper') {
         branchesQuery.eq('owner_id', session.user.id)
       }
 
@@ -295,20 +336,39 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         appointmentsQuery.eq('branch_id', branchFilterId)
       }
 
-      const [branchesResponse, serviceTypesResponse, servicesResponse, appointmentsResponse, clientsResponse] = await Promise.all([
+      const clientsQuery = supabase
+        .from('profiles')
+        .select('id, full_name, email, whatsapp, created_at, role')
+        .eq('role', 'client')
+        .order('created_at', { ascending: false })
+
+      const adminProfilesQuery = supabase
+        .from('profiles')
+        .select('id, full_name, email, role')
+        .in('role', ['admin', 'adminsuper', 'adminmaster'])
+        .order('full_name', { ascending: true })
+
+      const [branchesResponse, serviceTypesResponse, servicesResponse, appointmentsResponse, clientsResponse, adminProfilesResponse] = await Promise.all([
         branchesQuery,
         serviceTypesQuery,
         servicesQuery,
         appointmentsQuery,
-        supabase
-          .from('profiles')
-          .select('id, full_name, email, whatsapp, created_at, role')
-          .eq('role', 'client')
-          .order('created_at', { ascending: false }),
+        clientsQuery,
+        adminProfilesQuery,
       ])
+
+      const branchIds = (branchesResponse.data ?? []).map((branch) => branch.id)
+      const branchAdminsResponse =
+        branchIds.length === 0
+          ? { data: [], error: null }
+          : await supabase.from('branch_admins').select('branch_id, user_id').in('branch_id', branchIds)
 
       if (branchesResponse.error) {
         throw new Error('Não foi possível carregar as filiais. Tente novamente.')
+      }
+
+      if (branchAdminsResponse.error) {
+        throw new Error('Não foi possível carregar os vínculos de administradores das filiais.')
       }
 
       if (serviceTypesResponse.error) {
@@ -326,6 +386,14 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       if (clientsResponse.error) {
         throw new Error('Não foi possível carregar os clientes. Tente novamente.')
       }
+
+      if (adminProfilesResponse.error) {
+        throw new Error('Não foi possível carregar a lista de administradores.')
+      }
+
+      const adminProfilesData = (adminProfilesResponse.data ?? []) as AdminProfile[]
+      const adminProfileMap = new Map(adminProfilesData.map((admin) => [admin.id, admin]))
+      const branchAdminAssignments = (branchAdminsResponse.data ?? []) as { branch_id: string; user_id: string }[]
 
       const normalizedAppointments = (appointmentsResponse.data ?? []).map((appointment) => {
         const profile = Array.isArray(appointment.profiles)
@@ -378,9 +446,22 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         branch_id: type.branch_id ?? null,
       })) satisfies ServiceType[]
 
-      const normalizedBranches = (branchesResponse.data ?? []).map((branch) => ({
-        ...branch,
-      })) satisfies Branch[]
+      const normalizedBranches = (branchesResponse.data ?? []).map((branch) => {
+        const ownerProfile = branch.owner_id ? adminProfileMap.get(branch.owner_id) ?? null : null
+        const adminsForBranch = branchAdminAssignments
+          .filter((assignment) => assignment.branch_id === branch.id)
+          .map((assignment) => ({
+            user_id: assignment.user_id,
+            profile: adminProfileMap.get(assignment.user_id) ?? null,
+          }))
+
+        return {
+          ...branch,
+          owner_id: branch.owner_id ?? null,
+          owner: ownerProfile,
+          admins: adminsForBranch,
+        }
+      }) satisfies Branch[]
 
       const normalizedClients = (clientsResponse.data ?? []).map((client) => ({
         id: client.id,
@@ -391,6 +472,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       })) satisfies ClientProfile[]
 
       setBranches(normalizedBranches)
+      setAdminProfiles(adminProfilesData)
       setServiceTypes(normalizedServiceTypes)
       setServices(normalizedServices)
       setAppointments(normalizedAppointments)
@@ -398,6 +480,8 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       setBranchEdits({})
       setServiceTypeEdits({})
       setServiceEdits({})
+      setOwnerSelections({})
+      setBranchAdminSelections({})
       setStatus('ready')
     } catch (err) {
       const message =
@@ -428,6 +512,10 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         setServiceTypes([])
         setBranches([])
         setClients([])
+        setAdminProfiles([])
+        setCurrentProfile(null)
+        setOwnerSelections({})
+        setBranchAdminSelections({})
         setStatus('idle')
         setSigningOut(false)
         router.replace('/login')
@@ -529,6 +617,8 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       active: true,
     })
     setServiceEdits({})
+    setOwnerSelections({})
+    setBranchAdminSelections({})
   }, [])
 
   const refreshData = useCallback(
@@ -617,6 +707,103 @@ export default function AdminOperationsContent({ section, showSectionNav = false
     }
 
     await refreshData({ type: 'success', text: 'Filial removida com sucesso!' })
+  }
+
+  const handleChangeBranchOwner = async (branchId: string) => {
+    setActionMessage(null)
+
+    if (!currentProfile || currentProfile.role !== 'adminmaster') {
+      setActionMessage({ type: 'error', text: 'Somente um admin master pode alterar o responsável pela filial.' })
+      return
+    }
+
+    const nextOwnerId = ownerSelections[branchId]
+    const branch = branches.find((item) => item.id === branchId)
+
+    if (!nextOwnerId) {
+      setActionMessage({ type: 'error', text: 'Selecione um admin super para definir como responsável.' })
+      return
+    }
+
+    if (branch?.owner_id === nextOwnerId) {
+      setActionMessage({ type: 'error', text: 'Este admin super já é o responsável pela filial.' })
+      return
+    }
+
+    const { error: updateError } = await supabase
+      .from('branches')
+      .update({ owner_id: nextOwnerId })
+      .eq('id', branchId)
+
+    if (updateError) {
+      setActionMessage({ type: 'error', text: 'Não foi possível atualizar o responsável pela filial.' })
+      return
+    }
+
+    await refreshData({ type: 'success', text: 'Responsável da filial atualizado com sucesso.' })
+  }
+
+  const handleAddBranchAdmin = async (branchId: string) => {
+    setActionMessage(null)
+
+    const selectedAdminId = branchAdminSelections[branchId]
+    const branch = branches.find((item) => item.id === branchId)
+    const canManageAdmins =
+      currentProfile?.role === 'adminmaster' ||
+      (currentProfile?.role === 'adminsuper' && branch?.owner_id === currentProfile.id)
+
+    if (!canManageAdmins) {
+      setActionMessage({ type: 'error', text: 'Você não tem permissão para vincular admins nesta filial.' })
+      return
+    }
+
+    if (!selectedAdminId) {
+      setActionMessage({ type: 'error', text: 'Selecione um admin para vincular à filial.' })
+      return
+    }
+
+    if (branch?.admins.some((admin) => admin.user_id === selectedAdminId)) {
+      setActionMessage({ type: 'error', text: 'Este admin já está vinculado a esta filial.' })
+      return
+    }
+
+    const { error: insertError } = await supabase
+      .from('branch_admins')
+      .insert({ branch_id: branchId, user_id: selectedAdminId })
+
+    if (insertError) {
+      setActionMessage({ type: 'error', text: 'Não foi possível vincular o admin à filial.' })
+      return
+    }
+
+    await refreshData({ type: 'success', text: 'Admin vinculado à filial com sucesso.' })
+  }
+
+  const handleRemoveBranchAdmin = async (branchId: string, userId: string) => {
+    setActionMessage(null)
+
+    const branch = branches.find((item) => item.id === branchId)
+    const canManageAdmins =
+      currentProfile?.role === 'adminmaster' ||
+      (currentProfile?.role === 'adminsuper' && branch?.owner_id === currentProfile.id)
+
+    if (!canManageAdmins) {
+      setActionMessage({ type: 'error', text: 'Você não tem permissão para remover admins desta filial.' })
+      return
+    }
+
+    const { error: deleteError } = await supabase
+      .from('branch_admins')
+      .delete()
+      .eq('branch_id', branchId)
+      .eq('user_id', userId)
+
+    if (deleteError) {
+      setActionMessage({ type: 'error', text: 'Não foi possível remover o admin desta filial.' })
+      return
+    }
+
+    await refreshData({ type: 'success', text: 'Admin desvinculado da filial.' })
   }
 
   const handleCreateServiceType = async (event: FormEvent<HTMLFormElement>) => {
@@ -911,6 +1098,15 @@ export default function AdminOperationsContent({ section, showSectionNav = false
               name: branch.name,
               timezone: branch.timezone,
             }
+            const selectedOwnerId = ownerSelections[branch.id] ?? branch.owner_id ?? ''
+            const selectedAdminId = branchAdminSelections[branch.id] ?? ''
+            const isMaster = currentProfile?.role === 'adminmaster'
+            const isOwnerSuper = currentProfile?.role === 'adminsuper' && currentProfile.id === branch.owner_id
+            const canManageAdmins = Boolean(isMaster || isOwnerSuper)
+            const ownerOptions = adminProfiles.filter((profile) => profile.role === 'adminsuper')
+            const adminOptions = adminProfiles
+              .filter((profile) => profile.role === 'admin')
+              .filter((profile) => !branch.admins.some((admin) => admin.user_id === profile.id))
             return (
               <div key={branch.id} className={`${surfaceCardClass} space-y-5`}>
                 <div className="space-y-2">
@@ -976,6 +1172,129 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                         Remover filial
                       </button>
                     </div>
+                  </div>
+                </div>
+                <div className="space-y-4 border-t border-emerald-900/10 pt-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="text-sm font-semibold text-emerald-950">Vínculos</h4>
+                    {isMaster && <span className={styles.metaPill}>Admin master</span>}
+                    {!isMaster && isOwnerSuper && <span className={styles.metaPill}>Responsável</span>}
+                  </div>
+                  <div className="space-y-3 rounded-lg border border-emerald-900/10 bg-white/40 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-900/55">Responsável (super)</p>
+                    <div className="space-y-1 text-sm text-emerald-900/80">
+                      <p className="font-semibold text-emerald-950">
+                        {branch.owner?.full_name ?? branch.owner?.email ?? 'Não definido'}
+                      </p>
+                      <p className="text-xs text-emerald-900/60">{branch.owner?.email ?? 'Selecione um responsável'}</p>
+                      {branch.owner?.role && (
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-900/55">
+                          {roleLabels[branch.owner.role]}
+                        </span>
+                      )}
+                    </div>
+                    {isMaster && (
+                      <div className="grid gap-3 md:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+                        <label className={labelClass}>
+                          <span className={labelCaptionClass}>Alterar responsável</span>
+                          <select
+                            className={inputClass}
+                            value={selectedOwnerId}
+                            onChange={(event) =>
+                              setOwnerSelections((state) => ({
+                                ...state,
+                                [branch.id]: event.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Selecione um admin super</option>
+                            {ownerOptions.map((profile) => (
+                              <option key={profile.id} value={profile.id}>
+                                {profile.full_name ?? profile.email ?? profile.id}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <div className="flex items-end">
+                          <button
+                            className={`${primaryButtonClass} w-full`}
+                            type="button"
+                            onClick={() => handleChangeBranchOwner(branch.id)}
+                            disabled={!selectedOwnerId}
+                          >
+                            Salvar responsável
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-emerald-950">Admins vinculados</p>
+                    {branch.admins.length === 0 ? (
+                      <p className="text-sm text-emerald-900/60">Nenhum admin vinculado.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {branch.admins.map((admin) => (
+                          <div
+                            key={admin.user_id}
+                            className="flex flex-col gap-2 rounded-md border border-emerald-900/10 bg-white/60 p-2 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-emerald-950">
+                                {admin.profile?.full_name ?? admin.profile?.email ?? 'Admin sem nome'}
+                              </p>
+                              <p className="text-xs text-emerald-900/60">{admin.profile?.email ?? admin.user_id}</p>
+                              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-900/55">
+                                {admin.profile?.role ? roleLabels[admin.profile.role] : 'Admin'}
+                              </span>
+                            </div>
+                            {canManageAdmins && (
+                              <button
+                                className={dangerButtonClass}
+                                type="button"
+                                onClick={() => handleRemoveBranchAdmin(branch.id, admin.user_id)}
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {canManageAdmins && (
+                      <div className="grid gap-3 md:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+                        <label className={labelClass}>
+                          <span className={labelCaptionClass}>Vincular admin</span>
+                          <select
+                            className={inputClass}
+                            value={selectedAdminId}
+                            onChange={(event) =>
+                              setBranchAdminSelections((state) => ({
+                                ...state,
+                                [branch.id]: event.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Selecione um admin</option>
+                            {adminOptions.map((profile) => (
+                              <option key={profile.id} value={profile.id}>
+                                {profile.full_name ?? profile.email ?? profile.id}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <div className="flex items-end">
+                          <button
+                            className={`${primaryButtonClass} w-full`}
+                            type="button"
+                            onClick={() => handleAddBranchAdmin(branch.id)}
+                            disabled={!selectedAdminId}
+                          >
+                            Adicionar admin
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

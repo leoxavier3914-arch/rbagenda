@@ -214,6 +214,7 @@ export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): 
   const [currentUserRole, setCurrentUserRole] = useState<ProfileRole | null>(null)
   const [branchAdmins, setBranchAdmins] = useState<Record<string, BranchAdminAssignment[]>>({})
   const [branchAdminSelection, setBranchAdminSelection] = useState<Record<string, string>>({})
+  const panelTitle = variant === 'adminmaster' ? 'Admin master' : 'Admin super'
 
   const fetchMasterData = useCallback(async () => {
     try {
@@ -1034,7 +1035,7 @@ export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): 
       <section className={styles.dashboardSection}>
         <div className={glassCardClass}>
           <div className={styles.heroIntro}>
-            <span className={badgeClass}>Admin super</span>
+            <span className={badgeClass}>{panelTitle}</span>
             <h2 className={styles.heroTitle}>Comando total da operação SaaS</h2>
             <p className={styles.heroSubtitle}>{headerDescription}</p>
           </div>
@@ -1828,7 +1829,7 @@ export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): 
   if (isLoading) {
     return (
       <main className={`${styles.page} ${styles.loadingState}`} aria-busy="true" aria-live="polite">
-        <span className="sr-only">Carregando painel admin master…</span>
+        <span className="sr-only">Carregando painel {panelTitle.toLowerCase()}…</span>
       </main>
     )
   }
@@ -1859,6 +1860,7 @@ export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): 
       sectionContent = renderAuditSection()
       break
   }
+  const navigationLabel = `Menu de navegação do ${panelTitle.toLowerCase()}`
 
   return (
     <main className={styles.page}>
@@ -1878,7 +1880,7 @@ export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): 
           </button>
           <div className={styles.topBarTitleGroup}>
             <span className={styles.sidebarEyebrow}>Painel</span>
-            <span className={styles.sidebarTitle}>Admin super</span>
+            <span className={styles.sidebarTitle}>{panelTitle}</span>
           </div>
         </div>
 
@@ -1887,12 +1889,12 @@ export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): 
         <aside
           id="admin-master-sidebar"
           className={`${styles.sidebar} ${isMenuOpen ? styles.sidebarOpen : ''}`}
-          aria-label="Menu de navegação do admin master"
+          aria-label={navigationLabel}
         >
           <div className={styles.sidebarHeader}>
             <div className={styles.sidebarTitleGroup}>
               <span className={styles.sidebarEyebrow}>Painel</span>
-              <h1 className={styles.sidebarTitle}>Admin super</h1>
+              <h1 className={styles.sidebarTitle}>{panelTitle}</h1>
             </div>
             <button
               type="button"

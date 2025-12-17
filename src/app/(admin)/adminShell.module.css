@@ -169,29 +169,15 @@
 }
 
 .shell {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  grid-template-columns: var(--sidebar-expanded) 1fr;
+  display: flex;
   min-height: calc(100vh - var(--topbar-height));
-}
-
-.shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: var(--sidebar-expanded);
-  background: #2f3546;
-  border-right: 1px solid #252b3a;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .sidebar {
   position: sticky;
   top: var(--topbar-height);
   align-self: flex-start;
-  width: var(--sidebar-expanded);
+  width: var(--sidebar-collapsed);
   min-height: calc(100vh - var(--topbar-height));
   background: #2f3546;
   border-right: 1px solid #252b3a;
@@ -199,9 +185,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: hidden;
-  transform: translateX(0);
-  transition: transform 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+  transition: width 0.25s ease, transform 0.25s ease;
   z-index: 16;
 }
 
@@ -209,8 +193,9 @@
   cursor: pointer;
   align-items: stretch;
   padding: 20px 10px;
-  padding-left: calc(var(--sidebar-expanded) - var(--sidebar-collapsed) + 12px);
-  transform: translateX(calc(var(--sidebar-collapsed) - var(--sidebar-expanded)));
+  background: #2f3546;
+  border-right: 1px solid #252b3a;
+  box-shadow: none;
 }
 
 .sidebarCollapsed .sidebarHeader {
@@ -219,8 +204,10 @@
 }
 
 .sidebarExpanded {
-  padding: 16px 12px;
-  transform: translateX(0);
+  width: var(--sidebar-expanded);
+  background: #2f3546;
+  border-right: 1px solid #252b3a;
+  box-shadow: none;
 }
 
 .sidebarMobileOpen {
@@ -304,8 +291,6 @@
   flex: 1;
   min-width: 0;
   padding: 26px 24px 32px;
-  position: relative;
-  z-index: 1;
 }
 
 .pageShell {
@@ -318,14 +303,6 @@
     display: inline-flex;
   }
 
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .shell::before {
-    display: none;
-  }
-
   .sidebar {
     position: fixed;
     left: 0;
@@ -336,9 +313,8 @@
     min-height: 100vh;
   }
 
-  .sidebarExpanded,
-  .sidebarMobileOpen {
-    transform: translateX(0);
+  .sidebarExpanded {
+    width: 260px;
   }
 
   .contentArea {

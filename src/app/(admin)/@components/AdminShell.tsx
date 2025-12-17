@@ -59,10 +59,11 @@ function BranchSelector() {
 }
 
 export default function AdminShell({ children }: { children: ReactNode }) {
-  const { status } = useAdminGuard();
+  const { status, role } = useAdminGuard();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isChecking = status === "checking";
+  const roleLabel = role === "adminmaster" ? "Admin master" : role === "adminsuper" ? "Admin super" : "Admin";
 
   return (
     <AdminBranchProvider>
@@ -82,7 +83,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               </button>
               <div className={styles.headerCopy}>
                 <p className={styles.headerSubtitle}>Acesso reservado</p>
-                <h1 className={styles.headerTitle}>Painel administrativo</h1>
+                <h1 className={styles.headerTitle}>Painel administrativo · {roleLabel}</h1>
                 <p className={styles.headerSubtitle}>
                   Controle total das operações, mantendo o mesmo visual leve e responsivo das páginas do cliente.
                 </p>
@@ -102,7 +103,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             )}
             <div className={`${styles.navWrapper} ${isMenuOpen ? styles.navOpen : ""}`}>
               <div className={styles.panel} id="admin-nav">
-                <AdminNav disabled={isChecking} />
+                <AdminNav disabled={isChecking} role={role ?? undefined} />
               </div>
             </div>
 

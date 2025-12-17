@@ -41,9 +41,9 @@ export default function Login() {
       return null
     }
 
-    if (data?.role === 'admin') return '/admin'
-    if (data?.role === 'adminsuper') return '/admin/adminsuper'
-    if (data?.role === 'adminmaster') return '/admin/adminmaster'
+    if (data?.role === 'admin' || data?.role === 'adminsuper' || data?.role === 'adminmaster') {
+      return '/admin'
+    }
 
     return '/meu-perfil'
   }, [])

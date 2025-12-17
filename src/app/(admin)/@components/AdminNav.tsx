@@ -7,9 +7,10 @@ import styles from "../adminNav.module.css";
 
 type AdminNavProps = {
   disabled?: boolean;
+  onNavigate?: () => void;
 };
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { href: "/admin", label: "Início", description: "Resumo rápido do painel", icon: "🏠" },
   { href: "/admin/agendamentos", label: "Agendamentos", description: "Visão geral e triagem", icon: "📅" },
   { href: "/admin/filiais", label: "Filiais", description: "Unidades e timezones", icon: "🏢" },
@@ -20,7 +21,7 @@ const NAV_ITEMS = [
   { href: "/admin/suporte", label: "Suporte", description: "Em breve tickets e mensagens", icon: "💬" },
 ];
 
-export default function AdminNav({ disabled }: AdminNavProps) {
+export default function AdminNav({ disabled, onNavigate }: AdminNavProps) {
   const pathname = usePathname();
 
   return (
@@ -35,11 +36,15 @@ export default function AdminNav({ disabled }: AdminNavProps) {
                 href={item.href}
                 className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${disabled ? styles.navItemDisabled : ""}`}
                 aria-current={isActive ? "page" : undefined}
+                onClick={onNavigate}
               >
                 <span className={styles.navIcon} aria-hidden>{item.icon}</span>
                 <span className={styles.navCopy}>
                   <span className={styles.navTitle}>{item.label}</span>
                   <span className={styles.navSubtitle}>{item.description}</span>
+                </span>
+                <span className={styles.navChevron} aria-hidden>
+                  →
                 </span>
               </Link>
             </li>

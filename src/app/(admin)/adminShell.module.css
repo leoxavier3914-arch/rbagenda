@@ -3,34 +3,50 @@
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  background: var(--admin-body);
 }
 
 .adminRoot {
-  --admin-header-height: 76px;
+  --admin-header-height: 82px;
   min-height: 100dvh;
-  background: var(--admin-bg);
+  background: var(--admin-body);
   color: var(--admin-text);
   display: flex;
   width: 100%;
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.adminRoot::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at 40% 0%, rgba(255, 255, 255, 0.06), transparent 35%),
+    radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.04), transparent 25%);
+  pointer-events: none;
+  opacity: 0.7;
+  z-index: 0;
 }
 
 .adminShell {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: var(--admin-header-height) 1fr;
   grid-template-columns: 1fr;
   grid-template-areas:
     "topbar"
     "main";
   min-height: 100dvh;
   width: 100%;
-  background: var(--admin-bg);
+  background: var(--admin-body);
   position: relative;
+  z-index: 1;
 }
 
 .drawerBackdrop {
   position: fixed;
-  inset: var(--admin-header-height) 0 0 0;
+  inset: 0 0 0 0;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   z-index: 50;
@@ -40,16 +56,17 @@
   grid-area: topbar;
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 60;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 14px 16px;
+  padding: 14px 20px;
   min-height: var(--admin-header-height);
-  background: var(--admin-surface);
-  border-bottom: 1px solid var(--admin-border);
-  box-shadow: none;
+  background: var(--admin-header-gradient);
+  color: var(--admin-header-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--admin-shadow-hard);
 }
 
 .headerLeft {
@@ -64,13 +81,13 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
-  color: var(--admin-text);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--admin-header-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--admin-shadow-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .brandMark {
@@ -80,8 +97,9 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: var(--admin-gradient);
-  box-shadow: inset 0 0 0 1px var(--admin-border);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.12));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 8px 18px rgba(0, 0, 0, 0.22);
+  color: var(--admin-header-text);
   font-weight: 800;
   flex-shrink: 0;
 }
@@ -90,6 +108,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  color: var(--admin-header-text);
 }
 
 .brandName {
@@ -101,31 +120,32 @@
 .brandSubtitle {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--admin-muted);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .headerBreadcrumbs {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: var(--admin-surface-alt);
-  border: 1px solid var(--admin-border);
-  color: var(--admin-text);
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--admin-header-text);
   min-width: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .breadcrumbRoot {
-  color: var(--admin-muted);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .breadcrumbDivider {
-  color: var(--admin-muted);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .breadcrumbCurrent {
-  color: var(--admin-text);
+  color: var(--admin-header-text);
   white-space: nowrap;
 }
 
@@ -145,23 +165,24 @@
 .selectControl {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-ghost);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
   padding: 10px 12px;
-  color: var(--admin-text);
+  color: var(--admin-header-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .themeButton {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
-  color: var(--admin-text);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--admin-header-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--admin-shadow-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
 .userMenu {
@@ -170,10 +191,11 @@
   gap: 10px;
   padding: 8px 12px;
   border-radius: 14px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
-  color: var(--admin-text);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--admin-header-text);
   min-width: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
 .userAvatarSmall {
@@ -191,6 +213,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  color: var(--admin-header-text);
 }
 
 .userName {
@@ -201,30 +224,31 @@
 
 .userRole {
   margin: 0;
-  color: var(--admin-muted);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.85rem;
   white-space: nowrap;
 }
 
 .userCaret {
-  color: var(--admin-muted);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.85rem;
 }
 
 .adminSidebar {
   position: fixed;
-  top: var(--admin-header-height);
+  top: 0;
   left: 0;
   width: min(86vw, var(--admin-sidebar-width));
   max-width: var(--admin-sidebar-width);
-  height: calc(100dvh - var(--admin-header-height));
+  height: 100dvh;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 60;
-  background: var(--admin-surface);
-  border-right: 1px solid var(--admin-border);
-  box-shadow: var(--admin-shadow-strong);
+  background: var(--admin-sidebar-bg);
+  border-right: 1px solid var(--admin-sidebar-border);
+  box-shadow: var(--admin-shadow-hard);
   padding: 18px;
+  padding-top: calc(var(--admin-header-height) + 10px);
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 16px;
@@ -235,7 +259,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
   pointer-events: none;
 }
 
@@ -248,6 +272,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  color: var(--admin-sidebar-text);
 }
 
 .closeButton {
@@ -257,10 +282,11 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
-  color: var(--admin-text);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--admin-sidebar-text);
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .sidebarFooter {
@@ -274,8 +300,9 @@
   gap: 10px;
   padding: 12px;
   border-radius: var(--admin-radius-md);
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  color: var(--admin-sidebar-text);
 }
 
 .userAvatar {
@@ -305,10 +332,10 @@
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2vw, 24px);
-  padding: 16px 16px 26px;
+  padding: 22px 18px 30px;
   min-width: 0;
   width: 100%;
-  background: var(--admin-bg);
+  background: var(--admin-content-bg);
   min-height: 0;
   overflow-x: hidden;
 }
@@ -324,10 +351,15 @@
 
 .pageHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  padding: 18px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-card-glow);
 }
 
 .pageTitle {
@@ -338,8 +370,9 @@
 
 .pageTitle h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .pageTitle p {
@@ -358,7 +391,7 @@
   height: 38px;
   border-radius: 12px;
   border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
+  background: var(--admin-surface-alt);
   color: var(--admin-text);
   display: inline-flex;
   align-items: center;
@@ -403,7 +436,7 @@
 
   .adminShell {
     grid-template-columns: var(--admin-sidebar-width) 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: var(--admin-header-height) 1fr;
     grid-template-areas:
       "topbar topbar"
       "sidebar main";
@@ -419,7 +452,7 @@
     top: var(--admin-header-height);
     width: var(--admin-sidebar-width);
     max-width: var(--admin-sidebar-width);
-    box-shadow: none;
+    box-shadow: var(--admin-shadow-hard);
     align-self: start;
   }
 
@@ -429,7 +462,7 @@
   }
 
   .adminContent {
-    padding: 22px 28px 32px;
+    padding: 30px 32px 38px;
     grid-area: main;
   }
 }

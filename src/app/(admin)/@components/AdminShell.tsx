@@ -118,6 +118,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
   const currentNav = useMemo(() => NAV_ITEMS.find((item) => pathname.startsWith(item.href)), [pathname]);
 
+  const initials = useMemo(() => profile?.name?.slice(0, 2).toUpperCase() || "AD", [profile?.name]);
+
   const toggleTheme = () => {
     const currentIndex = presets.findIndex((preset) => preset.id === theme);
     const next = presets[(currentIndex + 1) % presets.length];
@@ -126,17 +128,107 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
   const isChecking = status === "checking";
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
   return (
     <AdminBranchProvider>
-      <div className={styles.appShell}>
-        {isMenuOpen ? <div className={styles.sidebarBackdrop} onClick={() => setIsMenuOpen(false)} aria-hidden /> : null}
-        <aside className={`${styles.sidebarWrapper} ${isMenuOpen ? styles.sidebarOpen : ""}`}>
-          <div className={styles.sidebar}>
-            <div className={styles.brand}>
-              <div className={styles.brandMark}>RB</div>
-              <div className={styles.brandCopy}>
-                <p className={styles.brandName}>Admin Agenda</p>
-                <p className={styles.brandSubtitle}>Operações e catálogo</p>
+      <div className={styles.adminRoot}>
+        {isMenuOpen ? <div className={styles.drawerBackdrop} onClick={() => setIsMenuOpen(false)} aria-hidden /> : null}
+
+        <header className={styles.adminHeader}>
+          <div className={styles.headerLeft}>
+            <button
+              type="button"
+              className={styles.menuButton}
+              onClick={() => setIsMenuOpen(true)}
+              aria-expanded={isMenuOpen}
+              aria-controls="admin-nav"
+              aria-label="Abrir menu lateral"
+            >
+              ☰
+            </button>
+            <div className={styles.brandMark} aria-hidden>
+              RB
+            </div>
+            <div className={styles.brandCopy}>
+              <p className={styles.brandName}>RB Admin</p>
+              <p className={styles.brandSubtitle}>Painel operacional</p>
+            </div>
+            <div className={styles.headerBreadcrumbs} aria-label="Breadcrumb">
+              <span className={styles.breadcrumbRoot}>Admin</span>
+              <span className={styles.breadcrumbDivider} aria-hidden>
+                /
+              </span>
+              <span className={styles.breadcrumbCurrent}>{currentNav?.label ?? "Painel"}</span>
+            </div>
+          </div>
+
+          <div className={styles.headerRight}>
+            <BranchSelector />
+            <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label="Alternar tema do painel">
+              🎨
+            </button>
+            <button type="button" className={styles.userMenu} aria-label={`Conta ${profile?.name ?? "Administrador"}`}>
+              <span className={styles.userAvatarSmall} aria-hidden>
+                {initials}
+              </span>
+              <span className={styles.userMeta}>
+                <span className={styles.userName}>{profile?.name || "Administrador"}</span>
+                <span className={styles.userRole}>{profile?.email || "Conta interna"}</span>
+              </span>
+              <span className={styles.userCaret} aria-hidden>
+                ▾
+              </span>
+            </button>
+          </div>
+        </header>
+
+        <div className={styles.adminBody}>
+          <aside className={`${styles.adminSidebar} ${isMenuOpen ? styles.sidebarOpen : ""}`} aria-label="Menu do painel administrativo">
+            <div className={styles.sidebarHeader}>
+              <div className={styles.headerLeft}>
+                <div className={styles.brandMark} aria-hidden>
+                  RB
+                </div>
+                <div className={styles.brandCopy}>
+                  <p className={styles.brandName}>Admin Agenda</p>
+                  <p className={styles.brandSubtitle}>Navegue pelo painel</p>
+                </div>
               </div>
               <button type="button" className={styles.closeButton} onClick={() => setIsMenuOpen(false)} aria-label="Fechar navegação">
                 ✕
@@ -151,29 +243,9 @@ export default function AdminShell({ children }: { children: ReactNode }) {
                 </button>
               </div>
             </div>
-          </div>
-        </aside>
-        <div className={styles.contentArea}>
-          <header className={styles.topbar}>
-            <button
-              type="button"
-              className={styles.menuButton}
-              onClick={() => setIsMenuOpen(true)}
-              aria-expanded={isMenuOpen}
-              aria-controls="admin-nav"
-            >
-              ☰
-            </button>
-            <div className={styles.breadcrumbs} aria-label="Breadcrumb">
-              <span className={styles.breadcrumbRoot}>Admin</span>
-              <span className={styles.breadcrumbDivider} aria-hidden>
-                /
-              </span>
-              <span className={styles.breadcrumbCurrent}>{currentNav?.label ?? "Painel"}</span>
-            </div>
-            <BranchSelector />
-          </header>
-          <main className={styles.main}>
+          </aside>
+
+          <main className={styles.adminContent}>
             <div className={styles.pageHeader}>
               <div className={styles.pageTitle}>
                 <h1>{currentNav?.label ?? "Painel administrativo"}</h1>

@@ -55,12 +55,10 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const mediaQuery = window.matchMedia("(min-width: 900px)");
     const handleChange = (event: MediaQueryListEvent) => {
       setIsDesktop(event.matches);
-      if (event.matches) {
-        setMobileMenuOpen(false);
-      }
+      setMobileMenuOpen(false);
     };
 
     setIsDesktop(mediaQuery.matches);

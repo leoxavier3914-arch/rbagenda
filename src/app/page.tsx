@@ -57,11 +57,11 @@ export default function Home(){
       if (ignore) return
 
       if (role === 'admin') {
-        setAccess('admin')
+        redirectTo('/admin')
       } else if (role === 'adminsuper') {
-        redirectTo('/admin/adminsuper')
+        redirectTo('/admin')
       } else if (role === 'adminmaster') {
-        redirectTo('/admin/adminmaster')
+        redirectTo('/admin')
       } else {
         redirectTo('/procedimento')
       }

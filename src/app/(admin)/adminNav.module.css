@@ -1,105 +1,96 @@
 .nav {
   width: 100%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
-  border-radius: 16px;
+}
+
+.navCollapsed .navLabel,
+.navCollapsed .navBadge {
+  display: none;
+}
+
+.navCollapsed .navItem {
+  justify-content: center;
 }
 
 .navList {
   list-style: none;
-  margin: 0;
   padding: 0;
-  display: grid;
-  gap: 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .navItem {
   position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  display: flex;
   align-items: center;
-  padding: 12px 14px;
-  border-radius: 14px;
-  color: var(--admin-sidebar-text);
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
   text-decoration: none;
-  border: 1px solid transparent;
+  color: #dfe5f1;
   background: transparent;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
-  box-shadow: none;
-  overflow: hidden;
+  border: 1px solid transparent;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
-.navItem::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  height: 50%;
-  width: 4px;
-  border-radius: 999px;
+.navButton {
+  cursor: pointer;
+  border: 1px solid transparent;
   background: transparent;
-  transition: background 0.2s ease, height 0.2s ease;
+  text-align: left;
+  font: inherit;
 }
 
 .navItem:hover {
-  border-color: var(--admin-sidebar-border);
-  box-shadow: var(--admin-card-glow);
-  background: var(--admin-sidebar-hover);
-  transform: translateX(4px);
-  color: var(--admin-sidebar-text);
-}
-
-.navItem:hover::before {
-  background: var(--admin-accent);
-  height: 70%;
+  background: #3b4256;
+  border-color: #32384a;
+  transform: translateX(3px);
 }
 
 .navItemActive {
-  border-color: var(--admin-accent);
-  background: linear-gradient(135deg, rgba(116, 96, 238, 0.18), rgba(44, 167, 227, 0.12));
-  box-shadow: var(--admin-card-glow);
-  color: var(--admin-sidebar-text);
+  background: #e8f2ff;
+  color: #2f3445;
+  border-color: #b2cffd;
+  box-shadow: 0 10px 24px rgba(23, 43, 77, 0.18);
 }
 
-.navItemActive::before {
-  background: var(--admin-accent);
-  height: 70%;
+.navItemActive .navIcon {
+  background: linear-gradient(135deg, #6d7bff, #60b7ff);
+  color: #0f172a;
 }
 
 .navItemDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
   pointer-events: none;
-  opacity: 0.55;
 }
 
 .navIcon {
   width: 38px;
   height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
+  display: grid;
+  place-items: center;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--admin-sidebar-text);
+  background: #343b4f;
+  color: #f2f5fb;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
-.navCopy {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.navTitle {
+.navLabel {
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--admin-sidebar-text);
+  color: inherit;
 }
 
-.navSubtitle {
-  font-size: 0.9rem;
-  color: var(--admin-sidebar-muted);
-}
-
-.navChevron {
-  color: var(--admin-sidebar-muted);
+.navBadge {
+  margin-left: auto;
+  background: #ffe7eb;
+  color: #e14d5a;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8rem;
 }

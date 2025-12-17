@@ -294,32 +294,19 @@ export default function ClientMenu({
   );
 
   const adminItems = useMemo<NavItem[]>(() => {
-    if (profile.role === "admin") {
+    if (profile.role === "admin" || profile.role === "adminsuper" || profile.role === "adminmaster") {
+      const label =
+        profile.role === "admin"
+          ? "Admin"
+          : profile.role === "adminsuper"
+            ? "Admin super"
+            : "Admin master";
+
       return [
         {
           href: "/admin",
-          label: "Admin",
-          icon: <ShieldIcon />,
-        },
-      ];
-    }
-
-    if (profile.role === "adminsuper") {
-      return [
-        {
-          href: "/admin/adminsuper",
-          label: "Admin super",
-          icon: <DiamondIcon />,
-        },
-      ];
-    }
-
-    if (profile.role === "adminmaster") {
-      return [
-        {
-          href: "/admin/adminmaster",
-          label: "Admin master",
-          icon: <DiamondIcon />,
+          label,
+          icon: profile.role === "admin" ? <ShieldIcon /> : <DiamondIcon />,
         },
       ];
     }

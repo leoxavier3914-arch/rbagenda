@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 
 import AdminShell from "./@components/AdminShell";
-import { AdminThemeProvider } from "./@components/AdminThemeProvider";
-import "./admin-theme.css";
 
 export default function AdminLayout({
   children,
@@ -10,8 +8,6 @@ export default function AdminLayout({
   children: ReactNode;
 }>) {
   return (
-    <AdminThemeProvider>
-      <AdminShell>{children}</AdminShell>
-    </AdminThemeProvider>
+    <AdminShell>{children}</AdminShell>
   );
 }

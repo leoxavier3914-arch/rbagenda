@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactEl
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/db"
 
+import { useAdminBranch } from "./AdminBranchContext"
 import styles from "../admin/adminPanel.module.css"
 
 type LoadingState = "idle" | "loading" | "ready"
@@ -143,12 +144,14 @@ type AdminOperationsContentProps = {
 
 export default function AdminOperationsContent({ section, showSectionNav = false }: AdminOperationsContentProps) {
   const router = useRouter()
+  const { activeBranchId, branchScope, loading: branchLoading } = useAdminBranch()
   const [status, setStatus] = useState<LoadingState>("idle")
   const [error, setError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<ActionFeedback | null>(null)
   const [activeSection, setActiveSection] = useState<AdminSection>(section)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
+  const [branchGuardMessage, setBranchGuardMessage] = useState<string | null>(null)
 
   const [branches, setBranches] = useState<Branch[]>([])
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([])
@@ -194,6 +197,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
     try {
       setStatus('loading')
       setError(null)
+      setBranchGuardMessage(null)
 
       const { data: sess, error: sessionError } = await supabase.auth.getSession()
 
@@ -225,24 +229,77 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         return
       }
 
+      const requiresBranch = profile.role === 'admin' || profile.role === 'adminsuper'
+      const hasBranchSelected = branchScope === 'branch' && Boolean(activeBranchId)
+
+      if (branchScope === 'no_branch') {
+        setBranches([])
+        setServiceTypes([])
+        setServices([])
+        setAppointments([])
+        setClients([])
+        setBranchGuardMessage('Operações exigem uma filial. Selecione uma filial para continuar.')
+        setStatus('ready')
+        return
+      }
+
+      if ((requiresBranch && !hasBranchSelected) || (branchScope === 'branch' && !activeBranchId)) {
+        setBranches([])
+        setServiceTypes([])
+        setServices([])
+        setAppointments([])
+        setClients([])
+        setBranchGuardMessage('Selecione uma filial para visualizar e editar os dados.')
+        setStatus('ready')
+        return
+      }
+
+      const branchFilterId = branchScope === 'branch' ? activeBranchId : null
+
+      const branchesQuery = supabase.from('branches').select('id, name, timezone, created_at').order('created_at', { ascending: false })
+      if (branchFilterId) {
+        branchesQuery.eq('id', branchFilterId)
+      }
+      if (profile.role === 'adminsuper') {
+        branchesQuery.eq('owner_id', session.user.id)
+      }
+
+      const serviceTypesQuery = supabase
+        .from('service_types')
+        .select('id, branch_id, name, description, active, order_index, created_at')
+        .order('created_at', { ascending: false })
+
+      if (branchFilterId) {
+        serviceTypesQuery.eq('branch_id', branchFilterId)
+      }
+
+      const servicesQuery = supabase
+        .from('services')
+        .select(
+          'id, branch_id, name, description, duration_min, price_cents, deposit_cents, buffer_min, active, created_at, service_type_assignments(service_type_id)'
+        )
+        .order('created_at', { ascending: false })
+
+      if (branchFilterId) {
+        servicesQuery.eq('branch_id', branchFilterId)
+      }
+
+      const appointmentsQuery = supabase
+        .from('appointments')
+        .select(
+          'id, starts_at, ends_at, status, profiles:profiles!appointments_customer_id_fkey(full_name, email), services:services(name), branch_id'
+        )
+        .order('starts_at', { ascending: false })
+
+      if (branchFilterId) {
+        appointmentsQuery.eq('branch_id', branchFilterId)
+      }
+
       const [branchesResponse, serviceTypesResponse, servicesResponse, appointmentsResponse, clientsResponse] = await Promise.all([
-        supabase.from('branches').select('id, name, timezone, created_at').order('created_at', { ascending: false }),
-        supabase
-          .from('service_types')
-          .select('id, branch_id, name, description, active, order_index, created_at')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('services')
-          .select(
-            'id, branch_id, name, description, duration_min, price_cents, deposit_cents, buffer_min, active, created_at, service_type_assignments(service_type_id)'
-          )
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('appointments')
-          .select(
-            'id, starts_at, ends_at, status, profiles:profiles!appointments_customer_id_fkey(full_name, email), services:services(name)'
-          )
-          .order('starts_at', { ascending: false }),
+        branchesQuery,
+        serviceTypesQuery,
+        servicesQuery,
+        appointmentsQuery,
         supabase
           .from('profiles')
           .select('id, full_name, email, whatsapp, created_at, role')
@@ -350,13 +407,13 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       setError(message)
       setStatus('idle')
     }
-  }, [router])
+  }, [activeBranchId, branchScope, router])
 
   useEffect(() => {
     let active = true
 
     const load = async () => {
-      if (!active) return
+      if (!active || branchLoading) return
       await fetchAdminData()
     }
 
@@ -377,7 +434,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         return
       }
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && !branchLoading) {
         fetchAdminData()
       }
     })
@@ -386,9 +443,9 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       active = false
       subscription?.subscription.unsubscribe()
     }
-  }, [fetchAdminData, router])
+  }, [branchLoading, fetchAdminData, router])
 
-  const isLoading = status !== 'ready' && !error
+  const isLoading = status !== 'ready' && !error && !branchGuardMessage
 
   const groupedAppointments = useMemo(() => {
     return appointmentGroups.map((group) => ({
@@ -1686,26 +1743,30 @@ export default function AdminOperationsContent({ section, showSectionNav = false
 
   let sectionContent: ReactElement
 
-  switch (activeSection) {
-    case 'filiais':
-      sectionContent = renderBranchSection()
-      break
-    case 'servicos':
-      sectionContent = renderServicesSection()
-      break
-    case 'tipos':
-      sectionContent = renderServiceTypesSection()
-      break
-    case 'clientes':
-      sectionContent = renderClientsSection()
-      break
-    case 'configuracoes':
-      sectionContent = renderPlaceholderSection('Em breve! Personalize configurações avançadas do painel.')
-      break
-    case 'agendamentos':
-    default:
-      sectionContent = renderAppointmentsSection()
-      break
+  if (branchGuardMessage) {
+    sectionContent = renderPlaceholderSection(branchGuardMessage)
+  } else {
+    switch (activeSection) {
+      case 'filiais':
+        sectionContent = renderBranchSection()
+        break
+      case 'servicos':
+        sectionContent = renderServicesSection()
+        break
+      case 'tipos':
+        sectionContent = renderServiceTypesSection()
+        break
+      case 'clientes':
+        sectionContent = renderClientsSection()
+        break
+      case 'configuracoes':
+        sectionContent = renderPlaceholderSection('Em breve! Personalize configurações avançadas do painel.')
+        break
+      case 'agendamentos':
+      default:
+        sectionContent = renderAppointmentsSection()
+        break
+    }
   }
 
   return (

@@ -41,7 +41,7 @@ function getProfileData(profiles: SupportThread["profiles"]): ThreadProfile {
 }
 
 export default function AdminSuportePage() {
-  const { activeBranchId, loading: branchesLoading, isMaster } = useAdminBranch();
+  const { activeBranchId, branchScope, loading: branchesLoading, isMaster } = useAdminBranch();
   const [threads, setThreads] = useState<SupportThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,10 @@ export default function AdminSuportePage() {
       setIsLoading(true);
       setError(null);
 
-      if (!activeBranchId && !isMaster) {
+      const requiresBranch = branchScope === "branch";
+      const wantsNoBranch = branchScope === "no_branch";
+
+      if ((requiresBranch && !activeBranchId) || (!isMaster && wantsNoBranch)) {
         setThreads([]);
         setIsLoading(false);
         setError("Selecione uma filial para visualizar os tickets.");
@@ -66,9 +69,9 @@ export default function AdminSuportePage() {
         .select("id, user_id, branch_id, last_message_preview, last_actor, updated_at, profiles(full_name, email)")
         .order("updated_at", { ascending: false });
 
-      if (activeBranchId) {
+      if (branchScope === "branch" && activeBranchId) {
         query = query.eq("branch_id", activeBranchId);
-      } else if (isMaster) {
+      } else if (isMaster && wantsNoBranch) {
         query = query.is("branch_id", null);
       }
 
@@ -121,7 +124,7 @@ export default function AdminSuportePage() {
       active = false;
       if (unsubscribe) unsubscribe();
     };
-  }, [activeBranchId, branchesLoading, isMaster]);
+  }, [activeBranchId, branchScope, branchesLoading, isMaster]);
 
   const hasThreads = useMemo(() => threads.length > 0, [threads]);
 

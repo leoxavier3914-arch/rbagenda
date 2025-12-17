@@ -1,71 +1,75 @@
-.appShell {
+:global(html),
+:global(body) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.adminRoot {
+  --admin-header-height: 76px;
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
   display: flex;
-  gap: 0;
-  overflow-x: hidden;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
 }
 
-.sidebarWrapper {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: var(--admin-sidebar-width);
-  transform: translateX(-105%);
-  transition: transform 0.28s ease;
-  z-index: 30;
-}
-
-.sidebarWrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
-  pointer-events: none;
-}
-
-.sidebarOpen {
-  transform: translateX(0);
-}
-
-.sidebarBackdrop {
+.drawerBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
-  z-index: 25;
+  z-index: 50;
 }
 
-.sidebar {
-  height: 100vh;
-  height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  background: var(--admin-surface);
-  border-right: 1px solid var(--admin-border);
-  padding: 18px;
-  gap: 16px;
-  box-shadow: var(--admin-shadow-strong);
-  min-width: 0;
-}
-
-.brand {
+.adminHeader {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-soft);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.menuButton {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+  color: var(--admin-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--admin-shadow-soft);
 }
 
 .brandMark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
   background: var(--admin-gradient);
   box-shadow: inset 0 0 0 1px var(--admin-border);
   font-weight: 800;
+  flex-shrink: 0;
 }
 
 .brandCopy {
@@ -86,6 +90,160 @@
   color: var(--admin-muted);
 }
 
+.headerBreadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--admin-surface-alt);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  min-width: 0;
+}
+
+.breadcrumbRoot {
+  color: var(--admin-muted);
+}
+
+.breadcrumbDivider {
+  color: var(--admin-muted);
+}
+
+.breadcrumbCurrent {
+  color: var(--admin-text);
+  white-space: nowrap;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.branchSelector {
+  min-width: 190px;
+}
+
+.selectControl {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-ghost);
+  padding: 10px 12px;
+  color: var(--admin-text);
+}
+
+.themeButton {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+  color: var(--admin-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--admin-shadow-soft);
+}
+
+.userMenu {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-alt);
+  color: var(--admin-text);
+  min-width: 0;
+}
+
+.userAvatarSmall {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--admin-highlight);
+  font-weight: 800;
+}
+
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.userName {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.userRole {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.userCaret {
+  color: var(--admin-muted);
+  font-size: 0.85rem;
+}
+
+.adminBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--admin-bg);
+}
+
+.adminSidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(86vw, var(--admin-sidebar-width));
+  max-width: var(--admin-sidebar-width);
+  height: 100vh;
+  height: 100dvh;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 60;
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-strong);
+  padding: 18px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.adminSidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  pointer-events: none;
+}
+
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .closeButton {
   display: inline-flex;
   align-items: center;
@@ -99,78 +257,60 @@
   cursor: pointer;
 }
 
-.contentArea {
+.sidebarFooter {
   display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 100vh;
-  margin-left: 0;
-  background: var(--admin-bg);
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
+  gap: 8px;
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+.userCard {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 14px clamp(16px, 2vw, 24px);
-  border-bottom: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 55%), var(--admin-surface);
-  box-shadow: var(--admin-shadow-soft);
-}
-
-.menuButton {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--admin-radius-md);
   border: 1px solid var(--admin-border);
   background: var(--admin-surface-alt);
-  color: var(--admin-text);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--admin-shadow-soft);
 }
 
-.breadcrumbs {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  padding: 8px 10px;
+.userAvatar {
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  color: var(--admin-text);
+  display: grid;
+  place-items: center;
+  background: var(--admin-highlight);
+  font-weight: 800;
 }
 
-.breadcrumbRoot {
-  color: var(--admin-muted);
+.userCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.breadcrumbDivider {
-  color: var(--admin-muted);
+.inlineActions {
+  display: flex;
+  gap: 8px;
 }
 
-.breadcrumbCurrent {
-  color: var(--admin-text);
-}
-
-.main {
+.adminContent {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2vw, 24px);
-  padding: clamp(16px, 3vw, 28px);
+  padding: 16px 16px 26px;
   min-width: 0;
-  overflow-x: hidden;
+  width: 100%;
   background: var(--admin-bg);
+}
+
+.adminContent > * {
+  width: 100%;
+}
+
+.adminContent :is(input, select, textarea) {
+  width: 100%;
+  max-width: 100%;
 }
 
 .pageHeader {
@@ -226,95 +366,50 @@
   min-width: 0;
 }
 
-.branchSelector {
-  margin-left: auto;
-  min-width: 220px;
-}
-
-.selectControl {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-ghost);
-  padding: 10px 12px;
-  color: var(--admin-text);
-}
-
-.userCard {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border-radius: var(--admin-radius-md);
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
-}
-
-.userAvatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--admin-highlight);
-  font-weight: 800;
-}
-
-.userCopy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.userName {
-  margin: 0;
-  font-weight: 700;
-}
-
-.userRole {
-  margin: 0;
-  color: var(--admin-muted);
-  font-size: 0.9rem;
-}
-
-.sidebarFooter {
-  display: grid;
-  gap: 8px;
-}
-
-.inlineActions {
-  display: flex;
-  gap: 8px;
-}
-
-@media (min-width: 1024px) {
-  .sidebarWrapper {
-    position: sticky;
-    inset: 0 auto 0 0;
-    transform: none;
-    height: 100vh;
-    width: var(--admin-sidebar-width);
-    flex-shrink: 0;
-  }
-
-  .sidebarBackdrop,
-  .closeButton,
-  .menuButton {
-    display: none;
-  }
-}
-
 @media (max-width: 640px) {
-  .topbar {
-    align-items: flex-start;
-  }
-
   .branchSelector {
     width: 100%;
     min-width: 0;
   }
 
-  .pageHeader {
-    align-items: flex-start;
+  .headerRight {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .userMenu {
+    width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .drawerBackdrop {
+    display: none;
+  }
+
+  .adminBody {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .adminSidebar {
+    position: sticky;
+    inset: 0 auto 0 0;
+    transform: none;
+    height: calc(100vh - var(--admin-header-height));
+    top: var(--admin-header-height);
+    width: var(--admin-sidebar-width);
+    max-width: var(--admin-sidebar-width);
+    box-shadow: none;
+  }
+
+  .menuButton,
+  .closeButton {
+    display: none;
+  }
+
+  .adminContent {
+    padding: 22px 28px 32px;
   }
 }

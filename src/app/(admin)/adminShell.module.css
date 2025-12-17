@@ -189,8 +189,24 @@
   z-index: 16;
 }
 
+.sidebarCollapsed {
+  cursor: pointer;
+  align-items: stretch;
+  padding: 20px 10px;
+  background: #eaf1fd;
+  border-right: 1px solid #d6e2fb;
+  box-shadow: 10px 0 30px rgba(44, 62, 99, 0.1);
+}
+
+.sidebarCollapsed .sidebarHeader {
+  display: none;
+}
+
 .sidebarExpanded {
   width: var(--sidebar-expanded);
+  background: #2f3546;
+  border-right: 1px solid #252b3a;
+  box-shadow: none;
 }
 
 .sidebarMobileOpen {

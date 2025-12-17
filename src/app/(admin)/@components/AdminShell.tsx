@@ -75,6 +75,17 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const currentNav = useMemo(() => {
     return NAV_ITEMS.find((item) => item.href && pathname.startsWith(item.href)) ?? NAV_ITEMS[0];
   }, [pathname]);
+  const sidebarClassName = [
+    styles.sidebar,
+    expanded ? styles.sidebarExpanded : styles.sidebarCollapsed,
+    mobileMenuOpen ? styles.sidebarMobileOpen : "",
+  ].join(" ");
+
+  const handleSidebarClick = () => {
+    if (!expanded && isDesktop) {
+      setSidebarExpanded(true);
+    }
+  };
 
   return (
     <div className={styles.adminRoot} data-expanded={expanded}>
@@ -130,7 +141,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       <div className={styles.shell}>
         <aside
           id="admin-menu"
-          className={`${styles.sidebar} ${expanded ? styles.sidebarExpanded : ""} ${mobileMenuOpen ? styles.sidebarMobileOpen : ""}`}
+          className={sidebarClassName}
+          onClick={handleSidebarClick}
         >
           <div className={styles.sidebarHeader}>
             <button

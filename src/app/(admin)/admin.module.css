@@ -49,6 +49,26 @@
   flex: 1;
 }
 
+.branchSelector {
+  display: grid;
+  gap: 6px;
+  min-width: 190px;
+}
+
+.branchSelectorLabel {
+  font-size: 0.8rem;
+  color: rgba(233, 244, 237, 0.8);
+}
+
+.branchSelectorSelect {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #0d2419;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
 .menuButton {
   width: 44px;
   height: 44px;

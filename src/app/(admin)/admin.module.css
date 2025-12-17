@@ -1,206 +1,444 @@
-:global(:root) {
-  --admin-shell-surface: rgba(255, 255, 255, 0.88);
-  --admin-shell-border: rgba(255, 255, 255, 0.45);
-  --admin-shell-shadow: 0 30px 80px rgba(13, 45, 31, 0.2);
-  --admin-shell-radius: 28px;
-  --admin-shell-radius-sm: 18px;
-  --admin-shell-gap: clamp(18px, 3vw, 28px);
+:global(.admin-theme) {
+  --admin-bg: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08), transparent 35%),
+    radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.08), transparent 30%), #0f172a;
+  --admin-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  --admin-surface: rgba(255, 255, 255, 0.04);
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-border-strong: rgba(255, 255, 255, 0.14);
+  --admin-text: #e5e7eb;
+  --admin-muted: #94a3b8;
+  --admin-accent: #38bdf8;
+  --admin-accent-strong: #0ea5e9;
+  --admin-radius-lg: 20px;
+  --admin-radius-md: 14px;
+  --admin-radius-sm: 10px;
+  --admin-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  --admin-sidebar: rgba(13, 17, 23, 0.75);
 }
 
-.background {
-  position: relative;
-  min-height: 100vh;
-  background: radial-gradient(circle at 20% 20%, rgba(68, 157, 118, 0.18) 0%, transparent 45%),
-    radial-gradient(circle at 80% 0%, rgba(154, 227, 188, 0.2) 0%, transparent 42%),
-    linear-gradient(140deg, rgba(6, 61, 40, 0.24) 0%, rgba(6, 31, 20, 0.18) 35%, rgba(7, 20, 15, 0.32) 100%),
-    #0c1511;
-  color: #0f261b;
+:global(.admin-theme[data-theme="light"]) {
+  --admin-bg: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 10%, rgba(99, 102, 241, 0.06), transparent 30%), #f5f7fb;
+  --admin-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.9));
+  --admin-surface: rgba(255, 255, 255, 0.9);
+  --admin-border: rgba(15, 23, 42, 0.08);
+  --admin-border-strong: rgba(15, 23, 42, 0.14);
+  --admin-text: #0f172a;
+  --admin-muted: #475569;
+  --admin-accent: #2563eb;
+  --admin-accent-strong: #1d4ed8;
+  --admin-sidebar: rgba(255, 255, 255, 0.94);
 }
 
-.shell {
-  position: relative;
-  z-index: 1;
+:global(.admin-theme[data-theme="dark"]) {
+  --admin-bg: radial-gradient(circle at 5% 10%, rgba(56, 189, 248, 0.12), transparent 30%),
+    radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.12), transparent 36%), #0b1220;
+  --admin-panel: linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(17, 24, 39, 0.88));
+  --admin-surface: rgba(255, 255, 255, 0.04);
+  --admin-border: rgba(255, 255, 255, 0.1);
+  --admin-border-strong: rgba(255, 255, 255, 0.2);
+  --admin-text: #e2e8f0;
+  --admin-muted: #94a3b8;
+  --admin-accent: #22d3ee;
+  --admin-accent-strong: #0ea5e9;
+  --admin-sidebar: rgba(12, 18, 28, 0.92);
+}
+
+:global(.admin-theme[data-theme="romeike"]) {
+  --admin-bg: radial-gradient(circle at 5% 12%, rgba(15, 118, 178, 0.15), transparent 32%),
+    radial-gradient(circle at 80% 15%, rgba(26, 86, 219, 0.12), transparent 30%),
+    linear-gradient(145deg, #0d2037, #0e2540 45%, #0b1c32 100%);
+  --admin-panel: linear-gradient(180deg, rgba(14, 44, 78, 0.92), rgba(13, 36, 64, 0.9));
+  --admin-surface: rgba(255, 255, 255, 0.04);
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-border-strong: rgba(255, 255, 255, 0.12);
+  --admin-text: #e6edf7;
+  --admin-muted: #93b2d3;
+  --admin-accent: #34d399;
+  --admin-accent-strong: #10b981;
+  --admin-sidebar: rgba(9, 22, 38, 0.92);
+}
+
+:global(.admin-theme[data-theme="white-label"]) {
+  --admin-bg: linear-gradient(180deg, #f9fafb, #f3f4f6);
+  --admin-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92));
+  --admin-surface: rgba(255, 255, 255, 0.96);
+  --admin-border: rgba(15, 23, 42, 0.06);
+  --admin-border-strong: rgba(15, 23, 42, 0.12);
+  --admin-text: #0f172a;
+  --admin-muted: #475569;
+  --admin-accent: #0ea5e9;
+  --admin-accent-strong: #0284c7;
+  --admin-sidebar: rgba(255, 255, 255, 0.96);
+}
+
+.appShell {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--admin-shell-gap);
-  padding: clamp(18px, 4vw, 36px) clamp(16px, 3vw, 30px) clamp(40px, 5vw, 56px);
-  max-width: 1400px;
-  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-text);
 }
 
-.header {
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(320px, 90vw);
+  background: var(--admin-sidebar);
+  border-right: 1px solid var(--admin-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  padding: 22px 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  color: #e9f4ed;
-  text-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-.headerBar {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.headerCopy {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-
-.branchSelector {
-  display: grid;
-  gap: 6px;
-  min-width: 190px;
-}
-
-.branchSelectorLabel {
-  font-size: 0.8rem;
-  color: rgba(233, 244, 237, 0.8);
-}
-
-.branchSelectorSelect {
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.22);
-  color: #0d2419;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
-}
-
-.menuButton {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.18);
-  color: #0d2419;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-  font-size: 1.15rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.menuButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
-  background: rgba(255, 255, 255, 0.26);
-}
-
-.menuButton:active {
-  transform: scale(0.98);
-}
-
-.headerTitle {
-  font-size: clamp(2rem, 3vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.headerSubtitle {
-  max-width: 720px;
-  color: rgba(233, 244, 237, 0.76);
-  line-height: 1.6;
-}
-
-.shellBody {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--admin-shell-gap);
-  align-items: start;
-}
-
-.navBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(12, 21, 17, 0.6);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 8;
-}
-
-.navWrapper {
-  position: fixed;
-  top: clamp(18px, 4vw, 24px);
-  left: clamp(12px, 3vw, 20px);
-  width: min(320px, 85vw);
-  max-height: calc(100vh - clamp(32px, 6vw, 44px));
-  transform: translateX(-110%);
+  gap: 18px;
+  transform: translateX(-105%);
   transition: transform 0.3s ease;
-  z-index: 9;
+  z-index: 20;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-.navOpen {
+.sidebarOpen {
   transform: translateX(0);
 }
 
-.panel {
-  background: var(--admin-shell-surface);
-  border: 1px solid var(--admin-shell-border);
-  box-shadow: var(--admin-shell-shadow);
-  border-radius: var(--admin-shell-radius);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: clamp(16px, 2vw, 22px);
-  max-height: inherit;
-  overflow-y: auto;
+@media (min-width: 1024px) {
+  .appShell {
+    grid-template-columns: 300px 1fr;
+  }
+
+  .sidebar {
+    position: sticky;
+    inset: 0;
+    width: 300px;
+    transform: none;
+    box-shadow: none;
+    height: 100vh;
+    height: 100dvh;
+  }
 }
 
-.contentPanel {
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(235, 244, 239, 0.88));
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 32px 80px rgba(4, 20, 11, 0.25);
-  border-radius: var(--admin-shell-radius);
-  padding: clamp(18px, 3vw, 32px);
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brandMark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-strong));
+  color: #0b1220;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.22);
+}
+
+.brandCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brandEyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+}
+
+.brandTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.closeButton {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: transparent;
+  color: var(--admin-text);
+  display: grid;
+  place-items: center;
+}
+
+@media (min-width: 1024px) {
+  .closeButton {
+    display: none;
+  }
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sectionLabel span {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.sectionHint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--admin-muted);
+}
+
+.branchSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--admin-radius-md);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-panel);
+}
+
+.branchInputs {
+  display: grid;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--admin-muted);
+}
+
+.select {
+  width: 100%;
+  border-radius: var(--admin-radius-sm);
+  border: 1px solid var(--admin-border-strong);
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--admin-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.navSection {
+  display: grid;
+  gap: 8px;
+}
+
+.sectionLabelMuted {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+}
+
+.themeBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--admin-radius-md);
+  border: 1px dashed var(--admin-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.themeDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-strong));
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+}
+
+.themeLabel {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--admin-muted);
+}
+
+.themeValue {
+  margin: 0;
+  font-weight: 700;
+}
+
+.userCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: var(--admin-radius-md);
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.userAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-strong));
+  display: grid;
+  place-items: center;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.userMeta {
+  display: grid;
+  gap: 4px;
+}
+
+.userName {
+  margin: 0;
+  font-weight: 700;
+}
+
+.userEmail {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.userRole {
+  margin: 0;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--admin-muted);
+}
+
+.sidebarBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10;
+}
+
+.mainArea {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px clamp(16px, 3vw, 26px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hamburger {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--admin-text);
+  display: grid;
+  place-items: center;
+}
+
+@media (min-width: 1024px) {
+  .hamburger {
+    display: none;
+  }
+}
+
+.topbarEyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+}
+
+.topbarTitle {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 1.8rem);
+  font-weight: 800;
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbarBadge,
+.topbarBadgeMuted {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--admin-text);
+}
+
+.topbarBadgeMuted {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--admin-muted);
+}
+
+.badgeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-strong));
+}
+
+.badgeLabel {
+  font-weight: 600;
+}
+
+.contentFrame {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.contentInner {
+  background: var(--admin-panel);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow);
+  border-radius: 26px;
+  padding: clamp(18px, 4vw, 32px);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-.contentPanelInner {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(20px, 3vw, 32px);
-}
-
-.footerNote {
-  color: rgba(233, 244, 237, 0.7);
-  font-size: 0.9rem;
-}
-
-@media (min-width: 1024px) {
-  .shellBody {
-    grid-template-columns: 280px minmax(0, 1fr);
-  }
-
-  .navWrapper {
-    position: sticky;
-    top: clamp(10px, 3vw, 24px);
-    transform: none;
-    width: auto;
-    max-height: none;
-    z-index: 2;
-  }
-
-  .navBackdrop {
-    display: none;
-  }
-
-  .menuButton {
-    display: none;
-  }
-}
-
-@media (max-width: 720px) {
-  .branchSelector {
-    min-width: 0;
-    width: 100%;
+@media (max-width: 640px) {
+  .contentInner {
+    padding: clamp(14px, 4vw, 22px);
   }
 }

@@ -666,6 +666,63 @@ select.input:focus {
   border-bottom: 1px solid rgba(27, 94, 74, 0.1);
 }
 
+.tableCaption {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(27, 94, 74, 0.8);
+}
+
+.branchAdminBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.branchAdminHelper {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.branchAdminList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.branchAdminItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.branchAdminTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--admin-radius-sm);
+  background: var(--admin-muted-surface);
+  color: var(--admin-brand-dark);
+  font-weight: 600;
+}
+
+.inlineDanger {
+  background: transparent;
+  border: none;
+  color: #9c2f2f;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.branchAdminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .tableId {
   font-size: 0.75rem;
   color: rgba(27, 94, 74, 0.6);

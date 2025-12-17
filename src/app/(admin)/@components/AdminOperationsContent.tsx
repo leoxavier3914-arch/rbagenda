@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/db"
 
 import { useAdminBranch } from "./AdminBranchContext"
+import { AdminCard, AdminStatCard, AdminTable, AdminToolbar } from "./AdminUI"
+import { useAdminTheme } from "./AdminThemeProvider"
 import styles from "../admin/adminPanel.module.css"
 
 type LoadingState = "idle" | "loading" | "ready"
@@ -176,6 +178,8 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
   const [branchGuardMessage, setBranchGuardMessage] = useState<string | null>(null)
+  const { theme, themes, setTheme } = useAdminTheme()
+  const [searchTerm, setSearchTerm] = useState("")
 
   const [branches, setBranches] = useState<Branch[]>([])
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([])
@@ -534,13 +538,79 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   }, [branchLoading, fetchAdminData, router])
 
   const isLoading = status !== 'ready' && !error && !branchGuardMessage
+  const normalizedSearch = searchTerm.trim().toLowerCase()
+  const serviceTypeMap = useMemo(() => new Map(serviceTypes.map((type) => [type.id, type.name ?? ''])), [serviceTypes])
+
+  const filteredAppointments = useMemo(() => {
+    if (!normalizedSearch) return appointments
+    return appointments.filter((appt) => {
+      const clientName = appt.profiles?.full_name?.toLowerCase() ?? ''
+      const clientEmail = appt.profiles?.email?.toLowerCase() ?? ''
+      const serviceName = appt.services?.name?.toLowerCase() ?? ''
+      return (
+        clientName.includes(normalizedSearch) ||
+        clientEmail.includes(normalizedSearch) ||
+        serviceName.includes(normalizedSearch) ||
+        appt.id.toLowerCase().includes(normalizedSearch) ||
+        appointmentStatusLabels[appt.status]?.toLowerCase().includes(normalizedSearch)
+      )
+    })
+  }, [appointments, normalizedSearch])
+
+  const filteredClients = useMemo(() => {
+    if (!normalizedSearch) return clients
+    return clients.filter((client) => {
+      const name = client.full_name?.toLowerCase() ?? ''
+      const email = client.email?.toLowerCase() ?? ''
+      const phone = client.whatsapp?.toLowerCase() ?? ''
+      return name.includes(normalizedSearch) || email.includes(normalizedSearch) || phone.includes(normalizedSearch)
+    })
+  }, [clients, normalizedSearch])
+
+  const filteredServiceTypes = useMemo(() => {
+    if (!normalizedSearch) return serviceTypes
+    return serviceTypes.filter((type) => (type.name ?? '').toLowerCase().includes(normalizedSearch))
+  }, [normalizedSearch, serviceTypes])
+
+  const filteredServices = useMemo(() => {
+    if (!normalizedSearch) return services
+    return services.filter((service) => {
+      const serviceTypesLabels = service.service_type_ids
+        .map((id) => serviceTypeMap.get(id)?.toLowerCase() ?? '')
+        .join(' ')
+      return (
+        service.name.toLowerCase().includes(normalizedSearch) ||
+        (service.description ?? '').toLowerCase().includes(normalizedSearch) ||
+        serviceTypesLabels.includes(normalizedSearch)
+      )
+    })
+  }, [normalizedSearch, serviceTypeMap, services])
+
+  const filteredBranches = useMemo(() => {
+    if (!normalizedSearch) return branches
+    return branches.filter((branch) => {
+      const ownerName = branch.owner?.full_name?.toLowerCase() ?? ''
+      return (
+        (branch.name ?? '').toLowerCase().includes(normalizedSearch) ||
+        ownerName.includes(normalizedSearch) ||
+        branch.timezone.toLowerCase().includes(normalizedSearch) ||
+        branch.id.toLowerCase().includes(normalizedSearch)
+      )
+    })
+  }, [branches, normalizedSearch])
+
+  const currentBranchName = useMemo(() => {
+    if (branchScope === 'no_branch') return 'Tickets sem filial'
+    const branch = branches.find((item) => item.id === activeBranchId)
+    return branch?.name ?? 'Filial não selecionada'
+  }, [activeBranchId, branchScope, branches])
 
   const groupedAppointments = useMemo(() => {
     return appointmentGroups.map((group) => ({
       ...group,
-      items: appointments.filter((appt) => group.statuses.includes(appt.status)),
+      items: filteredAppointments.filter((appt) => group.statuses.includes(appt.status)),
     }))
-  }, [appointments])
+  }, [filteredAppointments])
 
   const upcomingAppointmentsCount = useMemo(
     () => appointments.filter((appt) => ['confirmed', 'reserved'].includes(appt.status)).length,
@@ -582,7 +652,6 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   const navButtonActiveClass = styles.navButtonActive
   const navButtonInactiveClass = styles.navButtonInactive
   const badgeClass = styles.badge
-  const statCardClass = styles.statCard
 
   const sectionIcons: Record<AdminSection, string> = {
     agendamentos: '📅',
@@ -1089,11 +1158,11 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             <p className="text-sm text-emerald-900/70">Atualize rapidamente detalhes e mantenha as informações consistentes.</p>
           </div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-            {branches.length} {branches.length === 1 ? 'filial' : 'filiais'}
+            {filteredBranches.length} {filteredBranches.length === 1 ? 'filial' : 'filiais'}
           </span>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {branches.map((branch) => {
+          {filteredBranches.map((branch) => {
             const form = branchEdits[branch.id] ?? {
               name: branch.name,
               timezone: branch.timezone,
@@ -1300,7 +1369,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
               </div>
             )
           })}
-          {branches.length === 0 && (
+          {filteredBranches.length === 0 && (
             <div className={`${mutedPanelClass} text-sm`}>
               Nenhuma filial cadastrada até o momento.
             </div>
@@ -1399,11 +1468,11 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             <p className="text-sm text-emerald-900/70">Edite descrições, status e vínculos com filiais em tempo real.</p>
           </div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-            {serviceTypes.length} {serviceTypes.length === 1 ? 'categoria' : 'categorias'}
+            {filteredServiceTypes.length} {filteredServiceTypes.length === 1 ? 'categoria' : 'categorias'}
           </span>
         </div>
         <div className="grid grid-cols-1 gap-6">
-          {serviceTypes.map((type) => {
+          {filteredServiceTypes.map((type) => {
             const form =
               serviceTypeEdits[type.id] ?? ({
                 name: type.name,
@@ -1512,7 +1581,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
               </div>
             )
           })}
-          {serviceTypes.length === 0 && (
+          {filteredServiceTypes.length === 0 && (
             <div className={`${mutedPanelClass} text-sm`}>
               Nenhum tipo de serviço cadastrado até o momento.
             </div>
@@ -1698,11 +1767,11 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             </p>
           </div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-            {services.length} {services.length === 1 ? 'serviço' : 'serviços'}
+            {filteredServices.length} {filteredServices.length === 1 ? 'serviço' : 'serviços'}
           </span>
         </div>
         <div className="grid grid-cols-1 gap-6">
-          {services.map((service) => {
+          {filteredServices.map((service) => {
             const form =
               serviceEdits[service.id] ?? ({
                 name: service.name,
@@ -1717,8 +1786,11 @@ export default function AdminOperationsContent({ section, showSectionNav = false
               } satisfies ServiceFormState)
 
             const assignedTypes = service.service_type_ids
-              .map((typeId) => serviceTypes.find((type) => type.id === typeId))
-              .filter((type): type is ServiceType => Boolean(type))
+              .map((typeId) => ({
+                id: typeId,
+                name: serviceTypeMap.get(typeId),
+              }))
+              .filter((type): type is { id: string; name: string } => Boolean(type.name))
 
             return (
               <div key={service.id} className={`${surfaceCardClass} space-y-5`}>
@@ -1918,7 +1990,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
               </div>
             )
           })}
-          {services.length === 0 && (
+          {filteredServices.length === 0 && (
             <div className={`${mutedPanelClass} text-sm`}>
               Nenhum serviço cadastrado até o momento.
             </div>
@@ -1927,125 +1999,144 @@ export default function AdminOperationsContent({ section, showSectionNav = false
       </div>
     </section>
   )
-  const renderAppointmentsSection = () => (
-    <section className="space-y-10">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {groupedAppointments.map((group) => (
-          <div key={group.key} className={`${statCardClass} space-y-3`}>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-900/55">{group.label}</span>
-            <p className="text-3xl font-semibold text-emerald-950">{group.items.length}</p>
-            <p className="text-xs text-emerald-900/60">
-              {group.statuses.length > 1
-                ? 'Inclui agendamentos confirmados ou reservados.'
-                : `Status: ${appointmentStatusLabels[group.statuses[0]]}`}
-            </p>
-          </div>
-        ))}
-      </div>
+  const renderAppointmentsSection = () => {
+    const appointmentColumns: { key: 'service' | 'client' | 'status' | 'start' | 'end' | 'id'; label: string }[] = [
+      { key: 'service', label: 'Serviço' },
+      { key: 'client', label: 'Cliente' },
+      { key: 'status', label: 'Status' },
+      { key: 'start', label: 'Início' },
+      { key: 'end', label: 'Fim' },
+      { key: 'id', label: 'ID' },
+    ]
 
-      {groupedAppointments.map((group) => (
-        <div key={group.key} className="space-y-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">{group.label}</h2>
-              <p className="text-sm text-emerald-900/70">
-                Visualize o histórico de cada reserva com dados completos de cliente e horários.
-              </p>
-            </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-              {group.items.length} {group.items.length === 1 ? 'agendamento' : 'agendamentos'}
+    return (
+      <section className="space-y-10">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {groupedAppointments.map((group) => (
+            <AdminStatCard
+              key={group.key}
+              label={group.label}
+              value={group.items.length}
+              hint={
+                group.statuses.length > 1
+                  ? 'Inclui agendamentos confirmados e reservados.'
+                  : `Status: ${appointmentStatusLabels[group.statuses[0]]}`
+              }
+              tone={group.items.length > 0 ? 'success' : 'neutral'}
+            />
+          ))}
+        </div>
+
+        {groupedAppointments.map((group) => {
+          const rows = group.items.map((appointment) => ({
+            service: appointment.services?.name ?? 'Serviço não informado',
+            client: (
+              <div className="flex flex-col gap-1">
+                <strong>{appointment.profiles?.full_name ?? 'Cliente sem nome'}</strong>
+                <span className="text-xs text-slate-400">{appointment.profiles?.email ?? 'Sem e-mail'}</span>
+              </div>
+            ),
+            status: (
+              <span className={`${styles.statusPill} ${styles.statusPillInfo}`}>
+                {appointmentStatusLabels[appointment.status] ?? appointment.status}
+              </span>
+            ),
+            start: new Date(appointment.starts_at).toLocaleString(),
+            end: new Date(appointment.ends_at).toLocaleString(),
+            id: <span className={styles.tableId}>{appointment.id}</span>,
+          }))
+
+          return (
+            <AdminCard
+              key={group.key}
+              title={group.label}
+              description="Visualize o histórico de cada reserva com dados completos de cliente e horários."
+              actions={
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+                  {group.items.length} {group.items.length === 1 ? 'agendamento' : 'agendamentos'}
+                </span>
+              }
+            >
+              <AdminTable columns={appointmentColumns} rows={rows} emptyMessage={`Nenhum agendamento ${group.label.toLowerCase()}.`} />
+            </AdminCard>
+          )
+        })}
+      </section>
+    )
+  }
+  const renderClientsSection = () => {
+    const clientColumns: { key: 'name' | 'email' | 'whatsapp' | 'created_at' | 'id'; label: string }[] = [
+      { key: 'name', label: 'Nome' },
+      { key: 'email', label: 'E-mail' },
+      { key: 'whatsapp', label: 'WhatsApp' },
+      { key: 'created_at', label: 'Desde' },
+      { key: 'id', label: 'ID' },
+    ]
+
+    const rows = filteredClients.map((client) => ({
+      name: client.full_name ?? '—',
+      email: client.email ?? '—',
+      whatsapp: client.whatsapp ?? '—',
+      created_at: client.created_at ? new Date(client.created_at).toLocaleString() : '—',
+      id: <span className={styles.tableId}>{client.id}</span>,
+    }))
+
+    return (
+      <section className="space-y-6">
+        <AdminCard
+          title="Clientes cadastrados"
+          description="Acompanhe a evolução da sua base e mantenha o relacionamento ativo."
+          actions={
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+              {filteredClients.length} {filteredClients.length === 1 ? 'cliente' : 'clientes'}
             </span>
-          </div>
-          {group.items.length === 0 ? (
-            <div className={`${mutedPanelClass} text-sm`}>
-              Nenhum agendamento {group.label.toLowerCase()}.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {group.items.map((appointment) => (
-                <article key={appointment.id} className={`${surfaceCardClass} space-y-4`}>
-                  <div className="flex flex-col gap-3 border-b border-emerald-900/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-emerald-950">
-                        {appointment.services?.name ?? 'Serviço não informado'}
-                      </h3>
-                      <p className="text-xs text-emerald-900/60">ID: {appointment.id}</p>
-                    </div>
-                    <span className={`${styles.statusPill} ${styles.statusPillInfo}`}>
-                      {appointmentStatusLabels[appointment.status] ?? appointment.status}
-                    </span>
-                  </div>
-                  <dl className="grid grid-cols-1 gap-3 text-sm text-emerald-900/80 md:grid-cols-2">
-                    <div className="space-y-1">
-                      <dt className={labelCaptionClass}>Cliente</dt>
-                      <dd className="font-semibold">{appointment.profiles?.full_name ?? 'Sem nome informado'}</dd>
-                    </div>
-                    <div className="space-y-1">
-                      <dt className={labelCaptionClass}>E-mail</dt>
-                      <dd>{appointment.profiles?.email ?? '—'}</dd>
-                    </div>
-                    <div className="space-y-1">
-                      <dt className={labelCaptionClass}>Início</dt>
-                      <dd>{new Date(appointment.starts_at).toLocaleString()}</dd>
-                    </div>
-                    <div className="space-y-1">
-                      <dt className={labelCaptionClass}>Fim</dt>
-                      <dd>{new Date(appointment.ends_at).toLocaleString()}</dd>
-                    </div>
-                  </dl>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </section>
-  )
-  const renderClientsSection = () => (
+          }
+        >
+          <AdminTable columns={clientColumns} rows={rows} emptyMessage="Nenhum cliente cadastrado ainda." />
+        </AdminCard>
+      </section>
+    )
+  }
+  const renderConfigSection = () => (
     <section className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-emerald-950">Clientes cadastrados</h2>
-          <p className="text-sm text-emerald-900/70">Acompanhe a evolução da sua base e mantenha o relacionamento ativo.</p>
+      <AdminCard
+        title="Temas do painel"
+        description="Escolha um preset para o modo admin. O tema fica salvo apenas para você neste navegador."
+      >
+        <div className={styles.themeGrid}>
+          {themes.map((preset) => {
+            const isActive = preset.id === theme
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => setTheme(preset.id)}
+                className={`${styles.themeTile} ${isActive ? styles.themeTileActive : ''}`}
+              >
+                <div className={styles.themeTileHead}>
+                  <span className={styles.themeDot} />
+                  <div className={styles.themeTileText}>
+                    <p className={styles.themeName}>{preset.name}</p>
+                    <p className={styles.themeDescription}>{preset.description}</p>
+                  </div>
+                </div>
+                <span className={styles.themeTag}>{isActive ? 'Tema ativo' : 'Aplicar tema'}</span>
+              </button>
+            )
+          })}
         </div>
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-          {clients.length} {clients.length === 1 ? 'cliente' : 'clientes'}
-        </span>
-      </div>
-      {clients.length === 0 ? (
-        <div className={`${mutedPanelClass} text-sm`}>
-          Nenhum cliente cadastrado ainda.
+      </AdminCard>
+
+      <AdminCard
+        title="Preferências gerais"
+        description="As rotas, roles e integrações permanecem intactas. Use os atalhos abaixo para revisar cadastros essenciais."
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <AdminStatCard label="Perfil atual" value={currentProfile?.role ?? 'admin'} hint="Admin master > admin super > admin" />
+          <AdminStatCard label="Filial ativa" value={currentBranchName} hint="Definida no seletor lateral" />
+          <AdminStatCard label="Tema aplicado" value={themes.find((preset) => preset.id === theme)?.name ?? 'Light'} />
         </div>
-      ) : (
-        <div className={`${panelCardClass} ${styles.tableCard}`}>
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeadCell}>Nome</th>
-                  <th className={styles.tableHeadCell}>E-mail</th>
-                  <th className={styles.tableHeadCell}>WhatsApp</th>
-                  <th className={styles.tableHeadCell}>Desde</th>
-                  <th className={styles.tableHeadCell}>ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
-                  <tr key={client.id} className={styles.tableBodyRow}>
-                    <td className={`${styles.tableCell} font-semibold`}>{client.full_name ?? '—'}</td>
-                    <td className={styles.tableCell}>{client.email ?? '—'}</td>
-                    <td className={styles.tableCell}>{client.whatsapp ?? '—'}</td>
-                    <td className={styles.tableCell}>
-                      {client.created_at ? new Date(client.created_at).toLocaleString() : '—'}
-                    </td>
-                    <td className={`${styles.tableCell} ${styles.tableId}`}>{client.id}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      </AdminCard>
     </section>
   )
   const renderPlaceholderSection = (message: string) => (
@@ -2079,7 +2170,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
         sectionContent = renderClientsSection()
         break
       case 'configuracoes':
-        sectionContent = renderPlaceholderSection('Em breve! Personalize configurações avançadas do painel.')
+        sectionContent = renderConfigSection()
         break
       case 'agendamentos':
       default:
@@ -2106,6 +2197,22 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             </button>
           </div>
         </header>
+
+        <AdminToolbar
+          searchPlaceholder="Buscar por cliente, serviço ou agendamento"
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          actions={
+            <div className="flex gap-2">
+              <button className={secondaryButtonClass} onClick={() => fetchAdminData()} disabled={status === 'loading'}>
+                {status === 'loading' ? 'Atualizando…' : 'Sincronizar'}
+              </button>
+              <button className={primaryButtonClass} onClick={handleSignOut} disabled={signingOut}>
+                {signingOut ? 'Saindo…' : 'Encerrar sessão'}
+              </button>
+            </div>
+          }
+        />
 
         {showSectionNav && (
           <div className={styles.inlineNav}>

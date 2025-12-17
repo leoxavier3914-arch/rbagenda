@@ -7,6 +7,7 @@ import styles from "../adminNav.module.css";
 
 type AdminNavProps = {
   disabled?: boolean;
+  onNavigate?: () => void;
 };
 
 const NAV_ITEMS = [
@@ -20,26 +21,32 @@ const NAV_ITEMS = [
   { href: "/admin/suporte", label: "Suporte", description: "Em breve tickets e mensagens", icon: "💬" },
 ];
 
-export default function AdminNav({ disabled }: AdminNavProps) {
+export default function AdminNav({ disabled, onNavigate }: AdminNavProps) {
   const pathname = usePathname();
 
   return (
     <nav className={styles.nav} aria-label="Navegação do painel administrativo">
       <ul className={styles.navList}>
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
+                onClick={onNavigate}
                 className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${disabled ? styles.navItemDisabled : ""}`}
                 aria-current={isActive ? "page" : undefined}
               >
-                <span className={styles.navIcon} aria-hidden>{item.icon}</span>
+                <span className={styles.navIcon} aria-hidden>
+                  {item.icon}
+                </span>
                 <span className={styles.navCopy}>
                   <span className={styles.navTitle}>{item.label}</span>
                   <span className={styles.navSubtitle}>{item.description}</span>
+                </span>
+                <span className={styles.navPill} aria-hidden>
+                  {isActive ? "•" : ""}
                 </span>
               </Link>
             </li>

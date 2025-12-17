@@ -9,6 +9,7 @@
 
 .navCollapsed .navItem {
   justify-content: center;
+  box-sizing: border-box;
   padding: 12px 10px;
   border-radius: 14px;
 }
@@ -34,6 +35,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
   border-radius: 12px;
   text-decoration: none;

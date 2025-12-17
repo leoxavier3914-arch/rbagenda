@@ -189,6 +189,16 @@
   z-index: 16;
 }
 
+.sidebarCollapsed {
+  cursor: pointer;
+  align-items: center;
+  padding: 18px 10px;
+}
+
+.sidebarCollapsed .sidebarHeader {
+  display: none;
+}
+
 .sidebarExpanded {
   width: var(--sidebar-expanded);
 }

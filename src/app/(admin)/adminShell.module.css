@@ -169,15 +169,29 @@
 }
 
 .shell {
-  display: flex;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: var(--sidebar-expanded) 1fr;
   min-height: calc(100vh - var(--topbar-height));
+}
+
+.shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: var(--sidebar-expanded);
+  background: #2f3546;
+  border-right: 1px solid #252b3a;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .sidebar {
   position: sticky;
   top: var(--topbar-height);
   align-self: flex-start;
-  width: var(--sidebar-collapsed);
+  width: var(--sidebar-expanded);
   min-height: calc(100vh - var(--topbar-height));
   background: #2f3546;
   border-right: 1px solid #252b3a;
@@ -185,7 +199,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transition: width 0.25s ease, transform 0.25s ease;
+  overflow: hidden;
+  transform: translateX(0);
+  transition: transform 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
   z-index: 16;
 }
 
@@ -193,9 +209,8 @@
   cursor: pointer;
   align-items: stretch;
   padding: 20px 10px;
-  background: #2f3546;
-  border-right: 1px solid #252b3a;
-  box-shadow: none;
+  padding-left: calc(var(--sidebar-expanded) - var(--sidebar-collapsed) + 12px);
+  transform: translateX(calc(var(--sidebar-collapsed) - var(--sidebar-expanded)));
 }
 
 .sidebarCollapsed .sidebarHeader {
@@ -204,10 +219,8 @@
 }
 
 .sidebarExpanded {
-  width: var(--sidebar-expanded);
-  background: #2f3546;
-  border-right: 1px solid #252b3a;
-  box-shadow: none;
+  padding: 16px 12px;
+  transform: translateX(0);
 }
 
 .sidebarMobileOpen {
@@ -291,6 +304,8 @@
   flex: 1;
   min-width: 0;
   padding: 26px 24px 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .pageShell {
@@ -303,6 +318,14 @@
     display: inline-flex;
   }
 
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell::before {
+    display: none;
+  }
+
   .sidebar {
     position: fixed;
     left: 0;
@@ -313,8 +336,9 @@
     min-height: 100vh;
   }
 
-  .sidebarExpanded {
-    width: 260px;
+  .sidebarExpanded,
+  .sidebarMobileOpen {
+    transform: translateX(0);
   }
 
   .contentArea {

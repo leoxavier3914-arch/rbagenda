@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 
+import { AdminCard, AdminStatCard } from "../@components/AdminUI";
 import styles from "../adminHome.module.css";
 import { useAdminGuard } from "../useAdminGuard";
 
@@ -37,27 +38,45 @@ export default function AdminHomePage() {
 
   return (
     <div className={styles.wrapper}>
-      <section className={styles.hero}>
-        <span className={styles.eyebrow}>Painel Admin</span>
-        <h2 className={styles.title}>Escolha um módulo para começar</h2>
-        <p className={styles.subtitle}>
-          Acesso rápido às áreas de agendamento, catálogo e clientes. Use o menu lateral para navegar entre os módulos do painel.
-        </p>
-      </section>
-
-      <div className={styles.cards}>
-        {sections.map((section) => (
-          <Link key={section.href} href={section.href} className={styles.card}>
-            <span className={styles.cardIcon} aria-hidden>
-              {section.icon}
-            </span>
-            <div>
-              <p className={styles.cardTitle}>{section.title}</p>
-              <p className={styles.cardDescription}>{section.description}</p>
-            </div>
-          </Link>
-        ))}
+      <div className={styles.heroGrid}>
+        <AdminCard
+          title="Painel administrativo"
+          description="Acesse rapidamente cada módulo sem alterar fluxos ou permissões. O novo layout mantém todas as rotas originais."
+        >
+          <div className={styles.heroBody}>
+            <p>
+              Sidebar fixa no desktop, drawer no mobile e um frame limpo para todas as páginas do admin. Escolha um módulo
+              para continuar trabalhando sem perder contexto.
+            </p>
+            <ul className={styles.heroList}>
+              <li>Rotas preservadas (/admin/...)</li>
+              <li>Permissões admin/adminsuper/adminmaster mantidas</li>
+              <li>Temas dedicados só para o painel administrativo</li>
+            </ul>
+          </div>
+        </AdminCard>
+        <div className={styles.statGrid}>
+          <AdminStatCard label="Módulos" value={sections.length} hint="Todas as rotas do admin ativas" icon="🗂️" />
+          <AdminStatCard label="Layout" value="Novo shell" hint="Sidebar fixa + drawer mobile" icon="🧭" />
+          <AdminStatCard label="Temas" value="4 presets" hint="Light, Dark, Romeike, White Label" icon="🎨" />
+        </div>
       </div>
+
+      <AdminCard title="Escolha um módulo" description="Cards limpos com ícones para navegar no painel.">
+        <div className={styles.cards}>
+          {sections.map((section) => (
+            <Link key={section.href} href={section.href} className={styles.card}>
+              <span className={styles.cardIcon} aria-hidden>
+                {section.icon}
+              </span>
+              <div>
+                <p className={styles.cardTitle}>{section.title}</p>
+                <p className={styles.cardDescription}>{section.description}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </AdminCard>
     </div>
   );
 }

@@ -1,0 +1,253 @@
+.card {
+  border-radius: 18px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-panel);
+  box-shadow: var(--admin-shadow);
+  display: grid;
+  gap: 12px;
+}
+
+.card-muted {
+  background: rgba(255, 255, 255, 0.04);
+  border-style: dashed;
+}
+
+.card-ghost {
+  background: transparent;
+  border: 1px dashed var(--admin-border);
+  box-shadow: none;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 0;
+  align-items: flex-start;
+}
+
+.cardHeaderText {
+  display: grid;
+  gap: 6px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.95rem;
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cardBody {
+  padding: 0 18px 18px;
+}
+
+.cardBodyFlush {
+  padding: 0;
+}
+
+.statCard {
+  border-radius: 16px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--admin-text);
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.statHint {
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.stat-success {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.stat-warning {
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.stat-danger {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.toolbarSearch {
+  flex: 1;
+  min-width: 240px;
+}
+
+.toolbarSearch input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border-strong);
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--admin-text);
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbarFilters,
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.table {
+  border-radius: 16px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tableScroller {
+  overflow-x: auto;
+}
+
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.table thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tableEmpty {
+  margin: 0;
+  padding: 14px;
+  font-size: 0.95rem;
+  color: var(--admin-muted);
+}
+
+.formSection {
+  display: grid;
+  gap: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 18px;
+}
+
+.formSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.formSectionEyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+}
+
+.formSectionTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.formSectionDescription {
+  margin: 6px 0 0;
+  color: var(--admin-muted);
+}
+
+.formSectionActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.formSectionAside {
+  min-width: 200px;
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.formSectionBody {
+  display: grid;
+  gap: 12px;
+}

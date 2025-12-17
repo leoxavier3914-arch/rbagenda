@@ -1,18 +1,18 @@
-:global(:root) {
-  --admin-bg: #fbfaf7;
-  --admin-glass-start: #f5fbf7;
-  --admin-glass-end: #ffffff;
-  --admin-surface: #ffffff;
-  --admin-muted-surface: #f0f5f2;
-  --admin-ink: #1f1f1f;
-  --admin-muted: #6b6b6b;
-  --admin-brand: #1f8a70;
-  --admin-brand-dark: #1b5e4a;
-  --admin-stroke: #e8e2d9;
-  --admin-shadow: 0 26px 56px rgba(28, 86, 66, 0.14);
-  --admin-radius-lg: 28px;
-  --admin-radius-md: 20px;
-  --admin-radius-sm: 14px;
+:global(.admin-theme) {
+  --admin-bg: transparent;
+  --admin-glass-start: color-mix(in srgb, var(--admin-panel) 88%, transparent);
+  --admin-glass-end: color-mix(in srgb, var(--admin-panel) 72%, transparent);
+  --admin-surface: color-mix(in srgb, var(--admin-panel) 90%, transparent);
+  --admin-muted-surface: color-mix(in srgb, var(--admin-panel) 70%, transparent);
+  --admin-ink: var(--admin-text);
+  --admin-muted: color-mix(in srgb, var(--admin-text) 60%, transparent);
+  --admin-brand: var(--admin-accent);
+  --admin-brand-dark: var(--admin-accent-strong);
+  --admin-stroke: var(--admin-border);
+  --admin-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --admin-radius-lg: 22px;
+  --admin-radius-md: 16px;
+  --admin-radius-sm: 12px;
 }
 
 .page {
@@ -990,6 +990,78 @@ select.input:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.themeTile {
+  border-radius: 14px;
+  border: 1px solid var(--admin-stroke);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px;
+  text-align: left;
+  display: grid;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.themeTile:hover {
+  border-color: var(--admin-brand);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
+}
+
+.themeTileActive {
+  border-color: var(--admin-brand);
+  box-shadow: 0 16px 30px rgba(14, 165, 233, 0.25);
+}
+
+.themeTileHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.themeDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--admin-brand), var(--admin-brand-dark));
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+}
+
+.themeTileText {
+  display: grid;
+  gap: 4px;
+}
+
+.themeName {
+  margin: 0;
+  font-weight: 700;
+}
+
+.themeDescription {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.themeTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--admin-stroke);
+  color: var(--admin-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

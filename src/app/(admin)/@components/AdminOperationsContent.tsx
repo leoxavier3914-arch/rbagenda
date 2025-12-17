@@ -1048,7 +1048,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
           </p>
         </div>
         <form
-          className="grid gap-5 md:grid-cols-[minmax(0,2fr),minmax(0,2fr),minmax(0,1.2fr)]"
+          className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,2fr),minmax(0,2fr),minmax(0,1.2fr)]"
           onSubmit={handleCreateBranch}
         >
           <label className={labelClass}>
@@ -1092,7 +1092,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             {branches.length} {branches.length === 1 ? 'filial' : 'filiais'}
           </span>
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {branches.map((branch) => {
             const form = branchEdits[branch.id] ?? {
               name: branch.name,
@@ -1123,7 +1123,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                 </div>
                 <div className="space-y-4 border-t border-emerald-900/10 pt-4">
                   <h4 className="text-sm font-semibold text-emerald-950">Editar filial</h4>
-                  <div className="grid gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <label className={labelClass}>
                       <span className={labelCaptionClass}>Nome</span>
                       <input
@@ -1194,7 +1194,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                       )}
                     </div>
                     {isMaster && (
-                      <div className="grid gap-3 md:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
                         <label className={labelClass}>
                           <span className={labelCaptionClass}>Alterar responsável</span>
                           <select
@@ -1262,7 +1262,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                       </div>
                     )}
                     {canManageAdmins && (
-                      <div className="grid gap-3 md:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
                         <label className={labelClass}>
                           <span className={labelCaptionClass}>Vincular admin</span>
                           <select
@@ -1319,7 +1319,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             Estruture seu catálogo em categorias para acelerar a busca por serviços durante o agendamento.
           </p>
         </div>
-        <form className="grid gap-5 md:grid-cols-4" onSubmit={handleCreateServiceType}>
+        <form className="grid grid-cols-1 gap-5 md:grid-cols-4" onSubmit={handleCreateServiceType}>
           <label className={`${labelClass} md:col-span-2`}>
             <span className={labelCaptionClass}>Nome</span>
             <input
@@ -1402,7 +1402,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             {serviceTypes.length} {serviceTypes.length === 1 ? 'categoria' : 'categorias'}
           </span>
         </div>
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {serviceTypes.map((type) => {
             const form =
               serviceTypeEdits[type.id] ?? ({
@@ -1429,7 +1429,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                     {type.active ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <label className={labelClass}>
                     <span className={labelCaptionClass}>Nome</span>
                     <input
@@ -1531,7 +1531,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             Construa descrições completas com preço, duração e intervalo entre atendimentos para uma operação consistente.
           </p>
         </div>
-        <form className="grid gap-5 md:grid-cols-4" onSubmit={handleCreateService}>
+        <form className="grid grid-cols-1 gap-5 md:grid-cols-4" onSubmit={handleCreateService}>
           <label className={`${labelClass} md:col-span-2`}>
             <span className={labelCaptionClass}>Nome</span>
             <input
@@ -1701,7 +1701,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
             {services.length} {services.length === 1 ? 'serviço' : 'serviços'}
           </span>
         </div>
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {services.map((service) => {
             const form =
               serviceEdits[service.id] ?? ({
@@ -1750,7 +1750,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                     </div>
                   )}
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <label className={labelClass}>
                     <span className={labelCaptionClass}>Nome</span>
                     <input
@@ -1929,7 +1929,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
   )
   const renderAppointmentsSection = () => (
     <section className="space-y-10">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {groupedAppointments.map((group) => (
           <div key={group.key} className={`${statCardClass} space-y-3`}>
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-900/55">{group.label}</span>
@@ -1961,7 +1961,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
               Nenhum agendamento {group.label.toLowerCase()}.
             </div>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {group.items.map((appointment) => (
                 <article key={appointment.id} className={`${surfaceCardClass} space-y-4`}>
                   <div className="flex flex-col gap-3 border-b border-emerald-900/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -1975,7 +1975,7 @@ export default function AdminOperationsContent({ section, showSectionNav = false
                       {appointmentStatusLabels[appointment.status] ?? appointment.status}
                     </span>
                   </div>
-                  <dl className="grid gap-3 text-sm text-emerald-900/80 md:grid-cols-2">
+                  <dl className="grid grid-cols-1 gap-3 text-sm text-emerald-900/80 md:grid-cols-2">
                     <div className="space-y-1">
                       <dt className={labelCaptionClass}>Cliente</dt>
                       <dd className="font-semibold">{appointment.profiles?.full_name ?? 'Sem nome informado'}</dd>

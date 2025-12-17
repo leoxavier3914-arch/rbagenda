@@ -7,24 +7,37 @@
 
 .adminRoot {
   --admin-header-height: 76px;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--admin-bg);
   color: var(--admin-text);
   display: flex;
-  flex-direction: column;
   width: 100%;
+  position: relative;
+}
+
+.adminShell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "topbar"
+    "main";
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--admin-bg);
   position: relative;
 }
 
 .drawerBackdrop {
   position: fixed;
-  inset: 0;
+  inset: var(--admin-header-height) 0 0 0;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   z-index: 50;
 }
 
 .adminHeader {
+  grid-area: topbar;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -33,9 +46,10 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 14px 16px;
+  min-height: var(--admin-header-height);
   background: var(--admin-surface);
   border-bottom: 1px solid var(--admin-border);
-  box-shadow: var(--admin-shadow-soft);
+  box-shadow: none;
 }
 
 .headerLeft {
@@ -197,21 +211,13 @@
   font-size: 0.85rem;
 }
 
-.adminBody {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--admin-bg);
-}
-
 .adminSidebar {
   position: fixed;
-  inset: 0 auto 0 0;
+  top: var(--admin-header-height);
+  left: 0;
   width: min(86vw, var(--admin-sidebar-width));
   max-width: var(--admin-sidebar-width);
-  height: 100vh;
-  height: 100dvh;
+  height: calc(100dvh - var(--admin-header-height));
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 60;
@@ -294,6 +300,7 @@
 }
 
 .adminContent {
+  grid-area: main;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -302,6 +309,8 @@
   min-width: 0;
   width: 100%;
   background: var(--admin-bg);
+  min-height: 0;
+  overflow-x: hidden;
 }
 
 .adminContent > * {
@@ -372,6 +381,10 @@
     min-width: 0;
   }
 
+  .adminShell {
+    grid-template-columns: 1fr;
+  }
+
   .headerRight {
     width: 100%;
     justify-content: flex-start;
@@ -388,20 +401,26 @@
     display: none;
   }
 
-  .adminBody {
-    flex-direction: row;
-    align-items: stretch;
+  .adminShell {
+    grid-template-columns: var(--admin-sidebar-width) 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "topbar topbar"
+      "sidebar main";
   }
 
   .adminSidebar {
     position: sticky;
-    inset: 0 auto 0 0;
+    grid-area: sidebar;
+    left: 0;
+    inset: auto auto auto 0;
     transform: none;
-    height: calc(100vh - var(--admin-header-height));
+    height: calc(100dvh - var(--admin-header-height));
     top: var(--admin-header-height);
     width: var(--admin-sidebar-width);
     max-width: var(--admin-sidebar-width);
     box-shadow: none;
+    align-self: start;
   }
 
   .menuButton,
@@ -411,5 +430,6 @@
 
   .adminContent {
     padding: 22px 28px 32px;
+    grid-area: main;
   }
 }

@@ -1,5 +1,7 @@
 .nav {
   width: 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  border-radius: 16px;
 }
 
 .navList {
@@ -7,7 +9,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .navItem {
@@ -17,25 +19,50 @@
   gap: 12px;
   align-items: center;
   padding: 12px 14px;
-  border-radius: var(--admin-radius-md);
-  color: var(--admin-text);
+  border-radius: 14px;
+  color: var(--admin-sidebar-text);
   text-decoration: none;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-alt);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
   box-shadow: none;
+  overflow: hidden;
+}
+
+.navItem::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  height: 50%;
+  width: 4px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.2s ease, height 0.2s ease;
 }
 
 .navItem:hover {
-  border-color: var(--admin-accent);
-  box-shadow: var(--admin-shadow-soft);
-  transform: translateX(2px);
+  border-color: var(--admin-sidebar-border);
+  box-shadow: var(--admin-card-glow);
+  background: var(--admin-sidebar-hover);
+  transform: translateX(4px);
+  color: var(--admin-sidebar-text);
+}
+
+.navItem:hover::before {
+  background: var(--admin-accent);
+  height: 70%;
 }
 
 .navItemActive {
   border-color: var(--admin-accent);
-  background: linear-gradient(135deg, var(--admin-highlight), var(--admin-surface));
-  box-shadow: var(--admin-shadow-soft);
+  background: linear-gradient(135deg, rgba(116, 96, 238, 0.18), rgba(44, 167, 227, 0.12));
+  box-shadow: var(--admin-card-glow);
+  color: var(--admin-sidebar-text);
+}
+
+.navItemActive::before {
+  background: var(--admin-accent);
+  height: 70%;
 }
 
 .navItemDisabled {
@@ -51,8 +78,8 @@
   justify-content: center;
   font-size: 1.1rem;
   border-radius: 12px;
-  background: var(--admin-highlight);
-  color: var(--admin-text);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--admin-sidebar-text);
 }
 
 .navCopy {
@@ -65,14 +92,14 @@
 .navTitle {
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--admin-text);
+  color: var(--admin-sidebar-text);
 }
 
 .navSubtitle {
   font-size: 0.9rem;
-  color: var(--admin-muted);
+  color: var(--admin-sidebar-muted);
 }
 
 .navChevron {
-  color: var(--admin-muted);
+  color: var(--admin-sidebar-muted);
 }

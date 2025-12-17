@@ -91,7 +91,9 @@ $$;
 grant execute on function public.is_admin(uuid) to public;
 
 -- RLS policies for branch admin assignments
-create policy if not exists branch_admins_select_policy
+drop policy if exists branch_admins_select_policy on public.branch_admins;
+
+create policy branch_admins_select_policy
   on public.branch_admins
   for select
   using (
@@ -103,7 +105,9 @@ create policy if not exists branch_admins_select_policy
     )
   );
 
-create policy if not exists branch_admins_insert_policy
+drop policy if exists branch_admins_insert_policy on public.branch_admins;
+
+create policy branch_admins_insert_policy
   on public.branch_admins
   for insert
   with check (
@@ -114,7 +118,9 @@ create policy if not exists branch_admins_insert_policy
     )
   );
 
-create policy if not exists branch_admins_delete_policy
+drop policy if exists branch_admins_delete_policy on public.branch_admins;
+
+create policy branch_admins_delete_policy
   on public.branch_admins
   for delete
   using (

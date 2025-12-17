@@ -174,7 +174,18 @@ const roleLabels: Record<ProfileRole, string> = {
   adminmaster: 'Admin master',
 }
 
-export default function AdminMaster(): ReactElement {
+type AdminPanelVariant = 'adminsuper' | 'adminmaster'
+
+const resolveUnauthorizedRedirect = (variant: AdminPanelVariant, role: ProfileRole | null) => {
+  if (role === 'admin') return '/admin'
+  if (role === 'adminsuper') {
+    return variant === 'adminmaster' ? '/admin/adminsuper' : '/admin/adminsuper'
+  }
+  if (role === 'adminmaster') return '/admin/adminmaster'
+  return '/login'
+}
+
+export function AdminPlatformPage({ variant }: { variant: AdminPanelVariant }): ReactElement {
   const router = useRouter()
 
   const [status, setStatus] = useState<LoadingState>('idle')
@@ -237,9 +248,12 @@ export default function AdminMaster(): ReactElement {
 
       const userRole = profile?.role ?? null
       setCurrentUserRole(userRole)
-      if (userRole !== 'adminsuper' && userRole !== 'adminmaster') {
+
+      const isAllowedRole = variant === 'adminmaster' ? userRole === 'adminmaster' : userRole === 'adminsuper'
+
+      if (!isAllowedRole) {
         setStatus('idle')
-        router.replace('/meu-perfil')
+        router.replace(resolveUnauthorizedRedirect(variant, userRole))
         return
       }
 
@@ -426,7 +440,7 @@ export default function AdminMaster(): ReactElement {
       setError(message)
       setStatus('idle')
     }
-  }, [router])
+  }, [router, variant])
 
   useEffect(() => {
     let active = true
@@ -2016,4 +2030,8 @@ export default function AdminMaster(): ReactElement {
       </div>
     </main>
   )
+}
+
+export default function AdminSuperPage() {
+  return <AdminPlatformPage variant="adminsuper" />
 }

@@ -9,13 +9,38 @@ type AdminGuardStatus = "checking" | "authorized";
 
 type GuardResult = {
   status: AdminGuardStatus;
+  role: AdminRole | "client" | null;
 };
 
-const ADMIN_ROLES = ["admin", "adminsuper", "adminmaster"];
+export type AdminRole = "admin" | "adminsuper" | "adminmaster";
 
-export function useAdminGuard(): GuardResult {
+export type GuardOptions = {
+  allowedRoles?: AdminRole[];
+  fallbackRedirects?: Partial<Record<AdminRole | "client" | "unauthenticated", string>>;
+};
+
+const ADMIN_ROLES: AdminRole[] = ["admin", "adminsuper", "adminmaster"];
+
+function resolveRedirect(
+  role: AdminRole | "client" | null,
+  fallbackRedirects: GuardOptions["fallbackRedirects"]
+) {
+  if (!fallbackRedirects) return "/meu-perfil";
+  if (!role) return fallbackRedirects.unauthenticated ?? "/login";
+  return (
+    fallbackRedirects[role] ??
+    fallbackRedirects.client ??
+    fallbackRedirects.unauthenticated ??
+    "/login"
+  );
+}
+
+export function useAdminGuard(options?: GuardOptions): GuardResult {
   const router = useRouter();
   const [status, setStatus] = useState<AdminGuardStatus>("checking");
+  const [role, setRole] = useState<AdminRole | "client" | null>(null);
+
+  const allowedRoles = options?.allowedRoles ?? ADMIN_ROLES;
 
   useEffect(() => {
     let active = true;
@@ -35,9 +60,11 @@ export function useAdminGuard(): GuardResult {
         .maybeSingle();
 
       if (!active) return;
+      const currentRole = (profile?.role ?? null) as AdminRole | "client" | null;
+      setRole(currentRole);
 
-      if (profileError || !profile || !ADMIN_ROLES.includes(profile.role)) {
-        router.replace("/meu-perfil");
+      if (profileError || !profile || !allowedRoles.includes(profile.role as AdminRole)) {
+        router.replace(resolveRedirect(currentRole, options?.fallbackRedirects));
         return;
       }
 
@@ -68,7 +95,7 @@ export function useAdminGuard(): GuardResult {
       active = false;
       subscription?.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [allowedRoles, options?.fallbackRedirects, router]);
 
-  return { status };
+  return { status, role };
 }

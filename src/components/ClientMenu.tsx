@@ -17,7 +17,7 @@ import { supabase } from "@/lib/db";
 import styles from "./ClientMenu.module.css";
 
 type DatabaseRole = "client" | "admin" | "adminmaster" | "adminsuper" | null;
-type AppRole = "client" | "admin" | "adminsuper";
+type AppRole = "client" | "admin" | "adminsuper" | "adminmaster";
 
 type ProfileState = {
   name: string | null;
@@ -40,12 +40,14 @@ type ClientMenuProps = {
 const roleLabels: Record<AppRole, string> = {
   client: "Cliente",
   admin: "Admin",
-  adminsuper: "Admin Super",
+  adminsuper: "Admin super",
+  adminmaster: "Admin master",
 };
 
 const normalizeRole = (role: DatabaseRole): AppRole => {
   if (role === "admin") return "admin";
-  if (role === "adminsuper" || role === "adminmaster") return "adminsuper";
+  if (role === "adminsuper") return "adminsuper";
+  if (role === "adminmaster") return "adminmaster";
   return "client";
 };
 
@@ -306,7 +308,17 @@ export default function ClientMenu({
       return [
         {
           href: "/admin/adminsuper",
-          label: "Admin Super",
+          label: "Admin super",
+          icon: <DiamondIcon />,
+        },
+      ];
+    }
+
+    if (profile.role === "adminmaster") {
+      return [
+        {
+          href: "/admin/adminmaster",
+          label: "Admin master",
           icon: <DiamondIcon />,
         },
       ];

@@ -27,14 +27,34 @@ export default function Login() {
 
   const isFormDisabled = loading || checkingSession
 
-  const redirectByRole = useCallback(
-    async (session: Session | null) => {
-      if (!session?.user?.id) return
+  const resolveRedirectPath = useCallback(async (session: Session | null) => {
+    if (!session?.user?.id) return null
 
-      router.replace('/meu-perfil')
-    },
-    [router],
-  )
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Erro ao descobrir role do usuário', error)
+      return null
+    }
+
+    if (data?.role === 'admin') return '/admin'
+    if (data?.role === 'adminsuper') return '/admin/adminsuper'
+    if (data?.role === 'adminmaster') return '/admin/adminmaster'
+
+    return '/meu-perfil'
+  }, [])
+
+  const redirectByRole = useCallback(async (session: Session | null) => {
+    if (!session?.user?.id) return
+
+    const redirectPath = await resolveRedirectPath(session)
+
+    router.replace(redirectPath ?? '/meu-perfil')
+  }, [resolveRedirectPath, router])
 
   useEffect(() => {
     let active = true

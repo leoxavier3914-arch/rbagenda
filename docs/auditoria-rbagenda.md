@@ -34,9 +34,9 @@
 - **Recomendações**: validar cores com schema; salvar avatar no servidor; mover lógica de tema para hook compartilhado; cobrir fluxo de salvar perfil com testes e estados de erro.
 
 ### 2.4 `/login` (`src/app/(auth)/login/page.tsx`)
-- **Objetivo**: autenticar usuário e redirecionar para `/meu-perfil`.
+- **Objetivo**: autenticar usuário e redirecionar para o destino correto (painéis admin/adminsuper/adminmaster ou `/meu-perfil`).
 - **Arquivos e componentes**: rota `page.tsx`; CSS `login.module.css`; usa `ClientPageShell`, `ClientSection`, `ClientGlassPanel` e `LavaLampProvider`.
-- **Fluxo de dados/estado**: `supabase.auth.getSession` roda no mount para evitar flicker; se houver sessão, redireciona. `onAuthStateChange` mantém sync. Estados: email, password, msg, `loading`, `checkingSession`; `heroReady` vem de `useClientPageReady`. Enquanto `checkingSession` é true, o formulário permanece visível com aviso (evita “sumir” atrás de skeleton). Submit usa `signInWithPassword`; em sucesso chama `redirectByRole` (perfil) e trata ausência de sessão com aviso.
+- **Fluxo de dados/estado**: `supabase.auth.getSession` roda no mount para evitar flicker; se houver sessão, redireciona. `onAuthStateChange` mantém sync. Estados: email, password, msg, `loading`, `checkingSession`; `heroReady` vem de `useClientPageReady`. Enquanto `checkingSession` é true, o formulário permanece visível com aviso (evita “sumir” atrás de skeleton). Submit usa `signInWithPassword`; em sucesso chama `redirectByRole` que consulta `profiles.role` e envia para `/admin` (admin), `/admin/adminsuper` (adminsuper), `/admin/adminmaster` (adminmaster) ou `/meu-perfil` (demais), tratando ausência de sessão com aviso.
 - **Layout e UX**: cartão “liquid glass” com logo em pílula, inputs com ícones, botão degradê e links de suporte/signup. Usa shell completo com lava; card centralizado.
 - **Organização**: estado todo na página; lógica de sessão encapsulada em hooks Supabase; layout segue padrão de vidro.
 - **Pontos fortes/fracos**: fluxo de sessão agora estável (formulário permanece visível); ainda falta feedback granular de erros Supabase e testes de autenticação.
@@ -112,8 +112,9 @@
 
 ## 6. Área administrativa
 - Estrutura: agrupada em `src/app/(admin)` com layout próprio `layout.tsx` que aplica `LavaLampProvider` e `AdminShell` (fundo lava + painel glass). Navegação acessada via botão hambúrguer (drawer mobile, fixa no desktop) em `@components/AdminNav` com links para `/admin`, `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes`, `/admin/suporte`.
-- Proteção: hook `useAdminGuard` (mesmo escopo) bloqueia rotas para quem não estiver autenticado ou fora das roles `admin/adminsuper/adminmaster`, redirecionando para login ou `/meu-perfil`. O painel principal ainda valida role antes de carregar dados.
-- Home do painel: `/admin` traz cards de módulos e visual glass/lava alinhado às páginas de cliente.
+- Proteção: hook `useAdminGuard` (mesmo escopo) agora aceita `allowedRoles` + `fallbackRedirects` para redirecionar por role real: adminsuper → `/admin/adminsuper`, adminmaster → `/admin/adminmaster`, admin → `/admin`, clientes → `/login`. O painel master/super também valida role antes de carregar dados.
+- Home do painel: `/admin` traz cards de módulos e visual glass/lava alinhado às páginas de cliente e só permite role `admin` (demais admins são redirecionados para seus painéis).
+- Painéis estratégicos: `/admin/adminsuper` e `/admin/adminmaster` compartilham a mesma tela client-side; o wrapper de cada rota valida role e envia admin → `/admin`, adminsuper → `/admin/adminsuper`, adminmaster → `/admin/adminmaster` (clientes → `/login`). Admin master habilita seções extras (já existentes no componente).
 - Módulos operacionais: rotas `/admin/agendamentos`, `/admin/filiais`, `/admin/servicos`, `/admin/tipos`, `/admin/clientes`, `/admin/configuracoes` reutilizam `@components/AdminOperationsContent` para exibir as seções reais (dados de Supabase, formulários, métricas) antes concentradas em `/admin/operacoes` (rota removida).
 - Suporte: `/admin/suporte` segue como placeholder declarando que o painel ainda será disponibilizado.
 
@@ -122,6 +123,6 @@
 - `/procedimento`: sequência tipo → técnica → dia → horário; usa `useClientAvailability` com subscribe e filtros de buffer/duração; pagamento inicia via `/api/payments/create`.
 - `/agendamentos`: filtros + paginação; pagar/cancelar/reagendar; `RescheduleModal` usa `useClientAvailability` (60 dias, buffer padrão) e `/api/slots`; respeita `CANCEL_THRESHOLD_HOURS`.
 - `/meu-perfil`: edita perfil Supabase, avatar em `localStorage`, tema via CSS vars + `refreshPalette`; apenas admins alteram aparência.
-- `/login`: lava + shell completo; formulário permanece visível enquanto verifica sessão; redirect para `/meu-perfil` em sucesso.
+- `/login`: lava + shell completo; formulário permanece visível enquanto verifica sessão; redirect pós-login segue o `profiles.role` (admin → `/admin`, adminsuper → `/admin/adminsuper`, adminmaster → `/admin/adminmaster`, demais → `/meu-perfil`).
 - `/regras`: conteúdo direto no fundo sem glass; divisórias brancas e ornamento central devem permanecer.
 - Riscos-chave: alterações em CSS vars/tema ou `useClientAvailability` impactam as rotas sensíveis; fluxos de pagamento e avatar seguem sem testes nem persistência server-side.

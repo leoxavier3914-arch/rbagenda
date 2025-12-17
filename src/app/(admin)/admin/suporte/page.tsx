@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { supabase } from "@/lib/db";
+import { useAdminBranch } from "@/app/(admin)/@components/AdminBranchContext";
 
 import styles from "./suporteList.module.css";
 
@@ -16,6 +17,7 @@ type ThreadProfile = {
 type SupportThread = {
   id: string;
   user_id: string | null;
+  branch_id: string | null;
   last_message_preview: string | null;
   last_actor: "user" | "staff" | "assistant" | null;
   updated_at: string;
@@ -39,6 +41,7 @@ function getProfileData(profiles: SupportThread["profiles"]): ThreadProfile {
 }
 
 export default function AdminSuportePage() {
+  const { activeBranchId, loading: branchesLoading, isMaster } = useAdminBranch();
   const [threads, setThreads] = useState<SupportThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,10 +54,25 @@ export default function AdminSuportePage() {
       setIsLoading(true);
       setError(null);
 
-      const { data, error: queryError } = await supabase
+      if (!activeBranchId && !isMaster) {
+        setThreads([]);
+        setIsLoading(false);
+        setError("Selecione uma filial para visualizar os tickets.");
+        return;
+      }
+
+      let query = supabase
         .from("support_threads")
-        .select("id, user_id, last_message_preview, last_actor, updated_at, profiles(full_name, email)")
+        .select("id, user_id, branch_id, last_message_preview, last_actor, updated_at, profiles(full_name, email)")
         .order("updated_at", { ascending: false });
+
+      if (activeBranchId) {
+        query = query.eq("branch_id", activeBranchId);
+      } else if (isMaster) {
+        query = query.is("branch_id", null);
+      }
+
+      const { data, error: queryError } = await query;
 
       if (!active) return;
 
@@ -95,13 +113,15 @@ export default function AdminSuportePage() {
       unsubscribe = subscription.unsubscribe;
     };
 
-    void ensureSessionAndLoad();
+    if (!branchesLoading) {
+      void ensureSessionAndLoad();
+    }
 
     return () => {
       active = false;
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [activeBranchId, branchesLoading, isMaster]);
 
   const hasThreads = useMemo(() => threads.length > 0, [threads]);
 

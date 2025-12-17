@@ -35,6 +35,20 @@ type BranchWithOwner = {
   created_at: string
 }
 
+type BranchAdminProfile = {
+  id: string
+  full_name: string | null
+  email: string | null
+  role: ProfileRole
+}
+
+type BranchAdminAssignment = {
+  id: string
+  branch_id: string
+  user_id: string
+  profile: BranchAdminProfile | null
+}
+
 type ProfileRole = 'client' | 'admin' | 'adminsuper' | 'adminmaster'
 
 type Profile = {
@@ -179,6 +193,9 @@ export default function AdminMaster(): ReactElement {
   })
   const [userRoleEdits, setUserRoleEdits] = useState<Record<string, Profile['role']>>({})
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentUserRole, setCurrentUserRole] = useState<ProfileRole | null>(null)
+  const [branchAdmins, setBranchAdmins] = useState<Record<string, BranchAdminAssignment[]>>({})
+  const [branchAdminSelection, setBranchAdminSelection] = useState<Record<string, string>>({})
 
   const fetchMasterData = useCallback(async () => {
     try {
@@ -212,40 +229,51 @@ export default function AdminMaster(): ReactElement {
       }
 
       const userRole = profile?.role ?? null
+      setCurrentUserRole(userRole)
       if (userRole !== 'adminsuper' && userRole !== 'adminmaster') {
         setStatus('idle')
         router.replace('/meu-perfil')
         return
       }
 
-      const [branchesResponse, profilesResponse, announcementsResponse, appointmentsResponse, policiesResponse] =
-        await Promise.all([
-          supabase
-            .from('branches')
-            .select('id, name, timezone, owner_id, created_at, owner:profiles!branches_owner_id_fkey(id, full_name, email)')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('profiles')
-            .select('id, full_name, email, whatsapp, role, created_at')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('system_announcements')
-            .select(
-              'id, title, message, audience, status, publish_at, created_at, creator:profiles!system_announcements_created_by_fkey(full_name, email)'
-            )
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('appointments')
-            .select(
-              'id, branch_id, status, starts_at, created_at, customer_id, branches(name), profiles:profiles!appointments_customer_id_fkey(id, full_name, email)'
-            )
-            .order('created_at', { ascending: false })
-            .limit(120),
-          supabase
-            .from('platform_policies')
-            .select('id, name, value')
-            .in('name', ['booking_rules', 'integrations']),
-        ])
+      const [
+        branchesResponse,
+        profilesResponse,
+        announcementsResponse,
+        appointmentsResponse,
+        policiesResponse,
+        branchAdminsResponse,
+      ] = await Promise.all([
+        supabase
+          .from('branches')
+          .select('id, name, timezone, owner_id, created_at, owner:profiles!branches_owner_id_fkey(id, full_name, email)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('profiles')
+          .select('id, full_name, email, whatsapp, role, created_at')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('system_announcements')
+          .select(
+            'id, title, message, audience, status, publish_at, created_at, creator:profiles!system_announcements_created_by_fkey(full_name, email)'
+          )
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('appointments')
+          .select(
+            'id, branch_id, status, starts_at, created_at, customer_id, branches(name), profiles:profiles!appointments_customer_id_fkey(id, full_name, email)'
+          )
+          .order('created_at', { ascending: false })
+          .limit(120),
+        supabase
+          .from('platform_policies')
+          .select('id, name, value')
+          .in('name', ['booking_rules', 'integrations']),
+        supabase
+          .from('branch_admins')
+          .select('id, branch_id, user_id, profiles:profiles!branch_admins_user_id_fkey(id, full_name, email, role)')
+          .order('created_at', { ascending: false }),
+      ])
 
       if (branchesResponse.error) {
         throw new Error('Não foi possível carregar as filiais. Tente novamente.')
@@ -358,6 +386,31 @@ export default function AdminMaster(): ReactElement {
           ...(integrationPolicyRecord?.value as Partial<IntegrationPolicy> | null ?? {}),
         },
       })
+
+      const groupedAdmins = (branchAdminsResponse.data ?? []).reduce<Record<string, BranchAdminAssignment[]>>(
+        (accumulator, assignment) => {
+          const profileData = Array.isArray(assignment.profiles) ? assignment.profiles[0] : assignment.profiles
+          const entry: BranchAdminAssignment = {
+            id: assignment.id,
+            branch_id: assignment.branch_id,
+            user_id: assignment.user_id,
+            profile: profileData
+              ? {
+                  id: profileData.id,
+                  full_name: profileData.full_name ?? null,
+                  email: profileData.email ?? null,
+                  role: (profileData.role ?? 'admin') as ProfileRole,
+                }
+              : null,
+          }
+
+          const current = accumulator[assignment.branch_id] ?? []
+          return { ...accumulator, [assignment.branch_id]: [...current, entry] }
+        },
+        {},
+      )
+
+      setBranchAdmins(groupedAdmins)
 
       setStatus('ready')
     } catch (err) {
@@ -548,6 +601,7 @@ export default function AdminMaster(): ReactElement {
   const totalMasters = masterUsers.length
   const totalClients = clientUsers.length
   const averageAppointmentsPerBranch = totalBranches > 0 ? Math.round(totalAppointments / totalBranches) : 0
+  const isMasterUser = currentUserRole === 'adminmaster'
 
   const glassCardClass = styles.heroCard
   const panelCardClass = styles.panelCard
@@ -569,6 +623,7 @@ export default function AdminMaster(): ReactElement {
     setBranchAssignments({})
     setNewAnnouncement({ title: '', message: '', audience: 'all' })
     setUserRoleEdits({})
+    setBranchAdminSelection({})
   }, [])
 
   const refreshMasterData = useCallback(
@@ -715,6 +770,44 @@ export default function AdminMaster(): ReactElement {
     }
 
     await refreshMasterData({ type: 'success', text: 'Responsável atualizado com sucesso.' })
+  }
+
+  const handleBranchAdminSelect = (branchId: string, adminId: string) => {
+    setBranchAdminSelection((previous) => ({ ...previous, [branchId]: adminId }))
+  }
+
+  const handleAddBranchAdmin = async (branchId: string) => {
+    setActionMessage(null)
+    const userId = branchAdminSelection[branchId]
+
+    if (!userId) {
+      setActionMessage({ type: 'error', text: 'Selecione um admin para atribuir à filial.' })
+      return
+    }
+
+    const { error: insertError } = await supabase
+      .from('branch_admins')
+      .insert({ branch_id: branchId, user_id: userId, assigned_by: currentUserId })
+
+    if (insertError) {
+      setActionMessage({ type: 'error', text: 'Não foi possível adicionar o admin à filial.' })
+      return
+    }
+
+    await refreshMasterData({ type: 'success', text: 'Admin atribuído à filial.' })
+  }
+
+  const handleRemoveBranchAdmin = async (assignmentId: string) => {
+    setActionMessage(null)
+
+    const { error: deleteError } = await supabase.from('branch_admins').delete().eq('id', assignmentId)
+
+    if (deleteError) {
+      setActionMessage({ type: 'error', text: 'Não foi possível remover o admin desta filial.' })
+      return
+    }
+
+    await refreshMasterData({ type: 'success', text: 'Admin removido da filial.' })
   }
 
   const handleDeleteBranch = async (branchId: string) => {
@@ -1153,13 +1246,14 @@ export default function AdminMaster(): ReactElement {
                 <th className={styles.tableHeadCell}>Responsável</th>
                 <th className={styles.tableHeadCell}>Fuso</th>
                 <th className={styles.tableHeadCell}>Criada em</th>
+                <th className={styles.tableHeadCell}>Admins da filial</th>
                 <th className={styles.tableHeadCell}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {branches.length === 0 ? (
                 <tr className={styles.tableBodyRow}>
-                  <td className={styles.tableCell} colSpan={5}>
+                  <td className={styles.tableCell} colSpan={6}>
                     Nenhuma filial cadastrada até o momento.
                   </td>
                 </tr>
@@ -1167,6 +1261,12 @@ export default function AdminMaster(): ReactElement {
                 branches.map((branch) => {
                   const selectValue = branchAssignments[branch.id] ?? branch.owner_id ?? ''
                   const isDirty = selectValue !== (branch.owner_id ?? '')
+                  const adminsForBranch = branchAdmins[branch.id] ?? []
+                  const availableAdmins = adminUsers.filter(
+                    (admin) => !adminsForBranch.some((assignment) => assignment.user_id === admin.id),
+                  )
+                  const adminSelectValue = branchAdminSelection[branch.id] ?? ''
+                  const canManageBranch = isMasterUser || branch.owner_id === currentUserId
 
                   return (
                     <tr key={branch.id} className={styles.tableBodyRow}>
@@ -1176,6 +1276,7 @@ export default function AdminMaster(): ReactElement {
                           className={inputClass}
                           value={selectValue}
                           onChange={(event) => handleBranchAssignmentChange(branch.id, event.target.value)}
+                          disabled={!canManageBranch}
                         >
                           <option value="">Sem responsável</option>
                           {adminUsers.map((admin) => (
@@ -1190,12 +1291,64 @@ export default function AdminMaster(): ReactElement {
                         {branch.created_at ? new Date(branch.created_at).toLocaleDateString('pt-BR') : '—'}
                       </td>
                       <td className={styles.tableCell}>
+                        <div className={styles.branchAdminBlock}>
+                          <p className={styles.tableCaption}>Admins da filial</p>
+                          {adminsForBranch.length === 0 ? (
+                            <p className={styles.branchAdminHelper}>Nenhum admin atribuído.</p>
+                          ) : (
+                            <ul className={styles.branchAdminList}>
+                              {adminsForBranch.map((assignment) => (
+                                <li key={assignment.id} className={styles.branchAdminItem}>
+                                  <span className={styles.branchAdminTag}>
+                                    {assignment.profile?.full_name ?? assignment.profile?.email ?? 'Admin'}
+                                  </span>
+                                  {canManageBranch ? (
+                                    <button
+                                      type="button"
+                                      className={styles.inlineDanger}
+                                      onClick={() => handleRemoveBranchAdmin(assignment.id)}
+                                    >
+                                      Remover
+                                    </button>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {canManageBranch ? (
+                            <div className={styles.branchAdminActions}>
+                              <select
+                                className={inputClass}
+                                value={adminSelectValue}
+                                onChange={(event) => handleBranchAdminSelect(branch.id, event.target.value)}
+                              >
+                                <option value="">Adicionar admin</option>
+                                {availableAdmins.map((admin) => (
+                                  <option key={admin.id} value={admin.id}>
+                                    {admin.full_name ?? admin.email ?? 'Admin'}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                className={secondaryButtonClass}
+                                type="button"
+                                onClick={() => handleAddBranchAdmin(branch.id)}
+                                disabled={!adminSelectValue}
+                              >
+                                Vincular admin
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className={styles.tableCell}>
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             className={secondaryButtonClass}
                             type="button"
                             onClick={() => handleAssignOwner(branch.id)}
-                            disabled={!isDirty}
+                            disabled={!isDirty || !canManageBranch}
                           >
                             Salvar responsável
                           </button>
@@ -1203,6 +1356,7 @@ export default function AdminMaster(): ReactElement {
                             className={dangerButtonClass}
                             type="button"
                             onClick={() => handleDeleteBranch(branch.id)}
+                            disabled={!canManageBranch}
                           >
                             Remover
                           </button>

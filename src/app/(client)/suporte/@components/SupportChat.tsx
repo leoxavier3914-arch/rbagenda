@@ -42,7 +42,26 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
       setLoading(true)
       setError(null)
 
+      const resolveLatestBranch = async () => {
+        const { data, error } = await supabase
+          .from("appointments")
+          .select("branch_id")
+          .eq("customer_id", session.user.id)
+          .not("branch_id", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (error) {
+          console.error("Erro ao buscar última filial do cliente", error)
+          return null
+        }
+
+        return data?.branch_id ?? null
+      }
+
       try {
+        const latestBranchId = await resolveLatestBranch()
         const { data: existingThread, error: threadError } = await supabase
           .from("support_threads")
           .select("*")
@@ -62,12 +81,22 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
             .insert({
               user_id: session.user.id,
               status: "open",
+              branch_id: latestBranchId ?? null,
             })
             .select("*")
             .single()
 
           if (insertError) throw insertError
           targetThread = newThread
+        } else if (!targetThread.branch_id && latestBranchId) {
+          const { error: attachBranchError } = await supabase
+            .from("support_threads")
+            .update({ branch_id: latestBranchId })
+            .eq("id", targetThread.id)
+
+          if (!attachBranchError) {
+            targetThread = { ...targetThread, branch_id: latestBranchId }
+          }
         }
 
         if (!active) return

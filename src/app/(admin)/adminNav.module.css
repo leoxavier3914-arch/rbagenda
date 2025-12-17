@@ -16,7 +16,7 @@
 .navCollapsed .navItemActive {
   background: #e8f2ff;
   border-color: #b2cffd;
-  box-shadow: 0 10px 24px rgba(23, 43, 77, 0.12);
+  box-shadow: none;
 }
 
 .navList {
@@ -61,7 +61,7 @@
   background: #e8f2ff;
   color: #2f3445;
   border-color: #b2cffd;
-  box-shadow: 0 10px 24px rgba(23, 43, 77, 0.18);
+  box-shadow: none;
   transform: none;
 }
 
@@ -82,7 +82,7 @@
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: #404860;
+  background: #505a78;
   color: #f2f5fb;
   font-size: 1rem;
   flex-shrink: 0;

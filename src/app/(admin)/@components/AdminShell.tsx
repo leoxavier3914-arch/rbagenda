@@ -8,11 +8,15 @@ import { useAdminGuard } from "../useAdminGuard";
 import styles from "../admin.module.css";
 
 function BranchSelector() {
-  const { branches, activeBranchId, setActiveBranchId, loading, isMaster } = useAdminBranch();
+  const { branches, activeBranchId, setActiveBranchId, branchScope, setBranchScope, loading, isMaster } =
+    useAdminBranch();
 
   if (loading || branches.length === 0) {
     return null;
   }
+
+  const selectValue =
+    branchScope === "branch" ? activeBranchId ?? "" : branchScope === "no_branch" ? "__NO_BRANCH__" : "";
 
   return (
     <div className={styles.branchSelector}>
@@ -22,11 +26,28 @@ function BranchSelector() {
       <select
         id="admin-active-branch"
         className={styles.branchSelectorSelect}
-        value={activeBranchId ?? ""}
-        onChange={(event) => setActiveBranchId(event.target.value || null)}
+        value={selectValue}
+        onChange={(event) => {
+          const { value } = event.target;
+
+          if (value === "__NO_BRANCH__") {
+            setActiveBranchId(null);
+            setBranchScope("no_branch");
+            return;
+          }
+
+          if (!value) {
+            setActiveBranchId(null);
+            setBranchScope("none");
+            return;
+          }
+
+          setActiveBranchId(value);
+          setBranchScope("branch");
+        }}
       >
         <option value="">Selecione uma filial</option>
-        {isMaster ? <option value="">Tickets sem filial</option> : null}
+        {isMaster ? <option value="__NO_BRANCH__">Tickets sem filial</option> : null}
         {branches.map((branch) => (
           <option key={branch.id} value={branch.id}>
             {branch.name || "Filial"}

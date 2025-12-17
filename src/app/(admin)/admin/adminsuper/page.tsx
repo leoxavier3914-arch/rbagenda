@@ -167,6 +167,13 @@ const sectionIcons: Record<MasterSection, string> = {
 const headerDescription =
   'Coordene todas as unidades, usuários e políticas da plataforma em um único painel. Defina regras, acompanhe indicadores e tome decisões estratégicas em segundos.'
 
+const roleLabels: Record<ProfileRole, string> = {
+  client: 'Cliente',
+  admin: 'Admin',
+  adminsuper: 'Admin super',
+  adminmaster: 'Admin master',
+}
+
 export default function AdminMaster(): ReactElement {
   const router = useRouter()
 
@@ -464,6 +471,12 @@ export default function AdminMaster(): ReactElement {
     [profiles],
   )
   const clientUsers = useMemo(() => profiles.filter((profile) => profile.role === 'client'), [profiles])
+  const roleOptions = useMemo<ProfileRole[]>(() => {
+    if (currentUserRole === 'adminsuper') {
+      return ['client', 'admin']
+    }
+    return ['client', 'admin', 'adminsuper', 'adminmaster']
+  }, [currentUserRole])
 
   const appointmentsThisMonth = useMemo(() => {
     const now = new Date()
@@ -834,13 +847,22 @@ export default function AdminMaster(): ReactElement {
   const handleUpdateUserRole = async (profileId: string) => {
     setActionMessage(null)
     const role = userRoleEdits[profileId]
+    const callerRole = currentUserRole
 
     if (!role) {
       setActionMessage({ type: 'error', text: 'Selecione um cargo válido antes de salvar.' })
       return
     }
 
-    const { error: updateError } = await supabase.from('profiles').update({ role }).eq('id', profileId)
+    if (callerRole === 'adminsuper' && (role === 'adminsuper' || role === 'adminmaster')) {
+      setActionMessage({ type: 'error', text: 'Você não pode promover usuários para este cargo.' })
+      return
+    }
+
+    const { error: updateError } = await supabase.rpc('set_profile_role', {
+      target_user_id: profileId,
+      new_role: role,
+    })
 
     if (updateError) {
       setActionMessage({ type: 'error', text: 'Não foi possível atualizar o cargo do usuário.' })
@@ -1403,6 +1425,7 @@ export default function AdminMaster(): ReactElement {
                 const roleValue = userRoleEdits[profile.id] ?? profile.role
                 const isDirty = roleValue !== profile.role
                 const isSelf = profile.id === currentUserId
+                const options = roleOptions.includes(roleValue) ? roleOptions : [roleValue, ...roleOptions]
 
                 return (
                   <tr key={profile.id} className={styles.tableBodyRow}>
@@ -1416,9 +1439,15 @@ export default function AdminMaster(): ReactElement {
                         onChange={(event) => handleRoleSelectChange(profile.id, event)}
                         disabled={isSelf}
                       >
-                        <option value="client">Cliente</option>
-                        <option value="admin">Admin</option>
-                        <option value="adminmaster">Admin super</option>
+                        {options.map((roleOption) => (
+                          <option
+                            key={roleOption}
+                            value={roleOption}
+                            disabled={!roleOptions.includes(roleOption) && roleOption !== roleValue}
+                          >
+                            {roleLabels[roleOption]}
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td className={styles.tableCell}>

@@ -5,6 +5,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { supabase } from "@/lib/db";
 
 const STORAGE_KEY = "rbagenda_admin_active_branch_id";
+const STORAGE_SCOPE_KEY = "rbagenda_admin_active_branch_scope";
+
+type BranchScope = "none" | "branch" | "no_branch";
 
 type BranchOption = {
   id: string;
@@ -15,6 +18,8 @@ type AdminBranchContextValue = {
   branches: BranchOption[];
   activeBranchId: string | null;
   setActiveBranchId: (value: string | null) => void;
+  branchScope: BranchScope;
+  setBranchScope: (scope: BranchScope) => void;
   loading: boolean;
   isMaster: boolean;
 };
@@ -24,26 +29,47 @@ const AdminBranchContext = createContext<AdminBranchContextValue | null>(null);
 export function AdminBranchProvider({ children }: { children: ReactNode }) {
   const [branches, setBranches] = useState<BranchOption[]>([]);
   const [activeBranchId, setActiveBranchIdState] = useState<string | null>(null);
+  const [branchScope, setBranchScopeState] = useState<BranchScope>("none");
   const [loading, setLoading] = useState(true);
   const [isMaster, setIsMaster] = useState(false);
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
+    const storedScope = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_SCOPE_KEY) : null;
+
     if (stored) {
       setActiveBranchIdState(stored);
+      setBranchScopeState(storedScope === "no_branch" ? "no_branch" : "branch");
+    } else {
+      setBranchScopeState(storedScope === "no_branch" ? "no_branch" : "none");
     }
+  }, []);
+
+  const setBranchScope = useCallback((scope: BranchScope) => {
+    setBranchScopeState(scope);
   }, []);
 
   const setActiveBranchId = useCallback((value: string | null) => {
     setActiveBranchIdState(value);
-    if (typeof window !== "undefined") {
-      if (value) {
-        window.localStorage.setItem(STORAGE_KEY, value);
-      } else {
-        window.localStorage.removeItem(STORAGE_KEY);
+    setBranchScopeState((current) => {
+      if (current === "no_branch") {
+        return value ? "branch" : current;
       }
-    }
+      return value ? "branch" : "none";
+    });
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (activeBranchId) {
+      window.localStorage.setItem(STORAGE_KEY, activeBranchId);
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+
+    window.localStorage.setItem(STORAGE_SCOPE_KEY, branchScope);
+  }, [activeBranchId, branchScope]);
 
   useEffect(() => {
     let active = true;
@@ -98,26 +124,29 @@ export function AdminBranchProvider({ children }: { children: ReactNode }) {
 
       setBranches(resolvedBranches);
 
-      setActiveBranchIdState((current) => {
-        let nextValue = current;
-
-        if (current && resolvedBranches.some((branch) => branch.id === current)) {
-          nextValue = current;
-        } else if (resolvedBranches.length === 1) {
-          nextValue = resolvedBranches[0].id;
-        } else {
-          nextValue = null;
+      const nextActiveBranchId = (() => {
+        if (branchScope === "no_branch") {
+          return null;
         }
 
-        if (typeof window !== "undefined") {
-          if (nextValue) {
-            window.localStorage.setItem(STORAGE_KEY, nextValue);
-          } else {
-            window.localStorage.removeItem(STORAGE_KEY);
-          }
+        if (activeBranchId && resolvedBranches.some((branch) => branch.id === activeBranchId)) {
+          return activeBranchId;
         }
 
-        return nextValue;
+        if (resolvedBranches.length === 1) {
+          return resolvedBranches[0].id;
+        }
+
+        return null;
+      })();
+
+      setActiveBranchIdState(nextActiveBranchId);
+
+      setBranchScopeState((currentScope) => {
+        if (currentScope === "no_branch") {
+          return master ? "no_branch" : "none";
+        }
+        return nextActiveBranchId ? "branch" : resolvedBranches.length === 1 ? "branch" : "none";
       });
 
       setLoading(false);
@@ -128,11 +157,11 @@ export function AdminBranchProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [activeBranchId, branchScope]);
 
   const value = useMemo(
-    () => ({ branches, activeBranchId, setActiveBranchId, loading, isMaster }),
-    [activeBranchId, branches, isMaster, loading, setActiveBranchId]
+    () => ({ branches, activeBranchId, setActiveBranchId, branchScope, setBranchScope, loading, isMaster }),
+    [activeBranchId, branchScope, branches, isMaster, loading, setActiveBranchId, setBranchScope]
   );
 
   return <AdminBranchContext.Provider value={value}>{children}</AdminBranchContext.Provider>;

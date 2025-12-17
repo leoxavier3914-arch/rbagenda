@@ -40,6 +40,8 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .headerCopy {
@@ -47,6 +49,7 @@
   flex-direction: column;
   gap: 10px;
   flex: 1;
+  min-width: 0;
 }
 
 .branchSelector {
@@ -192,5 +195,12 @@
 
   .menuButton {
     display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .branchSelector {
+    min-width: 0;
+    width: 100%;
   }
 }

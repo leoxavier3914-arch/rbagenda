@@ -288,7 +288,7 @@
   margin: 0 auto;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 899px) {
   .hamburger {
     display: inline-flex;
   }

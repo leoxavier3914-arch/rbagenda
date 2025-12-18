@@ -177,13 +177,20 @@
 
 .metricsRow {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
 .metricPairGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.metricsCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -209,6 +216,12 @@
   font-size: 1.6rem;
   font-weight: 800;
   color: #2f3242;
+}
+
+.metricHint {
+  margin: 0;
+  color: #7a86a2;
+  font-size: 0.95rem;
 }
 
 .barList {

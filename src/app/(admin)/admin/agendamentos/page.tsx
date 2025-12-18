@@ -389,40 +389,45 @@ export default function AdminAppointmentsPage() {
     return startOfYear(today);
   }, [metricsRange]);
 
-  const metricsAppointments = useMemo(
-    () =>
-      appointments.filter(
-        (appt) =>
-          appt.startDate &&
-          appt.startDate >= metricsRangeStart &&
-          !["canceled"].includes(statusKey(appt.status))
-      ),
+  const periodAppointments = useMemo(
+    () => appointments.filter((appt) => appt.startDate && appt.startDate >= metricsRangeStart),
     [appointments, metricsRangeStart]
   );
 
-  const serviceCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const appt of metricsAppointments) {
-      const key = appt.serviceName || "Serviço";
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [metricsAppointments]);
+  const metricsAppointments = useMemo(
+    () => periodAppointments.filter((appt) => !["canceled"].includes(statusKey(appt.status))),
+    [periodAppointments]
+  );
 
-  const typeCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const appt of metricsAppointments) {
-      const key = appt.serviceTypeName || appt.techniqueName || "Tipo";
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [metricsAppointments]);
+  const activeAppointments = useMemo(
+    () => periodAppointments.filter((appt) => !["completed", "canceled"].includes(statusKey(appt.status))),
+    [periodAppointments]
+  );
+
+  const confirmedAppointments = useMemo(
+    () => periodAppointments.filter((appt) => ["confirmed", "reserved"].includes(statusKey(appt.status))),
+    [periodAppointments]
+  );
+
+  const pendingAppointments = useMemo(
+    () => periodAppointments.filter((appt) => statusKey(appt.status) === "pending"),
+    [periodAppointments]
+  );
+
+  const canceledAppointments = useMemo(
+    () => periodAppointments.filter((appt) => statusKey(appt.status) === "canceled"),
+    [periodAppointments]
+  );
+
+  const refundedAppointments = useMemo(
+    () => periodAppointments.filter((appt) => statusKey(appt.status) === "refunded"),
+    [periodAppointments]
+  );
+
+  const completedAppointments = useMemo(
+    () => periodAppointments.filter((appt) => statusKey(appt.status) === "completed"),
+    [periodAppointments]
+  );
 
   const monthlyCounts = useMemo(() => {
     const months = [] as { label: string; value: number }[];
@@ -441,7 +446,6 @@ export default function AdminAppointmentsPage() {
     return months;
   }, [metricsAppointments]);
 
-  const maxServiceCount = Math.max(1, ...serviceCounts.map((item) => item.value), ...typeCounts.map((item) => item.value));
   const maxMonthly = Math.max(1, ...monthlyCounts.map((item) => item.value));
 
   if (status !== "authorized") {
@@ -618,43 +622,40 @@ export default function AdminAppointmentsPage() {
           <header className={layoutStyles.cardHeader}>
             <div>
               <p className={layoutStyles.cardEyebrow}>Métricas</p>
-              <h2>Serviços e tipos por período</h2>
+              <h2>Visão geral por período</h2>
             </div>
           </header>
 
-          <div className={styles.metricPairGrid}>
+          <div className={styles.metricsCardsGrid}>
             <div className={styles.metricCard}>
-              <p className={styles.metricLabel}>Serviços no período</p>
-              <p className={styles.metricValue}>{metricsAppointments.length}</p>
-              <div className={styles.barList}>
-                {serviceCounts.map((item) => (
-                  <div key={item.label} className={styles.barItem}>
-                    <span className={styles.barLabel}>{item.label}</span>
-                    <div className={styles.barTrack}>
-                      <div className={styles.barFill} style={{ width: `${(item.value / maxServiceCount) * 100}%` }} />
-                    </div>
-                    <span className={styles.barValue}>{item.value}</span>
-                  </div>
-                ))}
-                {serviceCounts.length === 0 ? <p className={styles.mutedCell}>Nenhum serviço no período selecionado.</p> : null}
-              </div>
+              <p className={styles.metricLabel}>Agendamentos</p>
+              <p className={styles.metricValue}>{activeAppointments.length}</p>
+              <p className={styles.metricHint}>Aguardando finalização</p>
             </div>
-
             <div className={styles.metricCard}>
-              <p className={styles.metricLabel}>Tipos e técnicas</p>
-              <p className={styles.metricValue}>{typeCounts.reduce((sum, item) => sum + item.value, 0)}</p>
-              <div className={styles.barList}>
-                {typeCounts.map((item) => (
-                  <div key={item.label} className={styles.barItem}>
-                    <span className={styles.barLabel}>{item.label}</span>
-                    <div className={styles.barTrack}>
-                      <div className={styles.barFillAlt} style={{ width: `${(item.value / maxServiceCount) * 100}%` }} />
-                    </div>
-                    <span className={styles.barValue}>{item.value}</span>
-                  </div>
-                ))}
-                {typeCounts.length === 0 ? <p className={styles.mutedCell}>Nenhuma técnica encontrada.</p> : null}
-              </div>
+              <p className={styles.metricLabel}>Confirmados</p>
+              <p className={styles.metricValue}>{confirmedAppointments.length}</p>
+              <p className={styles.metricHint}>Reservados ou confirmados</p>
+            </div>
+            <div className={styles.metricCard}>
+              <p className={styles.metricLabel}>Pendentes</p>
+              <p className={styles.metricValue}>{pendingAppointments.length}</p>
+              <p className={styles.metricHint}>Aguardando confirmação</p>
+            </div>
+            <div className={styles.metricCard}>
+              <p className={styles.metricLabel}>Cancelados</p>
+              <p className={styles.metricValue}>{canceledAppointments.length}</p>
+              <p className={styles.metricHint}>Cancelados no período</p>
+            </div>
+            <div className={styles.metricCard}>
+              <p className={styles.metricLabel}>Reembolsados</p>
+              <p className={styles.metricValue}>{refundedAppointments.length}</p>
+              <p className={styles.metricHint}>Marcados como reembolsados</p>
+            </div>
+            <div className={styles.metricCard}>
+              <p className={styles.metricLabel}>Concluídos</p>
+              <p className={styles.metricValue}>{completedAppointments.length}</p>
+              <p className={styles.metricHint}>Finalizados no período</p>
             </div>
           </div>
         </section>

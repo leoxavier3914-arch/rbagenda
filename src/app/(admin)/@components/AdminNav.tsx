@@ -21,7 +21,7 @@ type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: "🏠" },
-  { label: "Agendamentos", icon: "📅", comingSoon: true },
+  { href: "/admin/agendamentos", label: "Agendamentos", icon: "📅" },
   { label: "Clientes", icon: "👥", comingSoon: true },
   { label: "Tickets", icon: "🎫", comingSoon: true },
   { label: "Relatórios", icon: "📊", comingSoon: true },

@@ -29,6 +29,11 @@
   letter-spacing: -0.01em;
 }
 
+.pageSubtitle {
+  margin: 6px 0 0;
+  color: #5c6785;
+}
+
 .proButton {
   border: none;
   background: linear-gradient(135deg, #ff7b96, #ff5d7a);
@@ -59,6 +64,24 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.topChips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.scopeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #d6dce8;
+  background: #f6f9ff;
+  font-weight: 700;
+  color: #2f3242;
 }
 
 .cardEyebrow {
@@ -116,6 +139,100 @@
 .chartArea svg {
   width: 100%;
   height: auto;
+}
+
+.calendarControls {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.calendarLabel {
+  font-weight: 800;
+  color: #2f3242;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.calendarDay {
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8fbff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 110px;
+}
+
+.calendarDayMuted {
+  background: #f1f4f9;
+  color: #a0a9bf;
+}
+
+.calendarDayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #2f3242;
+}
+
+.calendarDate {
+  font-weight: 800;
+}
+
+.calendarWeekday {
+  font-size: 0.9rem;
+  color: #7a86a2;
+}
+
+.calendarDayEvents {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calendarEmpty {
+  color: #7a86a2;
+  font-size: 0.9rem;
+}
+
+.calendarBadge {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #dfe6f2;
+  color: #2f3242;
+}
+
+.badgeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badgeText {
+  font-weight: 700;
+}
+
+.badgeTime {
+  color: #7a86a2;
+  font-size: 0.9rem;
+}
+
+.calendarMore {
+  color: #5c6785;
+  font-weight: 700;
 }
 
 .feedCard {
@@ -269,6 +386,32 @@
   cursor: pointer;
 }
 
+.pillSwitcher {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f6f9ff;
+  border: 1px solid #d6dce8;
+}
+
+.pillButton {
+  border: 1px solid #d6dce8;
+  background: #fff;
+  color: #2f3242;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pillButtonActive {
+  background: linear-gradient(135deg, #6ad4ff, #7d6bff);
+  color: #fff;
+  border-color: #6d7bff;
+  box-shadow: 0 10px 24px rgba(109, 123, 255, 0.3);
+}
+
 .ticketList {
   display: flex;
   flex-direction: column;
@@ -365,6 +508,126 @@
   border: 1px solid #f4c1c7;
 }
 
+.emptyState {
+  margin: 0;
+  color: #7a86a2;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.metricCard {
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f9fbff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metricLabel {
+  margin: 0;
+  color: #7a86a2;
+  font-weight: 700;
+}
+
+.metricValue {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #2f3242;
+}
+
+.barList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.barLabel {
+  font-weight: 700;
+  color: #2f3242;
+}
+
+.barTrack {
+  position: relative;
+  height: 10px;
+  background: #e6ebf3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barFill,
+.barFillAlt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+}
+
+.barFill {
+  background: linear-gradient(90deg, #6ad4ff, #7d6bff);
+}
+
+.barFillAlt {
+  background: linear-gradient(90deg, #ffd281, #ff7b96);
+}
+
+.barValue {
+  font-weight: 700;
+  color: #2f3242;
+}
+
+.monthlyChart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.monthlyBarGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.monthlyBarTrack {
+  width: 100%;
+  height: 120px;
+  border-radius: 10px;
+  background: #eef3fb;
+  border: 1px solid #e1e6f0;
+  display: flex;
+  align-items: flex-end;
+}
+
+.monthlyBarFill {
+  width: 100%;
+  background: linear-gradient(180deg, #6ad4ff, #7d6bff);
+  border-radius: 10px 10px 6px 6px;
+  min-height: 8px;
+}
+
+.monthlyLabel {
+  font-weight: 700;
+  color: #2f3242;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 960px) {
   .heroCards {
     grid-template-columns: 1fr;
@@ -393,5 +656,9 @@
 
   .ticketMeta {
     align-items: flex-start;
+  }
+
+  .calendarGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
 }

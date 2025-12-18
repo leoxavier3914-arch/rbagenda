@@ -234,6 +234,7 @@
   border-radius: 12px;
   border: 1px solid #2d3346;
   background: #373e53;
+  width: 100%;
 }
 
 .avatarLarge {
@@ -254,8 +255,8 @@
   min-width: 0;
   opacity: 1;
   visibility: visible;
-  max-width: 220px;
-  transition: opacity 0.18s ease, visibility 0.18s ease, max-width 0.18s ease;
+  overflow: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
 .sidebarUserMeta p {
@@ -272,8 +273,7 @@
 .sidebarCollapsed .sidebarUserMeta {
   opacity: 0;
   visibility: hidden;
-  max-width: 0;
-  overflow: hidden;
+  pointer-events: none;
 }
 
 .contentArea {

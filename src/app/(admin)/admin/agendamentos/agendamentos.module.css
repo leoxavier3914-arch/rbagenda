@@ -42,12 +42,14 @@
 .calendarDay {
   border: 1px solid #e6ebf3;
   border-radius: 12px;
-  padding: 10px;
+  padding: 12px;
   background: #f8fbff;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 110px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .calendarDayMuted {
@@ -55,10 +57,22 @@
   color: #a0a9bf;
 }
 
+.calendarDaySelected {
+  border-color: #7d6bff;
+  box-shadow: 0 0 0 2px rgba(109, 123, 255, 0.18);
+  background: #f2f4ff;
+}
+
+.calendarDay:focus-visible {
+  outline: 2px solid #7d6bff;
+  outline-offset: 2px;
+}
+
 .calendarDayHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   color: #2f3242;
 }
 
@@ -69,6 +83,7 @@
 .calendarWeekday {
   font-size: 0.9rem;
   color: #7a86a2;
+  text-transform: capitalize;
 }
 
 .calendarDayEvents {
@@ -80,6 +95,9 @@
 .calendarEmpty {
   color: #7a86a2;
   font-size: 0.9rem;
+  align-self: center;
+  text-align: center;
+  padding: 4px 6px;
 }
 
 .calendarBadge {
@@ -146,11 +164,28 @@
   color: #7a86a2;
 }
 
-.metricsGrid {
+.feedHint {
+  margin: 4px 0 0;
+  color: #7a86a2;
+}
+
+.dayScheduleList {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.metricsRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.metricPairGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .metricCard {
@@ -224,6 +259,10 @@
   color: #2f3242;
 }
 
+.monthlyCardBody {
+  margin-top: 12px;
+}
+
 .monthlyChart {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
@@ -264,5 +303,9 @@
 @media (max-width: 960px) {
   .calendarGrid {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .metricsRow {
+    grid-template-columns: 1fr;
   }
 }

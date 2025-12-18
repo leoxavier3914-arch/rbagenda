@@ -7,13 +7,6 @@
   display: none;
 }
 
-.navCollapsed .navItem {
-  justify-content: flex-start;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border-radius: 14px;
-}
-
 .navCollapsed .navItemActive {
   background: #e8f2ff;
   border-color: #b2cffd;
@@ -38,6 +31,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
+  min-height: 58px;
   border-radius: 12px;
   text-decoration: none;
   color: #dfe5f1;
@@ -92,10 +86,12 @@
 }
 
 .navLabel {
+  align-self: center;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: inherit;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .navBadge {
@@ -106,4 +102,8 @@
   border-radius: 999px;
   font-weight: 700;
   font-size: 0.8rem;
+  line-height: 1;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
 }

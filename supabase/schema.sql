@@ -31,6 +31,10 @@ create table if not exists branches (
   name text not null,
   timezone text not null default 'America/Sao_Paulo',
   owner_id uuid references profiles(id) on delete set null,
+  region text,
+  focus text,
+  status text not null default 'ativa' check (status in ('ativa','pausada')),
+  staff_slots int not null default 0 check (staff_slots >= 0),
   created_at timestamptz not null default now()
 );
 create index if not exists branches_owner_id_idx on branches(owner_id);

@@ -105,6 +105,13 @@
   gap: 14px;
 }
 
+.dualCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
 .sectionHeader {
   display: flex;
   flex-direction: column;
@@ -136,6 +143,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 10px;
+}
+
+.stackedForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .inputGroup {
@@ -170,6 +183,15 @@
   margin: 0;
   color: #7a86a2;
   font-size: 0.9rem;
+}
+
+.successMessage {
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
 }
 
 .buttonRow {
@@ -323,6 +345,32 @@
   padding: 8px 10px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.branchList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.branchListItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.branchListActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .chartHeader {

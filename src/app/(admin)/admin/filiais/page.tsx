@@ -172,6 +172,9 @@ export default function FiliaisPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [newBranch, setNewBranch] = useState(defaultBranchForm);
   const [note, setNote] = useState<string>("");
+  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
+  const [editingBranch, setEditingBranch] = useState(defaultBranchForm);
+  const [editNote, setEditNote] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -483,6 +486,92 @@ export default function FiliaisPage() {
     }
   };
 
+  const handleSelectBranchForEdit = (branch: Branch) => {
+    setEditNote("");
+    setError(null);
+    setEditingBranchId(branch.id);
+    setEditingBranch({
+      name: branch.name,
+      region: branch.region ?? "",
+      focus: branch.focus ?? "",
+      status: branch.status,
+      staffSlots: branch.staffSlots ?? 0,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBranchId(null);
+    setEditingBranch(defaultBranchForm);
+    setEditNote("");
+  };
+
+  const handleUpdateBranch = async () => {
+    if (!userId || !editingBranchId) {
+      setError("Selecione uma filial para editar.");
+      return;
+    }
+
+    if (!editingBranch.name.trim() || !editingBranch.region.trim() || !editingBranch.focus.trim()) {
+      setEditNote("Preencha todos os campos para editar a filial.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setEditNote("");
+
+    try {
+      const { error: updateError } = await supabase
+        .from("branches")
+        .update({
+          name: editingBranch.name.trim(),
+          region: editingBranch.region.trim(),
+          focus: editingBranch.focus.trim(),
+          status: editingBranch.status,
+          staff_slots: editingBranch.staffSlots,
+        })
+        .eq("id", editingBranchId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      await refreshBranches();
+      setEditNote("Filial editada com sucesso.");
+      setEditingBranchId(null);
+      setEditingBranch(defaultBranchForm);
+    } catch (err) {
+      console.error("Erro ao atualizar filial", err);
+      setError("Não foi possível atualizar a filial agora.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteBranch = async (branchId: string) => {
+    setSaving(true);
+    setError(null);
+    setEditNote("");
+
+    try {
+      const { error: deleteError } = await supabase.from("branches").delete().eq("id", branchId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      await refreshBranches();
+      setEditNote("Filial excluída com sucesso.");
+      setEditingBranchId(null);
+      setEditingBranch(defaultBranchForm);
+    } catch (err) {
+      console.error("Erro ao excluir filial", err);
+      setError("Não foi possível excluir a filial.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleUnlinkMember = async (branchId: string, memberId: string) => {
     setSaving(true);
     setError(null);
@@ -593,63 +682,161 @@ export default function FiliaisPage() {
         {error ? <div className={styles.errorMessage}>{error}</div> : null}
       </div>
 
-      <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>Criar filial</p>
-          <h2 className={styles.sectionTitle}>Nova filial vinculada ao seu usuário</h2>
-          <p className={styles.sectionDescription}>
-            Super Admin só cria filiais próprias; Master pode criar para qualquer grupo. Salve para depois vincular mais pessoas.
-          </p>
+      <div className={styles.dualCardGrid}>
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionEyebrow}>Criar filial</p>
+            <h2 className={styles.sectionTitle}>Nova filial vinculada ao seu usuário</h2>
+            <p className={styles.sectionDescription}>
+              Super Admin só cria filiais próprias; Master pode criar para qualquer grupo. Salve para depois vincular mais pessoas.
+            </p>
+          </div>
+          <div className={styles.stackedForm}>
+            <label className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Nome</span>
+              <input
+                value={newBranch.name}
+                onChange={(event) => setNewBranch((prev) => ({ ...prev, name: event.target.value }))}
+                className={styles.inputControl}
+                placeholder="Ex.: Studio Centro"
+                disabled={saving}
+              />
+            </label>
+            <label className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Região</span>
+              <input
+                value={newBranch.region}
+                onChange={(event) => setNewBranch((prev) => ({ ...prev, region: event.target.value }))}
+                className={styles.inputControl}
+                placeholder="Cidade / Bairro"
+                disabled={saving}
+              />
+            </label>
+            <label className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Status</span>
+              <select
+                value={newBranch.status}
+                onChange={(event) => setNewBranch((prev) => ({ ...prev, status: event.target.value as BranchStatus }))}
+                className={styles.selectControl}
+                disabled={saving}
+              >
+                <option value="ativa">Ativa</option>
+                <option value="pausada">Pausada</option>
+              </select>
+            </label>
+            <label className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Foco</span>
+              <textarea
+                value={newBranch.focus}
+                onChange={(event) => setNewBranch((prev) => ({ ...prev, focus: event.target.value }))}
+                className={styles.textareaControl}
+                placeholder="Objetivo dessa filial (expansão, treinamento, campanha, etc.)"
+                disabled={saving}
+              />
+            </label>
+            <div className={styles.buttonRow}>
+              <button type="button" className={styles.primaryButton} onClick={handleCreateBranch} disabled={saving}>
+                {saving ? "Salvando..." : "Criar filial"}
+              </button>
+              {note ? <span className={styles.helperText}>{note}</span> : null}
+            </div>
+          </div>
         </div>
-        <div className={styles.formGrid}>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Nome</span>
-            <input
-              value={newBranch.name}
-              onChange={(event) => setNewBranch((prev) => ({ ...prev, name: event.target.value }))}
-              className={styles.inputControl}
-              placeholder="Ex.: Studio Centro"
-              disabled={saving}
-            />
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Região</span>
-            <input
-              value={newBranch.region}
-              onChange={(event) => setNewBranch((prev) => ({ ...prev, region: event.target.value }))}
-              className={styles.inputControl}
-              placeholder="Cidade / Bairro"
-              disabled={saving}
-            />
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Status</span>
-            <select
-              value={newBranch.status}
-              onChange={(event) => setNewBranch((prev) => ({ ...prev, status: event.target.value as BranchStatus }))}
-              className={styles.selectControl}
-              disabled={saving}
-            >
-              <option value="ativa">Ativa</option>
-              <option value="pausada">Pausada</option>
-            </select>
-          </label>
-        </div>
-        <label className={styles.inputGroup}>
-          <span className={styles.inputLabel}>Foco</span>
-          <textarea
-            value={newBranch.focus}
-            onChange={(event) => setNewBranch((prev) => ({ ...prev, focus: event.target.value }))}
-            className={styles.textareaControl}
-            placeholder="Objetivo dessa filial (expansão, treinamento, campanha, etc.)"
-            disabled={saving}
-          />
-        </label>
-        <div className={styles.buttonRow}>
-          <button type="button" className={styles.primaryButton} onClick={handleCreateBranch} disabled={saving}>
-            {saving ? "Salvando..." : "Criar filial"}
-          </button>
-          {note ? <span className={styles.helperText}>{note}</span> : null}
+
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionEyebrow}>Editar filial</p>
+            <h2 className={styles.sectionTitle}>Selecione uma filial existente</h2>
+            <p className={styles.sectionDescription}>Atualize ou exclua uma filial diretamente no painel lateral.</p>
+          </div>
+
+          {editNote ? <div className={styles.successMessage}>{editNote}</div> : null}
+
+          {editingBranchId ? (
+            <div className={styles.stackedForm}>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Nome</span>
+                <input
+                  value={editingBranch.name}
+                  onChange={(event) => setEditingBranch((prev) => ({ ...prev, name: event.target.value }))}
+                  className={styles.inputControl}
+                  placeholder="Nome da filial"
+                  disabled={saving}
+                />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Região</span>
+                <input
+                  value={editingBranch.region}
+                  onChange={(event) => setEditingBranch((prev) => ({ ...prev, region: event.target.value }))}
+                  className={styles.inputControl}
+                  placeholder="Cidade / Bairro"
+                  disabled={saving}
+                />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Status</span>
+                <select
+                  value={editingBranch.status}
+                  onChange={(event) => setEditingBranch((prev) => ({ ...prev, status: event.target.value as BranchStatus }))}
+                  className={styles.selectControl}
+                  disabled={saving}
+                >
+                  <option value="ativa">Ativa</option>
+                  <option value="pausada">Pausada</option>
+                </select>
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Foco</span>
+                <textarea
+                  value={editingBranch.focus}
+                  onChange={(event) => setEditingBranch((prev) => ({ ...prev, focus: event.target.value }))}
+                  className={styles.textareaControl}
+                  placeholder="Objetivo dessa filial"
+                  disabled={saving}
+                />
+              </label>
+              <div className={styles.buttonRow}>
+                <button type="button" className={styles.primaryButton} onClick={handleUpdateBranch} disabled={saving}>
+                  {saving ? "Salvando..." : "Salvar alterações"}
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={handleCancelEdit} disabled={saving}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : branches.length ? (
+            <ul className={styles.branchList}>
+              {branches.map((branch) => (
+                <li key={branch.id} className={styles.branchListItem}>
+                  <div>
+                    <div className={styles.sectionTitle}>{branch.name}</div>
+                    <p className={styles.sectionDescription}>{branch.region || "Sem região"}</p>
+                  </div>
+                  <div className={styles.branchListActions}>
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() => handleSelectBranchForEdit(branch)}
+                      disabled={saving}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.dangerButton}
+                      onClick={() => handleDeleteBranch(branch.id)}
+                      disabled={saving}
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className={styles.emptyState}>Nenhuma filial disponível para edição.</div>
+          )}
         </div>
       </div>
 

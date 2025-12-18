@@ -230,11 +230,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 64px;
   padding: 10px;
   border-radius: 12px;
   border: 1px solid #2d3346;
   background: #373e53;
-  width: 100%;
+  box-sizing: border-box;
 }
 
 .avatarLarge {
@@ -256,6 +257,7 @@
   opacity: 1;
   visibility: visible;
   overflow: hidden;
+  white-space: nowrap;
   transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 

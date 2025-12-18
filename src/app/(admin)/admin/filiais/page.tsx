@@ -39,6 +39,8 @@ type Branch = {
   createdBy: string | null;
   createdByName: string;
   assignedAdmins: BranchMember[];
+  clients: number;
+  services: number;
   staffSlots: number;
   metrics: BranchMetrics;
   chart: { label: string; scheduled: number; active: number }[];
@@ -88,7 +90,7 @@ const defaultBranchForm = {
   name: "",
   region: "",
   focus: "",
-  staffSlots: 4,
+  staffSlots: 0,
   status: "ativa" as BranchStatus,
 };
 
@@ -169,34 +171,10 @@ export default function FiliaisPage() {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [newBranch, setNewBranch] = useState(defaultBranchForm);
-  const [newMemberId, setNewMemberId] = useState<string>("");
-  const [availableAdmins, setAvailableAdmins] = useState<BranchMember[]>([]);
   const [note, setNote] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchAdminOptions = useCallback(async (): Promise<BranchMember[]> => {
-    const { data, error: optionsError } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, role")
-      .in("role", ["admin", "adminsuper", "adminmaster"])
-      .order("full_name", { ascending: true })
-      .returns<ProfileRow[]>();
-
-    if (optionsError) {
-      console.error("Erro ao buscar administradores disponíveis", optionsError);
-      return [];
-    }
-
-    return (
-      data?.map((profile) => ({
-        id: profile.id,
-        name: resolveDisplayName(profile, profile.email),
-        role: normalizeRole(profile.role),
-      })) ?? []
-    );
-  }, []);
 
   const fetchBranches = useCallback(
     async (currentUserId: string, currentRole: AdminRole | "client" | null) => {
@@ -380,6 +358,8 @@ export default function FiliaisPage() {
           createdBy: branch.owner_id,
           createdByName: resolveDisplayName(ownerProfile, "Criador não informado"),
           assignedAdmins: members,
+          clients: 0,
+          services: 0,
           staffSlots,
           timezone: branch.timezone,
           metrics: {
@@ -418,15 +398,9 @@ export default function FiliaisPage() {
         if (!active) return;
         setUserId(authUser.id);
 
-        const [adminOptions, branchList] = await Promise.all([
-          fetchAdminOptions(),
-          fetchBranches(authUser.id, (profile?.role as AdminRole | "client" | null) ?? role),
-        ]);
+        const branchList = await fetchBranches(authUser.id, (profile?.role as AdminRole | "client" | null) ?? role);
 
         if (!active) return;
-
-        setAvailableAdmins(adminOptions);
-        setNewMemberId((prev) => prev ?? adminOptions[0]?.id ?? "");
 
         setBranches(branchList);
         setSelectedBranchId((current) => {
@@ -450,7 +424,7 @@ export default function FiliaisPage() {
     return () => {
       active = false;
     };
-  }, [fetchAdminOptions, fetchBranches, role, status]);
+  }, [fetchBranches, role, status]);
 
   const refreshBranches = useCallback(async () => {
     if (!userId) return;
@@ -504,33 +478,6 @@ export default function FiliaisPage() {
     } catch (err) {
       console.error("Erro ao criar filial", err);
       setError("Não foi possível criar a filial agora.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleLinkMember = async (branchId: string) => {
-    if (!branchId || !newMemberId) return;
-    setSaving(true);
-    setError(null);
-    setNote("");
-
-    try {
-      const { error: linkError } = await supabase.from("branch_admins").insert({
-        branch_id: branchId,
-        user_id: newMemberId,
-        assigned_by: userId,
-      });
-
-      if (linkError && linkError.code !== "23505") {
-        throw linkError;
-      }
-
-      await refreshBranches();
-      setNote("Administrador vinculado.");
-    } catch (err) {
-      console.error("Erro ao vincular administrador", err);
-      setError("Não foi possível vincular o administrador.");
     } finally {
       setSaving(false);
     }
@@ -687,23 +634,6 @@ export default function FiliaisPage() {
               <option value="pausada">Pausada</option>
             </select>
           </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Staff previsto</span>
-            <input
-              type="number"
-              min={0}
-              value={newBranch.staffSlots}
-              onChange={(event) =>
-                setNewBranch((prev) => ({
-                  ...prev,
-                  staffSlots: Math.max(0, Number(event.target.value) || 0),
-                }))
-              }
-              className={styles.inputControl}
-              disabled={saving}
-            />
-            <span className={styles.helperText}>Staff influencia a contagem de membros ativos.</span>
-          </label>
         </div>
         <label className={styles.inputGroup}>
           <span className={styles.inputLabel}>Foco</span>
@@ -728,50 +658,9 @@ export default function FiliaisPage() {
           <p className={styles.sectionEyebrow}>Filiais disponíveis</p>
           <h2 className={styles.sectionTitle}>Gerenciar membros ativos</h2>
           <p className={styles.sectionDescription}>
-            Vincule ou desvincule administradores. Super Admin só enxerga as filiais que criou ou que um Master vinculou.
+            Clique na filial para visualizar os vinculados e gerenciar vínculos. Super Admin só enxerga as filiais que criou ou
+            que um Master vinculou.
           </p>
-        </div>
-        <div className={styles.buttonRow}>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Selecionar filial</span>
-            <select
-              className={styles.selectControl}
-              value={selectedBranchId ?? undefined}
-              onChange={(event) => setSelectedBranchId(event.target.value)}
-              disabled={saving}
-            >
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Vincular administrador</span>
-            <select
-              className={styles.selectControl}
-              value={newMemberId}
-              onChange={(event) => setNewMemberId(event.target.value)}
-              disabled={saving}
-            >
-              {availableAdmins.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name} — {member.role}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className={styles.buttonRow}>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={() => selectedBranchId && handleLinkMember(selectedBranchId)}
-              disabled={saving || !selectedBranchId}
-            >
-              Vincular ao time
-            </button>
-          </div>
         </div>
 
         <div className={styles.tableWrapper}>
@@ -780,30 +669,25 @@ export default function FiliaisPage() {
               <tr>
                 <th>Filial</th>
                 <th>Região</th>
-                <th>Status</th>
                 <th>Membros ativos</th>
-                <th>Admins vinculados</th>
-                <th>Ações</th>
+                <th>Clientes</th>
+                <th>Serviços</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {branches.map((branch) => (
-                <tr key={branch.id}>
+                <tr
+                  key={branch.id}
+                  className={selectedBranchId === branch.id ? styles.selectedRow : undefined}
+                  onClick={() => setSelectedBranchId(branch.id)}
+                >
                   <td>
                     <div className={styles.sectionTitle}>{branch.name}</div>
                     <p className={styles.sectionDescription}>{branch.focus || "Sem foco cadastrado"}</p>
                   </td>
                   <td>
                     <span className={styles.badgeNeutral}>{branch.region || "Sem região"}</span>
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.statusBadge} ${
-                        branch.status === "ativa" ? styles.statusActive : styles.statusPaused
-                      }`}
-                    >
-                      {branch.status === "ativa" ? "Ativa" : "Pausada"}
-                    </span>
                   </td>
                   <td>
                     <div className={styles.pillGroup}>
@@ -825,38 +709,16 @@ export default function FiliaisPage() {
                       </span>
                     </div>
                   </td>
+                  <td>{branch.clients}</td>
+                  <td>{branch.services}</td>
                   <td>
-                    <div className={styles.pillGroup}>
-                      {branch.assignedAdmins.map((member) => (
-                        <span key={member.id} className={styles.memberPill}>
-                          {member.name}
-                          <span className={styles.memberRole}>{member.role}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className={styles.actionsCell}>
-                    <button
-                      type="button"
-                      className={styles.linkButton}
-                      onClick={() => handleLinkMember(branch.id)}
-                      disabled={saving}
+                    <span
+                      className={`${styles.statusBadge} ${
+                        branch.status === "ativa" ? styles.statusActive : styles.statusPaused
+                      }`}
                     >
-                      Vincular
-                    </button>
-                    {branch.assignedAdmins
-                      .filter((member) => member.id !== userId || role === "adminmaster")
-                      .map((member) => (
-                        <button
-                          key={`${branch.id}-${member.id}`}
-                          type="button"
-                          className={styles.dangerButton}
-                          onClick={() => handleUnlinkMember(branch.id, member.id)}
-                          disabled={saving}
-                        >
-                          Desvincular {member.name}
-                        </button>
-                      ))}
+                      {branch.status === "ativa" ? "Ativa" : "Pausada"}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -867,49 +729,39 @@ export default function FiliaisPage() {
 
       {selectedBranch ? (
         <div className={styles.section}>
-          <div className={styles.chartHeader}>
-            <div>
-              <p className={styles.sectionEyebrow}>Métricas da filial</p>
-              <h2 className={styles.sectionTitle}>{selectedBranch.name}</h2>
-              <p className={styles.sectionDescription}>
-                Criador: {selectedBranch.createdByName}. Membros ativos consideram staff cadastrado no Supabase.
-              </p>
-            </div>
-            <div className={styles.inlineFilters}>
-              <span className={styles.badgeNeutral}>Membros ativos: {selectedBranch.metrics.activeMembers}</span>
-              <span className={styles.badgeNeutral}>Ocupação estimada: {selectedBranch.metrics.occupancy}%</span>
-              <span className={styles.badgeNeutral}>Agendamentos no mês: {selectedBranch.metrics.appointmentsThisMonth}</span>
-            </div>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionEyebrow}>Vinculados da filial</p>
+            <h2 className={styles.sectionTitle}>{selectedBranch.name}</h2>
+            <p className={styles.sectionDescription}>
+              Criador: {selectedBranch.createdByName}. Arraste para o lado para navegar pelos membros vinculados.
+            </p>
           </div>
-          <div className={styles.chartLegend}>
-            <div className={styles.legendItem}>
-              <span className={styles.legendSwatchPrimary} /> Agendados
-            </div>
-            <div className={styles.legendItem}>
-              <span className={styles.legendSwatchSecondary} /> Ativos
-            </div>
-          </div>
-          <div className={styles.chart}>
-            {selectedBranch.chart.map((item) => (
-              <div key={item.label} className={styles.chartColumn}>
-                <div className={styles.chartBar} style={{ height: `${Math.max(item.scheduled, 1) * 4}px` }}>
-                  <span>{item.scheduled}</span>
-                  <span className={styles.chartLabel}>{item.label}</span>
-                </div>
-                <div
-                  className={`${styles.chartBar} ${styles.chartBarSecondary}`}
-                  style={{ height: `${Math.max(item.active, 1) * 4}px` }}
-                >
-                  <span>{item.active}</span>
-                  <span className={styles.chartLabel}>Ativos</span>
-                </div>
+          <div className={styles.carousel}>
+            {selectedBranch.assignedAdmins.map((member) => (
+              <div key={`${selectedBranch.id}-${member.id}`} className={styles.memberCard}>
+                <div className={styles.avatarPlaceholder} aria-hidden />
+                <div className={styles.memberName}>{member.name}</div>
+                <span className={`${styles.statusBadge} ${styles.roleBadge}`}>{member.role}</span>
+                <button type="button" className={styles.secondaryButton} disabled>
+                  Editar
+                </button>
+                {member.id !== userId || role === "adminmaster" ? (
+                  <button
+                    type="button"
+                    className={styles.dangerButton}
+                    onClick={() => handleUnlinkMember(selectedBranch.id, member.id)}
+                    disabled={saving}
+                  >
+                    Remover
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
         </div>
-      ) : (
-        <div className={styles.emptyState}>Selecione uma filial para visualizar o gráfico.</div>
-      )}
+    ) : (
+      <div className={styles.emptyState}>Selecione uma filial para visualizar os vínculos.</div>
+    )}
     </div>
   );
 }

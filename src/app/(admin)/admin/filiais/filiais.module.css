@@ -411,3 +411,12 @@
   color: #526079;
   font-weight: 700;
 }
+
+.errorMessage {
+  background: #fff3f3;
+  border: 1px solid #fcd7d7;
+  color: #a41e1e;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+}

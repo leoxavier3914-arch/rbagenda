@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, formatDistanceToNow, isSameDay, isSameMonth, startOfMonth, startOfWeek, startOfYear, subDays } from "date-fns";
+import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, startOfYear, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/lib/db";
@@ -41,14 +41,6 @@ type CustomerProfile = {
   email: string | null;
 };
 
-type ReminderRow = {
-  id: string;
-  appointment_id: string;
-  scheduled_at: string;
-  status: string | null;
-  appointments: AppointmentRow | AppointmentRow[] | null;
-};
-
 type NormalizedAppointment = {
   id: string;
   branchId: string | null;
@@ -60,13 +52,6 @@ type NormalizedAppointment = {
   techniqueName: string | null;
   startsAt: string;
   startDate: Date | null;
-  status: AppointmentStatus;
-};
-
-type ReminderItem = {
-  id: string;
-  scheduledAt: string;
-  appointment: NormalizedAppointment;
   status: AppointmentStatus;
 };
 
@@ -191,17 +176,6 @@ const normalizeAppointment = (record: AppointmentRow, customers: Map<string, Cus
   };
 };
 
-const normalizeReminder = (row: ReminderRow, customers: Map<string, CustomerProfile>): ReminderItem | null => {
-  const appointmentRecord = Array.isArray(row.appointments) ? row.appointments[0] : row.appointments;
-  if (!appointmentRecord) return null;
-  return {
-    id: row.id,
-    scheduledAt: row.scheduled_at,
-    appointment: normalizeAppointment(appointmentRecord, customers),
-    status: normalizeStatusValue(row.status),
-  };
-};
-
 const formatDay = (date: Date | null) => {
   if (!date) return "—";
   return format(date, "dd/MM", { locale: ptBR });
@@ -210,11 +184,6 @@ const formatDay = (date: Date | null) => {
 const formatTime = (date: Date | null) => {
   if (!date) return "—";
   return format(date, "HH:mm", { locale: ptBR });
-};
-
-const formatRelative = (date: Date | null) => {
-  if (!date) return "—";
-  return formatDistanceToNow(date, { locale: ptBR, addSuffix: true });
 };
 
 const STATUS_TONE: Record<string, "blue" | "green" | "orange" | "purple"> = {
@@ -232,10 +201,10 @@ const statusKey = (value: AppointmentStatus) => value?.toString().toLowerCase();
 export default function AdminAppointmentsPage() {
   const { status, role } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
   const [appointments, setAppointments] = useState<NormalizedAppointment[]>([]);
-  const [reminders, setReminders] = useState<ReminderItem[]>([]);
   const [branchId, setBranchId] = useState<string | null>(null);
   const [branchName, setBranchName] = useState<string | null>(null);
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "year">("30d");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -318,33 +287,8 @@ export default function AdminAppointmentsPage() {
         }
 
         const normalizedAppointments = (appointmentRows ?? []).map((row) => normalizeAppointment(row, customers));
-
-        const reminderQuery = supabase
-          .from("reminders")
-          .select(
-            "id, appointment_id, scheduled_at, status, appointments!inner(id, branch_id, customer_id, starts_at, ends_at, status, service_id, service_type_id, services(id, name, service_type_assignments(service_types(id, name))), service_type:service_types!appointments_service_type_id_fkey(id, name))"
-          )
-          .gte("scheduled_at", new Date().toISOString())
-          .order("scheduled_at", { ascending: true })
-          .limit(8);
-
-        const reminderBuilder = scopedBranchId
-          ? reminderQuery.eq("appointments.branch_id", scopedBranchId)
-          : reminderQuery;
-
-        const { data: reminderRows, error: remindersError } = await reminderBuilder.returns<ReminderRow[]>();
-
-        if (remindersError) {
-          throw remindersError;
-        }
-
-        const reminderAppointments = (reminderRows ?? [])
-          .map((row) => normalizeReminder(row as ReminderRow, customers))
-          .filter((item): item is ReminderItem => Boolean(item));
-
         if (!active) return;
         setAppointments(normalizedAppointments);
-        setReminders(reminderAppointments);
         setBranchId(scopedBranchId);
         setBranchName(scopedBranchName);
       } catch (err) {
@@ -352,7 +296,6 @@ export default function AdminAppointmentsPage() {
         console.error("Erro ao carregar agendamentos do admin", err);
         setError("Não foi possível carregar os agendamentos agora.");
         setAppointments([]);
-        setReminders([]);
       } finally {
         if (active) {
           setLoading(false);
@@ -397,15 +340,25 @@ export default function AdminAppointmentsPage() {
       });
   }, [appointments]);
 
-  const reminderFeed = useMemo(() => {
-    if (reminders.length > 0) return reminders;
-    return upcomingAppointments.slice(0, 6).map((appt) => ({
-      id: `appt-${appt.id}`,
-      scheduledAt: appt.startsAt,
-      appointment: appt,
-      status: appt.status,
-    }));
-  }, [reminders, upcomingAppointments]);
+  const selectedDayAppointments = useMemo(() => {
+    if (!selectedDate) return [];
+    return appointments
+      .filter((appt) => appt.startDate && isSameDay(appt.startDate, selectedDate))
+      .sort((a, b) => {
+        if (!a.startDate || !b.startDate) return 0;
+        return a.startDate.getTime() - b.startDate.getTime();
+      });
+  }, [appointments, selectedDate]);
+
+  const selectedDayLabel = useMemo(
+    () => (selectedDate ? format(selectedDate, "d 'de' MMMM", { locale: ptBR }) : "Selecione um dia"),
+    [selectedDate]
+  );
+
+  const selectedDayWeekday = useMemo(
+    () => (selectedDate ? format(selectedDate, "EEEE", { locale: ptBR }) : ""),
+    [selectedDate]
+  );
 
   const metricsRangeStart = useMemo(() => {
     const today = new Date();
@@ -509,9 +462,20 @@ export default function AdminAppointmentsPage() {
             {calendarDays.map((day) => (
               <div
                 key={day.key}
-                className={`${styles.calendarDay} ${day.outOfMonth ? styles.calendarDayMuted : ""}`}
-                role="gridcell"
+                className={`${styles.calendarDay} ${day.outOfMonth ? styles.calendarDayMuted : ""} ${
+                  selectedDate && isSameDay(day.date, selectedDate) ? styles.calendarDaySelected : ""
+                }`}
                 aria-label={`Dia ${format(day.date, "dd/MM", { locale: ptBR })}`}
+                tabIndex={0}
+                role="gridcell"
+                aria-selected={selectedDate ? isSameDay(day.date, selectedDate) : false}
+                onClick={() => setSelectedDate(day.date)}
+                onKeyDown={(evt) => {
+                  if (evt.key === "Enter" || evt.key === " ") {
+                    evt.preventDefault();
+                    setSelectedDate(day.date);
+                  }
+                }}
               >
                 <div className={styles.calendarDayHeader}>
                   <span className={styles.calendarDate}>{format(day.date, "d", { locale: ptBR })}</span>
@@ -543,24 +507,31 @@ export default function AdminAppointmentsPage() {
         <section className={`${layoutStyles.card} ${layoutStyles.feedCard}`}>
           <header className={layoutStyles.cardHeader}>
             <div>
-              <p className={layoutStyles.cardEyebrow}>Próximos agendamentos</p>
-              <h2>Lembretes agendados</h2>
+              <p className={layoutStyles.cardEyebrow}>Horários do dia</p>
+              <h2>{selectedDayLabel}</h2>
+              <p className={styles.feedHint}>
+                {selectedDate ? selectedDayWeekday : "Selecione um dia no calendário para ver os horários."}
+              </p>
             </div>
           </header>
-          <div className={layoutStyles.feedList}>
-            {reminderFeed.length === 0 ? <p className={styles.emptyState}>Nenhum agendamento futuro encontrado.</p> : null}
-            {reminderFeed.map((item) => (
-              <div key={item.id} className={layoutStyles.feedItem}>
-                <span className={`${layoutStyles.feedIcon} ${layoutStyles[`tone-${STATUS_TONE[statusKey(item.status)] ?? "blue"}`]}`} aria-hidden />
+          <div className={`${layoutStyles.feedList} ${styles.dayScheduleList}`}>
+            {selectedDayAppointments.length === 0 ? (
+              <p className={styles.emptyState}>
+                {selectedDate ? "Nenhum horário para este dia." : "Selecione um dia no calendário para ver os horários."}
+              </p>
+            ) : null}
+            {selectedDayAppointments.map((appt) => (
+              <div key={appt.id} className={layoutStyles.feedItem}>
+                <span className={`${layoutStyles.feedIcon} ${layoutStyles[`tone-${STATUS_TONE[statusKey(appt.status)] ?? "blue"}`]}`} aria-hidden />
                 <div className={layoutStyles.feedCopy}>
-                  <p className={layoutStyles.feedTitle}>{item.appointment.customerName}</p>
+                  <p className={layoutStyles.feedTitle}>{appt.customerName}</p>
                   <p className={layoutStyles.feedDesc}>
-                    {item.appointment.serviceName}
-                    {item.appointment.techniqueName ? ` · ${item.appointment.techniqueName}` : ""}
+                    {appt.serviceName}
+                    {appt.techniqueName ? ` · ${appt.techniqueName}` : ""}
                   </p>
                 </div>
                 <span className={layoutStyles.feedTime}>
-                  {formatTime(parseDate(item.scheduledAt) ?? item.appointment.startDate)} ({formatRelative(item.appointment.startDate)})
+                  {formatTime(appt.startDate)} {appt.serviceTypeName ? `· ${appt.serviceTypeName}` : ""}
                 </span>
               </div>
             ))}
@@ -620,75 +591,84 @@ export default function AdminAppointmentsPage() {
         </div>
       </section>
 
-      <section className={layoutStyles.card}>
-        <header className={layoutStyles.cardHeader}>
-          <div>
-            <p className={layoutStyles.cardEyebrow}>Métricas</p>
-            <h2>Serviços e tipos por período</h2>
-          </div>
-          <div className={styles.pillSwitcher} role="group" aria-label="Período das métricas">
-            <button
-              type="button"
-              className={`${styles.pillButton} ${metricsRange === "7d" ? styles.pillButtonActive : ""}`}
-              onClick={() => setMetricsRange("7d")}
-            >
-              7 dias
-            </button>
-            <button
-              type="button"
-              className={`${styles.pillButton} ${metricsRange === "30d" ? styles.pillButtonActive : ""}`}
-              onClick={() => setMetricsRange("30d")}
-            >
-              30 dias
-            </button>
-            <button
-              type="button"
-              className={`${styles.pillButton} ${metricsRange === "year" ? styles.pillButtonActive : ""}`}
-              onClick={() => setMetricsRange("year")}
-            >
-              Ano
-            </button>
-          </div>
-        </header>
+      <div className={styles.metricsRow}>
+        <section className={layoutStyles.card}>
+          <header className={layoutStyles.cardHeader}>
+            <div>
+              <p className={layoutStyles.cardEyebrow}>Métricas</p>
+              <h2>Serviços e tipos por período</h2>
+            </div>
+          </header>
 
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <p className={styles.metricLabel}>Serviços no período</p>
-            <p className={styles.metricValue}>{metricsAppointments.length}</p>
-            <div className={styles.barList}>
-              {serviceCounts.map((item) => (
-                <div key={item.label} className={styles.barItem}>
-                  <span className={styles.barLabel}>{item.label}</span>
-                  <div className={styles.barTrack}>
-                    <div className={styles.barFill} style={{ width: `${(item.value / maxServiceCount) * 100}%` }} />
+          <div className={styles.metricPairGrid}>
+            <div className={styles.metricCard}>
+              <p className={styles.metricLabel}>Serviços no período</p>
+              <p className={styles.metricValue}>{metricsAppointments.length}</p>
+              <div className={styles.barList}>
+                {serviceCounts.map((item) => (
+                  <div key={item.label} className={styles.barItem}>
+                    <span className={styles.barLabel}>{item.label}</span>
+                    <div className={styles.barTrack}>
+                      <div className={styles.barFill} style={{ width: `${(item.value / maxServiceCount) * 100}%` }} />
+                    </div>
+                    <span className={styles.barValue}>{item.value}</span>
                   </div>
-                  <span className={styles.barValue}>{item.value}</span>
-                </div>
-              ))}
-              {serviceCounts.length === 0 ? <p className={styles.mutedCell}>Nenhum serviço no período selecionado.</p> : null}
+                ))}
+                {serviceCounts.length === 0 ? <p className={styles.mutedCell}>Nenhum serviço no período selecionado.</p> : null}
+              </div>
+            </div>
+
+            <div className={styles.metricCard}>
+              <p className={styles.metricLabel}>Tipos e técnicas</p>
+              <p className={styles.metricValue}>{typeCounts.reduce((sum, item) => sum + item.value, 0)}</p>
+              <div className={styles.barList}>
+                {typeCounts.map((item) => (
+                  <div key={item.label} className={styles.barItem}>
+                    <span className={styles.barLabel}>{item.label}</span>
+                    <div className={styles.barTrack}>
+                      <div className={styles.barFillAlt} style={{ width: `${(item.value / maxServiceCount) * 100}%` }} />
+                    </div>
+                    <span className={styles.barValue}>{item.value}</span>
+                  </div>
+                ))}
+                {typeCounts.length === 0 ? <p className={styles.mutedCell}>Nenhuma técnica encontrada.</p> : null}
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className={styles.metricCard}>
-            <p className={styles.metricLabel}>Tipos e técnicas</p>
-            <p className={styles.metricValue}>{typeCounts.reduce((sum, item) => sum + item.value, 0)}</p>
-            <div className={styles.barList}>
-              {typeCounts.map((item) => (
-                <div key={item.label} className={styles.barItem}>
-                  <span className={styles.barLabel}>{item.label}</span>
-                  <div className={styles.barTrack}>
-                    <div className={styles.barFillAlt} style={{ width: `${(item.value / maxServiceCount) * 100}%` }} />
-                  </div>
-                  <span className={styles.barValue}>{item.value}</span>
-                </div>
-              ))}
-              {typeCounts.length === 0 ? <p className={styles.mutedCell}>Nenhuma técnica encontrada.</p> : null}
+        <section className={layoutStyles.card}>
+          <header className={layoutStyles.cardHeader}>
+            <div>
+              <p className={layoutStyles.cardEyebrow}>Distribuição mensal</p>
+              <h2>Agendamentos por mês</h2>
             </div>
-          </div>
+            <div className={styles.pillSwitcher} role="group" aria-label="Período das métricas">
+              <button
+                type="button"
+                className={`${styles.pillButton} ${metricsRange === "7d" ? styles.pillButtonActive : ""}`}
+                onClick={() => setMetricsRange("7d")}
+              >
+                7 dias
+              </button>
+              <button
+                type="button"
+                className={`${styles.pillButton} ${metricsRange === "30d" ? styles.pillButtonActive : ""}`}
+                onClick={() => setMetricsRange("30d")}
+              >
+                30 dias
+              </button>
+              <button
+                type="button"
+                className={`${styles.pillButton} ${metricsRange === "year" ? styles.pillButtonActive : ""}`}
+                onClick={() => setMetricsRange("year")}
+              >
+                Ano
+              </button>
+            </div>
+          </header>
 
-          <div className={styles.metricCard}>
-            <p className={styles.metricLabel}>Distribuição mensal</p>
-            <p className={styles.metricValue}>{metricsRange === "year" ? "Últimos meses" : "Recente"}</p>
+          <div className={styles.monthlyCardBody}>
             <div className={styles.monthlyChart} role="img" aria-label="Distribuição mensal de agendamentos">
               {monthlyCounts.map((item) => (
                 <div key={item.label} className={styles.monthlyBarGroup}>
@@ -700,10 +680,10 @@ export default function AdminAppointmentsPage() {
               ))}
             </div>
           </div>
-        </div>
-        {error ? <div className={layoutStyles.error}>{error}</div> : null}
-        {loading ? <div className={layoutStyles.loading}>Carregando agendamentos…</div> : null}
-      </section>
+        </section>
+      </div>
+      {error ? <div className={layoutStyles.error}>{error}</div> : null}
+      {loading ? <div className={layoutStyles.loading}>Carregando agendamentos…</div> : null}
     </div>
   );
 }

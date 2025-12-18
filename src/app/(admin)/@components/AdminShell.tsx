@@ -77,6 +77,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const currentNav = useMemo(() => {
     return NAV_ITEMS.find((item) => item.href && pathname.startsWith(item.href)) ?? NAV_ITEMS[0];
   }, [pathname]);
+  const brandTitle = currentNav?.label ?? "Painel";
+  const shouldShowBrandTitle = brandTitle.toLowerCase() !== "dashboard";
   const sidebarClassName = [
     styles.sidebar,
     expanded ? styles.sidebarExpanded : styles.sidebarCollapsed,
@@ -135,12 +137,12 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           </button>
           <div className={styles.brandArea}>
             <div className={styles.brandMark} aria-label="PAINELADM">
-              <span className={styles.brandMarkPrimary}>PAINEL</span>
-              <span className={styles.brandMarkAccent}>ADM</span>
-            </div>
-            <p className={styles.brandTitle}>{currentNav?.label ?? "Painel"}</p>
+            <span className={styles.brandMarkPrimary}>PAINEL</span>
+            <span className={styles.brandMarkAccent}>ADM</span>
           </div>
+          {shouldShowBrandTitle ? <p className={styles.brandTitle}>{brandTitle}</p> : null}
         </div>
+      </div>
         <div className={styles.topbarRight}>
           <div className={styles.searchBox} role="search">
             <input type="search" placeholder="Buscar" aria-label="Buscar" />

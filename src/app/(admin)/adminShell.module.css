@@ -192,15 +192,6 @@
 .sidebarCollapsed {
   cursor: pointer;
   align-items: stretch;
-  padding: 20px 10px;
-  background: #2f3546;
-  border-right: 1px solid #252b3a;
-  box-shadow: none;
-}
-
-.sidebarCollapsed .sidebarHeader {
-  align-items: center;
-  gap: 10px;
 }
 
 .sidebarExpanded {
@@ -212,10 +203,6 @@
 
 .sidebarMobileOpen {
   transform: translateX(0);
-}
-
-.sidebar:not(.sidebarExpanded) .sidebarUserMeta {
-  display: none;
 }
 
 .sidebar:not(.sidebarExpanded) .sidebarToggle {
@@ -247,6 +234,7 @@
   border-radius: 12px;
   border: 1px solid #2d3346;
   background: #373e53;
+  width: 100%;
 }
 
 .avatarLarge {
@@ -260,20 +248,15 @@
   font-weight: 800;
 }
 
-.sidebarCollapsed .sidebarUser {
-  justify-content: center;
-}
-
-.sidebarCollapsed .avatarLarge {
-  width: 40px;
-  height: 40px;
-}
-
 .sidebarUserMeta {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  opacity: 1;
+  visibility: visible;
+  overflow: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
 .sidebarUserMeta p {
@@ -285,6 +268,12 @@
 .sidebarUserMeta span {
   color: #cdd3e3;
   font-size: 0.9rem;
+}
+
+.sidebarCollapsed .sidebarUserMeta {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .contentArea {

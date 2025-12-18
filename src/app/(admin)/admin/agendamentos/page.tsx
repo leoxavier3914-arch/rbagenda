@@ -201,8 +201,7 @@ const statusKey = (value: AppointmentStatus) => value?.toString().toLowerCase();
 export default function AdminAppointmentsPage() {
   const { status, role } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
   const [appointments, setAppointments] = useState<NormalizedAppointment[]>([]);
-  const [branchId, setBranchId] = useState<string | null>(null);
-  const [branchName, setBranchName] = useState<string | null>(null);
+  const [branchScope, setBranchScope] = useState<{ ids: string[]; label: string | null }>({ ids: [], label: null });
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "year">("30d");
@@ -216,34 +215,58 @@ export default function AdminAppointmentsPage() {
     const loadBranchScope = async (currentRole: AdminRole | "client" | null) => {
       const { data: userResponse } = await supabase.auth.getUser();
       const userId = userResponse.user?.id;
-      if (!userId) return { branchId: null as string | null, branchName: null as string | null };
+      if (!userId) return { ids: [] as string[], label: null as string | null };
 
       const { data: branchAssignments } = await supabase
         .from("branch_admins")
         .select("branch_id, branches(name)")
         .eq("user_id", userId)
-        .limit(5)
+        .limit(50)
         .returns<BranchAssignment[]>();
 
-      const primaryAssignment = branchAssignments?.[0];
-      const scopedBranchId = primaryAssignment?.branch_id ?? null;
-      const scopedBranchName = primaryAssignment?.branches?.name ?? null;
-
-      if (currentRole === "admin") {
-        return { branchId: scopedBranchId, branchName: scopedBranchName };
+      const assignmentIds = new Map<string, string | null>();
+      for (const assignment of branchAssignments ?? []) {
+        if (!assignment?.branch_id) continue;
+        assignmentIds.set(assignment.branch_id, assignment.branches?.name ?? null);
       }
 
-      return {
-        branchId: scopedBranchId,
-        branchName: scopedBranchName,
-      };
+      const ownedBranches =
+        currentRole === "adminsuper"
+          ? (
+              await supabase
+                .from("branches")
+                .select("id, name")
+                .eq("owner_id", userId)
+                .limit(50)
+            ).data ?? []
+          : [];
+
+      if (ownedBranches.length > 0) {
+        for (const branch of ownedBranches) {
+          if (!branch?.id) continue;
+          assignmentIds.set(branch.id, branch.name ?? assignmentIds.get(branch.id) ?? null);
+        }
+      }
+
+      const ids = currentRole === "adminmaster" ? [] : Array.from(new Set([...assignmentIds.keys()]));
+      let label: string | null = null;
+
+      if (currentRole === "adminmaster") {
+        label = "Todas as filiais";
+      } else if (ids.length === 1) {
+        label = assignmentIds.get(ids[0]) ?? null;
+      } else if (ids.length > 1) {
+        label = "Filiais atribuídas";
+      }
+
+      return { ids, label };
     };
 
     const loadData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const { branchId: scopedBranchId, branchName: scopedBranchName } = await loadBranchScope(role);
+        const scopedBranchScope = await loadBranchScope(role);
         const startDate = startOfYear(new Date());
         const endDate = nextMonthsRange();
 
@@ -257,8 +280,8 @@ export default function AdminAppointmentsPage() {
           .not("status", "eq", "canceled")
           .order("starts_at", { ascending: true });
 
-        const { data: appointmentRows, error: appointmentsError } = scopedBranchId
-          ? await appointmentsQuery.eq("branch_id", scopedBranchId)
+        const { data: appointmentRows, error: appointmentsError } = scopedBranchScope.ids.length
+          ? await appointmentsQuery.in("branch_id", scopedBranchScope.ids)
           : await appointmentsQuery;
 
         if (appointmentsError) {
@@ -289,8 +312,7 @@ export default function AdminAppointmentsPage() {
         const normalizedAppointments = (appointmentRows ?? []).map((row) => normalizeAppointment(row, customers));
         if (!active) return;
         setAppointments(normalizedAppointments);
-        setBranchId(scopedBranchId);
-        setBranchName(scopedBranchName);
+        setBranchScope(scopedBranchScope);
       } catch (err) {
         if (!active) return;
         console.error("Erro ao carregar agendamentos do admin", err);
@@ -432,11 +454,11 @@ export default function AdminAppointmentsPage() {
         <div>
           <p className={layoutStyles.pageBreadcrumb}>Dashboard / Agendamentos</p>
           <h1 className={layoutStyles.pageTitle}>Agenda por filial</h1>
-          {branchName ? <p className={styles.pageSubtitle}>Filial ativa: {branchName}</p> : null}
+          {branchScope.label ? <p className={styles.pageSubtitle}>Filial ativa: {branchScope.label}</p> : null}
         </div>
         <div className={styles.topChips}>
           <span className={styles.scopeChip}>
-            {branchId ? "Filial atribuída" : "Todas as filiais"}
+            {branchScope.ids.length ? (branchScope.ids.length === 1 ? "Filial atribuída" : "Filiais filtradas") : "Todas as filiais"}
           </span>
         </div>
       </div>

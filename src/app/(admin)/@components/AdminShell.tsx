@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/db";
 
@@ -17,12 +17,15 @@ type ProfileInfo = {
 
 export default function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { status, role } = useAdminGuard();
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -87,9 +90,27 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   };
 
   const handleRootClick = (event: React.MouseEvent) => {
-    if (sidebarRef.current?.contains(event.target as Node)) return;
-    setSidebarExpanded(false);
-    setMobileMenuOpen(false);
+    const targetNode = event.target as Node;
+    const clickedSidebar = sidebarRef.current?.contains(targetNode);
+    const clickedUserMenu = userMenuRef.current?.contains(targetNode);
+
+    if (!clickedSidebar) {
+      setSidebarExpanded(false);
+      setMobileMenuOpen(false);
+    }
+
+    if (!clickedUserMenu) {
+      setUserMenuOpen(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao sair:", error.message);
+    }
+    setUserMenuOpen(false);
+    router.replace("/login");
   };
 
   return (
@@ -113,13 +134,11 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             <span />
           </button>
           <div className={styles.brandArea}>
-            <div className={styles.brandIcon} aria-hidden>
-              <span>🗂️</span>
+            <div className={styles.brandMark} aria-label="PAINELADM">
+              <span className={styles.brandMarkPrimary}>PAINEL</span>
+              <span className={styles.brandMarkAccent}>ADM</span>
             </div>
-            <div>
-              <p className={styles.breadcrumb}>Dashboard</p>
-              <p className={styles.brandTitle}>{currentNav?.label ?? "Painel"}</p>
-            </div>
+            <p className={styles.brandTitle}>{currentNav?.label ?? "Painel"}</p>
           </div>
         </div>
         <div className={styles.topbarRight}>
@@ -133,12 +152,28 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           <button type="button" className={styles.iconAction} aria-label="Mensagens">
             💬
           </button>
-          <div className={styles.userChip} aria-label="Usuário logado">
-            <span className={styles.avatar}>{initials}</span>
-            <div className={styles.userMeta}>
-              <span className={styles.userName}>{profile?.name ?? "Administrador"}</span>
-              <span className={styles.userRole}>{profile?.role ?? role ?? "admin"}</span>
-            </div>
+          <div className={styles.userMenu} ref={userMenuRef}>
+            <button
+              type="button"
+              className={`${styles.userChip} ${userMenuOpen ? styles.userChipOpen : ""}`}
+              aria-label="Usuário logado"
+              aria-haspopup="menu"
+              aria-expanded={userMenuOpen}
+              onClick={() => setUserMenuOpen((prev) => !prev)}
+            >
+              <span className={styles.avatar}>{initials}</span>
+              <div className={styles.userMeta}>
+                <span className={styles.userName}>{profile?.name ?? "Administrador"}</span>
+                <span className={styles.userRole}>{profile?.role ?? role ?? "admin"}</span>
+              </div>
+            </button>
+            {userMenuOpen ? (
+              <div className={styles.userDropdown} role="menu">
+                <button type="button" className={styles.userDropdownItem} onClick={handleSignOut}>
+                  Sair
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
@@ -150,16 +185,6 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           ref={sidebarRef}
           onClick={handleSidebarClick}
         >
-          <div className={styles.sidebarHeader}>
-            <div className={styles.sidebarUser}>
-              <span className={styles.avatarLarge}>{initials}</span>
-              <div className={styles.sidebarUserMeta}>
-                <p>{profile?.name ?? "Administrador"}</p>
-                <span>{profile?.email ?? "Conta interna"}</span>
-              </div>
-            </div>
-          </div>
-
           <AdminNav
             expanded={expanded}
             disabled={status !== "authorized"}

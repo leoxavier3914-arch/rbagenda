@@ -89,6 +89,12 @@
   align-items: center;
 }
 
+.calendarControlsRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
 .calendarLabel {
   font-weight: 800;
   color: #2f3242;
@@ -171,15 +177,14 @@
 
 .calendarLegend {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   margin-top: 10px;
   margin-bottom: 6px;
   color: #7a86a2;
   font-size: 0.85rem;
-  white-space: nowrap;
-  overflow-x: auto;
 }
 
 .legendItem {
@@ -213,6 +218,8 @@
 
 .pillSwitcher {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   padding: 4px;
   border-radius: 999px;
@@ -245,6 +252,17 @@
 .feedHint {
   margin: 4px 0 0;
   color: #7a86a2;
+}
+
+.centeredCardHeader {
+  justify-content: center;
+  text-align: center;
+}
+
+.centeredCardHeader > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .dayScheduleList {
@@ -354,41 +372,108 @@
   margin-top: 12px;
 }
 
-.monthlyChart {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 8px;
-  align-items: end;
-}
-
-.monthlyBarGroup {
+.metricsSwitcherRow {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
-.monthlyBarTrack {
-  width: 100%;
-  height: 120px;
-  border-radius: 10px;
-  background: #eef3fb;
-  border: 1px solid #e1e6f0;
+.customRangeInputs {
   display: flex;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  color: #5c6785;
+  font-weight: 700;
 }
 
-.monthlyBarFill {
-  width: 100%;
-  background: linear-gradient(180deg, #6ad4ff, #7d6bff);
-  border-radius: 10px 10px 6px 6px;
-  min-height: 8px;
+.customRangeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.monthlyLabel {
+.customRangeInput {
+  border: 1px solid #d6dce8;
+  border-radius: 10px;
+  padding: 6px 10px;
   font-weight: 700;
   color: #2f3242;
+  background: #fff;
+}
+
+.pieChartWrapper {
+  display: grid;
+  grid-template-columns: minmax(160px, 200px) 1fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.pieChart {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  position: relative;
+  border: 1px solid #e1e6f0;
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.6);
+  margin: 0 auto;
+}
+
+.pieChartHole {
+  position: absolute;
+  inset: 32%;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e6ebf3;
+}
+
+.pieLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.pieLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #2f3242;
+}
+
+.pieLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.pieLegendLabel {
+  flex: 1;
+  color: #5c6785;
+}
+
+.pieLegendValue {
+  font-weight: 800;
+}
+
+.distributionFooter {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.filterButtonSmall {
+  padding: 6px 10px;
   font-size: 0.9rem;
+}
+
+.distributionFilterMenu {
+  top: auto;
+  bottom: calc(100% + 8px);
 }
 
 @media (max-width: 960px) {
@@ -398,5 +483,10 @@
 
   .metricsRow {
     grid-template-columns: 1fr;
+  }
+
+  .pieChartWrapper {
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 }

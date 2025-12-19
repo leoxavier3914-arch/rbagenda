@@ -436,10 +436,11 @@
 .pieLegend {
   width: 100%;
   max-width: 520px;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: center;
-  align-items: flex-start;
+  justify-items: start;
+  align-items: start;
   gap: 12px 20px;
 }
 
@@ -544,6 +545,13 @@
   }
 
   .pieLegend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pieLegend {
+    grid-template-columns: 1fr;
   }
 }

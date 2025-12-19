@@ -6,13 +6,10 @@ import {
   eachDayOfInterval,
   endOfDay,
   endOfMonth,
-  endOfWeek,
   format,
   isSameDay,
-  isSameMonth,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
   subDays,
 } from "date-fns";
@@ -452,12 +449,10 @@ export default function AdminAppointmentsPage() {
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(visibleMonth);
     const monthEnd = endOfMonth(visibleMonth);
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
     const today = startOfDay(new Date());
     const slotsPerDay = DEFAULT_SLOT_TEMPLATE.length;
 
-    const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     return days.map((date) => {
       const eventsCount = appointments.filter(
         (appt) =>
@@ -481,7 +476,6 @@ export default function AdminAppointmentsPage() {
       return {
         date,
         key: date.toISOString(),
-        outOfMonth: !isSameMonth(date, monthStart),
         state,
       };
     });
@@ -740,7 +734,7 @@ export default function AdminAppointmentsPage() {
             {calendarDays.map((day) => (
               <div
                 key={day.key}
-                className={`${styles.calendarDay} ${calendarStateClasses[day.state]} ${day.outOfMonth ? styles.calendarDayMuted : ""} ${
+                className={`${styles.calendarDay} ${calendarStateClasses[day.state]} ${
                   selectedDate && isSameDay(day.date, selectedDate) ? styles.calendarDaySelected : ""
                 }`}
                 aria-label={`Dia ${format(day.date, "dd/MM", { locale: ptBR })} ${CALENDAR_STATE_LABELS[day.state]}`}
@@ -829,7 +823,7 @@ export default function AdminAppointmentsPage() {
       </div>
 
       <section className={layoutStyles.card}>
-        <header className={layoutStyles.cardHeader}>
+        <header className={`${layoutStyles.cardHeader} ${styles.tableHeader}`}>
           <div>
             <p className={layoutStyles.cardEyebrow}>Agendamentos</p>
             <h2>Ordem cronológica</h2>
@@ -870,7 +864,7 @@ export default function AdminAppointmentsPage() {
           </div>
         </header>
         <div className={layoutStyles.tableWrapper}>
-          <table className={layoutStyles.table}>
+          <table className={`${layoutStyles.table} ${styles.centeredTable}`}>
             <thead>
               <tr>
                 <th>Cliente</th>
@@ -1049,8 +1043,10 @@ export default function AdminAppointmentsPage() {
                   {distributionBreakdown.map((item) => (
                     <div key={item.key} className={styles.pieLegendItem}>
                       <span className={styles.pieLegendDot} style={{ background: item.color }} aria-hidden />
-                      <span className={styles.pieLegendLabel}>{item.label}</span>
-                      <span className={styles.pieLegendValue}>{item.value}</span>
+                      <div className={styles.pieLegendCopy}>
+                        <span className={styles.pieLegendLabel}>{item.label}</span>
+                        <span className={styles.pieLegendValue}>{item.value}</span>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -110,12 +110,14 @@
 .calendarDay {
   border: 1px solid #e6ebf3;
   border-radius: 12px;
-  padding: 12px;
+  padding: 8px;
   background: #f8fbff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 110px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 74px;
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -160,7 +162,7 @@
 .calendarDayHeader {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 2px;
   color: #2f3242;
 }
@@ -218,13 +220,15 @@
 
 .pillSwitcher {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  gap: 6px;
-  padding: 4px;
-  border-radius: 999px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
   background: #f6f9ff;
   border: 1px solid #d6dce8;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .pillButton {
@@ -286,7 +290,7 @@
 
 .metricsCardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -382,6 +386,7 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
+  width: 100%;
 }
 
 .customRangeInputs {
@@ -451,12 +456,42 @@
 }
 
 .pieLegendLabel {
-  flex: 1;
   color: #5c6785;
 }
 
 .pieLegendValue {
   font-weight: 800;
+}
+
+.pieLegendCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tableHeader {
+  position: relative;
+  justify-content: center;
+  text-align: center;
+}
+
+.tableHeader .tableFilters {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.centeredTable th,
+.centeredTable td {
+  text-align: center;
+}
+
+.centeredTable .clientCell {
+  justify-content: center;
+}
+
+.centeredTable .clientCell > div {
+  text-align: center;
 }
 
 .distributionFooter {
@@ -488,7 +523,17 @@
     grid-template-columns: 1fr;
   }
 
+  .metricsCardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .pieChartWrapper {
     justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .metricsCardsGrid {
+    grid-template-columns: 1fr;
   }
 }

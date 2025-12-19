@@ -290,7 +290,7 @@
 
 .metricsCardsGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -436,14 +436,16 @@
 .pieLegend {
   width: 100%;
   max-width: 520px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px 20px;
 }
 
 .pieLegendItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-weight: 700;
   color: #2f3242;
@@ -453,20 +455,24 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  margin-top: 4px;
 }
 
 .pieLegendLabel {
   color: #5c6785;
+  font-size: 0.9rem;
 }
 
 .pieLegendValue {
   font-weight: 800;
+  font-size: 0.95rem;
 }
 
 .pieLegendCopy {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  align-items: flex-start;
 }
 
 .tableHeader {
@@ -535,5 +541,9 @@
 @media (max-width: 640px) {
   .metricsCardsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .pieLegend {
+    gap: 10px 16px;
   }
 }

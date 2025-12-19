@@ -256,7 +256,7 @@ export default function AdminAppointmentsPage() {
   const [branchScope, setBranchScope] = useState<{ ids: string[]; label: string | null }>({ ids: [], label: null });
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "60d" | "90d" | "year" | "custom" | "all">("30d");
+  const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "90d" | "year" | "custom" | "all">("30d");
   const [customRange, setCustomRange] = useState<{ start: string; end: string }>({
     start: format(subDays(new Date(), 30), "yyyy-MM-dd"),
     end: format(new Date(), "yyyy-MM-dd"),
@@ -537,7 +537,6 @@ export default function AdminAppointmentsPage() {
     const today = new Date();
     if (metricsRange === "7d") return { start: subDays(today, 7), end: today };
     if (metricsRange === "30d") return { start: subDays(today, 30), end: today };
-    if (metricsRange === "60d") return { start: subDays(today, 60), end: today };
     if (metricsRange === "90d") return { start: subDays(today, 90), end: today };
     if (metricsRange === "year") return { start: startOfYear(today), end: today };
     if (metricsRange === "custom") {
@@ -975,13 +974,6 @@ export default function AdminAppointmentsPage() {
                   onClick={() => setMetricsRange("30d")}
                 >
                   30D
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.pillButton} ${metricsRange === "60d" ? styles.pillButtonActive : ""}`}
-                  onClick={() => setMetricsRange("60d")}
-                >
-                  60D
                 </button>
                 <button
                   type="button"

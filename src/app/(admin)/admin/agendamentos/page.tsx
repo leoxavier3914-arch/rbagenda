@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addMonths,
   eachDayOfInterval,
+  endOfDay,
   endOfMonth,
   endOfWeek,
   format,
@@ -258,12 +259,19 @@ export default function AdminAppointmentsPage() {
   const [branchScope, setBranchScope] = useState<{ ids: string[]; label: string | null }>({ ids: [], label: null });
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "year">("30d");
+  const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "60d" | "90d" | "year" | "custom" | "all">("30d");
+  const [customRange, setCustomRange] = useState<{ start: string; end: string }>({
+    start: format(subDays(new Date(), 30), "yyyy-MM-dd"),
+    end: format(new Date(), "yyyy-MM-dd"),
+  });
   const [selectedFilter, setSelectedFilter] = useState<AppointmentFilterKey>("upcoming");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [distributionFilter, setDistributionFilter] = useState<"total" | "services" | "techniques">("total");
+  const [distributionFilterOpen, setDistributionFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const filterMenuRef = useRef<HTMLDivElement | null>(null);
+  const distributionFilterRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (status !== "authorized") return;
@@ -412,6 +420,30 @@ export default function AdminAppointmentsPage() {
     };
   }, [filterOpen]);
 
+  useEffect(() => {
+    if (!distributionFilterOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      if (!distributionFilterRef.current) return;
+      if (!distributionFilterRef.current.contains(event.target as Node)) {
+        setDistributionFilterOpen(false);
+      }
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDistributionFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [distributionFilterOpen]);
+
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(visibleMonth);
     const monthEnd = endOfMonth(visibleMonth);
@@ -502,16 +534,33 @@ export default function AdminAppointmentsPage() {
     [selectedDate]
   );
 
-  const metricsRangeStart = useMemo(() => {
+  const metricsRangeWindow = useMemo(() => {
     const today = new Date();
-    if (metricsRange === "7d") return subDays(today, 7);
-    if (metricsRange === "30d") return subDays(today, 30);
-    return startOfYear(today);
-  }, [metricsRange]);
+    if (metricsRange === "7d") return { start: subDays(today, 7), end: today };
+    if (metricsRange === "30d") return { start: subDays(today, 30), end: today };
+    if (metricsRange === "60d") return { start: subDays(today, 60), end: today };
+    if (metricsRange === "90d") return { start: subDays(today, 90), end: today };
+    if (metricsRange === "year") return { start: startOfYear(today), end: today };
+    if (metricsRange === "custom") {
+      const start = customRange.start ? startOfDay(new Date(customRange.start)) : null;
+      const end = customRange.end ? endOfDay(new Date(customRange.end)) : null;
+      return {
+        start: start && !Number.isNaN(start.getTime()) ? start : null,
+        end: end && !Number.isNaN(end.getTime()) ? end : null,
+      };
+    }
+    return { start: null, end: null };
+  }, [customRange.end, customRange.start, metricsRange]);
 
   const periodAppointments = useMemo(
-    () => appointments.filter((appt) => appt.startDate && appt.startDate >= metricsRangeStart),
-    [appointments, metricsRangeStart]
+    () =>
+      appointments.filter((appt) => {
+        if (!appt.startDate) return false;
+        if (metricsRangeWindow.start && appt.startDate < metricsRangeWindow.start) return false;
+        if (metricsRangeWindow.end && appt.startDate > metricsRangeWindow.end) return false;
+        return true;
+      }),
+    [appointments, metricsRangeWindow.end, metricsRangeWindow.start]
   );
 
   const metricsAppointments = useMemo(
@@ -549,24 +598,34 @@ export default function AdminAppointmentsPage() {
     [periodAppointments]
   );
 
-  const monthlyCounts = useMemo(() => {
-    const months = [] as { label: string; value: number }[];
-    const today = new Date();
-    for (let i = 5; i >= 0; i -= 1) {
-      const monthDate = addMonths(startOfMonth(today), -i);
-      const label = format(monthDate, "LLL", { locale: ptBR });
-      const value = metricsAppointments.filter(
-        (appt) =>
-          appt.startDate &&
-          appt.startDate.getMonth() === monthDate.getMonth() &&
-          appt.startDate.getFullYear() === monthDate.getFullYear()
-      ).length;
-      months.push({ label, value });
-    }
-    return months;
-  }, [metricsAppointments]);
+  const metricBreakdown = useMemo(
+    () => [
+      { key: "agendamentos", label: "Agendamentos", value: activeAppointments.length, color: "#6ad4ff" },
+      { key: "confirmados", label: "Confirmados", value: confirmedAppointments.length, color: "#62a07e" },
+      { key: "pendentes", label: "Pendentes", value: pendingAppointments.length, color: "#f3a451" },
+      { key: "cancelados", label: "Cancelados", value: canceledAppointments.length, color: "#d96a6a" },
+      { key: "reembolsados", label: "Reembolsados", value: refundedAppointments.length, color: "#ff7b96" },
+      { key: "concluidos", label: "Concluídos", value: completedAppointments.length, color: "#7d6bff" },
+    ],
+    [activeAppointments.length, canceledAppointments.length, completedAppointments.length, confirmedAppointments.length, pendingAppointments.length, refundedAppointments.length]
+  );
 
-  const maxMonthly = Math.max(1, ...monthlyCounts.map((item) => item.value));
+  const metricTotal = useMemo(() => metricBreakdown.reduce((sum, item) => sum + item.value, 0), [metricBreakdown]);
+
+  const pieBackground = useMemo(() => {
+    if (metricTotal <= 0) {
+      return "conic-gradient(#eef3fb 0deg 360deg)";
+    }
+    let current = 0;
+    const slices = metricBreakdown.map((item) => {
+      const start = current;
+      const portion = (item.value / metricTotal) * 100;
+      const end = start + portion;
+      current = end;
+      return `${item.color} ${start}% ${end}%`;
+    });
+    return `conic-gradient(${slices.join(", ")})`;
+  }, [metricBreakdown, metricTotal]);
   const calendarStateClasses: Record<"available" | "partial" | "full" | "past", string> = {
     available: styles.calendarDayAvailable,
     partial: styles.calendarDayPartial,
@@ -595,19 +654,10 @@ export default function AdminAppointmentsPage() {
 
       <div className={layoutStyles.heroCards}>
         <section className={layoutStyles.card}>
-          <header className={layoutStyles.cardHeader}>
+          <header className={`${layoutStyles.cardHeader} ${styles.centeredCardHeader}`}>
             <div>
               <p className={layoutStyles.cardEyebrow}>Calendário</p>
               <h2>Agendamentos marcados</h2>
-            </div>
-            <div className={styles.calendarControls}>
-              <button type="button" className={styles.pillButton} onClick={() => setVisibleMonth((prev) => addMonths(prev, -1))}>
-                ◀
-              </button>
-              <span className={styles.calendarLabel}>{format(visibleMonth, "LLLL yyyy", { locale: ptBR })}</span>
-              <button type="button" className={styles.pillButton} onClick={() => setVisibleMonth((prev) => addMonths(prev, 1))}>
-                ▶
-              </button>
             </div>
           </header>
           <div className={styles.calendarGrid} role="grid" aria-label="Calendário de agendamentos">
@@ -654,10 +704,21 @@ export default function AdminAppointmentsPage() {
               Passado
             </span>
           </div>
+          <div className={styles.calendarControlsRow}>
+            <div className={styles.calendarControls}>
+              <button type="button" className={styles.pillButton} onClick={() => setVisibleMonth((prev) => addMonths(prev, -1))}>
+                ◀
+              </button>
+              <span className={styles.calendarLabel}>{format(visibleMonth, "LLLL yyyy", { locale: ptBR })}</span>
+              <button type="button" className={styles.pillButton} onClick={() => setVisibleMonth((prev) => addMonths(prev, 1))}>
+                ▶
+              </button>
+            </div>
+          </div>
         </section>
 
         <section className={`${layoutStyles.card} ${layoutStyles.feedCard}`}>
-          <header className={layoutStyles.cardHeader}>
+          <header className={`${layoutStyles.cardHeader} ${styles.centeredCardHeader}`}>
             <div>
               <p className={layoutStyles.cardEyebrow}>Horários do dia</p>
               <h2>{selectedDayLabel}</h2>
@@ -779,7 +840,7 @@ export default function AdminAppointmentsPage() {
 
       <div className={styles.metricsRow}>
         <section className={layoutStyles.card}>
-          <header className={layoutStyles.cardHeader}>
+          <header className={`${layoutStyles.cardHeader} ${styles.centeredCardHeader}`}>
             <div>
               <p className={layoutStyles.cardEyebrow}>Métricas</p>
               <h2>Visão geral por período</h2>
@@ -821,46 +882,147 @@ export default function AdminAppointmentsPage() {
         </section>
 
         <section className={layoutStyles.card}>
-          <header className={layoutStyles.cardHeader}>
+          <header className={`${layoutStyles.cardHeader} ${styles.centeredCardHeader}`}>
             <div>
               <p className={layoutStyles.cardEyebrow}>Distribuição mensal</p>
               <h2>Agendamentos por mês</h2>
             </div>
-            <div className={styles.pillSwitcher} role="group" aria-label="Período das métricas">
-              <button
-                type="button"
-                className={`${styles.pillButton} ${metricsRange === "7d" ? styles.pillButtonActive : ""}`}
-                onClick={() => setMetricsRange("7d")}
-              >
-                7 dias
-              </button>
-              <button
-                type="button"
-                className={`${styles.pillButton} ${metricsRange === "30d" ? styles.pillButtonActive : ""}`}
-                onClick={() => setMetricsRange("30d")}
-              >
-                30 dias
-              </button>
-              <button
-                type="button"
-                className={`${styles.pillButton} ${metricsRange === "year" ? styles.pillButtonActive : ""}`}
-                onClick={() => setMetricsRange("year")}
-              >
-                Ano
-              </button>
-            </div>
           </header>
 
           <div className={styles.monthlyCardBody}>
-            <div className={styles.monthlyChart} role="img" aria-label="Distribuição mensal de agendamentos">
-              {monthlyCounts.map((item) => (
-                <div key={item.label} className={styles.monthlyBarGroup}>
-                  <div className={styles.monthlyBarTrack}>
-                    <div className={styles.monthlyBarFill} style={{ height: `${(item.value / maxMonthly) * 100}%` }} />
-                  </div>
-                  <span className={styles.monthlyLabel}>{item.label}</span>
+            <div className={styles.metricsSwitcherRow}>
+              <div className={styles.pillSwitcher} role="group" aria-label="Período das métricas">
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "7d" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("7d")}
+                >
+                  7 dias
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "30d" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("30d")}
+                >
+                  30 dias
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "60d" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("60d")}
+                >
+                  60 dias
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "90d" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("90d")}
+                >
+                  90 dias
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "year" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("year")}
+                >
+                  Ano
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "custom" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("custom")}
+                  title="Personalizado"
+                >
+                  P
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "all" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("all")}
+                >
+                  Todo
+                </button>
+              </div>
+              {metricsRange === "custom" ? (
+                <div className={styles.customRangeInputs} aria-label="Período personalizado">
+                  <label className={styles.customRangeLabel}>
+                    De
+                    <input
+                      type="date"
+                      className={styles.customRangeInput}
+                      value={customRange.start}
+                      onChange={(event) => setCustomRange((prev) => ({ ...prev, start: event.target.value }))}
+                    />
+                  </label>
+                  <label className={styles.customRangeLabel}>
+                    Até
+                    <input
+                      type="date"
+                      className={styles.customRangeInput}
+                      value={customRange.end}
+                      onChange={(event) => setCustomRange((prev) => ({ ...prev, end: event.target.value }))}
+                    />
+                  </label>
                 </div>
-              ))}
+              ) : null}
+            </div>
+            {metricTotal > 0 ? (
+              <div className={styles.pieChartWrapper} role="img" aria-label="Distribuição das métricas do período">
+                <div className={styles.pieChart} style={{ background: pieBackground }}>
+                  <span className={styles.pieChartHole} aria-hidden />
+                </div>
+                <div className={styles.pieLegend}>
+                  {metricBreakdown.map((item) => (
+                    <div key={item.key} className={styles.pieLegendItem}>
+                      <span className={styles.pieLegendDot} style={{ background: item.color }} aria-hidden />
+                      <span className={styles.pieLegendLabel}>{item.label}</span>
+                      <span className={styles.pieLegendValue}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className={styles.emptyState}>Sem dados suficientes para o período selecionado.</p>
+            )}
+            <div className={styles.distributionFooter} ref={distributionFilterRef}>
+              <button
+                type="button"
+                className={`${styles.filterButton} ${styles.filterButtonSmall}`}
+                aria-haspopup="listbox"
+                aria-expanded={distributionFilterOpen}
+                onClick={() => setDistributionFilterOpen((prev) => !prev)}
+              >
+                Filtrar
+                <span className={styles.filterLabel}>
+                  {distributionFilter === "total" ? "Total" : distributionFilter === "services" ? "Serviços" : "Técnicas"}
+                </span>
+              </button>
+              {distributionFilterOpen ? (
+                <div className={`${styles.filterMenu} ${styles.distributionFilterMenu}`} role="listbox" aria-label="Filtros de distribuição">
+                  {[
+                    { key: "total", label: "Total" },
+                    { key: "services", label: "Serviços" },
+                    { key: "techniques", label: "Técnicas" },
+                  ].map((option) => {
+                    const isActive = option.key === distributionFilter;
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        role="option"
+                        aria-selected={isActive}
+                        className={`${styles.filterOption} ${isActive ? styles.filterOptionActive : ""}`}
+                        onClick={() => {
+                          setDistributionFilter(option.key as "total" | "services" | "techniques");
+                          setDistributionFilterOpen(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>

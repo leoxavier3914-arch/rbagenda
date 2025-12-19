@@ -49,12 +49,12 @@ const defaultActivities: ActivityItem[] = [
 const formatLabel = (date: Date) => `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
 
 const CHART_DIMENSIONS = {
-  width: 700,
-  height: 280,
-  xStart: 60,
-  xEnd: 670,
-  yStart: 30,
-  yEnd: 240,
+  width: 860,
+  height: 340,
+  xStart: 70,
+  xEnd: 800,
+  yStart: 24,
+  yEnd: 290,
 };
 
 function buildPolyline(points: ChartPoint[], maxValue: number, key: "scheduled" | "confirmed") {
@@ -73,9 +73,29 @@ function buildPolyline(points: ChartPoint[], maxValue: number, key: "scheduled" 
     .join(" ");
 }
 
+function buildAreaPath(points: ChartPoint[], maxValue: number, key: "scheduled" | "confirmed") {
+  if (!points.length || !maxValue) return "";
+
+  const chartWidth = CHART_DIMENSIONS.xEnd - CHART_DIMENSIONS.xStart;
+  const chartHeight = CHART_DIMENSIONS.yEnd - CHART_DIMENSIONS.yStart;
+  const coords = points.map((point, index) => {
+    const x = CHART_DIMENSIONS.xStart + (index / Math.max(points.length - 1, 1)) * chartWidth;
+    const value = Math.max(0, point[key]);
+    const y = CHART_DIMENSIONS.yEnd - (value / maxValue) * chartHeight;
+    return { x, y };
+  });
+
+  if (!coords.length) return "";
+
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  const line = coords.map((coord, index) => `${index === 0 ? "M" : "L"} ${coord.x} ${coord.y}`).join(" ");
+  return `${line} L ${last.x} ${CHART_DIMENSIONS.yEnd} L ${first.x} ${CHART_DIMENSIONS.yEnd} Z`;
+}
+
 export default function AdminDashboardPage() {
   const { status } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
-  const [chartPoints, setChartPoints] = useState<ChartPoint[]>(defaultChartPoints);
+  const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
   const [chartType, setChartType] = useState<ChartType>("line");
   const [chartRange, setChartRange] = useState<ChartRange>("7d");
   const [chartMetric, setChartMetric] = useState<ChartMetric>("both");
@@ -91,13 +111,14 @@ export default function AdminDashboardPage() {
     if (status !== "authorized") return;
 
     let active = true;
+    const rangeDays = chartRange === "30d" ? 30 : chartRange === "15d" ? 15 : 7;
 
     const loadDashboard = async () => {
       setLoading(true);
       setError(null);
 
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
+      startDate.setDate(startDate.getDate() - (rangeDays - 1));
       startDate.setHours(0, 0, 0, 0);
       const endDate = new Date();
       endDate.setHours(23, 59, 59, 999);
@@ -123,7 +144,7 @@ export default function AdminDashboardPage() {
 
         if (!active) return;
 
-        const buckets = Array.from({ length: 8 }).map((_, index) => {
+        const buckets = Array.from({ length: rangeDays }).map((_, index) => {
           const day = new Date(startDate);
           day.setDate(startDate.getDate() + index);
           return { label: formatLabel(day), key: day.toISOString().slice(0, 10), scheduled: 0, confirmed: 0 };
@@ -172,11 +193,7 @@ export default function AdminDashboardPage() {
           date: new Date().toLocaleDateString("pt-BR"),
         }));
 
-        setChartPoints(
-          normalizedPoints.every((point) => point.scheduled === 0 && point.confirmed === 0)
-            ? defaultChartPoints
-            : normalizedPoints
-        );
+        setChartPoints(normalizedPoints);
         setClients(normalizedClients.length > 0 ? normalizedClients : defaultClients);
         setTickets(normalizedTickets.length > 0 ? normalizedTickets : defaultTickets);
         setActivities([
@@ -214,7 +231,7 @@ export default function AdminDashboardPage() {
     return () => {
       active = false;
     };
-  }, [status]);
+  }, [status, chartRange]);
 
   const chartRangeOptions = useMemo(
     () => [
@@ -281,15 +298,19 @@ export default function AdminDashboardPage() {
               <p className={styles.cardEyebrow}>Gráfico dos agendamentos</p>
               <h2>Últimos {activeRangeLabel}</h2>
             </div>
-            <div className={styles.legend}>
-              <span className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotBlue}`} aria-hidden />
-                Agendados
-              </span>
-              <span className={styles.legendItem}>
-                <span className={`${styles.dot} ${styles.dotPurple}`} aria-hidden />
-                Confirmados
-              </span>
+            <div className={styles.chartTypeToggle} role="tablist" aria-label="Tipo de gráfico">
+              {chartTypeOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`${styles.chartTypeButton} ${chartType === option.key ? styles.chartTypeActive : ""}`}
+                  onClick={() => setChartType(option.key)}
+                  role="tab"
+                  aria-selected={chartType === option.key}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </header>
           <div className={styles.chartControls}>
@@ -315,20 +336,6 @@ export default function AdminDashboardPage() {
                 </select>
               </label>
             </div>
-            <div className={styles.chartTypeToggle} role="tablist" aria-label="Tipo de gráfico">
-              {chartTypeOptions.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  className={`${styles.chartTypeButton} ${chartType === option.key ? styles.chartTypeActive : ""}`}
-                  onClick={() => setChartType(option.key)}
-                  role="tab"
-                  aria-selected={chartType === option.key}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
           </div>
           <div className={styles.chartArea}>
             <div className={styles.chartMeta}>
@@ -352,7 +359,7 @@ export default function AdminDashboardPage() {
                 </span>
               ) : (
                 <span>
-                  Passe o mouse para detalhar · {filteredPoints.length} dias no período selecionado
+                  Total do período: {totalScheduled} agendados · {totalConfirmed} confirmados · Clique em um ponto para detalhar
                 </span>
               )}
             </div>
@@ -365,6 +372,32 @@ export default function AdminDashboardPage() {
                 setActiveSlice(null);
               }}
             >
+              <defs>
+                <linearGradient id="line-scheduled" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#8be7ff" />
+                  <stop offset="100%" stopColor="#42bfff" />
+                </linearGradient>
+                <linearGradient id="line-confirmed" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#9b8cff" />
+                  <stop offset="100%" stopColor="#6a5bff" />
+                </linearGradient>
+                <linearGradient id="area-scheduled" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#6ad4ff" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#6ad4ff" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="area-confirmed" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#7d6bff" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#7d6bff" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="candle-up" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#8be7ff" />
+                  <stop offset="100%" stopColor="#4fd1ff" />
+                </linearGradient>
+                <linearGradient id="candle-down" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#9b8cff" />
+                  <stop offset="100%" stopColor="#6a5bff" />
+                </linearGradient>
+              </defs>
               {chartType !== "pie" ? (
                 <>
                   {Array.from({ length: 5 }).map((_, index) => {
@@ -389,10 +422,16 @@ export default function AdminDashboardPage() {
                   {chartType === "line" ? (
                     <>
                       {chartMetric !== "confirmed" ? (
+                        <path d={buildAreaPath(filteredPoints, maxValue, "scheduled")} fill="url(#area-scheduled)" />
+                      ) : null}
+                      {chartMetric !== "scheduled" ? (
+                        <path d={buildAreaPath(filteredPoints, maxValue, "confirmed")} fill="url(#area-confirmed)" />
+                      ) : null}
+                      {chartMetric !== "confirmed" ? (
                         <polyline
                           fill="none"
-                          stroke="#6ad4ff"
-                          strokeWidth="3"
+                          stroke="url(#line-scheduled)"
+                          strokeWidth="3.5"
                           strokeLinecap="round"
                           points={buildPolyline(filteredPoints, maxValue, "scheduled")}
                         />
@@ -400,8 +439,8 @@ export default function AdminDashboardPage() {
                       {chartMetric !== "scheduled" ? (
                         <polyline
                           fill="none"
-                          stroke="#7d6bff"
-                          strokeWidth="3"
+                          stroke="url(#line-confirmed)"
+                          strokeWidth="3.5"
                           strokeLinecap="round"
                           points={buildPolyline(filteredPoints, maxValue, "confirmed")}
                         />
@@ -416,22 +455,26 @@ export default function AdminDashboardPage() {
                               <circle
                                 cx={x}
                                 cy={scheduledY}
-                                r="5"
+                                r={activePoint === index ? "7" : "5"}
                                 fill="#6ad4ff"
                                 stroke="#ffffff"
-                                strokeWidth="2"
+                                strokeWidth="2.5"
+                                className={styles.chartPoint}
                                 onMouseEnter={() => setActivePoint(index)}
+                                onClick={() => setActivePoint(index)}
                               />
                             ) : null}
                             {chartMetric !== "scheduled" ? (
                               <circle
                                 cx={x}
                                 cy={confirmedY}
-                                r="5"
+                                r={activePoint === index ? "7" : "5"}
                                 fill="#7d6bff"
                                 stroke="#ffffff"
-                                strokeWidth="2"
+                                strokeWidth="2.5"
+                                className={styles.chartPoint}
                                 onMouseEnter={() => setActivePoint(index)}
+                                onClick={() => setActivePoint(index)}
                               />
                             ) : null}
                           </g>
@@ -450,16 +493,22 @@ export default function AdminDashboardPage() {
                         const bodyY = Math.min(highY, lowY);
                         const isUp = point.scheduled >= point.confirmed;
                         return (
-                          <g key={point.label} onMouseEnter={() => setActivePoint(index)}>
-                            <line x1={x} x2={x} y1={highY} y2={lowY} stroke="#94a3b8" strokeWidth="2" />
+                          <g
+                            key={point.label}
+                            className={styles.candleGroup}
+                            onMouseEnter={() => setActivePoint(index)}
+                            onClick={() => setActivePoint(index)}
+                          >
+                            <line x1={x} x2={x} y1={highY} y2={lowY} stroke="#64748b" strokeWidth="3" />
                             <rect
-                              x={x - 8}
+                              x={x - 9}
                               y={bodyY}
-                              width="16"
+                              width="18"
                               height={bodyHeight}
-                              rx="4"
-                              fill={isUp ? "#6ad4ff" : "#7d6bff"}
-                              opacity="0.9"
+                              rx="6"
+                              fill={isUp ? "url(#candle-up)" : "url(#candle-down)"}
+                              stroke={isUp ? "#38bdf8" : "#7c7cff"}
+                              strokeWidth="1.5"
                             />
                           </g>
                         );
@@ -522,6 +571,16 @@ export default function AdminDashboardPage() {
                 </>
               )}
             </svg>
+            <div className={styles.chartLegend}>
+              <span className={styles.legendItem}>
+                <span className={`${styles.dot} ${styles.dotBlue}`} aria-hidden />
+                Agendados
+              </span>
+              <span className={styles.legendItem}>
+                <span className={`${styles.dot} ${styles.dotPurple}`} aria-hidden />
+                Confirmados
+              </span>
+            </div>
           </div>
         </section>
 

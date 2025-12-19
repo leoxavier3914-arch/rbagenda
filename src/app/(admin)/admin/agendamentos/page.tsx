@@ -268,6 +268,9 @@ export default function AdminAppointmentsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [distributionFilter, setDistributionFilter] = useState<"total" | "services" | "techniques">("total");
   const [distributionFilterOpen, setDistributionFilterOpen] = useState(false);
+  const [distributionMenu, setDistributionMenu] = useState<"root" | "services" | "techniques">("root");
+  const [selectedDistributionService, setSelectedDistributionService] = useState<string | null>(null);
+  const [selectedDistributionTechnique, setSelectedDistributionTechnique] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const filterMenuRef = useRef<HTMLDivElement | null>(null);
@@ -426,12 +429,14 @@ export default function AdminAppointmentsPage() {
       if (!distributionFilterRef.current) return;
       if (!distributionFilterRef.current.contains(event.target as Node)) {
         setDistributionFilterOpen(false);
+        setDistributionMenu("root");
       }
     };
 
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setDistributionFilterOpen(false);
+        setDistributionMenu("root");
       }
     };
 
@@ -568,6 +573,37 @@ export default function AdminAppointmentsPage() {
     [periodAppointments]
   );
 
+  const distributionAppointments = useMemo(() => {
+    if (distributionFilter === "services" && selectedDistributionService) {
+      return metricsAppointments.filter((appt) => appt.serviceName === selectedDistributionService);
+    }
+    if (distributionFilter === "techniques" && selectedDistributionTechnique) {
+      return metricsAppointments.filter(
+        (appt) => (appt.techniqueName?.trim() || "Sem técnica") === selectedDistributionTechnique
+      );
+    }
+    return metricsAppointments;
+  }, [distributionFilter, metricsAppointments, selectedDistributionService, selectedDistributionTechnique]);
+
+  const distributionServices = useMemo(() => {
+    const unique = new Set<string>();
+    metricsAppointments.forEach((appt) => {
+      if (appt.serviceName?.trim()) {
+        unique.add(appt.serviceName.trim());
+      }
+    });
+    return Array.from(unique).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [metricsAppointments]);
+
+  const distributionTechniques = useMemo(() => {
+    const unique = new Set<string>();
+    metricsAppointments.forEach((appt) => {
+      const name = appt.techniqueName?.trim() || "Sem técnica";
+      unique.add(name);
+    });
+    return Array.from(unique).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [metricsAppointments]);
+
   const activeAppointments = useMemo(
     () => periodAppointments.filter((appt) => !["completed", "canceled"].includes(statusKey(appt.status))),
     [periodAppointments]
@@ -610,22 +646,62 @@ export default function AdminAppointmentsPage() {
     [activeAppointments.length, canceledAppointments.length, completedAppointments.length, confirmedAppointments.length, pendingAppointments.length, refundedAppointments.length]
   );
 
-  const metricTotal = useMemo(() => metricBreakdown.reduce((sum, item) => sum + item.value, 0), [metricBreakdown]);
+  const distributionBreakdown = useMemo(() => {
+    if (distributionFilter === "total") {
+      return metricBreakdown;
+    }
+    const palette = ["#6ad4ff", "#62a07e", "#f3a451", "#d96a6a", "#ff7b96", "#7d6bff", "#55b9c7", "#ffb347", "#7bd389"];
+    const counts = new Map<string, number>();
+    if (distributionFilter === "services") {
+      distributionAppointments.forEach((appt) => {
+        const label = appt.serviceName?.trim() || "Serviço";
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      });
+    } else {
+      distributionAppointments.forEach((appt) => {
+        const label = appt.techniqueName?.trim() || "Sem técnica";
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      });
+    }
+    return Array.from(counts.entries())
+      .map(([label, value], index) => ({
+        key: label.toLowerCase().replace(/\s+/g, "-"),
+        label,
+        value,
+        color: palette[index % palette.length],
+      }))
+      .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, "pt-BR"));
+  }, [distributionAppointments, distributionFilter, metricBreakdown]);
+
+  const distributionTotal = useMemo(
+    () => distributionBreakdown.reduce((sum, item) => sum + item.value, 0),
+    [distributionBreakdown]
+  );
 
   const pieBackground = useMemo(() => {
-    if (metricTotal <= 0) {
+    if (distributionTotal <= 0) {
       return "conic-gradient(#eef3fb 0deg 360deg)";
     }
     let current = 0;
-    const slices = metricBreakdown.map((item) => {
+    const slices = distributionBreakdown.map((item) => {
       const start = current;
-      const portion = (item.value / metricTotal) * 100;
+      const portion = (item.value / distributionTotal) * 100;
       const end = start + portion;
       current = end;
       return `${item.color} ${start}% ${end}%`;
     });
     return `conic-gradient(${slices.join(", ")})`;
-  }, [metricBreakdown, metricTotal]);
+  }, [distributionBreakdown, distributionTotal]);
+
+  const distributionFilterLabel = useMemo(() => {
+    if (distributionFilter === "services") {
+      return selectedDistributionService ?? "Serviços";
+    }
+    if (distributionFilter === "techniques") {
+      return selectedDistributionTechnique ?? "Técnicas";
+    }
+    return "Total";
+  }, [distributionFilter, selectedDistributionService, selectedDistributionTechnique]);
   const calendarStateClasses: Record<"available" | "partial" | "full" | "past", string> = {
     available: styles.calendarDayAvailable,
     partial: styles.calendarDayPartial,
@@ -897,35 +973,42 @@ export default function AdminAppointmentsPage() {
                   className={`${styles.pillButton} ${metricsRange === "7d" ? styles.pillButtonActive : ""}`}
                   onClick={() => setMetricsRange("7d")}
                 >
-                  7 dias
+                  7D
                 </button>
                 <button
                   type="button"
                   className={`${styles.pillButton} ${metricsRange === "30d" ? styles.pillButtonActive : ""}`}
                   onClick={() => setMetricsRange("30d")}
                 >
-                  30 dias
+                  30D
                 </button>
                 <button
                   type="button"
                   className={`${styles.pillButton} ${metricsRange === "60d" ? styles.pillButtonActive : ""}`}
                   onClick={() => setMetricsRange("60d")}
                 >
-                  60 dias
+                  60D
                 </button>
                 <button
                   type="button"
                   className={`${styles.pillButton} ${metricsRange === "90d" ? styles.pillButtonActive : ""}`}
                   onClick={() => setMetricsRange("90d")}
                 >
-                  90 dias
+                  90D
                 </button>
                 <button
                   type="button"
                   className={`${styles.pillButton} ${metricsRange === "year" ? styles.pillButtonActive : ""}`}
                   onClick={() => setMetricsRange("year")}
                 >
-                  Ano
+                  1A
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pillButton} ${metricsRange === "all" ? styles.pillButtonActive : ""}`}
+                  onClick={() => setMetricsRange("all")}
+                >
+                  total
                 </button>
                 <button
                   type="button"
@@ -934,13 +1017,6 @@ export default function AdminAppointmentsPage() {
                   title="Personalizado"
                 >
                   P
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.pillButton} ${metricsRange === "all" ? styles.pillButtonActive : ""}`}
-                  onClick={() => setMetricsRange("all")}
-                >
-                  Todo
                 </button>
               </div>
               {metricsRange === "custom" ? (
@@ -966,13 +1042,11 @@ export default function AdminAppointmentsPage() {
                 </div>
               ) : null}
             </div>
-            {metricTotal > 0 ? (
+            {distributionTotal > 0 ? (
               <div className={styles.pieChartWrapper} role="img" aria-label="Distribuição das métricas do período">
-                <div className={styles.pieChart} style={{ background: pieBackground }}>
-                  <span className={styles.pieChartHole} aria-hidden />
-                </div>
+                <div className={styles.pieChart} style={{ background: pieBackground }} />
                 <div className={styles.pieLegend}>
-                  {metricBreakdown.map((item) => (
+                  {distributionBreakdown.map((item) => (
                     <div key={item.key} className={styles.pieLegendItem}>
                       <span className={styles.pieLegendDot} style={{ background: item.color }} aria-hidden />
                       <span className={styles.pieLegendLabel}>{item.label}</span>
@@ -987,40 +1061,132 @@ export default function AdminAppointmentsPage() {
             <div className={styles.distributionFooter} ref={distributionFilterRef}>
               <button
                 type="button"
-                className={`${styles.filterButton} ${styles.filterButtonSmall}`}
+                className={styles.filterButton}
                 aria-haspopup="listbox"
                 aria-expanded={distributionFilterOpen}
-                onClick={() => setDistributionFilterOpen((prev) => !prev)}
+                onClick={() =>
+                  setDistributionFilterOpen((prev) => {
+                    const next = !prev;
+                    if (next) {
+                      setDistributionMenu("root");
+                    }
+                    return next;
+                  })
+                }
               >
                 Filtrar
-                <span className={styles.filterLabel}>
-                  {distributionFilter === "total" ? "Total" : distributionFilter === "services" ? "Serviços" : "Técnicas"}
-                </span>
+                <span className={styles.filterLabel}>{distributionFilterLabel}</span>
               </button>
               {distributionFilterOpen ? (
                 <div className={`${styles.filterMenu} ${styles.distributionFilterMenu}`} role="listbox" aria-label="Filtros de distribuição">
-                  {[
-                    { key: "total", label: "Total" },
-                    { key: "services", label: "Serviços" },
-                    { key: "techniques", label: "Técnicas" },
-                  ].map((option) => {
-                    const isActive = option.key === distributionFilter;
-                    return (
+                  {distributionMenu === "root" ? (
+                    <>
+                      {[
+                        { key: "total", label: "Total" },
+                        { key: "services", label: "Serviços" },
+                        { key: "techniques", label: "Técnicas" },
+                      ].map((option) => {
+                        const isActive = option.key === distributionFilter;
+                        return (
+                          <button
+                            key={option.key}
+                            type="button"
+                            role="option"
+                            aria-selected={isActive}
+                            className={`${styles.filterOption} ${isActive ? styles.filterOptionActive : ""}`}
+                            onClick={() => {
+                              if (option.key === "total") {
+                                setDistributionFilter("total");
+                                setDistributionFilterOpen(false);
+                                return;
+                              }
+                              if (option.key === "services") {
+                                setDistributionFilter("services");
+                                setSelectedDistributionService(null);
+                                setSelectedDistributionTechnique(null);
+                                setDistributionMenu("services");
+                                return;
+                              }
+                              setDistributionFilter("techniques");
+                              setSelectedDistributionService(null);
+                              setSelectedDistributionTechnique(null);
+                              setDistributionMenu("techniques");
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </>
+                  ) : distributionMenu === "services" ? (
+                    <>
+                      {distributionServices.length > 0 ? (
+                        distributionServices.map((service) => {
+                          const isActive = distributionFilter === "services" && service === selectedDistributionService;
+                          return (
+                            <button
+                              key={service}
+                              type="button"
+                              role="option"
+                              aria-selected={isActive}
+                              className={`${styles.filterOption} ${isActive ? styles.filterOptionActive : ""}`}
+                              onClick={() => {
+                                setDistributionFilter("services");
+                                setSelectedDistributionService(service);
+                                setDistributionFilterOpen(false);
+                                setDistributionMenu("root");
+                              }}
+                            >
+                              {service}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <span className={styles.filterEmpty}>Sem serviços cadastrados.</span>
+                      )}
                       <button
-                        key={option.key}
                         type="button"
-                        role="option"
-                        aria-selected={isActive}
-                        className={`${styles.filterOption} ${isActive ? styles.filterOptionActive : ""}`}
-                        onClick={() => {
-                          setDistributionFilter(option.key as "total" | "services" | "techniques");
-                          setDistributionFilterOpen(false);
-                        }}
+                        className={styles.filterOption}
+                        onClick={() => setDistributionMenu("root")}
                       >
-                        {option.label}
+                        Voltar
                       </button>
-                    );
-                  })}
+                    </>
+                  ) : (
+                    <>
+                      {distributionTechniques.length > 0 ? (
+                        distributionTechniques.map((technique) => {
+                          const isActive = distributionFilter === "techniques" && technique === selectedDistributionTechnique;
+                          return (
+                            <button
+                              key={technique}
+                              type="button"
+                              role="option"
+                              aria-selected={isActive}
+                              className={`${styles.filterOption} ${isActive ? styles.filterOptionActive : ""}`}
+                              onClick={() => {
+                                setDistributionFilter("techniques");
+                                setSelectedDistributionTechnique(technique);
+                                setDistributionFilterOpen(false);
+                                setDistributionMenu("root");
+                              }}
+                            >
+                              {technique}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <span className={styles.filterEmpty}>Sem técnicas cadastradas.</span>
+                      )}
+                      <button
+                        type="button"
+                        className={styles.filterOption}
+                        onClick={() => setDistributionMenu("root")}
+                      >
+                        Voltar
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : null}
             </div>

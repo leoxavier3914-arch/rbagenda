@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, startOfYear, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -194,9 +194,40 @@ const STATUS_TONE: Record<string, "blue" | "green" | "orange" | "purple"> = {
   canceled: "orange",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pendente",
+  reserved: "Reservado",
+  confirmed: "Confirmado",
+  canceled: "Cancelado",
+  completed: "Finalizado",
+  refunded: "Reembolsado",
+};
+
 const nextMonthsRange = () => endOfMonth(addMonths(new Date(), 2));
 
 const statusKey = (value: AppointmentStatus) => value?.toString().toLowerCase();
+
+type AppointmentFilterKey = "upcoming" | "all" | "confirmed" | "pending" | "canceled" | "completed";
+
+const FILTER_OPTIONS: Array<{
+  key: AppointmentFilterKey;
+  label: string;
+  statuses?: AppointmentStatus[];
+  upcomingOnly?: boolean;
+}> = [
+  { key: "upcoming", label: "Próximos", statuses: ["pending", "reserved", "confirmed"], upcomingOnly: true },
+  { key: "all", label: "Todos" },
+  { key: "confirmed", label: "Confirmados", statuses: ["reserved", "confirmed"] },
+  { key: "pending", label: "Pendentes", statuses: ["pending"] },
+  { key: "canceled", label: "Cancelados", statuses: ["canceled"] },
+  { key: "completed", label: "Finalizados", statuses: ["completed"] },
+];
+
+const formatStatusLabel = (status: AppointmentStatus) => {
+  const key = statusKey(status);
+  if (!key) return "Pendente";
+  return STATUS_LABELS[key] ?? "Pendente";
+};
 
 export default function AdminAppointmentsPage() {
   const { status, role } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
@@ -205,8 +236,11 @@ export default function AdminAppointmentsPage() {
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [metricsRange, setMetricsRange] = useState<"7d" | "30d" | "year">("30d");
+  const [selectedFilter, setSelectedFilter] = useState<AppointmentFilterKey>("upcoming");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const filterMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (status !== "authorized") return;
@@ -277,7 +311,6 @@ export default function AdminAppointmentsPage() {
           )
           .gte("starts_at", startDate.toISOString())
           .lte("starts_at", endDate.toISOString())
-          .not("status", "eq", "canceled")
           .order("starts_at", { ascending: true });
 
         const { data: appointmentRows, error: appointmentsError } = scopedBranchScope.ids.length
@@ -332,6 +365,30 @@ export default function AdminAppointmentsPage() {
     };
   }, [role, status]);
 
+  useEffect(() => {
+    if (!filterOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      if (!filterMenuRef.current) return;
+      if (!filterMenuRef.current.contains(event.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [filterOpen]);
+
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(visibleMonth);
     const monthEnd = endOfMonth(visibleMonth);
@@ -347,20 +404,37 @@ export default function AdminAppointmentsPage() {
     }));
   }, [appointments, visibleMonth]);
 
-  const upcomingAppointments = useMemo(() => {
-    const cutoff = new Date();
-    return appointments
-      .filter(
-        (appt) =>
-          appt.startDate &&
-          appt.startDate.getTime() >= cutoff.getTime() &&
-          !["canceled", "completed"].includes(statusKey(appt.status))
-      )
-      .sort((a, b) => {
-        if (!a.startDate || !b.startDate) return 0;
-        return a.startDate.getTime() - b.startDate.getTime();
-      });
+  const sortedAppointments = useMemo(() => {
+    return [...appointments].sort((a, b) => {
+      if (!a.startDate && !b.startDate) return 0;
+      if (!a.startDate) return 1;
+      if (!b.startDate) return -1;
+      return a.startDate.getTime() - b.startDate.getTime();
+    });
   }, [appointments]);
+
+  const filteredAppointments = useMemo(() => {
+    const activeFilter = FILTER_OPTIONS.find((option) => option.key === selectedFilter);
+    if (!activeFilter) return sortedAppointments;
+    const statusSet = activeFilter.statuses ? new Set(activeFilter.statuses.map((value) => statusKey(value))) : null;
+    const now = new Date();
+
+    return sortedAppointments.filter((appt) => {
+      const normalizedStatus = statusKey(appt.status);
+      if (activeFilter.upcomingOnly) {
+        if (!appt.startDate || appt.startDate.getTime() < now.getTime()) {
+          return false;
+        }
+      }
+      if (!statusSet) return true;
+      return statusSet.has(normalizedStatus);
+    });
+  }, [selectedFilter, sortedAppointments]);
+
+  const selectedFilterLabel = useMemo(
+    () => FILTER_OPTIONS.find((option) => option.key === selectedFilter)?.label ?? "Próximos",
+    [selectedFilter]
+  );
 
   const selectedDayAppointments = useMemo(() => {
     if (!selectedDate) return [];
@@ -571,28 +645,62 @@ export default function AdminAppointmentsPage() {
             <p className={layoutStyles.cardEyebrow}>Agendamentos</p>
             <h2>Ordem cronológica</h2>
           </div>
+          <div className={styles.tableFilters} ref={filterMenuRef}>
+            <button
+              type="button"
+              className={styles.filterButton}
+              aria-haspopup="listbox"
+              aria-expanded={filterOpen}
+              onClick={() => setFilterOpen((prev) => !prev)}
+            >
+              Filtrar
+              <span className={styles.filterLabel}>{selectedFilterLabel}</span>
+            </button>
+            {filterOpen ? (
+              <div className={styles.filterMenu} role="listbox" aria-label="Filtros de agendamentos">
+                {FILTER_OPTIONS.map((option) => {
+                  const isActive = option.key === selectedFilter;
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      className={`${styles.filterOption} ${isActive ? styles.filterOptionActive : ""}`}
+                      onClick={() => {
+                        setSelectedFilter(option.key);
+                        setFilterOpen(false);
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
         </header>
         <div className={layoutStyles.tableWrapper}>
           <table className={layoutStyles.table}>
             <thead>
               <tr>
                 <th>Cliente</th>
-                <th>Nome</th>
-                <th>Tipo</th>
+                <th>Status</th>
+                <th>Serviço</th>
                 <th>Técnica</th>
                 <th>Data</th>
                 <th>Horário</th>
               </tr>
             </thead>
             <tbody>
-              {upcomingAppointments.length === 0 ? (
+              {filteredAppointments.length === 0 ? (
                 <tr>
                   <td colSpan={6} className={layoutStyles.mutedCell}>
-                    Nenhum agendamento futuro para mostrar.
+                    Nenhum agendamento para o filtro selecionado.
                   </td>
                 </tr>
               ) : null}
-              {upcomingAppointments.map((appt) => (
+              {filteredAppointments.map((appt) => (
                 <tr key={appt.id}>
                   <td>
                     <div className={layoutStyles.clientCell}>
@@ -605,8 +713,8 @@ export default function AdminAppointmentsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className={layoutStyles.valueCell}>{appt.serviceName}</td>
-                  <td className={layoutStyles.mutedCell}>{appt.serviceTypeName ?? "—"}</td>
+                  <td className={layoutStyles.valueCell}>{formatStatusLabel(appt.status)}</td>
+                  <td className={layoutStyles.mutedCell}>{appt.serviceName}</td>
                   <td className={layoutStyles.mutedCell}>{appt.techniqueName ?? "—"}</td>
                   <td>{formatDay(appt.startDate)}</td>
                   <td>{formatTime(appt.startDate)}</td>

@@ -9,6 +9,68 @@
   align-items: center;
 }
 
+.tableFilters {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d6dce8;
+  background: #fff;
+  color: #2f3242;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filterLabel {
+  font-weight: 800;
+  color: #5c6785;
+  font-size: 0.9rem;
+}
+
+.filterMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 180px;
+  background: #ffffff;
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.filterOption {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #2f3242;
+  cursor: pointer;
+}
+
+.filterOption:hover,
+.filterOption:focus-visible {
+  background: #f2f4ff;
+}
+
+.filterOptionActive {
+  background: linear-gradient(135deg, #6ad4ff, #7d6bff);
+  color: #fff;
+}
+
 .scopeChip {
   display: inline-flex;
   align-items: center;

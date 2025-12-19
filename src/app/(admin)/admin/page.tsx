@@ -12,7 +12,7 @@ type ActivityItem = { title: string; description: string; tone: "blue" | "green"
 type ClientRow = { id: string; name: string; email: string; tickets: number; value: number };
 type TicketItem = { id: string; customer: string; excerpt: string; status: "pending" | "approved" | "rejected"; date: string };
 type ChartType = "line" | "candlestick" | "pie";
-type ChartRange = "7d" | "15d" | "30d";
+type ChartRange = "7d" | "15d" | "30d" | "60d" | "90d" | "all" | "custom";
 type ChartMetric = "both" | "scheduled" | "confirmed";
 
 const defaultChartPoints: ChartPoint[] = [
@@ -98,6 +98,12 @@ export default function AdminDashboardPage() {
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
   const [chartType, setChartType] = useState<ChartType>("line");
   const [chartRange, setChartRange] = useState<ChartRange>("7d");
+  const [customRangeStart, setCustomRangeStart] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 6);
+    return start.toISOString().slice(0, 10);
+  });
+  const [customRangeEnd, setCustomRangeEnd] = useState(() => new Date().toISOString().slice(0, 10));
   const [chartMetric, setChartMetric] = useState<ChartMetric>("both");
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [activeSlice, setActiveSlice] = useState<ChartMetric | null>(null);
@@ -111,19 +117,60 @@ export default function AdminDashboardPage() {
     if (status !== "authorized") return;
 
     let active = true;
-    const rangeDays = chartRange === "30d" ? 30 : chartRange === "15d" ? 15 : 7;
 
     const loadDashboard = async () => {
       setLoading(true);
       setError(null);
 
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - (rangeDays - 1));
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date();
-      endDate.setHours(23, 59, 59, 999);
-
       try {
+        const endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+        let startDate = new Date();
+        let rangeDays = 7;
+
+        if (chartRange === "custom") {
+          const startValue = customRangeStart || new Date().toISOString().slice(0, 10);
+          const endValue = customRangeEnd || startValue;
+          const start = new Date(`${startValue}T00:00:00`);
+          const end = new Date(`${endValue}T00:00:00`);
+          if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+            const [normalizedStart, normalizedEnd] = start > end ? [end, start] : [start, end];
+            startDate = normalizedStart;
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setTime(normalizedEnd.getTime());
+            endDate.setHours(23, 59, 59, 999);
+            rangeDays = Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / 86400000) + 1);
+          }
+        } else if (chartRange === "all") {
+          const { data: earliestData, error: earliestError } = await supabase
+            .from("appointments")
+            .select("starts_at")
+            .order("starts_at", { ascending: true })
+            .limit(1);
+          if (earliestError) {
+            throw new Error("Não foi possível carregar o dashboard.");
+          }
+          const earliestDate = earliestData?.[0]?.starts_at ? new Date(earliestData[0].starts_at) : null;
+          if (earliestDate) {
+            startDate = earliestDate;
+          } else {
+            startDate.setDate(startDate.getDate() - 6);
+          }
+          startDate.setHours(0, 0, 0, 0);
+          rangeDays = Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / 86400000) + 1);
+        } else {
+          const rangeByKey: Record<Exclude<ChartRange, "all" | "custom">, number> = {
+            "7d": 7,
+            "15d": 15,
+            "30d": 30,
+            "60d": 60,
+            "90d": 90,
+          };
+          rangeDays = rangeByKey[chartRange] ?? 7;
+          startDate.setDate(startDate.getDate() - (rangeDays - 1));
+          startDate.setHours(0, 0, 0, 0);
+        }
+
         const [{ data: appointmentsData, error: appointmentsError }, { data: clientsData, error: clientsError }] = await Promise.all([
           supabase
             .from("appointments")
@@ -196,10 +243,12 @@ export default function AdminDashboardPage() {
         setChartPoints(normalizedPoints);
         setClients(normalizedClients.length > 0 ? normalizedClients : defaultClients);
         setTickets(normalizedTickets.length > 0 ? normalizedTickets : defaultTickets);
+        const activityRangeLabel =
+          chartRange === "all" ? "no período todo" : chartRange === "custom" ? "no período selecionado" : `nos últimos ${rangeDays} dias`;
         setActivities([
           {
             title: "Agendamentos",
-            description: `${(appointmentsData ?? []).length} agendamentos nos últimos 8 dias.`,
+            description: `${(appointmentsData ?? []).length} agendamentos ${activityRangeLabel}.`,
             tone: "blue",
             time: "Agora",
           },
@@ -231,13 +280,17 @@ export default function AdminDashboardPage() {
     return () => {
       active = false;
     };
-  }, [status, chartRange]);
+  }, [status, chartRange, customRangeStart, customRangeEnd]);
 
-  const chartRangeOptions = useMemo(
+  const chartRangeOptions = useMemo<{ key: ChartRange; label: string; count?: number }[]>(
     () => [
-      { key: "7d" as const, label: "7 dias", count: 7 },
-      { key: "15d" as const, label: "15 dias", count: 15 },
-      { key: "30d" as const, label: "30 dias", count: 30 },
+      { key: "7d", label: "7 dias", count: 7 },
+      { key: "15d", label: "15 dias", count: 15 },
+      { key: "30d", label: "30 dias", count: 30 },
+      { key: "60d", label: "60 dias", count: 60 },
+      { key: "90d", label: "90 dias", count: 90 },
+      { key: "all", label: "Todo" },
+      { key: "custom", label: "Personalizado" },
     ],
     []
   );
@@ -264,6 +317,15 @@ export default function AdminDashboardPage() {
   const chartHeight = CHART_DIMENSIONS.yEnd - CHART_DIMENSIONS.yStart;
   const pieTotal = totalScheduled + totalConfirmed || 1;
   const activeRangeLabel = chartRangeOptions.find((option) => option.key === chartRange)?.label ?? "período";
+  const customRangeLabel = useMemo(() => {
+    if (!customRangeStart || !customRangeEnd) return "Personalizado";
+    const start = new Date(`${customRangeStart}T00:00:00`);
+    const end = new Date(`${customRangeEnd}T00:00:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "Personalizado";
+    return `${start.toLocaleDateString("pt-BR")} - ${end.toLocaleDateString("pt-BR")}`;
+  }, [customRangeStart, customRangeEnd]);
+  const rangeSummaryLabel =
+    chartRange === "custom" ? customRangeLabel : chartRange === "all" ? "Todo" : activeRangeLabel;
   const chartTypeOptions = [
     { key: "line" as const, label: "Linhas" },
     { key: "candlestick" as const, label: "Velas" },
@@ -296,7 +358,7 @@ export default function AdminDashboardPage() {
           <header className={styles.cardHeader}>
             <div>
               <p className={styles.cardEyebrow}>Gráfico dos agendamentos</p>
-              <h2>Últimos {activeRangeLabel}</h2>
+              <h2>Período {rangeSummaryLabel}</h2>
             </div>
             <div className={styles.chartTypeToggle} role="tablist" aria-label="Tipo de gráfico">
               {chartTypeOptions.map((option) => (
@@ -336,6 +398,40 @@ export default function AdminDashboardPage() {
                 </select>
               </label>
             </div>
+            {chartRange === "custom" ? (
+              <div className={styles.chartCustomRange}>
+                <label className={styles.chartSelect}>
+                  Data inicial
+                  <input
+                    type="date"
+                    value={customRangeStart}
+                    max={customRangeEnd}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setCustomRangeStart(value);
+                      if (customRangeEnd && value && value > customRangeEnd) {
+                        setCustomRangeEnd(value);
+                      }
+                    }}
+                  />
+                </label>
+                <label className={styles.chartSelect}>
+                  Data final
+                  <input
+                    type="date"
+                    value={customRangeEnd}
+                    min={customRangeStart}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setCustomRangeEnd(value);
+                      if (customRangeStart && value && value < customRangeStart) {
+                        setCustomRangeStart(value);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            ) : null}
           </div>
           <div className={styles.chartArea}>
             <div className={styles.chartMeta}>

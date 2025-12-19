@@ -803,8 +803,7 @@ export default function AdminAppointmentsPage() {
               </p>
             ) : null}
             {selectedDayAppointments.map((appt) => (
-              <div key={appt.id} className={layoutStyles.feedItem}>
-                <span className={`${layoutStyles.feedIcon} ${layoutStyles[`tone-${STATUS_TONE[statusKey(appt.status)] ?? "blue"}`]}`} aria-hidden />
+              <div key={appt.id} className={`${layoutStyles.feedItem} ${styles.dayScheduleItem}`}>
                 <div className={layoutStyles.feedCopy}>
                   <p className={layoutStyles.feedTitle}>{appt.customerName}</p>
                   <p className={layoutStyles.feedDesc}>
@@ -812,9 +811,7 @@ export default function AdminAppointmentsPage() {
                     {appt.techniqueName ? ` · ${appt.techniqueName}` : ""}
                   </p>
                 </div>
-                <span className={layoutStyles.feedTime}>
-                  {formatTime(appt.startDate)} {appt.serviceTypeName ? `· ${appt.serviceTypeName}` : ""}
-                </span>
+                <span className={layoutStyles.feedTime}>{formatTime(appt.startDate)}</span>
               </div>
             ))}
           </div>

@@ -239,6 +239,7 @@
   text-align: left;
   padding: 10px 12px;
   border-bottom: 1px solid #e6ebf3;
+  vertical-align: top;
 }
 
 .table tbody tr {

@@ -11,6 +11,9 @@ type ChartPoint = { label: string; scheduled: number; confirmed: number };
 type ActivityItem = { title: string; description: string; tone: "blue" | "green" | "orange" | "purple"; time: string };
 type ClientRow = { id: string; name: string; email: string; tickets: number; value: number };
 type TicketItem = { id: string; customer: string; excerpt: string; status: "pending" | "approved" | "rejected"; date: string };
+type ChartType = "line" | "candlestick" | "pie";
+type ChartRange = "7d" | "15d" | "30d";
+type ChartMetric = "both" | "scheduled" | "confirmed";
 
 const defaultChartPoints: ChartPoint[] = [
   { label: "01/05", scheduled: 8, confirmed: 2 },
@@ -45,14 +48,26 @@ const defaultActivities: ActivityItem[] = [
 
 const formatLabel = (date: Date) => `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
 
+const CHART_DIMENSIONS = {
+  width: 700,
+  height: 280,
+  xStart: 60,
+  xEnd: 670,
+  yStart: 30,
+  yEnd: 240,
+};
+
 function buildPolyline(points: ChartPoint[], maxValue: number, key: "scheduled" | "confirmed") {
   if (!points.length || !maxValue) return "";
 
+  const chartWidth = CHART_DIMENSIONS.xEnd - CHART_DIMENSIONS.xStart;
+  const chartHeight = CHART_DIMENSIONS.yEnd - CHART_DIMENSIONS.yStart;
+
   return points
     .map((point, index) => {
-      const x = 60 + (index / Math.max(points.length - 1, 1)) * 610;
+      const x = CHART_DIMENSIONS.xStart + (index / Math.max(points.length - 1, 1)) * chartWidth;
       const value = Math.max(0, point[key]);
-      const y = 240 - (value / maxValue) * 200;
+      const y = CHART_DIMENSIONS.yEnd - (value / maxValue) * chartHeight;
       return `${x},${y}`;
     })
     .join(" ");
@@ -61,6 +76,11 @@ function buildPolyline(points: ChartPoint[], maxValue: number, key: "scheduled" 
 export default function AdminDashboardPage() {
   const { status } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>(defaultChartPoints);
+  const [chartType, setChartType] = useState<ChartType>("line");
+  const [chartRange, setChartRange] = useState<ChartRange>("7d");
+  const [chartMetric, setChartMetric] = useState<ChartMetric>("both");
+  const [activePoint, setActivePoint] = useState<number | null>(null);
+  const [activeSlice, setActiveSlice] = useState<ChartMetric | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>(defaultActivities);
   const [clients, setClients] = useState<ClientRow[]>(defaultClients);
   const [tickets, setTickets] = useState<TicketItem[]>(defaultTickets);
@@ -196,8 +216,47 @@ export default function AdminDashboardPage() {
     };
   }, [status]);
 
-  const maxValue = useMemo(() => Math.max(...chartPoints.flatMap((point) => [point.scheduled, point.confirmed, 1])), [chartPoints]);
+  const chartRangeOptions = useMemo(
+    () => [
+      { key: "7d" as const, label: "7 dias", count: 7 },
+      { key: "15d" as const, label: "15 dias", count: 15 },
+      { key: "30d" as const, label: "30 dias", count: 30 },
+    ],
+    []
+  );
+
+  const filteredPoints = useMemo(() => {
+    const range = chartRangeOptions.find((option) => option.key === chartRange);
+    const count = range ? range.count : chartPoints.length;
+    return chartPoints.slice(-count);
+  }, [chartPoints, chartRange, chartRangeOptions]);
+
+  const maxValue = useMemo(() => {
+    const values = filteredPoints.flatMap((point) => {
+      if (chartMetric === "scheduled") return [point.scheduled];
+      if (chartMetric === "confirmed") return [point.confirmed];
+      return [point.scheduled, point.confirmed];
+    });
+    return Math.max(1, ...values);
+  }, [filteredPoints, chartMetric]);
+
+  const totalScheduled = useMemo(() => filteredPoints.reduce((sum, point) => sum + point.scheduled, 0), [filteredPoints]);
+  const totalConfirmed = useMemo(() => filteredPoints.reduce((sum, point) => sum + point.confirmed, 0), [filteredPoints]);
   const currency = useMemo(() => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), []);
+  const chartWidth = CHART_DIMENSIONS.xEnd - CHART_DIMENSIONS.xStart;
+  const chartHeight = CHART_DIMENSIONS.yEnd - CHART_DIMENSIONS.yStart;
+  const pieTotal = totalScheduled + totalConfirmed || 1;
+  const activeRangeLabel = chartRangeOptions.find((option) => option.key === chartRange)?.label ?? "período";
+  const chartTypeOptions = [
+    { key: "line" as const, label: "Linhas" },
+    { key: "candlestick" as const, label: "Velas" },
+    { key: "pie" as const, label: "Pizza" },
+  ];
+  const chartMetricOptions = [
+    { key: "both" as const, label: "Todos" },
+    { key: "scheduled" as const, label: "Agendados" },
+    { key: "confirmed" as const, label: "Confirmados" },
+  ];
 
   if (status !== "authorized") {
     return <div className={styles.loading}>Carregando painel…</div>;
@@ -220,7 +279,7 @@ export default function AdminDashboardPage() {
           <header className={styles.cardHeader}>
             <div>
               <p className={styles.cardEyebrow}>Gráfico dos agendamentos</p>
-              <h2>Últimos 8 dias</h2>
+              <h2>Últimos {activeRangeLabel}</h2>
             </div>
             <div className={styles.legend}>
               <span className={styles.legendItem}>
@@ -233,42 +292,235 @@ export default function AdminDashboardPage() {
               </span>
             </div>
           </header>
+          <div className={styles.chartControls}>
+            <div className={styles.chartFilters}>
+              <label className={styles.chartSelect}>
+                Período
+                <select value={chartRange} onChange={(event) => setChartRange(event.target.value as ChartRange)}>
+                  {chartRangeOptions.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={styles.chartSelect}>
+                Métrica
+                <select value={chartMetric} onChange={(event) => setChartMetric(event.target.value as ChartMetric)}>
+                  {chartMetricOptions.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className={styles.chartTypeToggle} role="tablist" aria-label="Tipo de gráfico">
+              {chartTypeOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`${styles.chartTypeButton} ${chartType === option.key ? styles.chartTypeActive : ""}`}
+                  onClick={() => setChartType(option.key)}
+                  role="tab"
+                  aria-selected={chartType === option.key}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className={styles.chartArea}>
-            <svg viewBox="0 0 700 280" role="img" aria-label="Gráfico de agendamentos">
-              {Array.from({ length: 5 }).map((_, index) => {
-                const y = 240 - (index * 200) / 4;
-                const valueLabel = Math.round((maxValue * index) / 4);
-                return (
-                  <g key={index}>
-                    <line x1="60" x2="670" y1={y} y2={y} stroke="#e5ecf6" strokeWidth="1" />
-                    <text x="20" y={y + 4} fill="#7a86a2" fontSize="12">
-                      {valueLabel}
-                    </text>
-                  </g>
-                );
-              })}
-              <polyline
-                fill="none"
-                stroke="#6ad4ff"
-                strokeWidth="3"
-                strokeLinecap="round"
-                points={buildPolyline(chartPoints, maxValue, "scheduled")}
-              />
-              <polyline
-                fill="none"
-                stroke="#7d6bff"
-                strokeWidth="3"
-                strokeLinecap="round"
-                points={buildPolyline(chartPoints, maxValue, "confirmed")}
-              />
-              {chartPoints.map((point, index) => {
-                const x = 60 + (index / Math.max(chartPoints.length - 1, 1)) * 610;
-                return (
-                  <text key={point.label} x={x} y={258} textAnchor="middle" fill="#7a86a2" fontSize="12">
-                    {point.label}
-                  </text>
-                );
-              })}
+            <div className={styles.chartMeta}>
+              {chartType === "pie" ? (
+                <span>
+                  {activeSlice ? (
+                    <>
+                      {activeSlice === "scheduled" ? "Agendados" : "Confirmados"}:{" "}
+                      {activeSlice === "scheduled" ? totalScheduled : totalConfirmed}
+                    </>
+                  ) : (
+                    <>
+                      Total do período: {totalScheduled} agendados · {totalConfirmed} confirmados
+                    </>
+                  )}
+                </span>
+              ) : activePoint !== null && filteredPoints[activePoint] ? (
+                <span>
+                  Dia {filteredPoints[activePoint].label}: {filteredPoints[activePoint].scheduled} agendados ·{" "}
+                  {filteredPoints[activePoint].confirmed} confirmados
+                </span>
+              ) : (
+                <span>
+                  Passe o mouse para detalhar · {filteredPoints.length} dias no período selecionado
+                </span>
+              )}
+            </div>
+            <svg
+              viewBox={`0 0 ${CHART_DIMENSIONS.width} ${CHART_DIMENSIONS.height}`}
+              role="img"
+              aria-label="Gráfico de agendamentos"
+              onMouseLeave={() => {
+                setActivePoint(null);
+                setActiveSlice(null);
+              }}
+            >
+              {chartType !== "pie" ? (
+                <>
+                  {Array.from({ length: 5 }).map((_, index) => {
+                    const y = CHART_DIMENSIONS.yEnd - (index * chartHeight) / 4;
+                    const valueLabel = Math.round((maxValue * index) / 4);
+                    return (
+                      <g key={index}>
+                        <line
+                          x1={CHART_DIMENSIONS.xStart}
+                          x2={CHART_DIMENSIONS.xEnd}
+                          y1={y}
+                          y2={y}
+                          stroke="#e5ecf6"
+                          strokeWidth="1"
+                        />
+                        <text x="20" y={y + 4} fill="#7a86a2" fontSize="12">
+                          {valueLabel}
+                        </text>
+                      </g>
+                    );
+                  })}
+                  {chartType === "line" ? (
+                    <>
+                      {chartMetric !== "confirmed" ? (
+                        <polyline
+                          fill="none"
+                          stroke="#6ad4ff"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          points={buildPolyline(filteredPoints, maxValue, "scheduled")}
+                        />
+                      ) : null}
+                      {chartMetric !== "scheduled" ? (
+                        <polyline
+                          fill="none"
+                          stroke="#7d6bff"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          points={buildPolyline(filteredPoints, maxValue, "confirmed")}
+                        />
+                      ) : null}
+                      {filteredPoints.map((point, index) => {
+                        const x = CHART_DIMENSIONS.xStart + (index / Math.max(filteredPoints.length - 1, 1)) * chartWidth;
+                        const scheduledY = CHART_DIMENSIONS.yEnd - (point.scheduled / maxValue) * chartHeight;
+                        const confirmedY = CHART_DIMENSIONS.yEnd - (point.confirmed / maxValue) * chartHeight;
+                        return (
+                          <g key={point.label}>
+                            {chartMetric !== "confirmed" ? (
+                              <circle
+                                cx={x}
+                                cy={scheduledY}
+                                r="5"
+                                fill="#6ad4ff"
+                                stroke="#ffffff"
+                                strokeWidth="2"
+                                onMouseEnter={() => setActivePoint(index)}
+                              />
+                            ) : null}
+                            {chartMetric !== "scheduled" ? (
+                              <circle
+                                cx={x}
+                                cy={confirmedY}
+                                r="5"
+                                fill="#7d6bff"
+                                stroke="#ffffff"
+                                strokeWidth="2"
+                                onMouseEnter={() => setActivePoint(index)}
+                              />
+                            ) : null}
+                          </g>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <>
+                      {filteredPoints.map((point, index) => {
+                        const x = CHART_DIMENSIONS.xStart + (index / Math.max(filteredPoints.length - 1, 1)) * chartWidth;
+                        const high = Math.max(point.scheduled, point.confirmed);
+                        const low = Math.min(point.scheduled, point.confirmed);
+                        const highY = CHART_DIMENSIONS.yEnd - (high / maxValue) * chartHeight;
+                        const lowY = CHART_DIMENSIONS.yEnd - (low / maxValue) * chartHeight;
+                        const bodyHeight = Math.max(6, Math.abs(highY - lowY));
+                        const bodyY = Math.min(highY, lowY);
+                        const isUp = point.scheduled >= point.confirmed;
+                        return (
+                          <g key={point.label} onMouseEnter={() => setActivePoint(index)}>
+                            <line x1={x} x2={x} y1={highY} y2={lowY} stroke="#94a3b8" strokeWidth="2" />
+                            <rect
+                              x={x - 8}
+                              y={bodyY}
+                              width="16"
+                              height={bodyHeight}
+                              rx="4"
+                              fill={isUp ? "#6ad4ff" : "#7d6bff"}
+                              opacity="0.9"
+                            />
+                          </g>
+                        );
+                      })}
+                    </>
+                  )}
+                  {filteredPoints.map((point, index) => {
+                    const x = CHART_DIMENSIONS.xStart + (index / Math.max(filteredPoints.length - 1, 1)) * chartWidth;
+                    return (
+                      <text key={point.label} x={x} y={CHART_DIMENSIONS.yEnd + 18} textAnchor="middle" fill="#7a86a2" fontSize="12">
+                        {point.label}
+                      </text>
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  {(() => {
+                    const centerX = CHART_DIMENSIONS.width / 2;
+                    const centerY = CHART_DIMENSIONS.height / 2;
+                    const radius = 110;
+                    const scheduledAngle = (totalScheduled / pieTotal) * Math.PI * 2;
+                    const confirmedAngle = (totalConfirmed / pieTotal) * Math.PI * 2;
+                    const scheduledEnd = scheduledAngle;
+                    const confirmedEnd = scheduledEnd + confirmedAngle;
+
+                    const describeArc = (startAngle: number, endAngle: number) => {
+                      const x1 = centerX + radius * Math.cos(startAngle);
+                      const y1 = centerY + radius * Math.sin(startAngle);
+                      const x2 = centerX + radius * Math.cos(endAngle);
+                      const y2 = centerY + radius * Math.sin(endAngle);
+                      const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+                      return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                    };
+
+                    return (
+                      <>
+                        <path
+                          d={describeArc(0, scheduledEnd)}
+                          fill="#6ad4ff"
+                          onMouseEnter={() => setActiveSlice("scheduled")}
+                          opacity={activeSlice && activeSlice !== "scheduled" ? 0.5 : 1}
+                        />
+                        <path
+                          d={describeArc(scheduledEnd, confirmedEnd)}
+                          fill="#7d6bff"
+                          onMouseEnter={() => setActiveSlice("confirmed")}
+                          opacity={activeSlice && activeSlice !== "confirmed" ? 0.5 : 1}
+                        />
+                        <circle cx={centerX} cy={centerY} r="52" fill="#ffffff" />
+                        <text x={centerX} y={centerY - 6} textAnchor="middle" fontSize="14" fill="#64748b">
+                          Total
+                        </text>
+                        <text x={centerX} y={centerY + 16} textAnchor="middle" fontSize="18" fill="#0f172a" fontWeight="700">
+                          {totalScheduled + totalConfirmed}
+                        </text>
+                      </>
+                    );
+                  })()}
+                </>
+              )}
             </svg>
           </div>
         </section>

@@ -1,10 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, startOfYear, subDays } from "date-fns";
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+  subDays,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/lib/db";
+import { DEFAULT_SLOT_TEMPLATE } from "@/lib/availability";
 
 import { useAdminGuard, type AdminRole } from "../../useAdminGuard";
 import layoutStyles from "../../adminHome.module.css";
@@ -223,6 +237,15 @@ const FILTER_OPTIONS: Array<{
   { key: "completed", label: "Finalizados", statuses: ["completed"] },
 ];
 
+const CALENDAR_ACTIVE_STATUSES = new Set(["pending", "reserved", "confirmed"]);
+
+const CALENDAR_STATE_LABELS: Record<"available" | "partial" | "full" | "past", string> = {
+  available: "livre",
+  partial: "parcial",
+  full: "lotado",
+  past: "passado",
+};
+
 const formatStatusLabel = (status: AppointmentStatus) => {
   const key = statusKey(status);
   if (!key) return "Pendente";
@@ -394,14 +417,37 @@ export default function AdminAppointmentsPage() {
     const monthEnd = endOfMonth(visibleMonth);
     const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
     const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    const today = startOfDay(new Date());
+    const slotsPerDay = DEFAULT_SLOT_TEMPLATE.length;
 
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
-    return days.map((date) => ({
-      date,
-      key: date.toISOString(),
-      outOfMonth: !isSameMonth(date, monthStart),
-      events: appointments.filter((appt) => appt.startDate && isSameDay(appt.startDate, date)),
-    }));
+    return days.map((date) => {
+      const eventsCount = appointments.filter(
+        (appt) =>
+          appt.startDate &&
+          isSameDay(appt.startDate, date) &&
+          CALENDAR_ACTIVE_STATUSES.has(statusKey(appt.status))
+      ).length;
+      const isPast = date < today;
+      let state: "available" | "partial" | "full" | "past" = "available";
+
+      if (isPast) {
+        state = "past";
+      } else if (eventsCount === 0) {
+        state = "available";
+      } else if (eventsCount >= slotsPerDay) {
+        state = "full";
+      } else {
+        state = "partial";
+      }
+
+      return {
+        date,
+        key: date.toISOString(),
+        outOfMonth: !isSameMonth(date, monthStart),
+        state,
+      };
+    });
   }, [appointments, visibleMonth]);
 
   const sortedAppointments = useMemo(() => {
@@ -521,6 +567,12 @@ export default function AdminAppointmentsPage() {
   }, [metricsAppointments]);
 
   const maxMonthly = Math.max(1, ...monthlyCounts.map((item) => item.value));
+  const calendarStateClasses: Record<"available" | "partial" | "full" | "past", string> = {
+    available: styles.calendarDayAvailable,
+    partial: styles.calendarDayPartial,
+    full: styles.calendarDayFull,
+    past: styles.calendarDayPast,
+  };
 
   if (status !== "authorized") {
     return <div className={styles.loading}>Carregando painel…</div>;
@@ -562,10 +614,10 @@ export default function AdminAppointmentsPage() {
             {calendarDays.map((day) => (
               <div
                 key={day.key}
-                className={`${styles.calendarDay} ${day.outOfMonth ? styles.calendarDayMuted : ""} ${
+                className={`${styles.calendarDay} ${calendarStateClasses[day.state]} ${day.outOfMonth ? styles.calendarDayMuted : ""} ${
                   selectedDate && isSameDay(day.date, selectedDate) ? styles.calendarDaySelected : ""
                 }`}
-                aria-label={`Dia ${format(day.date, "dd/MM", { locale: ptBR })}`}
+                aria-label={`Dia ${format(day.date, "dd/MM", { locale: ptBR })} ${CALENDAR_STATE_LABELS[day.state]}`}
                 tabIndex={0}
                 role="gridcell"
                 aria-selected={selectedDate ? isSameDay(day.date, selectedDate) : false}
@@ -581,26 +633,26 @@ export default function AdminAppointmentsPage() {
                   <span className={styles.calendarDate}>{format(day.date, "d", { locale: ptBR })}</span>
                   <span className={styles.calendarWeekday}>{format(day.date, "EEE", { locale: ptBR })}</span>
                 </div>
-                <div className={styles.calendarDayEvents}>
-                  {day.events.length === 0 ? <span className={styles.calendarEmpty}>Sem horários</span> : null}
-                  {day.events.slice(0, 3).map((event) => {
-                    const tone = STATUS_TONE[statusKey(event.status)] ?? "blue";
-                    return (
-                      <span
-                        key={event.id}
-                        className={`${styles.calendarBadge} ${styles[`tone-${tone}`]}`}
-                        title={`${event.customerName} · ${event.serviceName}`}
-                      >
-                        <span className={styles.badgeDot} aria-hidden />
-                        <span className={styles.badgeText}>{event.customerName}</span>
-                        <span className={styles.badgeTime}>{formatTime(event.startDate)}</span>
-                      </span>
-                    );
-                  })}
-                  {day.events.length > 3 ? <span className={styles.calendarMore}>+{day.events.length - 3} outros</span> : null}
-                </div>
               </div>
             ))}
+          </div>
+          <div className={styles.calendarLegend} aria-label="Legenda de cores do calendário">
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendDot} ${styles.legendAvailable}`} aria-hidden />
+              Livre
+            </span>
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendDot} ${styles.legendPartial}`} aria-hidden />
+              Parcial
+            </span>
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendDot} ${styles.legendFull}`} aria-hidden />
+              Lotado
+            </span>
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendDot} ${styles.legendPast}`} aria-hidden />
+              Passado
+            </span>
           </div>
         </section>
 

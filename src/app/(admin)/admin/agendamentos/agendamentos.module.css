@@ -114,6 +114,27 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
+.calendarDayAvailable {
+  background: rgba(98, 160, 126, 0.18);
+  border-color: rgba(98, 160, 126, 0.35);
+}
+
+.calendarDayPartial {
+  background: rgba(243, 164, 81, 0.22);
+  border-color: rgba(243, 164, 81, 0.4);
+}
+
+.calendarDayFull {
+  background: rgba(217, 106, 106, 0.22);
+  border-color: rgba(217, 106, 106, 0.4);
+}
+
+.calendarDayPast {
+  background: #eef1f6;
+  border-color: #d9e0ec;
+  color: #8b96ad;
+}
+
 .calendarDayMuted {
   background: #f1f4f9;
   color: #a0a9bf;
@@ -148,51 +169,46 @@
   text-transform: capitalize;
 }
 
-.calendarDayEvents {
+.calendarLegend {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.calendarEmpty {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  margin-bottom: 6px;
   color: #7a86a2;
-  font-size: 0.9rem;
-  align-self: center;
-  text-align: center;
-  padding: 4px 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
-.calendarBadge {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+.legendItem {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: #fff;
-  border: 1px solid #dfe6f2;
-  color: #2f3242;
 }
 
-.badgeDot {
+.legendDot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: currentColor;
+  display: inline-block;
 }
 
-.badgeText {
-  font-weight: 700;
+.legendAvailable {
+  background: #62a07e;
 }
 
-.badgeTime {
-  color: #7a86a2;
-  font-size: 0.9rem;
+.legendPartial {
+  background: #f3a451;
 }
 
-.calendarMore {
-  color: #5c6785;
-  font-weight: 700;
+.legendFull {
+  background: #d96a6a;
+}
+
+.legendPast {
+  background: #b8c7be;
 }
 
 .pillSwitcher {

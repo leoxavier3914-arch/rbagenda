@@ -111,11 +111,78 @@
   margin-top: 12px;
   width: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
 }
 
 .chartArea svg {
   width: 100%;
   height: auto;
+  flex: 1;
+}
+
+.chartControls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.chartFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chartSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #55607c;
+}
+
+.chartSelect select {
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  padding: 8px 10px;
+  background: #ffffff;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.chartTypeToggle {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chartTypeButton {
+  border: 1px solid #d7deea;
+  background: #f8fafc;
+  color: #475569;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chartTypeActive {
+  background: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.chartMeta {
+  font-size: 0.9rem;
+  color: #5b6b84;
+  font-weight: 600;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .feedCard {

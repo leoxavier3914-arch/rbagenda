@@ -158,6 +158,21 @@
   color: #1f2937;
 }
 
+.chartSelect input {
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  padding: 8px 10px;
+  background: #ffffff;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.chartCustomRange {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .chartTypeToggle {
   display: flex;
   gap: 8px;

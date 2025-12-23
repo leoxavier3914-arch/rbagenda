@@ -110,7 +110,7 @@
 - `/suporte`: chat expandido agora escurece o fundo com overlay mais opaco e mensagens/input ganharam bordas arredondadas com contorno suave e profundidade (sombra externa + leve brilho interno); botão enviar recebeu sombra para profundidade.
 - `/suporte`: botões de ação do cabeçalho do chat (minimizar/fechar) e ferramentas de input (anexo/emoji) ganharam gradiente e sombra leve para dar profundidade consistente com os demais controles.
 - `/suporte`: canais de WhatsApp, e-mail e chat foram unificados em três botões verticais com ícones (emoji) e mesma largura/profundidade; o botão de chat agora reutiliza o launcher principal em vez de um CTA separado.
-- `/suporte`: alinhamento interno dos cards de canal centralizado e tipografia dos textos equalizada para deixar o botão de Chat no mesmo tamanho dos demais.
+- `/suporte`: alinhamento interno dos cards de canal centralizado e tipografia dos textos equalizada para deixar o botão de Chat no mesmo tamanho dos demais; textos dos cards forçados a alinhar à esquerda para manter consistência.
 - Sessão e shell: páginas protegidas usam `useClientSessionGuard` + `useClientPageReady`, eliminando `getSession` duplicado e padronizando a liberação do hero.
 - Modais: `ConfirmCancelModal`, `BlockedModal`, `SuccessModal` e `RescheduleModal` agora apoiam-se em `ClientBaseModal` compartilhado em `src/components/client` (usado também no `SummaryModal` do `/procedimento`), reduzindo duplicação de backdrop/estrutura.
 - Vidro e variáveis: `agendamentos.module.css` passou a usar apenas variáveis globais (`--ink`, `--muted`, `--card-stroke`, `--glass-stroke`, `--radius-*`) e removeu o bloco `:root` local para manter consistência temática.

@@ -79,6 +79,8 @@
   flex: 1;
   min-width: 0;
   justify-content: center;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .actionLabel {

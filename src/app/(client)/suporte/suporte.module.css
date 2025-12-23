@@ -217,6 +217,9 @@
   border-radius: 20px;
   background: color-mix(in srgb, var(--brand-sand) 92%, var(--glass));
   border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--brand-border));
+  box-shadow:
+    0 14px 26px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--light) 65%, transparent);
   overflow-y: auto;
 }
 
@@ -288,6 +291,9 @@
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--brand-border));
   background: color-mix(in srgb, var(--brand-sand) 90%, var(--glass));
   color: var(--ink);
+  box-shadow:
+    0 10px 20px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--light) 70%, transparent);
   resize: vertical;
 }
 

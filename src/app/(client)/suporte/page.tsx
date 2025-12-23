@@ -13,7 +13,7 @@ export default function SuportePage() {
 
   return (
     <ClientPageShell heroReady={heroReady} forceMotion>
-      <ClientSection>
+      <ClientSection className={styles.section}>
         <SupportHeader />
 
         <ClientGlassPanel label="SUPORTE" className={styles.card}>

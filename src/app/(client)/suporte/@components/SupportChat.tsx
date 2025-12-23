@@ -34,6 +34,8 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
   const [dragging, setDragging] = useState(false)
   const dragOffset = useRef({ x: 0, y: 0 })
   const dragBounds = useRef({ width: 360, height: 520 })
+  const dragTarget = useRef<HTMLElement | null>(null)
+  const dragPointerId = useRef<number | null>(null)
 
   const clampPosition = (nextX: number, nextY: number) => {
     const { width, height } = dragBounds.current
@@ -59,8 +61,13 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
       })
     }
 
-    const handleUp = () => {
+    const handleUp = (event: PointerEvent) => {
       setDragging(false)
+      if (dragTarget.current && dragPointerId.current !== null) {
+        dragTarget.current.releasePointerCapture(dragPointerId.current)
+      }
+      dragTarget.current = null
+      dragPointerId.current = null
     }
 
     window.addEventListener("pointermove", handleMove)
@@ -235,9 +242,13 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
 
   const handleDragStart = (event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
     const rect = event.currentTarget.getBoundingClientRect()
     dragOffset.current = { x: event.clientX - rect.left, y: event.clientY - rect.top }
     dragBounds.current = { width: rect.width, height: rect.height }
+    dragTarget.current = event.currentTarget
+    dragPointerId.current = event.pointerId
     setDragging(true)
   }
 

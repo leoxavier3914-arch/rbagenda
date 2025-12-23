@@ -161,11 +161,18 @@
 
 .chatHeaderButton {
   border: 1px solid color-mix(in srgb, var(--glass-stroke) 80%, transparent);
-  background: color-mix(in srgb, var(--glass) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--glass) 88%, var(--light)),
+    color-mix(in srgb, var(--glass) 70%, transparent)
+  );
   color: var(--ink);
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
   font-size: 0.75rem;
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--light) 60%, transparent);
 }
 
 .chatBody {
@@ -275,12 +282,19 @@
   height: 36px;
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--glass-stroke) 80%, transparent);
-  background: color-mix(in srgb, var(--glass) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--glass) 80%, var(--light)),
+    color-mix(in srgb, var(--glass) 62%, transparent)
+  );
   color: var(--ink);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
+  box-shadow:
+    0 8px 16px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--light) 55%, transparent);
 }
 
 .chatInput {

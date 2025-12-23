@@ -108,6 +108,7 @@
 - `/suporte`: painel do chat e área de mensagens agora usam superfícies opacas (sem blur/transparência) para manter o conteúdo totalmente sólido.
 - `/suporte`: botão minimizado do chat agora captura ponteiro no drag e bloqueia scroll/seleção durante o arraste para manter o movimento mesmo fora do botão.
 - `/suporte`: chat expandido agora escurece o fundo com overlay mais opaco e mensagens/input ganharam bordas arredondadas com contorno suave e profundidade (sombra externa + leve brilho interno); botão enviar recebeu sombra para profundidade.
+- `/suporte`: botões de ação do cabeçalho do chat (minimizar/fechar) e ferramentas de input (anexo/emoji) ganharam gradiente e sombra leve para dar profundidade consistente com os demais controles.
 - Sessão e shell: páginas protegidas usam `useClientSessionGuard` + `useClientPageReady`, eliminando `getSession` duplicado e padronizando a liberação do hero.
 - Modais: `ConfirmCancelModal`, `BlockedModal`, `SuccessModal` e `RescheduleModal` agora apoiam-se em `ClientBaseModal` compartilhado em `src/components/client` (usado também no `SummaryModal` do `/procedimento`), reduzindo duplicação de backdrop/estrutura.
 - Vidro e variáveis: `agendamentos.module.css` passou a usar apenas variáveis globais (`--ink`, `--muted`, `--card-stroke`, `--glass-stroke`, `--radius-*`) e removeu o bloco `:root` local para manter consistência temática.

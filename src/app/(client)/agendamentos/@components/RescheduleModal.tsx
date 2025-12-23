@@ -64,7 +64,7 @@ export function RescheduleModal({
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const { availability, availabilityError, isLoadingAvailability } = useClientAvailability({
+  const { availability, availabilityError } = useClientAvailability({
     serviceId: appointment.serviceId,
     enabled: Boolean(appointment.serviceId),
     fallbackBufferMinutes: DEFAULT_FALLBACK_BUFFER_MINUTES,
@@ -280,9 +280,7 @@ export function RescheduleModal({
           </button>
         </div>
 
-        {isLoadingAvailability ? (
-          <div className={styles.meta}>Carregando disponibilidade…</div>
-        ) : availabilityError ? (
+        {availabilityError ? (
           <div className={styles.meta}>{availabilityError}</div>
         ) : null}
 

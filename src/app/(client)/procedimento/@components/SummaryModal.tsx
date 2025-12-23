@@ -1,4 +1,5 @@
-import { ClientBaseModal } from '@/components/client/ClientBaseModal'
+import { ClientModal } from '@/components/client/ClientModal'
+import modalStyles from '@/components/client/client-modal.module.css'
 
 import styles from '../procedimento.module.css'
 
@@ -28,67 +29,66 @@ export function SummaryModal({
   if (!summarySnapshot) return null
 
   return (
-    <ClientBaseModal
+    <ClientModal
       isOpen={isOpen}
       onClose={onClose}
-      className={styles.modal}
-      backdropClassName={styles.modalBackdrop}
-      contentClassName={styles.modalContent}
+      title="Resumo do agendamento"
+      tone="info"
+      contentClassName={styles.summaryModal}
+      disableBackdropClose={isProcessingPayment}
       contentProps={{ 'aria-labelledby': 'appointment-summary-title' }}
-      data-open={isOpen ? 'true' : 'false'}
+      actions={(
+        <>
+          <button
+            type="button"
+            className={`${modalStyles.modalButton} ${modalStyles.modalButtonSuccess}`}
+            onClick={onPayDeposit}
+            disabled={isProcessingPayment || !depositAvailable}
+          >
+            {isProcessingPayment ? 'Processando…' : 'Pagar sinal'}
+          </button>
+          <button
+            type="button"
+            className={`${modalStyles.modalButton} ${modalStyles.modalButtonSecondary}`}
+            onClick={onPayLater}
+            disabled={isProcessingPayment}
+          >
+            Pagar depois
+          </button>
+        </>
+      )}
     >
-      <h2 id="appointment-summary-title" className={styles.modalTitle}>
-        Resumo do agendamento
-      </h2>
-      <div className={styles.modalBody}>
-        <div className={styles.modalLine}>
+      <div className={styles.summaryList}>
+        <div className={styles.summaryLine}>
           <span>Tipo</span>
           <strong>{summarySnapshot.typeName}</strong>
         </div>
-        <div className={styles.modalLine}>
+        <div className={styles.summaryLine}>
           <span>Técnica</span>
           <strong>{summarySnapshot.techniqueName}</strong>
         </div>
-        <div className={styles.modalLine}>
+        <div className={styles.summaryLine}>
           <span>Horário</span>
           <strong>
             {summarySnapshot.dateLabel} às {summarySnapshot.timeLabel}
           </strong>
         </div>
-        <div className={styles.modalLine}>
+        <div className={styles.summaryLine}>
           <span>Duração</span>
           <strong>{summarySnapshot.durationLabel}</strong>
         </div>
-        <div className={styles.modalLine}>
+        <div className={styles.summaryLine}>
           <span>Valor</span>
           <strong>{summarySnapshot.priceLabel}</strong>
         </div>
         {summarySnapshot.depositCents > 0 ? (
-          <div className={styles.modalLine}>
+          <div className={styles.summaryLine}>
             <span>Sinal</span>
             <strong>{summarySnapshot.depositLabel}</strong>
           </div>
         ) : null}
       </div>
-      {modalError ? <div className={`${styles.status} ${styles.statusError}`}>{modalError}</div> : null}
-      <div className={styles.modalActions}>
-        <button
-          type="button"
-          className={styles.modalButton}
-          onClick={onPayDeposit}
-          disabled={isProcessingPayment || !depositAvailable}
-        >
-          {isProcessingPayment ? 'Processando…' : 'Pagar sinal'}
-        </button>
-        <button
-          type="button"
-          className={`${styles.modalButton} ${styles.modalButtonSecondary}`}
-          onClick={onPayLater}
-          disabled={isProcessingPayment}
-        >
-          Pagar depois
-        </button>
-      </div>
-    </ClientBaseModal>
+      {modalError ? <div className={modalStyles.modalAlert}>{modalError}</div> : null}
+    </ClientModal>
   )
 }

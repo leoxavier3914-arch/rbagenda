@@ -1,33 +1,52 @@
+import { ClientModal } from '@/components/client/ClientModal'
+import modalStyles from '@/components/client/client-modal.module.css'
+
 import styles from '../procedimento.module.css'
 
 type Props = {
   isOpen: boolean
+  isSubmitting: boolean
+  errorMessage: string | null
   onConfirm: () => void
-  onClose: () => void
+  onCancel: () => void
 }
 
-export function PayLaterNotice({ isOpen, onConfirm, onClose }: Props) {
+export function PayLaterNotice({ isOpen, isSubmitting, errorMessage, onConfirm, onCancel }: Props) {
   if (!isOpen) return null
 
   return (
-    <div className={styles.modal} data-open="true">
-      <div className={styles.modalBackdrop} onClick={onClose} aria-hidden="true" />
-      <div className={styles.modalContent} role="dialog" aria-modal="true" aria-labelledby="pay-later-title">
-        <h2 id="pay-later-title" className={styles.modalTitle}>
-          Pagamento na clínica
-        </h2>
-        <div className={styles.modalBody}>
-          Seu agendamento foi criado com sucesso. Conclua o pagamento no dia do atendimento.
-        </div>
-        <div className={styles.modalActions}>
-          <button type="button" className={styles.modalButton} onClick={onConfirm}>
-            Ver meus agendamentos
+    <ClientModal
+      isOpen={isOpen}
+      onClose={onCancel}
+      title="Agendamento pendente"
+      tone="warning"
+      contentClassName={styles.summaryModal}
+      disableBackdropClose={isSubmitting}
+      actions={(
+        <>
+          <button
+            type="button"
+            className={`${modalStyles.modalButton} ${modalStyles.modalButtonSecondary}`}
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Cancelar
           </button>
-          <button type="button" className={`${styles.modalButton} ${styles.modalButtonSecondary}`} onClick={onClose}>
-            Fechar
+          <button
+            type="button"
+            className={modalStyles.modalButton}
+            onClick={onConfirm}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Criando…' : 'Aceito'}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    >
+      <p className={modalStyles.modalText}>
+        O sinal pode ser pago em até 2h, caso contrário o agendamento é cancelado e o horário disponibilizado.
+      </p>
+      {errorMessage ? <div className={modalStyles.modalAlert}>{errorMessage}</div> : null}
+    </ClientModal>
   )
 }

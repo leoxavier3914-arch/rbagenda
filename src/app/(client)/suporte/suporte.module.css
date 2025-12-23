@@ -1,17 +1,5 @@
-.card {
-  width: 100%;
-  max-width: 720px;
-}
-
 .section :global(.stack) {
   width: 100%;
-}
-
-@media (max-width: 720px) {
-  .section {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
 }
 
 .header {

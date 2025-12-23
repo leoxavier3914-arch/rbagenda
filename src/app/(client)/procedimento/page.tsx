@@ -117,6 +117,7 @@ export default function ProcedimentoPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
   const [isPayLaterNoticeOpen, setIsPayLaterNoticeOpen] = useState(false)
+  const [payLaterError, setPayLaterError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<
     { kind: 'success' | 'error'; text: string } | null
   >(null)
@@ -726,6 +727,7 @@ export default function ProcedimentoPage() {
     setAppointmentId(null)
     setSummarySnapshot(null)
     setModalError(null)
+    setPayLaterError(null)
     setIsSummaryModalOpen(false)
     setIsProcessingPayment(false)
     setActionMessage(null)
@@ -750,34 +752,20 @@ export default function ProcedimentoPage() {
   const closeSummaryModal = useCallback(() => {
     setIsSummaryModalOpen(false)
     setModalError(null)
+    setPayLaterError(null)
   }, [])
 
-  const isCurrentSelectionBooked = useMemo(() => {
-    if (!summaryData || !summarySnapshot || !appointmentId) return false
-
-    return (
-      summarySnapshot.payload.serviceId === summaryData.payload.serviceId &&
-      summarySnapshot.payload.typeId === summaryData.payload.typeId &&
-      summarySnapshot.payload.date === summaryData.payload.date &&
-      summarySnapshot.payload.slot === summaryData.payload.slot
-    )
-  }, [appointmentId, summaryData, summarySnapshot])
-
-  const handleContinue = useCallback(async () => {
-    if (!summaryData) return
-
-    setModalError(null)
-
-    if (isCurrentSelectionBooked) {
-      setIsSummaryModalOpen(true)
-      return
+  const ensureAppointmentCreated = useCallback(async () => {
+    if (!summaryData) {
+      throw new Error('Selecione o serviço, técnica, data e horário antes de continuar.')
     }
 
-    if (isCreatingAppointment) return
+    if (appointmentId) return appointmentId
 
     const currentSummary = summaryData
     setIsCreatingAppointment(true)
     setActionMessage(null)
+    setPayLaterError(null)
 
     try {
       const scheduledDate = combineDateAndTime(
@@ -833,7 +821,7 @@ export default function ProcedimentoPage() {
         kind: 'success',
         text: `Agendamento criado para ${currentSummary.dateLabel} às ${currentSummary.timeLabel}. ID ${newAppointmentId}.`,
       })
-      setIsSummaryModalOpen(true)
+      return newAppointmentId
     } catch (error) {
       console.error('Erro ao criar agendamento', error)
       const message =
@@ -841,19 +829,24 @@ export default function ProcedimentoPage() {
           ? error.message
           : 'Não foi possível criar o agendamento. Tente novamente.'
       setActionMessage({ kind: 'error', text: message })
+      throw new Error(message)
     } finally {
       setIsCreatingAppointment(false)
     }
-  }, [ensureSession, isCreatingAppointment, isCurrentSelectionBooked, summaryData])
+  }, [appointmentId, ensureSession, summaryData])
+
+  const handleContinue = useCallback(() => {
+    if (!summaryData) return
+
+    setModalError(null)
+    setPayLaterError(null)
+    setSummarySnapshot(summaryData)
+    setIsSummaryModalOpen(true)
+  }, [summaryData])
 
   const handlePayDeposit = useCallback(async () => {
     if (!summarySnapshot || summarySnapshot.depositCents <= 0) {
       setModalError('Este agendamento não possui sinal disponível para pagamento.')
-      return
-    }
-
-    if (!appointmentId) {
-      setModalError('Crie um agendamento antes de iniciar o pagamento.')
       return
     }
 
@@ -863,9 +856,11 @@ export default function ProcedimentoPage() {
     }
 
     setModalError(null)
+    setPayLaterError(null)
     setIsProcessingPayment(true)
 
     try {
+      const ensuredAppointmentId = await ensureAppointmentCreated()
       const session = await ensureSession()
 
       const res = await fetch('/api/payments/create', {
@@ -874,7 +869,7 @@ export default function ProcedimentoPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ appointment_id: appointmentId, mode: 'deposit' }),
+        body: JSON.stringify({ appointment_id: ensuredAppointmentId, mode: 'deposit' }),
       })
 
       if (!res.ok) {
@@ -899,25 +894,46 @@ export default function ProcedimentoPage() {
       setIsSummaryModalOpen(false)
       closeSummaryModal()
       router.push(
-        `/checkout?client_secret=${encodeURIComponent(clientSecret)}&appointment_id=${encodeURIComponent(appointmentId)}`,
+        `/checkout?client_secret=${encodeURIComponent(clientSecret)}&appointment_id=${encodeURIComponent(ensuredAppointmentId)}`,
       )
     } catch (error) {
       console.error('Erro ao iniciar o checkout', error)
-      setModalError('Erro inesperado ao iniciar o checkout.')
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Erro inesperado ao iniciar o checkout.'
+      setModalError(message)
     } finally {
       setIsProcessingPayment(false)
     }
-  }, [appointmentId, closeSummaryModal, ensureSession, router, summarySnapshot])
+  }, [closeSummaryModal, ensureAppointmentCreated, ensureSession, router, summarySnapshot])
 
   const handlePayLater = useCallback(() => {
-    closeSummaryModal()
+    setIsSummaryModalOpen(false)
+    setPayLaterError(null)
     setIsPayLaterNoticeOpen(true)
-  }, [closeSummaryModal])
+  }, [])
 
-  const handleConfirmPayLaterNotice = useCallback(() => {
+  const handleConfirmPayLaterNotice = useCallback(async () => {
+    setPayLaterError(null)
+    try {
+      await ensureAppointmentCreated()
+      setIsPayLaterNoticeOpen(false)
+      router.push('/agendamentos')
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível criar o agendamento. Tente novamente.'
+      setPayLaterError(message)
+    }
+  }, [ensureAppointmentCreated, router])
+
+  const handleCancelPayLaterNotice = useCallback(() => {
     setIsPayLaterNoticeOpen(false)
-    router.push('/agendamentos')
-  }, [router])
+    setPayLaterError(null)
+    setIsSummaryModalOpen(true)
+  }, [])
 
   useEffect(() => {
     if (!isSummaryModalOpen) return
@@ -943,7 +959,7 @@ export default function ProcedimentoPage() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        setIsPayLaterNoticeOpen(false)
+        handleCancelPayLaterNotice()
       }
     }
 
@@ -951,17 +967,13 @@ export default function ProcedimentoPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isPayLaterNoticeOpen])
+  }, [handleCancelPayLaterNotice, isPayLaterNoticeOpen])
 
   const hasSummary = !!summaryData
   const canSelectTechnique = Boolean(selectedServiceId)
   const canSelectDate = Boolean(selectedTechniqueId)
   const canSelectTime = Boolean(selectedDate)
-  const continueButtonLabel = isCreatingAppointment
-    ? 'Criando agendamento…'
-    : isCurrentSelectionBooked
-    ? 'Ver resumo'
-    : 'Continuar'
+  const continueButtonLabel = isCreatingAppointment ? 'Salvando agendamento…' : 'Ver resumo'
   const continueButtonDisabled = !summaryData || isCreatingAppointment
   const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
 
@@ -1044,8 +1056,10 @@ export default function ProcedimentoPage() {
 
       <PayLaterNotice
         isOpen={isPayLaterNoticeOpen}
+        isSubmitting={isCreatingAppointment}
+        errorMessage={payLaterError}
         onConfirm={handleConfirmPayLaterNotice}
-        onClose={() => setIsPayLaterNoticeOpen(false)}
+        onCancel={handleCancelPayLaterNotice}
       />
 
       {isAdmin ? <AdminCustomizationPanel refreshPalette={refreshPalette} /> : null}

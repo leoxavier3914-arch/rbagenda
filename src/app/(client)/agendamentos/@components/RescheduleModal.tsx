@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ClientBaseModal } from '@/components/client/ClientBaseModal'
+import { ClientModal } from '@/components/client/ClientModal'
+import modalStyles from '@/components/client/client-modal.module.css'
 import { useClientAvailability } from '@/hooks/useClientAvailability'
 import { DEFAULT_FALLBACK_BUFFER_MINUTES, DEFAULT_TIMEZONE } from '@/lib/availability'
 
@@ -248,105 +249,114 @@ export function RescheduleModal({
   }
 
   return (
-    <ClientBaseModal
+    <ClientModal
       isOpen
       onClose={onClose}
-      className={styles.modal}
-      backdropClassName={styles.modalBackdrop}
-      contentClassName={`${styles.modalContent} ${styles.modalEdit}`}
+      title="Alterar data e horário"
+      tone="info"
+      size="lg"
+      wrapBody={false}
       disableBackdropClose={isSaving}
+      contentClassName={styles.rescheduleModal}
     >
-      <h2 className={styles.modalTitle}>Alterar data e horário</h2>
+      <div className={`${modalStyles.modalBody} ${modalStyles.modalBodyLeft} ${styles.rescheduleBody}`}>
 
-      <div className={styles.calHead}>
-        <button
-          type="button"
-          className={styles.btnNav}
-          onClick={goToPreviousMonth}
-          aria-label="Mês anterior"
-        >
-          ‹
-        </button>
-        <div className={styles.calTitle}>{monthTitle}</div>
-        <button
-          type="button"
-          className={styles.btnNav}
-          onClick={goToNextMonth}
-          aria-label="Próximo mês"
-        >
-          ›
-        </button>
-      </div>
-
-      {isLoadingAvailability ? (
-        <div className={styles.meta}>Carregando disponibilidade…</div>
-      ) : availabilityError ? (
-        <div className={styles.meta}>{availabilityError}</div>
-      ) : null}
-
-      <div className={styles.grid} aria-hidden="true">
-        {calendarHeaderDays.map((label, index) => (
-          <div key={`dow-${index}`} className={styles.gridDow}>
-            {label}
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.grid}>
-        {calendarDays.dayEntries.map((entry) => (
+        <div className={styles.calHead}>
           <button
-            key={entry.iso}
             type="button"
-            className={styles.day}
-            data-state={entry.state}
-            data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
-            data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}
-            aria-disabled={entry.isDisabled}
-            disabled={entry.isDisabled}
-            onClick={() => handleDayClick(entry.iso, entry.isDisabled || entry.isOutsideCurrentMonth)}
+            className={styles.btnNav}
+            onClick={goToPreviousMonth}
+            aria-label="Mês anterior"
           >
-            {entry.day}
+            ‹
           </button>
-        ))}
-      </div>
+          <div className={styles.calTitle}>{monthTitle}</div>
+          <button
+            type="button"
+            className={styles.btnNav}
+            onClick={goToNextMonth}
+            aria-label="Próximo mês"
+          >
+            ›
+          </button>
+        </div>
 
-      <div className={styles.label}>Horários disponíveis</div>
-      <div className={styles.slots}>
-        {isLoadingSlots ? (
-          <div className={styles.meta}>{slotsMessage}</div>
-        ) : slotOptions.length > 0 ? (
-          slotOptions.map((option) => (
+        {isLoadingAvailability ? (
+          <div className={styles.meta}>Carregando disponibilidade…</div>
+        ) : availabilityError ? (
+          <div className={styles.meta}>{availabilityError}</div>
+        ) : null}
+
+        <div className={styles.grid} aria-hidden="true">
+          {calendarHeaderDays.map((label, index) => (
+            <div key={`dow-${index}`} className={styles.gridDow}>
+              {label}
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.grid}>
+          {calendarDays.dayEntries.map((entry) => (
             <button
-              key={option.iso}
+              key={entry.iso}
               type="button"
-              className={styles.slot}
-              data-selected={selectedSlot === option.iso}
-              aria-disabled={option.disabled}
-              disabled={option.disabled}
-              onClick={() => handleSlotClick(option)}
+              className={styles.day}
+              data-state={entry.state}
+              data-selected={!entry.isOutsideCurrentMonth && selectedDate === entry.iso}
+              data-outside-month={entry.isOutsideCurrentMonth ? 'true' : 'false'}
+              aria-disabled={entry.isDisabled}
+              disabled={entry.isDisabled}
+              onClick={() => handleDayClick(entry.iso, entry.isDisabled || entry.isOutsideCurrentMonth)}
             >
-              {option.label}
+              {entry.day}
             </button>
-          ))
-        ) : (
-          <div className={styles.meta}>{slotsMessage}</div>
-        )}
-      </div>
-      {errorMessage ? <div className={styles.modalError}>{errorMessage}</div> : null}
+          ))}
+        </div>
 
-      <div className={styles.btnRow}>
-        <button type="button" className={`${styles.btn} ${styles.btnNo}`} disabled={isSaving} onClick={onClose}>
+        <div className={styles.label}>Horários disponíveis</div>
+        <div className={styles.slots}>
+          {isLoadingSlots ? (
+            <div className={styles.meta}>{slotsMessage}</div>
+          ) : slotOptions.length > 0 ? (
+            slotOptions.map((option) => (
+              <button
+                key={option.iso}
+                type="button"
+                className={styles.slot}
+                data-selected={selectedSlot === option.iso}
+                aria-disabled={option.disabled}
+                disabled={option.disabled}
+                onClick={() => handleSlotClick(option)}
+              >
+                {option.label}
+              </button>
+            ))
+          ) : (
+            <div className={styles.meta}>{slotsMessage}</div>
+          )}
+        </div>
+      </div>
+
+      {errorMessage ? <div className={modalStyles.modalAlert}>{errorMessage}</div> : null}
+
+      <div className={modalStyles.modalActions}>
+        <button
+          type="button"
+          className={`${modalStyles.modalButton} ${modalStyles.modalButtonSecondary}`}
+          disabled={isSaving}
+          onClick={onClose}
+        >
           Cancelar
         </button>
         <button
           type="button"
-          className={`${styles.btn} ${styles.btnYes}`}
+          className={`${modalStyles.modalButton} ${modalStyles.modalButtonSuccess}`}
           disabled={!selectedSlot || isSaving}
           onClick={handleSubmit}
         >
           {isSaving ? 'Salvando…' : 'Salvar alterações'}
         </button>
       </div>
-    </ClientBaseModal>
+    </ClientModal>
   )
 }

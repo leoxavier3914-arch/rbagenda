@@ -1,6 +1,5 @@
-import { ClientBaseModal } from '@/components/client/ClientBaseModal'
-
-import styles from '../agendamentos.module.css'
+import { ClientModal } from '@/components/client/ClientModal'
+import modalStyles from '@/components/client/client-modal.module.css'
 import type { SuccessDialogState } from '../types'
 
 type SuccessModalProps = {
@@ -11,25 +10,23 @@ type SuccessModalProps = {
 export function SuccessModal({ dialog, onClose }: SuccessModalProps) {
   if (!dialog) return null
   return (
-    <ClientBaseModal
+    <ClientModal
       isOpen
       onClose={onClose}
-      className={styles.modal}
-      backdropClassName={styles.modalBackdrop}
-      contentClassName={`${styles.modalContent} ${styles.modalSuccess}`}
-    >
-      <div className={`${styles.iconWrap} ${styles.iconWrapSuccess}`} aria-hidden="true">
+      title={dialog.title}
+      tone="success"
+      icon={(
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f8a70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 6L9 17l-5-5" />
         </svg>
-      </div>
-      <h2 className={styles.modalTitle}>{dialog.title}</h2>
-      <p className={styles.modalText}>{dialog.message}</p>
-      <div className={styles.btnRowCenter}>
-        <button type="button" className={`${styles.btn} ${styles.btnOk}`} onClick={onClose}>
+      )}
+      actions={(
+        <button type="button" className={`${modalStyles.modalButton} ${modalStyles.modalButtonSuccess}`} onClick={onClose}>
           OK
         </button>
-      </div>
-    </ClientBaseModal>
+      )}
+    >
+      <p className={modalStyles.modalText}>{dialog.message}</p>
+    </ClientModal>
   )
 }

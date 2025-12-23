@@ -102,6 +102,14 @@
   letter-spacing: 0.14em;
 }
 
+.chatOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--dark) 72%, transparent);
+  backdrop-filter: blur(2px);
+}
+
 .chatFloating {
   position: fixed;
   z-index: 40;
@@ -206,9 +214,12 @@
   min-height: 180px;
   max-height: min(280px, 40vh);
   padding: 0.75rem;
-  border-radius: var(--radius-lg);
-  background: var(--brand-sand);
-  border: 1px solid var(--brand-border);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--brand-sand) 92%, var(--glass));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--brand-border));
+  box-shadow:
+    0 14px 26px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--light) 65%, transparent);
   overflow-y: auto;
 }
 
@@ -276,10 +287,13 @@
   flex: 1;
   min-height: 64px;
   padding: 0.75rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-stroke);
-  background: color-mix(in srgb, var(--glass) 60%, transparent);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-sand) 90%, var(--glass));
   color: var(--ink);
+  box-shadow:
+    0 10px 20px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--light) 70%, transparent);
   resize: vertical;
 }
 
@@ -296,6 +310,7 @@
   background: color-mix(in srgb, var(--accent) 20%, var(--glass));
   color: var(--ink);
   font-weight: 600;
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
 .chatSendButton:disabled {

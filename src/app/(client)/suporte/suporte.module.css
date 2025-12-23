@@ -118,10 +118,6 @@
   backdrop-filter: blur(18px) saturate(140%);
 }
 
-.chatFloatingMinimized {
-  max-height: unset;
-}
-
 .chatHeader {
   display: flex;
   align-items: center;
@@ -174,8 +170,27 @@
   overflow: hidden;
 }
 
-.chatFloatingMinimized .chatBody {
-  display: none;
+.chatMinimizedButton {
+  position: fixed;
+  z-index: 40;
+  width: 56px;
+  height: 56px;
+  right: 16px;
+  bottom: 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--glass-stroke) 85%, var(--accent));
+  background: color-mix(in srgb, var(--glass) 85%, var(--dark));
+  color: var(--ink);
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--ink) 20%, transparent);
+  cursor: grab;
+}
+
+.chatMinimizedButton:active {
+  cursor: grabbing;
 }
 
 .chatSubtitle {

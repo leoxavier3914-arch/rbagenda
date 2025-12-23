@@ -15,6 +15,17 @@ export function SupportChannelsList({ channels }: SupportChannelsListProps) {
             <span className={styles.itemValue}>{channel.value}</span>
             {channel.helper ? <span className={styles.itemHelper}>{channel.helper}</span> : null}
           </div>
+          {channel.actionLabel ? (
+            channel.actionHref ? (
+              <a className={styles.itemAction} href={channel.actionHref} target="_blank" rel="noreferrer">
+                {channel.actionLabel}
+              </a>
+            ) : (
+              <button className={styles.itemAction} type="button" disabled>
+                {channel.actionLabel}
+              </button>
+            )
+          ) : null}
         </li>
       ))}
     </ul>

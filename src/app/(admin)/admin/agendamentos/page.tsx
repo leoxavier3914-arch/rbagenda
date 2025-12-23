@@ -198,14 +198,6 @@ const formatTime = (date: Date | null) => {
   return format(date, "HH:mm", { locale: ptBR });
 };
 
-const STATUS_TONE: Record<string, "blue" | "green" | "orange" | "purple"> = {
-  pending: "orange",
-  reserved: "blue",
-  confirmed: "green",
-  completed: "purple",
-  canceled: "orange",
-};
-
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendente",
   reserved: "Reservado",

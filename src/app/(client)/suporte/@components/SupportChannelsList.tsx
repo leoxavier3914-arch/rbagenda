@@ -7,27 +7,33 @@ export type SupportChannelsListProps = {
 
 export function SupportChannelsList({ channels }: SupportChannelsListProps) {
   return (
-    <ul className={styles.list}>
-      {channels.map((channel) => (
-        <li key={channel.label} className={styles.item}>
-          <span className={styles.itemLabel}>{channel.label}</span>
-          <div className={styles.itemValueWrapper}>
-            <span className={styles.itemValue}>{channel.value}</span>
-            {channel.helper ? <span className={styles.itemHelper}>{channel.helper}</span> : null}
-          </div>
-          {channel.actionLabel ? (
-            channel.actionHref ? (
-              <a className={styles.itemAction} href={channel.actionHref} target="_blank" rel="noreferrer">
-                {channel.actionLabel}
-              </a>
-            ) : (
-              <button className={styles.itemAction} type="button" disabled>
-                {channel.actionLabel}
-              </button>
-            )
-          ) : null}
-        </li>
-      ))}
-    </ul>
+    <div className={styles.actionsList}>
+      {channels.map((channel) => {
+        const isLink = Boolean(channel.actionHref);
+        const Component = isLink ? "a" : "button";
+        const componentProps = isLink
+          ? { href: channel.actionHref, target: "_blank", rel: "noreferrer" }
+          : { type: "button" as const, onClick: channel.onClick, disabled: channel.disabled };
+
+        return (
+          <Component
+            key={channel.label}
+            className={styles.actionCard}
+            {...componentProps}
+            aria-label={channel.actionLabel ?? channel.label}
+          >
+            <span className={styles.actionIcon} aria-hidden="true">
+              {channel.icon ?? "💬"}
+            </span>
+            <span className={styles.actionTexts}>
+              <span className={styles.actionLabel}>{channel.label}</span>
+              <span className={styles.actionValue}>{channel.value}</span>
+              {channel.helper ? <span className={styles.actionHelper}>{channel.helper}</span> : null}
+            </span>
+            {channel.actionLabel ? <span className={styles.actionCta}>{channel.actionLabel}</span> : null}
+          </Component>
+        )
+      })}
+    </div>
   );
 }

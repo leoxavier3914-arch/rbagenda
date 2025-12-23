@@ -176,7 +176,7 @@
   right: 16px;
   bottom: 16px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--glass-stroke) 85%, var(--accent));
+  border: 2px solid #fff;
   background: color-mix(in srgb, var(--glass) 85%, var(--dark));
   color: var(--ink);
   font-size: 1.25rem;
@@ -187,6 +187,11 @@
   cursor: grab;
   touch-action: none;
   user-select: none;
+}
+
+.chatMinimizedButton:hover,
+.chatMinimizedButton:active {
+  border: 2px solid #fff;
 }
 
 .chatMinimizedButton:active {

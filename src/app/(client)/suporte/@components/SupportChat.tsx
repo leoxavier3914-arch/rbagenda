@@ -30,10 +30,8 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const [minimizedPosition, setMinimizedPosition] = useState<{ x: number; y: number } | null>(null)
   const [dragging, setDragging] = useState(false)
-  const panelRef = useRef<HTMLDivElement | null>(null)
-  const minimizedButtonRef = useRef<HTMLButtonElement | null>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
   const dragBounds = useRef({ width: 360, height: 520 })
 
@@ -51,29 +49,10 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
   }
 
   useEffect(() => {
-    if (!isOpen) return
-    if (position) return
-
-    const panel = panelRef.current
-    if (!panel) return
-
-    const syncPosition = () => {
-      const rect = panel.getBoundingClientRect()
-      const margin = 16
-      const nextX = window.innerWidth - rect.width - margin
-      const nextY = window.innerHeight - rect.height - margin
-      setPosition(clampPosition(nextX, nextY))
-    }
-
-    const raf = window.requestAnimationFrame(syncPosition)
-    return () => window.cancelAnimationFrame(raf)
-  }, [isOpen, position])
-
-  useEffect(() => {
     if (!dragging) return
 
     const handleMove = (event: PointerEvent) => {
-      setPosition(() => {
+      setMinimizedPosition(() => {
         const nextX = event.clientX - dragOffset.current.x
         const nextY = event.clientY - dragOffset.current.y
         return clampPosition(nextX, nextY)
@@ -271,14 +250,18 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
       {isOpen ? (
         isMinimized ? (
           <button
-            ref={minimizedButtonRef}
             className={styles.chatMinimizedButton}
             type="button"
             onClick={openChat}
             onPointerDown={handleDragStart}
             style={
-              position
-                ? { left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }
+              minimizedPosition
+                ? {
+                    left: `${minimizedPosition.x}px`,
+                    top: `${minimizedPosition.y}px`,
+                    right: "auto",
+                    bottom: "auto",
+                  }
                 : undefined
             }
             aria-label="Abrir chat de suporte"
@@ -286,16 +269,8 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
             💬
           </button>
         ) : (
-          <div
-            ref={panelRef}
-            className={styles.chatFloating}
-            style={
-              position
-                ? { left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }
-                : undefined
-            }
-          >
-            <div className={styles.chatHeader} onPointerDown={handleDragStart}>
+          <div className={styles.chatFloating}>
+            <div className={styles.chatHeader}>
               <div className={styles.chatHeaderInfo}>
                 <span className={styles.chatHeaderTitle}>Chat de suporte</span>
                 <span className={styles.chatHeaderStatus}>Online agora</span>

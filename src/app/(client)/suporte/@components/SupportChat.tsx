@@ -32,7 +32,7 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
   const [isMinimized, setIsMinimized] = useState(false)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
   const [dragging, setDragging] = useState(false)
-  const panelRef = useRef<HTMLDivElement | null>(null)
+  const panelRef = useRef<HTMLElement | null>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
 
   const clampPosition = (nextX: number, nextY: number) => {
@@ -73,7 +73,7 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
     if (!dragging) return
 
     const handleMove = (event: PointerEvent) => {
-      setPosition((prev) => {
+      setPosition(() => {
         const nextX = event.clientX - dragOffset.current.x
         const nextY = event.clientY - dragOffset.current.y
         return clampPosition(nextX, nextY)
@@ -254,7 +254,7 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
     setIsMinimized((prev) => !prev)
   }
 
-  const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handleDragStart = (event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return
     const panel = panelRef.current
     if (!panel) return
@@ -270,112 +270,130 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
       </button>
 
       {isOpen ? (
-        <div
-          ref={panelRef}
-          className={`${styles.chatFloating} ${isMinimized ? styles.chatFloatingMinimized : ""}`}
-          style={
-            position
-              ? { left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }
-              : undefined
-          }
-        >
-          <div className={styles.chatHeader} onPointerDown={handleDragStart}>
-            <div className={styles.chatHeaderInfo}>
-              <span className={styles.chatHeaderTitle}>Chat de suporte</span>
-              <span className={styles.chatHeaderStatus}>Online agora</span>
+        isMinimized ? (
+          <button
+            ref={panelRef}
+            className={styles.chatMinimizedButton}
+            type="button"
+            onClick={openChat}
+            onPointerDown={handleDragStart}
+            style={
+              position
+                ? { left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }
+                : undefined
+            }
+            aria-label="Abrir chat de suporte"
+          >
+            💬
+          </button>
+        ) : (
+          <div
+            ref={panelRef}
+            className={styles.chatFloating}
+            style={
+              position
+                ? { left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }
+                : undefined
+            }
+          >
+            <div className={styles.chatHeader} onPointerDown={handleDragStart}>
+              <div className={styles.chatHeaderInfo}>
+                <span className={styles.chatHeaderTitle}>Chat de suporte</span>
+                <span className={styles.chatHeaderStatus}>Online agora</span>
+              </div>
+              <div className={styles.chatHeaderActions}>
+                <button
+                  className={styles.chatHeaderButton}
+                  type="button"
+                  onClick={toggleMinimize}
+                  onPointerDown={(event) => event.stopPropagation()}
+                >
+                  Minimizar
+                </button>
+                <button
+                  className={styles.chatHeaderButton}
+                  type="button"
+                  onClick={closeChat}
+                  onPointerDown={(event) => event.stopPropagation()}
+                >
+                  Fechar
+                </button>
+              </div>
             </div>
-            <div className={styles.chatHeaderActions}>
-              <button
-                className={styles.chatHeaderButton}
-                type="button"
-                onClick={toggleMinimize}
-                onPointerDown={(event) => event.stopPropagation()}
-              >
-                {isMinimized ? "Expandir" : "Minimizar"}
-              </button>
-              <button
-                className={styles.chatHeaderButton}
-                type="button"
-                onClick={closeChat}
-                onPointerDown={(event) => event.stopPropagation()}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
 
-          <div className={styles.chatBody}>
-            <p className={styles.chatSubtitle}>
-              Envie sua dúvida aqui. Responderemos o mais breve possível.
-            </p>
-
-            {!ready ? (
-              <p className={styles.chatEmptyState}>Carregando sessão...</p>
-            ) : !session?.user ? (
-              <p className={styles.chatEmptyState}>
-                Faça login para usar o chat de suporte. <Link href="/login">Ir para login</Link>
+            <div className={styles.chatBody}>
+              <p className={styles.chatSubtitle}>
+                Envie sua dúvida aqui. Responderemos o mais breve possível.
               </p>
-            ) : (
-              <>
-                {loading ? (
-                  <p className={styles.chatEmptyState}>Carregando seu histórico...</p>
-                ) : error ? (
-                  <p className={styles.chatEmptyState}>{error}</p>
-                ) : (
-                  <div className={styles.chatMessages}>
-                    {messages.length === 0 ? (
-                      <p className={styles.chatEmptyState}>
-                        Nenhuma mensagem ainda. Envie sua dúvida para começar.
-                      </p>
-                    ) : (
-                      messages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`${styles.chatMessageRow} ${msg.sender_type === "user" ? styles.chatMessageUser : styles.chatMessageStaff}`}
-                        >
-                          <span>{msg.message}</span>
-                          <span className={styles.chatTimestamp}>
-                            {new Date(msg.created_at).toLocaleString("pt-BR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
 
-                <div className={styles.chatInputRow}>
-                  <div className={styles.chatInputTools}>
-                    <button className={styles.chatToolButton} type="button" aria-label="Anexar imagem">
-                      📎
-                    </button>
-                    <button className={styles.chatToolButton} type="button" aria-label="Inserir emoji">
-                      😊
+              {!ready ? (
+                <p className={styles.chatEmptyState}>Carregando sessão...</p>
+              ) : !session?.user ? (
+                <p className={styles.chatEmptyState}>
+                  Faça login para usar o chat de suporte. <Link href="/login">Ir para login</Link>
+                </p>
+              ) : (
+                <>
+                  {loading ? (
+                    <p className={styles.chatEmptyState}>Carregando seu histórico...</p>
+                  ) : error ? (
+                    <p className={styles.chatEmptyState}>{error}</p>
+                  ) : (
+                    <div className={styles.chatMessages}>
+                      {messages.length === 0 ? (
+                        <p className={styles.chatEmptyState}>
+                          Nenhuma mensagem ainda. Envie sua dúvida para começar.
+                        </p>
+                      ) : (
+                        messages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`${styles.chatMessageRow} ${msg.sender_type === "user" ? styles.chatMessageUser : styles.chatMessageStaff}`}
+                          >
+                            <span>{msg.message}</span>
+                            <span className={styles.chatTimestamp}>
+                              {new Date(msg.created_at).toLocaleString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  <div className={styles.chatInputRow}>
+                    <div className={styles.chatInputTools}>
+                      <button className={styles.chatToolButton} type="button" aria-label="Anexar imagem">
+                        📎
+                      </button>
+                      <button className={styles.chatToolButton} type="button" aria-label="Inserir emoji">
+                        😊
+                      </button>
+                    </div>
+                    <textarea
+                      className={styles.chatInput}
+                      value={inputValue}
+                      onChange={(event) => setInputValue(event.target.value)}
+                      placeholder="Digite sua mensagem"
+                      rows={2}
+                      disabled={disabled || !thread}
+                    />
+                    <button
+                      className={styles.chatSendButton}
+                      type="button"
+                      onClick={handleSend}
+                      disabled={disabled || !thread || !inputValue.trim()}
+                    >
+                      {sending ? "Enviando..." : "Enviar"}
                     </button>
                   </div>
-                  <textarea
-                    className={styles.chatInput}
-                    value={inputValue}
-                    onChange={(event) => setInputValue(event.target.value)}
-                    placeholder="Digite sua mensagem"
-                    rows={2}
-                    disabled={disabled || !thread}
-                  />
-                  <button
-                    className={styles.chatSendButton}
-                    type="button"
-                    onClick={handleSend}
-                    disabled={disabled || !thread || !inputValue.trim()}
-                  >
-                    {sending ? "Enviando..." : "Enviar"}
-                  </button>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )
       ) : null}
     </div>
   )

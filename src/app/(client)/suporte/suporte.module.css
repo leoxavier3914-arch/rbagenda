@@ -106,7 +106,7 @@
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: color-mix(in srgb, var(--dark) 72%, transparent);
+  background: color-mix(in srgb, var(--dark) 88%, transparent);
   backdrop-filter: blur(2px);
 }
 

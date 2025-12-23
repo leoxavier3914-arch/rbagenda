@@ -16,7 +16,6 @@ import {
   DateSelectionSection,
   PayLaterNotice,
   ProcedimentoWrapper,
-  SummaryBar,
   SummaryModal,
   TechniqueSelectionSection,
   TimeSelectionSection,
@@ -149,7 +148,6 @@ export default function ProcedimentoPage() {
   const dateSectionRef = useRef<HTMLDivElement | null>(null)
   const timeSectionRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
-  const summaryRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -969,7 +967,6 @@ export default function ProcedimentoPage() {
     }
   }, [handleCancelPayLaterNotice, isPayLaterNoticeOpen])
 
-  const hasSummary = !!summaryData
   const canSelectTechnique = Boolean(selectedServiceId)
   const canSelectDate = Boolean(selectedTechniqueId)
   const canSelectTime = Boolean(selectedDate)
@@ -1033,15 +1030,6 @@ export default function ProcedimentoPage() {
           onContinue={handleContinue}
         />
       ) : null}
-
-      <SummaryBar
-        summaryData={summaryData}
-        hasSummary={hasSummary}
-        continueButtonDisabled={continueButtonDisabled}
-        continueButtonLabel={continueButtonLabel}
-        onContinue={handleContinue}
-        summaryRef={summaryRef}
-      />
 
       <SummaryModal
         summarySnapshot={summarySnapshot}

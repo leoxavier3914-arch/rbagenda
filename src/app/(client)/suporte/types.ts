@@ -4,6 +4,8 @@ export type SupportChannel = {
   helper?: string
   actionLabel?: string
   actionHref?: string
+  icon?: string
+  disabled?: boolean
 }
 
 export type SupportThread = {

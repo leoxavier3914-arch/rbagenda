@@ -9,22 +9,43 @@ type SupportContentProps = {
   isSessionReady?: boolean
 }
 
-const supportChannels: SupportChannel[] = [
-  {
-    label: "WhatsApp",
-    value: "Atendimento rápido",
-    helper: "Canal direto com o estúdio",
-    actionLabel: "Abrir WhatsApp",
-    actionHref: "https://wa.me/",
-  },
-  { label: "E-mail", value: "Em breve", helper: "Para dúvidas, alterações ou suporte" },
-]
-
 export function SupportContent({ session, isSessionReady }: SupportContentProps) {
   return (
     <div className={styles.content}>
-      <SupportChannelsList channels={supportChannels} />
-      <SupportChat session={session} isSessionReady={isSessionReady} />
+      <SupportChat
+        session={session}
+        isSessionReady={isSessionReady}
+        renderLauncher={({ openChat, isOpen }) => {
+          const supportChannels: SupportChannel[] = [
+            {
+              label: "WhatsApp",
+              value: "Atendimento rápido com o estúdio",
+              helper: "Responderemos mais rápido por aqui",
+              actionLabel: "Abrir WhatsApp",
+              actionHref: "https://wa.me/",
+              icon: "📱",
+            },
+            {
+              label: "E-mail",
+              value: "suporte@rbagenda.com",
+              helper: "Para dúvidas, alterações ou suporte",
+              actionLabel: "Enviar e-mail",
+              actionHref: "mailto:suporte@rbagenda.com",
+              icon: "✉️",
+            },
+            {
+              label: "Chat",
+              value: isOpen ? "Chat já está aberto" : "Fale com a equipe agora",
+              helper: isOpen ? "A janela está ativa" : "Abriremos o chat aqui mesmo",
+              actionLabel: isOpen ? "Voltar para o chat" : "Abrir chat",
+              icon: "💬",
+              onClick: openChat,
+            },
+          ]
+
+          return <SupportChannelsList channels={supportChannels} />
+        }}
+      />
     </div>
   )
 }

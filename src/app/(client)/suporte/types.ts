@@ -2,6 +2,8 @@ export type SupportChannel = {
   label: string
   value: string
   helper?: string
+  actionLabel?: string
+  actionHref?: string
 }
 
 export type SupportThread = {

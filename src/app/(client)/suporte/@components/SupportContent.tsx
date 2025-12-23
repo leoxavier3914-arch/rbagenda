@@ -10,9 +10,14 @@ type SupportContentProps = {
 }
 
 const supportChannels: SupportChannel[] = [
-  { label: "WhatsApp", value: "Em breve", helper: "Canal direto com o estúdio" },
+  {
+    label: "WhatsApp",
+    value: "Atendimento rápido",
+    helper: "Canal direto com o estúdio",
+    actionLabel: "Abrir WhatsApp",
+    actionHref: "https://wa.me/",
+  },
   { label: "E-mail", value: "Em breve", helper: "Para dúvidas, alterações ou suporte" },
-  { label: "Horário", value: "Em breve", helper: "Atendimento em horário comercial" },
 ]
 
 export function SupportContent({ session, isSessionReady }: SupportContentProps) {

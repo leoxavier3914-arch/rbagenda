@@ -167,7 +167,7 @@ export function RescheduleModal({
       if (slots.length === 0) {
         setSlotsMessage('Sem horários para este dia.')
       } else {
-        setSlotsMessage('Selecione um horário:')
+        setSlotsMessage('Selecione um horário no dropdown:')
       }
     } catch (error) {
       console.error('Failed to load slots', error)
@@ -206,9 +206,8 @@ export function RescheduleModal({
     void loadSlots(iso)
   }
 
-  const handleSlotClick = (option: SlotOption) => {
-    if (option.disabled) return
-    setSelectedSlot(option.iso)
+  const handleSlotChange = (value: string) => {
+    setSelectedSlot(value || null)
   }
 
   const handleSubmit = async () => {
@@ -314,23 +313,33 @@ export function RescheduleModal({
         </div>
 
         <div className={styles.label}>Horários disponíveis</div>
-        <div className={styles.slots}>
+        <div className={`${styles.slots} ${styles.slotsDropdownLayout}`}>
           {isLoadingSlots ? (
             <div className={styles.meta}>{slotsMessage}</div>
           ) : slotOptions.length > 0 ? (
-            slotOptions.map((option) => (
-              <button
-                key={option.iso}
-                type="button"
-                className={styles.slot}
-                data-selected={selectedSlot === option.iso}
-                aria-disabled={option.disabled}
-                disabled={option.disabled}
-                onClick={() => handleSlotClick(option)}
-              >
-                {option.label}
-              </button>
-            ))
+            <>
+              <label className={styles.slotDropdown} htmlFor="slotSelect">
+                <span className={styles.visuallyHidden}>Selecione um horário</span>
+                <select
+                  id="slotSelect"
+                  className={styles.slotSelect}
+                  value={selectedSlot ?? ''}
+                  onChange={(event) => handleSlotChange(event.target.value)}
+                  disabled={isSaving}
+                >
+                  <option value="" disabled>
+                    Selecione um horário
+                  </option>
+                  {slotOptions.map((option) => (
+                    <option key={option.iso} value={option.iso} disabled={option.disabled}>
+                      {option.label}
+                      {option.disabled ? ' (indisponível)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className={styles.meta}>{slotsMessage}</div>
+            </>
           ) : (
             <div className={styles.meta}>{slotsMessage}</div>
           )}

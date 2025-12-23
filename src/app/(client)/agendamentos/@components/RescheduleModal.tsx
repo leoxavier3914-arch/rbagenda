@@ -361,7 +361,7 @@ export function RescheduleModal({
           disabled={!selectedSlot || isSaving}
           onClick={handleSubmit}
         >
-          {isSaving ? 'Salvando…' : 'Salvar alterações'}
+          {isSaving ? 'Salvando…' : 'Salvar'}
         </button>
       </div>
     </ClientModal>

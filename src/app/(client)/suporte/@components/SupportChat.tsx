@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
+import type React from "react"
 
 import { useClientSessionGuard } from "@/hooks/useClientSessionGuard"
 import { supabase } from "@/lib/db"
@@ -13,11 +14,12 @@ import type { SupportMessage, SupportThread } from "../types"
 type SupportChatProps = {
   session?: Session | null
   isSessionReady?: boolean
+  renderLauncher?: (controls: { openChat: () => void; isOpen: boolean }) => React.ReactNode
 }
 
 const MESSAGE_PREVIEW_LIMIT = 120
 
-export function SupportChat({ session: providedSession, isSessionReady }: SupportChatProps) {
+export function SupportChat({ session: providedSession, isSessionReady, renderLauncher }: SupportChatProps) {
   const guard = useClientSessionGuard()
   const session = useMemo(() => providedSession ?? guard.session, [guard.session, providedSession])
   const ready = useMemo(() => (isSessionReady !== undefined ? isSessionReady : guard.isReady), [guard.isReady, isSessionReady])
@@ -61,7 +63,7 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
       })
     }
 
-    const handleUp = (event: PointerEvent) => {
+    const handleUp = () => {
       setDragging(false)
       if (dragTarget.current && dragPointerId.current !== null) {
         dragTarget.current.releasePointerCapture(dragPointerId.current)
@@ -252,11 +254,17 @@ export function SupportChat({ session: providedSession, isSessionReady }: Suppor
     setDragging(true)
   }
 
+  const launcher = renderLauncher ? (
+    renderLauncher({ openChat, isOpen })
+  ) : (
+    <button className={styles.chatLauncher} type="button" onClick={openChat}>
+      CHAT
+    </button>
+  )
+
   return (
     <div className={styles.chatRoot}>
-      <button className={styles.chatLauncher} type="button" onClick={openChat}>
-        CHAT
-      </button>
+      {launcher}
 
       {isOpen ? (
         isMinimized ? (

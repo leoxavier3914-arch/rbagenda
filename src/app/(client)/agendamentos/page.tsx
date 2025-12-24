@@ -303,6 +303,7 @@ export default function MyAppointments() {
   const [cancelingId, setCancelingId] = useState<string | null>(null)
   const [blockedAppointment, setBlockedAppointment] = useState<NormalizedAppointment | null>(null)
   const [editingAppointment, setEditingAppointment] = useState<NormalizedAppointment | null>(null)
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<SelectedStatusCategory>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [shouldScrollToResults, setShouldScrollToResults] = useState(false)
@@ -419,6 +420,14 @@ export default function MyAppointments() {
     () => (filteredAppointments.length > 0 ? Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE) : 0),
     [filteredAppointments],
   )
+
+  useEffect(() => {
+    if (!selectedAppointmentId) return
+    const isStillVisible = filteredAppointments.some((appointment) => appointment.id === selectedAppointmentId)
+    if (!isStillVisible) {
+      setSelectedAppointmentId(null)
+    }
+  }, [filteredAppointments, selectedAppointmentId])
 
   useEffect(() => {
     if (filteredAppointments.length === 0) {
@@ -591,6 +600,10 @@ export default function MyAppointments() {
     setCancelError(null)
   }
 
+  const handleSelectAppointment = useCallback((appointmentId: string) => {
+    setSelectedAppointmentId((current) => (current === appointmentId ? null : appointmentId))
+  }, [])
+
   return (
     <AppointmentsWrapper heroReady={heroReady}>
       <AppointmentsHeader />
@@ -630,6 +643,8 @@ export default function MyAppointments() {
           totalPages={totalPages}
           currentPage={currentPage}
           onChangePage={(page) => setCurrentPage(page)}
+          selectedAppointmentId={selectedAppointmentId}
+          onSelect={handleSelectAppointment}
         />
       ) : null}
 

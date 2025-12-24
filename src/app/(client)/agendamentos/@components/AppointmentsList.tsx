@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, type KeyboardEvent } from 'react'
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 
 import styles from '../agendamentos.module.css'
@@ -42,6 +42,8 @@ type AppointmentsListProps = {
   totalPages: number
   currentPage: number
   onChangePage: (page: number) => void
+  selectedAppointmentId: string | null
+  onSelect: (appointmentId: string) => void
 }
 
 export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps>(
@@ -73,6 +75,8 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
       totalPages,
       currentPage,
       onChangePage,
+      selectedAppointmentId,
+      onSelect,
     },
     ref,
   ) => (
@@ -122,10 +126,34 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
               const showEdit = canShowEdit(appointment)
               const actions = [showPay, showEdit, showCancel].filter(Boolean)
               const shouldShowPayError = payError && lastPayAttemptId === appointment.id
+              const isSelected = selectedAppointmentId === appointment.id
+              const depositValue =
+                appointment.depositValue > 0
+                  ? `Sinal ${toCurrency(appointment.depositValue)} (${depositLabel})`
+                  : 'Sem sinal'
+              const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onSelect(appointment.id)
+                }
+              }
+              const shouldShowActions = isSelected && actions.length > 0
 
               return (
-                <article key={appointment.id} className={styles.card}>
+                <article
+                  key={appointment.id}
+                  className={`${styles.card} ${isSelected ? styles.cardSelected : ''}`}
+                  onClick={() => onSelect(appointment.id)}
+                  onKeyDown={handleCardKeyDown}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  data-selected={isSelected}
+                >
                   <div className={styles.cardHeader}>
+                    <div className={styles.cardAvatar} aria-hidden="true">
+                      🛠️
+                    </div>
                     <div className={styles.cardInfo}>
                       <div className={styles.serviceType}>{appointment.serviceType}</div>
                       {appointment.serviceTechnique ? (
@@ -136,35 +164,48 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
                   </div>
 
                   <div className={styles.cardBody}>
-                    <div className={styles.detail}>
-                      <div className={styles.detailLabel}>Data</div>
-                      <div className={styles.detailValue}>{formatDate(appointment.startsAt)}</div>
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailIcon} aria-hidden="true">
+                        📅
+                      </span>
+                      <div className={styles.detailText}>
+                        <div className={styles.detailLabel}>Data</div>
+                        <div className={styles.detailValue}>{formatDate(appointment.startsAt)}</div>
+                      </div>
                     </div>
-                    <div className={styles.detail}>
-                      <div className={styles.detailLabel}>Horário</div>
-                      <div className={styles.detailValue}>{formatTime(appointment.startsAt)}</div>
+
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailIcon} aria-hidden="true">
+                        ⏰
+                      </span>
+                      <div className={styles.detailText}>
+                        <div className={styles.detailLabel}>Horário</div>
+                        <div className={styles.detailValue}>{formatTime(appointment.startsAt)}</div>
+                      </div>
                     </div>
-                    <div className={styles.detail}>
-                      <div className={styles.detailLabel}>Valor</div>
-                      <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
-                    </div>
-                    <div className={styles.detail}>
-                      <div className={styles.detailLabel}>Sinal</div>
-                      <div className={styles.detailValue}>
-                        {appointment.depositValue > 0
-                          ? `${toCurrency(appointment.depositValue)} (${depositLabel})`
-                          : 'Não necessário'}
+
+                    <div className={`${styles.detailRow} ${styles.detailRowValue}`}>
+                      <span className={styles.detailIcon} aria-hidden="true">
+                        💰
+                      </span>
+                      <div className={styles.detailText}>
+                        <div className={styles.detailLabel}>Valor</div>
+                        <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
+                      </div>
+                      <div className={styles.detailAside}>
+                        <span className={styles.depositBadge}>{depositValue}</span>
                       </div>
                     </div>
                   </div>
 
-                  {actions.length > 0 && (
+                  {shouldShowActions && (
                     <div className={styles.cardFooter}>
                       {showPay && (
                         <button
                           type="button"
                           className={`${styles.btn} ${styles.btnPay}`}
-                          onClick={() => {
+                          onClick={(event) => {
+                            event.stopPropagation()
                             onStartDepositPayment(appointment.id)
                           }}
                           disabled={payingApptId === appointment.id}
@@ -176,7 +217,10 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
                         <button
                           type="button"
                           className={`${styles.btn} ${styles.btnEdit}`}
-                          onClick={() => onEdit(appointment)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onEdit(appointment)
+                          }}
                         >
                           ✎ Alterar
                         </button>
@@ -185,7 +229,10 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
                         <button
                           type="button"
                           className={`${styles.btn} ${styles.btnCancel}`}
-                          onClick={() => onCancel(appointment)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onCancel(appointment)
+                          }}
                           disabled={cancelingId === appointment.id}
                         >
                           {cancelingId === appointment.id ? 'Cancelando…' : '✖ Cancelar'}

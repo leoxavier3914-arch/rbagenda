@@ -232,14 +232,18 @@
 
 .card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   border-radius: var(--radius-inner);
   border: 1.6px solid var(--card-stroke);
-  background: linear-gradient(180deg, #f3fcf6, #c9e0d1);
+  background: linear-gradient(180deg, #f7fcf9, #dbe9e1);
   box-shadow: 0 16px 34px rgba(28, 75, 56, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -14px 20px rgba(143, 196, 170, 0.12);
-  padding: 20px;
+  padding: 18px;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .card::before {
@@ -252,23 +256,46 @@
 }
 
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 20px 42px rgba(24, 63, 46, 0.18);
+}
+
+.cardSelected {
+  border-color: rgba(31, 98, 66, 0.5);
+  box-shadow: 0 24px 48px rgba(24, 63, 46, 0.24);
+}
+
+.card:focus-visible {
+  outline: 2px solid rgba(31, 98, 66, 0.55);
+  outline-offset: 3px;
 }
 
 .cardHeader {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 12px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
   position: relative;
+}
+
+.cardAvatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.65), rgba(146, 190, 165, 0.9));
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -10px 16px rgba(143, 196, 170, 0.18);
+  flex-shrink: 0;
 }
 
 .cardInfo {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .serviceType {
@@ -284,8 +311,9 @@
 
 .status {
   padding: 7px 14px;
+  margin-left: auto;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.5);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.5));
@@ -320,37 +348,88 @@
 }
 
 .cardBody {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px 16px;
-  padding: 6px 0 4px;
-}
-
-.detail {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(233, 242, 236, 0.96));
+  border: 1px solid var(--glass-stroke);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -12px 16px rgba(143, 196, 170, 0.12);
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--ink);
+}
+
+.detailIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(205, 227, 214, 0.86));
+  box-shadow: 0 10px 18px rgba(24, 63, 46, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.detailText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--ink);
+  min-width: 0;
 }
 
 .detailLabel {
   font-size: 12px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
 .detailValue {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.detailRowValue {
+  align-items: center;
+}
+
+.detailAside {
+  margin-left: auto;
+  text-align: right;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 140px;
+}
+
+.depositBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(214, 231, 222, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  box-shadow: 0 10px 18px rgba(24, 63, 46, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .cardFooter {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 10px;
-  margin-top: 14px;
-  justify-content: center;
+  margin-top: 6px;
+  justify-content: flex-end;
 }
 
 .btn {
@@ -399,6 +478,7 @@
 .btnEdit {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(200, 232, 212, 0.8));
   color: var(--ink);
+  border-color: rgba(31, 98, 66, 0.26);
 }
 
 .inlineError {

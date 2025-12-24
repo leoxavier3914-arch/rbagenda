@@ -53,7 +53,8 @@ const statusEmptyMessages: Record<StatusCategory, string> = {
   concluidos: 'Você ainda não tem agendamentos finalizados.',
 }
 
-const ITEMS_PER_PAGE = 5
+const DESKTOP_ITEMS_PER_PAGE = 4
+const MOBILE_ITEMS_PER_PAGE = 3
 
 const normalizeStatusValue = (status: string | null | undefined): AppointmentStatus => {
   if (typeof status !== 'string') return 'pending'
@@ -416,9 +417,27 @@ export default function MyAppointments() {
     [appointments, selectedCategory],
   )
 
+  const [itemsPerPage, setItemsPerPage] = useState(DESKTOP_ITEMS_PER_PAGE)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+
+    const updateItemsPerPage = () => {
+      setItemsPerPage(mediaQuery.matches ? MOBILE_ITEMS_PER_PAGE : DESKTOP_ITEMS_PER_PAGE)
+    }
+
+    updateItemsPerPage()
+    mediaQuery.addEventListener('change', updateItemsPerPage)
+
+    return () => mediaQuery.removeEventListener('change', updateItemsPerPage)
+  }, [])
+
   const totalPages = useMemo(
-    () => (filteredAppointments.length > 0 ? Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE) : 0),
-    [filteredAppointments],
+    () => {
+      const perPage = Math.max(itemsPerPage, 1)
+      return filteredAppointments.length > 0 ? Math.ceil(filteredAppointments.length / perPage) : 0
+    },
+    [filteredAppointments, itemsPerPage],
   )
 
   useEffect(() => {
@@ -441,10 +460,10 @@ export default function MyAppointments() {
   const paginatedAppointments = useMemo(
     () =>
       filteredAppointments.slice(
-        (Math.max(currentPage, 1) - 1) * ITEMS_PER_PAGE,
-        Math.max(currentPage, 1) * ITEMS_PER_PAGE,
+        (Math.max(currentPage, 1) - 1) * Math.max(itemsPerPage, 1),
+        Math.max(currentPage, 1) * Math.max(itemsPerPage, 1),
       ),
-    [filteredAppointments, currentPage],
+    [filteredAppointments, currentPage, itemsPerPage],
   )
 
   const completionSummary = useMemo(() => {

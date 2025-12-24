@@ -128,8 +128,8 @@
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: color-mix(in srgb, var(--dark) 100%, transparent);
-  backdrop-filter: blur(2px);
+  background: rgba(16, 32, 25, 0.5);
+  backdrop-filter: blur(6px);
 }
 
 .chatFloating {

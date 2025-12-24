@@ -127,10 +127,8 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
               const actions = [showPay, showEdit, showCancel].filter(Boolean)
               const shouldShowPayError = payError && lastPayAttemptId === appointment.id
               const isSelected = selectedAppointmentId === appointment.id
-              const depositValue =
-                appointment.depositValue > 0
-                  ? `Sinal ${toCurrency(appointment.depositValue)} (${depositLabel})`
-                  : 'Sem sinal'
+              const hasDeposit = appointment.depositValue > 0
+              const depositValue = hasDeposit ? toCurrency(appointment.depositValue) : 'Sem sinal'
               const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault()
@@ -190,10 +188,16 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
                       </span>
                       <div className={styles.detailText}>
                         <div className={styles.detailLabel}>Valor</div>
-                        <div className={styles.detailValue}>{toCurrency(appointment.totalValue)}</div>
-                      </div>
-                      <div className={styles.detailAside}>
-                        <span className={styles.depositBadge}>{depositValue}</span>
+                        <div className={styles.detailValue}>
+                          {toCurrency(appointment.totalValue)}{' '}
+                          <span className={styles.depositInline}>
+                            (
+                            {hasDeposit
+                              ? `Sinal: ${depositValue}${depositLabel ? ` · ${depositLabel}` : ''}`
+                              : 'Sem sinal'}
+                            )
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -15,6 +15,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 2.6vw, 28px);
+  width: min(1160px, 100%);
+  margin: 0 auto;
 }
 
 .subtitle {
@@ -25,9 +27,10 @@
 
 .resultsCard {
   margin-top: 12px;
-  background: color-mix(in srgb, var(--glass) 18%, transparent);
-  border-color: color-mix(in srgb, var(--glass-stroke) 70%, transparent);
-  box-shadow: 0 14px 30px rgba(24, 63, 46, 0.12);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .footerMark {

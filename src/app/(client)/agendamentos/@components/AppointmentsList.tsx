@@ -1,5 +1,4 @@
 import { forwardRef, type KeyboardEvent } from 'react'
-import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 
 import styles from '../agendamentos.module.css'
 import type {
@@ -80,7 +79,7 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
     },
     ref,
   ) => (
-    <ClientGlassPanel ref={ref} className={styles.resultsCard}>
+    <div ref={ref} className={styles.resultsCard}>
       {loading ? (
         <div className={`${styles.stateCard} ${styles.stateNeutral}`}>Carregando…</div>
       ) : error ? (
@@ -278,7 +277,7 @@ export const AppointmentsList = forwardRef<HTMLDivElement, AppointmentsListProps
           ) : null}
         </>
       )}
-    </ClientGlassPanel>
+    </div>
   ),
 )
 

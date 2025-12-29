@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
@@ -814,6 +815,9 @@ export default function FiliaisPage() {
                     <p className={styles.sectionDescription}>{branch.region || "Sem região"}</p>
                   </div>
                   <div className={styles.branchListActions}>
+                    <Link href={`/admin/filiais/${branch.id}/ramos`} className={styles.linkButton}>
+                      Ramos
+                    </Link>
                     <button
                       type="button"
                       className={styles.secondaryButton}

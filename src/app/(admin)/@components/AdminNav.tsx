@@ -23,7 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: "🏠" },
   { href: "/admin/agendamentos", label: "Agendamentos", icon: "📅" },
   { href: "/admin/filiais", label: "Filiais", icon: "🏢" },
-  { href: "/admin/ramos", label: "Ramos", icon: "🌿" },
+  { href: "/admin/categorias", label: "Categorias", icon: "🌿" },
   { href: "/admin/servicos", label: "Serviços", icon: "🛠️" },
   { label: "Clientes", icon: "👥", comingSoon: true },
   { label: "Tickets", icon: "🎫", comingSoon: true },

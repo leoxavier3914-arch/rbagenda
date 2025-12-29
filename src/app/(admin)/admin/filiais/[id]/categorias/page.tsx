@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/db";
 
 import { useAdminGuard } from "../../../../useAdminGuard";
-import styles from "./ramos.module.css";
+import styles from "./categorias.module.css";
 
 type ServiceCategory = {
   id: string;
@@ -26,7 +26,7 @@ const normalizeOrder = (value: string | number) => {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
 };
 
-export default function BranchRamosPage() {
+export default function BranchCategoriasPage() {
   const params = useParams();
   const router = useRouter();
   const branchIdParam = params?.id;
@@ -76,7 +76,7 @@ export default function BranchRamosPage() {
     setBranchName(branchData?.name ?? "Filial");
 
     if (categoryError) {
-      setError("Não foi possível carregar os ramos disponíveis.");
+      setError("Não foi possível carregar as categorias disponíveis.");
       setCategories([]);
       setLoading(false);
       return;
@@ -92,7 +92,7 @@ export default function BranchRamosPage() {
     const normalizedCategories =
       (categoryData ?? []).map((entry) => ({
         id: entry.id,
-        name: entry.name ?? "Ramo",
+        name: entry.name ?? "Categoria",
         description: entry.description ?? null,
         order_index: normalizeOrder(entry.order_index ?? 0),
         active: entry.active !== false,
@@ -139,9 +139,9 @@ export default function BranchRamosPage() {
       .upsert(payload, { onConflict: "branch_id,category_id" });
 
     if (upsertError) {
-      setError("Não foi possível salvar as habilitações de ramos.");
+      setError("Não foi possível salvar as habilitações de categorias.");
     } else {
-      setNote("Ramos habilitados para a filial foram atualizados.");
+      setNote("Categorias habilitadas para a filial foram atualizadas.");
     }
 
     setSaving(false);
@@ -157,9 +157,9 @@ export default function BranchRamosPage() {
   return (
     <div className={styles.page}>
       <section className={styles.headerCard}>
-        <h1 className={styles.headerTitle}>Ramos da filial</h1>
+        <h1 className={styles.headerTitle}>Categorias da filial</h1>
         <p className={styles.headerDescription}>
-          Escolha quais ramos ficam disponíveis na filial selecionada. Apenas ramos ativos podem ser habilitados.
+          Escolha quais categorias ficam disponíveis na filial selecionada. Apenas categorias ativas podem ser habilitadas.
         </p>
       </section>
 
@@ -168,7 +168,7 @@ export default function BranchRamosPage() {
           <p className={styles.sectionEyebrow}>Filial</p>
           <h2 className={styles.sectionTitle}>{branchName}</h2>
           <p className={styles.sectionDescription}>
-            Habilite ou desabilite ramos. No futuro, o cliente verá a seleção automática com base nas opções habilitadas.
+            Habilite ou desabilite categorias. No futuro, o cliente verá a seleção automática com base nas opções habilitadas.
           </p>
         </div>
 
@@ -176,7 +176,7 @@ export default function BranchRamosPage() {
         {note ? <div className={styles.helperText}>{note}</div> : null}
 
         {loading ? (
-          <div className={styles.helperText}>Carregando ramos...</div>
+          <div className={styles.helperText}>Carregando categorias...</div>
         ) : sortedCategories.length ? (
           sortedCategories.map((category) => (
             <div key={category.id} className={styles.card}>
@@ -195,12 +195,12 @@ export default function BranchRamosPage() {
             </div>
           ))
         ) : (
-          <div className={styles.emptyState}>Nenhum ramo ativo disponível.</div>
+          <div className={styles.emptyState}>Nenhuma categoria ativa disponível.</div>
         )}
 
         <div className={styles.buttonRow}>
           <button type="button" className={styles.primaryButton} onClick={handleSave} disabled={saving || loading}>
-            {saving ? "Salvando..." : "Salvar ramos da filial"}
+            {saving ? "Salvando..." : "Salvar categorias da filial"}
           </button>
           <button type="button" className={styles.secondaryButton} onClick={() => router.push("/admin/filiais")} disabled={saving}>
             Voltar

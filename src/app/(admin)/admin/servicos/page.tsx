@@ -153,7 +153,7 @@ export default function ServicosPage() {
     const categoryOptions =
       (categoriesResponse.data ?? []).map((entry) => ({
         id: entry.id,
-        name: entry.name ?? "Ramo",
+        name: entry.name ?? "Categoria",
         order_index: normalizeOrder(entry.order_index ?? 0),
         active: entry.active !== false,
       })) ?? [];
@@ -340,14 +340,14 @@ export default function ServicosPage() {
             <p className={styles.helperText}>Serviços com ordem menor aparecem primeiro.</p>
           </label>
           <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Ramo</span>
+            <span className={styles.inputLabel}>Categoria</span>
             <select
               className={styles.selectControl}
               value={form.category_id}
               onChange={(event) => setForm((prev) => ({ ...prev, category_id: event.target.value }))}
               disabled={saving || isReadonly}
             >
-              <option value="">Sem ramo</option>
+              <option value="">Sem categoria</option>
               {categories
                 .filter((category) => category.active)
                 .map((category) => (
@@ -356,7 +356,7 @@ export default function ServicosPage() {
                   </option>
                 ))}
             </select>
-            <p className={styles.helperText}>Apenas ramos ativos são exibidos.</p>
+            <p className={styles.helperText}>Apenas categorias ativas são exibidas.</p>
           </label>
           <label className={styles.inputGroup}>
             <span className={styles.inputLabel}>Descrição</span>

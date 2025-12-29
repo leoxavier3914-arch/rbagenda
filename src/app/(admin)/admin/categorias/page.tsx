@@ -6,7 +6,7 @@ import { supabase } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 
 import { useAdminGuard } from "../../useAdminGuard";
-import styles from "./ramos.module.css";
+import styles from "./categorias.module.css";
 
 type ServiceCategory = {
   id: string;
@@ -41,10 +41,10 @@ const normalizeOrder = (value: string | number) => {
 
 const normalizeSlug = (value: string, fallback: string) => {
   const base = value?.trim().length ? value : fallback;
-  return slugify(base || "ramo");
+  return slugify(base || "categoria");
 };
 
-export default function RamosPage() {
+export default function CategoriasPage() {
   const { status, role } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,7 @@ export default function RamosPage() {
       .order("name", { ascending: true });
 
     if (fetchError) {
-      setError("Não foi possível carregar os ramos.");
+      setError("Não foi possível carregar as categorias.");
       setCategories([]);
     } else {
       setCategories(
@@ -103,7 +103,7 @@ export default function RamosPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!isSuper) {
-      setError("Apenas Master ou Super podem editar ramos.");
+      setError("Apenas Master ou Super podem editar categorias.");
       return;
     }
 
@@ -112,7 +112,7 @@ export default function RamosPage() {
     setNote(null);
 
     const payload = {
-      name: form.name.trim() || "Ramo",
+      name: form.name.trim() || "Categoria",
       slug: normalizeSlug(form.slug, form.name),
       description: form.description.trim() || null,
       active: Boolean(form.active),
@@ -124,9 +124,9 @@ export default function RamosPage() {
       : await supabase.from("service_categories").insert(payload);
 
     if (response.error) {
-      setError("Não foi possível salvar o ramo. Verifique o slug e tente novamente.");
+      setError("Não foi possível salvar a categoria. Verifique o slug e tente novamente.");
     } else {
-      setNote(editingId ? "Ramo atualizado com sucesso." : "Ramo criado com sucesso.");
+      setNote(editingId ? "Categoria atualizada com sucesso." : "Categoria criada com sucesso.");
       resetForm();
       void loadCategories();
     }
@@ -143,15 +143,15 @@ export default function RamosPage() {
       active: category.active !== false,
       order_index: normalizeOrder(category.order_index),
     });
-    setNote("Editando ramo existente. Salve para confirmar ou use cancelar para limpar.");
+    setNote("Editando categoria existente. Salve para confirmar ou use cancelar para limpar.");
   };
 
   const handleDelete = async (categoryId: string) => {
     if (!isSuper) {
-      setError("Apenas Master ou Super podem excluir ramos.");
+      setError("Apenas Master ou Super podem excluir categorias.");
       return;
     }
-    if (!window.confirm("Tem certeza que deseja excluir este ramo?")) return;
+    if (!window.confirm("Tem certeza que deseja excluir esta categoria?")) return;
 
     setSaving(true);
     setError(null);
@@ -159,9 +159,9 @@ export default function RamosPage() {
 
     const { error: deleteError } = await supabase.from("service_categories").delete().eq("id", categoryId);
     if (deleteError) {
-      setError("Não foi possível excluir o ramo. Verifique dependências e tente novamente.");
+      setError("Não foi possível excluir a categoria. Verifique dependências e tente novamente.");
     } else {
-      setNote("Ramo excluído.");
+      setNote("Categoria excluída.");
       if (editingId === categoryId) resetForm();
       void loadCategories();
     }
@@ -172,23 +172,23 @@ export default function RamosPage() {
   return (
     <div className={styles.page}>
       <section className={styles.headerCard}>
-        <h1 className={styles.headerTitle}>Ramos</h1>
+        <h1 className={styles.headerTitle}>Categorias</h1>
         <p className={styles.headerDescription}>
-          Organize os ramos de serviços e defina a ordem exibida no painel. Apenas usuários Master e Super podem criar, editar ou
-          excluir; administradores comuns têm acesso somente leitura.
+          Organize as categorias de serviços e defina a ordem exibida no painel. Apenas usuários Master e Super podem criar, editar
+          ou excluir; administradores comuns têm acesso somente leitura.
         </p>
         <div className={styles.tagRow}>
-          <span className={styles.tag}>CRUD de Ramos</span>
+          <span className={styles.tag}>CRUD de Categorias</span>
           {isReadonly ? <span className={styles.tag}>Modo somente leitura</span> : null}
         </div>
       </section>
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>{editingId ? "Editar ramo" : "Novo ramo"}</p>
-          <h2 className={styles.sectionTitle}>{editingId ? "Atualize um ramo existente" : "Cadastre um novo ramo"}</h2>
+          <p className={styles.sectionEyebrow}>{editingId ? "Editar categoria" : "Nova categoria"}</p>
+          <h2 className={styles.sectionTitle}>{editingId ? "Atualize uma categoria existente" : "Cadastre uma nova categoria"}</h2>
           <p className={styles.sectionDescription}>
-            Defina nome, slug e ordenação. Desative o ramo quando não quiser mais exibi-lo nas filiais ou serviços.
+            Defina nome, slug e ordenação. Desative a categoria quando não quiser mais exibi-la nas filiais ou serviços.
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export default function RamosPage() {
                   slug: prev.slug || slugify(event.target.value),
                 }))
               }
-              placeholder="Ramo (ex: Estética)"
+              placeholder="Categoria (ex: Estética)"
               disabled={saving || isReadonly}
               required
             />
@@ -235,7 +235,7 @@ export default function RamosPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, order_index: normalizeOrder(event.target.value) }))}
               disabled={saving || isReadonly}
             />
-            <p className={styles.helperText}>Ramos com ordem menor aparecem primeiro.</p>
+            <p className={styles.helperText}>Categorias com ordem menor aparecem primeiro.</p>
           </label>
           <label className={styles.inputGroup}>
             <span className={styles.inputLabel}>Descrição</span>
@@ -243,7 +243,7 @@ export default function RamosPage() {
               className={styles.textareaControl}
               value={form.description}
               onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-              placeholder="Explicação breve do ramo"
+              placeholder="Explicação breve da categoria"
               disabled={saving || isReadonly}
             />
           </label>
@@ -254,11 +254,11 @@ export default function RamosPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))}
               disabled={saving || isReadonly}
             />
-            <span className={styles.inputLabel}>Ramo ativo</span>
+            <span className={styles.inputLabel}>Categoria ativa</span>
           </label>
           <div className={styles.buttonRow}>
             <button type="submit" className={styles.primaryButton} disabled={saving || isReadonly}>
-              {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar ramo"}
+              {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar categoria"}
             </button>
             {editingId ? (
               <button type="button" className={styles.secondaryButton} onClick={resetForm} disabled={saving}>
@@ -271,19 +271,19 @@ export default function RamosPage() {
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>Lista de ramos</p>
+          <p className={styles.sectionEyebrow}>Lista de categorias</p>
           <h2 className={styles.sectionTitle}>Catálogo atual</h2>
-          <p className={styles.sectionDescription}>Visualize todos os ramos disponíveis e gerencie a ordem e ativação.</p>
+          <p className={styles.sectionDescription}>Visualize todas as categorias disponíveis e gerencie a ordem e ativação.</p>
         </div>
 
         {loading ? (
-          <div className={styles.helperText}>Carregando ramos...</div>
+          <div className={styles.helperText}>Carregando categorias...</div>
         ) : sortedCategories.length ? (
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Ramo</th>
+                  <th>Categoria</th>
                   <th>Slug</th>
                   <th>Ordem</th>
                   <th>Status</th>
@@ -334,7 +334,7 @@ export default function RamosPage() {
             </table>
           </div>
         ) : (
-          <div className={styles.emptyState}>Nenhum ramo cadastrado.</div>
+          <div className={styles.emptyState}>Nenhuma categoria cadastrada.</div>
         )}
       </section>
     </div>

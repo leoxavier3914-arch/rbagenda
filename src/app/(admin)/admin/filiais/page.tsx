@@ -815,8 +815,8 @@ export default function FiliaisPage() {
                     <p className={styles.sectionDescription}>{branch.region || "Sem região"}</p>
                   </div>
                   <div className={styles.branchListActions}>
-                    <Link href={`/admin/filiais/${branch.id}/ramos`} className={styles.linkButton}>
-                      Ramos
+                    <Link href={`/admin/filiais/${branch.id}/categorias`} className={styles.linkButton}>
+                      Categorias
                     </Link>
                     <button
                       type="button"

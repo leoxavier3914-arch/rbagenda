@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
 import { z } from 'zod'
+import { resolveServicePricing } from '@/lib/servicePricing'
 
 const supabaseAdmin = getSupabaseAdmin()
 
@@ -49,6 +50,46 @@ async function resolveServiceTypeId(serviceId: string, preferredId?: string | nu
   return data.service_type_id ?? null
 }
 
+const clampDeposit = (price: number, deposit: number) => {
+  const safePrice = Math.max(0, price)
+  const safeDeposit = Math.max(0, deposit)
+  return Math.min(safePrice, safeDeposit)
+}
+
+async function resolvePricing(serviceId: string, preferredServiceTypeId?: string | null) {
+  try {
+    const pricing = await resolveServicePricing(supabaseAdmin, serviceId, preferredServiceTypeId ?? null)
+    if (pricing) {
+      return {
+        serviceTypeId: pricing.serviceTypeId ?? preferredServiceTypeId ?? null,
+        values: pricing.finalValues,
+      }
+    }
+  } catch (error) {
+    console.error('Failed to resolve service pricing', error)
+  }
+
+  const { data: legacy } = await supabaseAdmin
+    .from('services')
+    .select('duration_min, price_cents, deposit_cents')
+    .eq('id', serviceId)
+    .maybeSingle()
+
+  const legacyDuration = Math.max(0, Number(legacy?.duration_min) || 0)
+  const legacyPrice = Math.max(0, Number(legacy?.price_cents) || 0)
+  const legacyDeposit = clampDeposit(legacyPrice, Math.max(0, Number(legacy?.deposit_cents) || 0))
+
+  return {
+    serviceTypeId: preferredServiceTypeId ?? null,
+    values: {
+      duration_min: legacyDuration,
+      price_cents: legacyPrice,
+      deposit_cents: legacyDeposit,
+      buffer_min: 0,
+    },
+  }
+}
+
 export async function POST(req: NextRequest) {
   const user = await getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
@@ -62,12 +103,15 @@ export async function POST(req: NextRequest) {
 
     const { data: svc } = await supabaseAdmin
       .from('services')
-      .select('id, branch_id, duration_min, price_cents, deposit_cents')
+      .select('id, branch_id')
       .eq('id', service_id)
       .single()
     if (!svc) return NextResponse.json({ error: 'service not found' }, { status: 404 })
 
-    const resolvedServiceTypeId = await resolveServiceTypeId(service_id, service_type_id ?? null)
+    const pricing = await resolvePricing(service_id, service_type_id ?? null)
+    const resolvedServiceTypeId =
+      pricing.serviceTypeId ?? (await resolveServiceTypeId(service_id, service_type_id ?? null))
+    const finalValues = pricing.values
 
     let staffId = staff_id as string | null
     if (!staffId) {
@@ -82,7 +126,7 @@ export async function POST(req: NextRequest) {
     if (!staffId) return NextResponse.json({ error: 'no staff available' }, { status: 400 })
 
     const start = new Date(starts_at)
-    const end = new Date(start.getTime() + svc.duration_min * 60 * 1000)
+    const end = new Date(start.getTime() + finalValues.duration_min * 60 * 1000)
 
     const { data: appt, error } = await supabaseAdmin
       .from('appointments')
@@ -95,8 +139,8 @@ export async function POST(req: NextRequest) {
         starts_at: start.toISOString(),
         ends_at: end.toISOString(),
         status: 'pending',
-        total_cents: svc.price_cents,
-        deposit_cents: svc.deposit_cents,
+        total_cents: Math.max(0, finalValues.price_cents),
+        deposit_cents: clampDeposit(Math.max(0, finalValues.price_cents), Math.max(0, finalValues.deposit_cents)),
         utm_source: utm?.source,
         utm_medium: utm?.medium,
         utm_campaign: utm?.campaign,
@@ -113,13 +157,16 @@ export async function POST(req: NextRequest) {
 
   const { data: svc } = await supabaseAdmin
     .from('services')
-    .select('id, branch_id, duration_min, price_cents, deposit_cents')
+    .select('id, branch_id')
     .eq('id', service_id)
     .eq('active', true)
     .single()
   if (!svc) return NextResponse.json({ error: 'service not found' }, { status: 404 })
 
-  const resolvedServiceTypeId = await resolveServiceTypeId(service_id, service_type_id ?? null)
+  const pricing = await resolvePricing(service_id, service_type_id ?? null)
+  const resolvedServiceTypeId =
+    pricing.serviceTypeId ?? (await resolveServiceTypeId(service_id, service_type_id ?? null))
+  const finalValues = pricing.values
 
   let staffId: string | null = null
   if (svc.branch_id) {
@@ -137,10 +184,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid scheduled_at' }, { status: 400 })
   }
 
-  const end = new Date(start.getTime() + svc.duration_min * 60 * 1000)
+  const end = new Date(start.getTime() + finalValues.duration_min * 60 * 1000)
 
-  const totalCents = Math.max(0, svc.price_cents)
-  const depositCents = Math.min(totalCents, Math.max(0, svc.deposit_cents))
+  const totalCents = Math.max(0, finalValues.price_cents)
+  const depositCents = clampDeposit(totalCents, Math.max(0, finalValues.deposit_cents))
   const priceValue = Number((totalCents / 100).toFixed(2))
   const depositValue = Number((depositCents / 100).toFixed(2))
 

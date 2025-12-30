@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/db'
 import { stripePromise } from '@/lib/stripeClient'
+import { resolveFinalServiceValues } from '@/lib/servicePricing'
 
 import FlowShell from './FlowShell'
 
@@ -13,6 +14,25 @@ type Service = {
   name: string
   price_cents: number
   deposit_cents: number
+  duration_min: number
+}
+
+type AssignmentRow = {
+  use_service_defaults?: boolean | null
+  override_duration_min?: number | null
+  override_price_cents?: number | null
+  override_deposit_cents?: number | null
+  override_buffer_min?: number | null
+  service_type?:
+    | {
+        id?: string | null
+        active?: boolean | null
+        base_duration_min?: number | null
+        base_price_cents?: number | null
+        base_deposit_cents?: number | null
+        base_buffer_min?: number | null
+      }
+    | null
 }
 
 type SlotCacheEntry = {
@@ -77,7 +97,9 @@ export default function BookingFlow(){
     async function loadServices(){
       const { data, error } = await supabase
         .from('services')
-        .select('id,name,price_cents,deposit_cents')
+        .select(
+          'id, name, active, assignments:service_type_assignments(use_service_defaults, override_duration_min, override_price_cents, override_deposit_cents, override_buffer_min, service_type:service_types(id, active, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min))',
+        )
         .eq('active', true)
         .order('name')
 
@@ -90,8 +112,55 @@ export default function BookingFlow(){
         return
       }
 
+      const normalized =
+        (data ?? [])
+          .map((entry) => {
+            const assignments = Array.isArray(entry.assignments)
+              ? (entry.assignments as AssignmentRow[])
+              : entry.assignments
+              ? [entry.assignments as AssignmentRow]
+              : []
+
+            const firstActive = assignments.find((assignment) => {
+              const serviceType = assignment?.service_type
+              return serviceType && typeof serviceType === 'object' && serviceType.active !== false
+            })
+
+            const serviceType = firstActive?.service_type
+            if (!serviceType || typeof serviceType !== 'object' || !serviceType.id) {
+              return null
+            }
+
+            const finalValues = resolveFinalServiceValues(
+              {
+                base_duration_min: serviceType.base_duration_min ?? 0,
+                base_price_cents: serviceType.base_price_cents ?? 0,
+                base_deposit_cents: serviceType.base_deposit_cents ?? 0,
+                base_buffer_min: serviceType.base_buffer_min ?? 0,
+              },
+              {
+                use_service_defaults: firstActive.use_service_defaults ?? true,
+                override_duration_min: firstActive.override_duration_min ?? null,
+                override_price_cents: firstActive.override_price_cents ?? null,
+                override_deposit_cents: firstActive.override_deposit_cents ?? null,
+                override_buffer_min: firstActive.override_buffer_min ?? null,
+              },
+            )
+
+            if (!Number.isFinite(finalValues.duration_min) || finalValues.duration_min <= 0) return null
+
+            return {
+              id: entry.id,
+              name: entry.name ?? 'Serviço',
+              price_cents: Math.max(0, finalValues.price_cents),
+              deposit_cents: Math.max(0, finalValues.deposit_cents),
+              duration_min: Math.max(0, finalValues.duration_min),
+            } as Service
+          })
+          .filter(Boolean) as Service[]
+
       setError(null)
-      setServices(data ?? [])
+      setServices(normalized)
     }
 
     loadServices()

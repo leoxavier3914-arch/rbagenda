@@ -67,6 +67,14 @@
   gap: 6px;
 }
 
+.sectionTopBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .sectionEyebrow {
   margin: 0;
   color: #7a86a2;
@@ -98,6 +106,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.formSection {
+  gap: 16px;
 }
 
 .filterGrid {
@@ -177,6 +189,16 @@
   border-radius: 12px;
   padding: 10px 14px;
   font-weight: 700;
+  cursor: pointer;
+}
+
+.dangerButton {
+  border: 1px solid #fecdd3;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
   cursor: pointer;
 }
 
@@ -303,6 +325,20 @@
 
 .configSection {
   gap: 10px;
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+  background: #e6ebf3;
+}
+
+.inlineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .optionGrid {

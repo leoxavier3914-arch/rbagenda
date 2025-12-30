@@ -2,6 +2,7 @@
 
 ## 1. Visão geral da arquitetura de cliente
 - Rotas de cliente vivem em `src/app/(client)` com páginas client-side. Layout padrão fornecido por `ClientPageLayout` (`ClientPageShell`, `ClientSection`, `ClientGlassPanel`) e `ClientFullScreenLayout` no layout de `(client)`. `checkout` é exceção: recebe só `LavaLampProvider`. `ClientPageShell` agora pode forçar a classe `force-motion` (com suporte a `#nomotion`) para centralizar o comportamento das animações.
+- Vitrine `/catalogo` em `src/app/(client)/catalogo` reutiliza o shell padrão (badge + header + `ClientGlassPanel`) para listar opções ativas vindas de `services` + `service_type_assignments` + `service_photos`, exibindo tags de serviço/categoria, foto de capa e valores/duração estimados com CTA para `/procedimento`.
 - Fundo animado controlado por `LavaLampProvider` e variáveis CSS globais (`--bg-*`, `--inner-*`, `--glass`, `--glass-stroke`, `--card-stroke`, `--dark`, `--light`, `--lava-alpha-*`); `refreshPalette` redesenha blobs. Classes globais (`client-hero-wrapper`, `page`, `stack`, `glass`, `label`) estão em `globals.css` e agora definem padding vertical mais enxuto (topo 64px + safe-area, base 26px) com gaps menores.
 - Páginas sensíveis: `/procedimento`, `/agendamentos`, `/meu-perfil` compartilham hero, vidro e tipografia; `/login` e `/regras` têm observações específicas abaixo. Estilos globais continuam focados em tokens/layout padrão e o que for específico de uma rota fica no CSS Module local.
 
@@ -73,6 +74,13 @@
 - **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; `heroReady` via hook; somente renderiza links estáticos.
 - **Layout e UX**: badge + header padrão com cards de links em grade responsiva; vidro claro local nos cartões. Mantém `force-motion` pelo shell para animações consistentes.
 - **Riscos**: baixos; apenas grid/responsividade.
+
+### 2.9 `/catalogo` (`src/app/(client)/catalogo/page.tsx`)
+- **Objetivo**: vitrine das opções do estúdio com fotos e valores estimados antes de agendar.
+- **Arquivos e componentes**: rota `page.tsx`; CSS `catalogo.module.css`; usa `ClientPageShell` + `ClientSection` + `ClientGlassPanel` + `ClientPageHeader`; dados vêm diretamente de `supabase` (`services` + `service_type_assignments` + `service_photos`) com cálculo de preço/duração por `resolveFinalServiceValues`.
+- **Fluxo de dados/estado**: protegido por `useClientSessionGuard`; carrega catálogo ao montar (`loading/error/ready`), normaliza assignments ativos e fotos ordenadas; ignora opções sem serviço ativo. Mostra tags de serviço/categoria, foto de capa e galeria.
+- **Layout e UX**: card em vidro claro com grade responsiva (mín. 260px) e badge de fotos; meta de valor/duração/sinal e CTA “Agendar” leva a `/procedimento`. Badge + header seguem padrão do shell.
+- **Riscos**: depender dos joins de Supabase e da consistência das fotos públicas; valores exibidos usam o primeiro serviço ativo da opção.
 
 
 ## 3. Hooks e helpers compartilhados

@@ -161,6 +161,7 @@ export default function OpcoesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "form" | "personalize">("list");
   const [form, setForm] = useState<OptionFormState>(defaultForm);
   const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<Set<string>>(new Set());
   const [assignmentForm, setAssignmentForm] = useState<Map<
@@ -425,6 +426,23 @@ export default function OpcoesPage() {
     setNote("Editando opção. Salve para confirmar ou cancele para limpar.");
   };
 
+  const startCreate = () => {
+    resetForm();
+    setViewMode("form");
+    setNote("Preencha os dados e escolha os serviços obrigatórios na mesma tela.");
+  };
+
+  const startEdit = (option: NormalizedOption, mode: "form" | "personalize" = "form") => {
+    handleEdit(option);
+    setViewMode(mode);
+    setNote(mode === "personalize" ? "Personalize os vínculos por serviço e salve para aplicar." : "Editando opção. Salve ou volte para cancelar.");
+  };
+
+  const backToList = () => {
+    resetForm();
+    setViewMode("list");
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!isSuper) {
@@ -501,6 +519,42 @@ export default function OpcoesPage() {
     resetForm();
     setNote(editingId ? "Opção atualizada." : "Opção criada.");
     void loadData();
+    setViewMode("list");
+    setSaving(false);
+  };
+
+  const handleDelete = async (option: NormalizedOption) => {
+    if (!isSuper) {
+      setError("Apenas Master ou Super podem excluir opções.");
+      return;
+    }
+
+    const confirmed = window.confirm(`Deseja remover a opção “${option.name}”?`);
+    if (!confirmed) return;
+
+    setSaving(true);
+    setError(null);
+    setNote(null);
+
+    const { error: assignmentsError } = await supabase.from("service_type_assignments").delete().eq("service_id", option.id);
+    if (assignmentsError) {
+      setError("Não foi possível remover os vínculos da opção.");
+      setSaving(false);
+      return;
+    }
+
+    await supabase.from("service_photos").delete().eq("service_id", option.id);
+
+    const { error: deleteError } = await supabase.from("services").delete().eq("id", option.id);
+    if (deleteError) {
+      setError("Não foi possível excluir a opção.");
+      setSaving(false);
+      return;
+    }
+
+    await loadData();
+    backToList();
+    setNote("Opção excluída.");
     setSaving(false);
   };
 
@@ -728,152 +782,30 @@ export default function OpcoesPage() {
         </div>
       </section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>Filtros</p>
-          <h2 className={styles.sectionTitle}>Refine a lista de opções</h2>
-          <p className={styles.sectionDescription}>
-            Filtre por categoria, serviço e status. Use o link de Serviços para abrir esta página já filtrada.
-          </p>
-        </div>
-
-        <div className={styles.filterGrid}>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Categoria</span>
-            <select
-              className={styles.selectControl}
-              value={filterCategory}
-              onChange={(event) => setFilterCategory(event.target.value)}
-              disabled={loading}
-            >
-              <option value="">Todas</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Serviço</span>
-            <select
-              className={styles.selectControl}
-              value={filterServiceType}
-              onChange={(event) => setFilterServiceType(event.target.value)}
-              disabled={loading}
-            >
-              <option value="">Todos</option>
-              {serviceTypes.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
-            <input
-              type="checkbox"
-              checked={onlyActive}
-              onChange={(event) => setOnlyActive(event.target.checked)}
-              disabled={loading}
-            />
-            <span className={styles.inputLabel}>Mostrar apenas opções ativas</span>
-          </label>
-        </div>
-      </section>
-
-      <form className={styles.formStack} onSubmit={handleSubmit}>
+      {viewMode === "list" ? (
         <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionEyebrow}>{editingId ? "Editar opção" : "Nova opção"}</p>
-            <h2 className={styles.sectionTitle}>{editingId ? "Atualize uma opção existente" : "Cadastre uma opção"}</h2>
-            <p className={styles.sectionDescription}>
-              Defina nome, slug e vínculos. Os valores finais vêm do Serviço ou podem ser personalizados por combinação Serviço + Opção.
-            </p>
+          <div className={styles.sectionTopBar}>
+            <div>
+              <p className={styles.sectionEyebrow}>Lista de opções</p>
+              <h2 className={styles.sectionTitle}>Opções cadastradas</h2>
+              <p className={styles.sectionDescription}>Filtre, edite, personalize ou crie novas opções sem sair desta tela.</p>
+            </div>
+            <button type="button" className={styles.primaryButton} onClick={startCreate} disabled={saving || isReadonly}>
+              Nova opção
+            </button>
           </div>
 
-          {error ? <div className={`${styles.helperText} ${styles.errorText}`}>{error}</div> : null}
           {note ? <div className={styles.helperText}>{note}</div> : null}
+          {error ? <div className={`${styles.helperText} ${styles.errorText}`}>{error}</div> : null}
 
-          <div className={styles.formGrid}>
+          <div className={styles.filterGrid}>
             <label className={styles.inputGroup}>
-              <span className={styles.inputLabel}>Nome</span>
-              <input
-                className={styles.inputControl}
-                value={form.name}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    name: event.target.value,
-                    slug: prev.slug || slugify(event.target.value),
-                  }))
-                }
-                placeholder="Opção (ex: Foxy)"
-                disabled={saving || isReadonly}
-                required
-              />
-            </label>
-            <label className={styles.inputGroup}>
-              <span className={styles.inputLabel}>Slug</span>
-              <input
-                className={styles.inputControl}
-                value={form.slug}
-                onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-                onBlur={(event) => setForm((prev) => ({ ...prev, slug: normalizeSlug(event.target.value, prev.name) }))}
-                placeholder="identificador-unico"
-                disabled={saving || isReadonly}
-                required
-              />
-            </label>
-            <label className={styles.inputGroup}>
-              <span className={styles.inputLabel}>Descrição</span>
-              <textarea
-                className={styles.textareaControl}
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-                placeholder="Detalhes da opção"
-                disabled={saving || isReadonly}
-              />
-            </label>
-            <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
-              <input
-                type="checkbox"
-                checked={form.active}
-                onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))}
-                disabled={saving || isReadonly}
-              />
-              <span className={styles.inputLabel}>Opção ativa</span>
-            </label>
-          </div>
-        </section>
-
-        <section className={`${styles.section} ${styles.serviceSection}`}>
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionEyebrow}>Serviços obrigatórios</p>
-            <h2 className={styles.sectionTitle}>Selecione onde esta opção aparece</h2>
-            <p className={styles.sectionDescription}>
-              Escolha os serviços no mesmo fluxo do formulário. Uma opção precisa estar vinculada a pelo menos um serviço.
-            </p>
-          </div>
-
-          <div className={styles.serviceToolbar}>
-            <label className={styles.inputGroup}>
-              <span className={styles.inputLabel}>Buscar serviço</span>
-              <input
-                className={styles.inputControl}
-                value={serviceSearch}
-                onChange={(event) => setServiceSearch(event.target.value)}
-                placeholder="Digite o nome do serviço"
-                disabled={saving || isReadonly}
-              />
-            </label>
-            <label className={styles.inputGroup}>
-              <span className={styles.inputLabel}>Filtrar por categoria</span>
+              <span className={styles.inputLabel}>Categoria</span>
               <select
                 className={styles.selectControl}
-                value={serviceSelectionCategory}
-                onChange={(event) => setServiceSelectionCategory(event.target.value)}
-                disabled={saving || isReadonly}
+                value={filterCategory}
+                onChange={(event) => setFilterCategory(event.target.value)}
+                disabled={loading}
               >
                 <option value="">Todas</option>
                 {categories.map((category) => (
@@ -883,392 +815,546 @@ export default function OpcoesPage() {
                 ))}
               </select>
             </label>
-            <div className={styles.inlineInfo}>
-              <span className={styles.inputLabel}>Selecionados</span>
-              <span className={styles.pill}>{selectedServiceTypeIds.size}</span>
-            </div>
-          </div>
-
-          {selectionError ? <div className={`${styles.helperText} ${styles.errorText}`}>{selectionError}</div> : null}
-
-          <div className={styles.serviceList}>
-            {groupedServiceTypes.length ? (
-              groupedServiceTypes.map((group) => (
-                <div key={group.id ?? "sem-categoria"} className={styles.serviceGroup}>
-                  <div className={styles.serviceGroupTitle}>
-                    <div>
-                      <p className={styles.sectionEyebrow}>{group.name}</p>
-                      <p className={styles.sectionDescription}>{group.id ? "Categoria ativa" : "Sem categoria"}</p>
-                    </div>
-                    <span className={styles.pill}>{group.services.length} serviços</span>
-                  </div>
-                  <div className={styles.serviceGrid}>
-                    {group.services.map((service) => (
-                      <label
-                        key={service.id}
-                        className={`${styles.serviceRow} ${selectedServiceTypeIds.has(service.id) ? styles.serviceRowActive : ""}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedServiceTypeIds.has(service.id)}
-                          onChange={(event) => {
-                            setSelectedServiceTypeIds((prev) => {
-                              const next = new Set(prev);
-                              if (event.target.checked) {
-                                next.add(service.id);
-                                setAssignmentForm((prevMap) => {
-                                  if (prevMap.has(service.id)) return prevMap;
-                                  const nextMap = new Map(prevMap);
-                                  nextMap.set(service.id, defaultAssignmentConfig);
-                                  return nextMap;
-                                });
-                              } else {
-                                next.delete(service.id);
-                                setAssignmentForm((prevMap) => {
-                                  const nextMap = new Map(prevMap);
-                                  nextMap.delete(service.id);
-                                  return nextMap;
-                                });
-                              }
-                              setSelectionError(next.size ? null : "Selecione pelo menos 1 serviço para esta opção.");
-                              return next;
-                            });
-                          }}
-                          disabled={saving || isReadonly}
-                        />
-                        <div className={styles.serviceRowBody}>
-                          <div className={styles.serviceRowHeader}>
-                            <span className={styles.serviceName}>{service.name}</span>
-                            <span className={`${styles.badge} ${service.active !== false ? styles.statusActive : styles.statusInactive}`}>
-                              {service.active !== false ? "Ativo" : "Inativo"}
-                            </span>
-                          </div>
-                          <p className={styles.serviceMeta}>
-                            {resolveCategoryMeta(service).name ?? "Sem categoria"} • {service.base_duration_min ?? 0} min •{" "}
-                            {formatPriceLabel(service.base_price_cents ?? 0)}
-                          </p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className={styles.helperText}>Nenhum serviço encontrado com os filtros informados.</div>
-            )}
-          </div>
-        </section>
-
-        <section className={`${styles.section} ${styles.configSection}`}>
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionEyebrow}>Configuração por serviço</p>
-            <h2 className={styles.sectionTitle}>Personalize onde for necessário</h2>
-            <p className={styles.sectionDescription}>
-              Para cada serviço selecionado, mantenha o padrão ou personalize tempo, preço, sinal e buffer. Salvando, os valores são gravados em
-              service_type_assignments.
-            </p>
-          </div>
-          {selectedServiceTypes.length === 0 ? (
-            <div className={styles.helperText}>Selecione ao menos um serviço para personalizar.</div>
-          ) : (
-            <div className={styles.optionGrid}>
-              {selectedServiceTypes.map((serviceType) => {
-                const config = getAssignmentConfig(serviceType.id);
-                const overridePayload: ServiceAssignmentOverride = {
-                  use_service_defaults: config.useDefaults,
-                  override_duration_min:
-                    !config.useDefaults && config.duration.length > 0
-                      ? normalizeInt(config.duration, serviceType.base_duration_min ?? 0)
-                      : null,
-                  override_price_cents:
-                    !config.useDefaults && config.price.length > 0 ? parseReaisToCents(config.price) : null,
-                  override_deposit_cents:
-                    !config.useDefaults && config.deposit.length > 0 ? parseReaisToCents(config.deposit) : null,
-                  override_buffer_min:
-                    !config.useDefaults && config.buffer.length > 0
-                      ? normalizeInt(config.buffer, serviceType.base_buffer_min ?? 0)
-                      : null,
-                };
-                const finalValues = resolveFinalServiceValues(
-                  {
-                    base_duration_min: serviceType.base_duration_min ?? 0,
-                    base_price_cents: serviceType.base_price_cents ?? 0,
-                    base_deposit_cents: serviceType.base_deposit_cents ?? 0,
-                    base_buffer_min: serviceType.base_buffer_min ?? 0,
-                  },
-                  overridePayload
-                );
-                const defaultValues = resolveFinalServiceValues(
-                  {
-                    base_duration_min: serviceType.base_duration_min ?? 0,
-                    base_price_cents: serviceType.base_price_cents ?? 0,
-                    base_deposit_cents: serviceType.base_deposit_cents ?? 0,
-                    base_buffer_min: serviceType.base_buffer_min ?? 0,
-                  },
-                  { use_service_defaults: true }
-                );
-
-                return (
-                  <div key={serviceType.id} className={styles.optionCard}>
-                    <div className={styles.optionHeader}>
-                      <div>
-                        <h3 className={styles.optionTitle}>{serviceType.name}</h3>
-                        <p className={styles.sectionDescription}>{serviceType.category_name || "Sem categoria"}</p>
-                      </div>
-                      <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
-                        <input
-                          type="checkbox"
-                          checked={config.useDefaults}
-                          onChange={(event) =>
-                            updateAssignmentConfig(serviceType.id, (prev) => ({
-                              ...prev,
-                              useDefaults: event.target.checked,
-                              duration: event.target.checked ? "" : prev.duration,
-                              price: event.target.checked ? "" : prev.price,
-                              deposit: event.target.checked ? "" : prev.deposit,
-                              buffer: event.target.checked ? "" : prev.buffer,
-                            }))
-                          }
-                          disabled={saving || isReadonly}
-                        />
-                        <span className={styles.inputLabel}>Usar padrão do serviço</span>
-                      </label>
-                    </div>
-
-                    {!config.useDefaults ? (
-                      <div className={styles.formGrid}>
-                        <label className={styles.inputGroup}>
-                          <span className={styles.inputLabel}>Tempo final (min)</span>
-                          <input
-                            className={styles.inputControl}
-                            type="number"
-                            min={0}
-                            value={config.duration}
-                            onChange={(event) =>
-                              updateAssignmentConfig(serviceType.id, (prev) => ({
-                                ...prev,
-                                duration: event.target.value,
-                              }))
-                            }
-                            disabled={saving || isReadonly}
-                          />
-                        </label>
-                        <label className={styles.inputGroup}>
-                          <span className={styles.inputLabel}>Preço final (R$)</span>
-                          <input
-                            className={styles.inputControl}
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={config.price}
-                            onChange={(event) =>
-                              updateAssignmentConfig(serviceType.id, (prev) => ({
-                                ...prev,
-                                price: event.target.value,
-                              }))
-                            }
-                            disabled={saving || isReadonly}
-                          />
-                        </label>
-                        <label className={styles.inputGroup}>
-                          <span className={styles.inputLabel}>Sinal final (R$)</span>
-                          <input
-                            className={styles.inputControl}
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={config.deposit}
-                            onChange={(event) =>
-                              updateAssignmentConfig(serviceType.id, (prev) => ({
-                                ...prev,
-                                deposit: event.target.value,
-                              }))
-                            }
-                            disabled={saving || isReadonly}
-                          />
-                          <p className={styles.helperText}>Se vazio, herda o sinal padrão.</p>
-                        </label>
-                        <label className={styles.inputGroup}>
-                          <span className={styles.inputLabel}>Buffer final (min)</span>
-                          <input
-                            className={styles.inputControl}
-                            type="number"
-                            min={0}
-                            value={config.buffer}
-                            onChange={(event) =>
-                              updateAssignmentConfig(serviceType.id, (prev) => ({
-                                ...prev,
-                                buffer: event.target.value,
-                              }))
-                            }
-                            disabled={saving || isReadonly}
-                          />
-                          <p className={styles.helperText}>Se vazio, herda o buffer padrão.</p>
-                        </label>
-                      </div>
-                    ) : null}
-
-                    <div className={styles.pillGroup}>
-                      <span className={styles.pill}>
-                        Padrão do serviço: {defaultValues.duration_min} min • {formatPriceLabel(defaultValues.price_cents)} • Sinal{" "}
-                        {formatPriceLabel(defaultValues.deposit_cents)} • Buffer {defaultValues.buffer_min} min
-                      </span>
-                    </div>
-                    <div className={styles.pillGroup}>
-                      <span className={styles.pill}>
-                        Final: {finalValues.duration_min} min • {formatPriceLabel(finalValues.price_cents)} • Sinal{" "}
-                        {formatPriceLabel(finalValues.deposit_cents)} • Buffer {finalValues.buffer_min} min
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <div className={`${styles.section} ${styles.actionsSection}`}>
-          <div className={styles.buttonRow}>
-            <button type="submit" className={styles.primaryButton} disabled={saving || isReadonly}>
-              {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar opção"}
-            </button>
-            {editingId ? (
-              <button type="button" className={styles.secondaryButton} onClick={resetForm} disabled={saving}>
-                Cancelar
-              </button>
-            ) : null}
-          </div>
-          <p className={styles.helperText}>Salvar aplica o vínculo obrigatório e as personalizações em um único envio.</p>
-        </div>
-      </form>
-
-      {editingId ? (
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionEyebrow}>Fotos</p>
-            <h2 className={styles.sectionTitle}>Galeria da opção</h2>
-            <p className={styles.sectionDescription}>
-              Envie, remova ou reordene fotos desta opção. Os registros são salvos na tabela service_photos.
-            </p>
-          </div>
-
-          {photosError ? <div className={styles.helperText}>{photosError}</div> : null}
-          {photosNote ? <div className={styles.helperText}>{photosNote}</div> : null}
-
-          <div className={styles.photoActions}>
-            <label className={styles.secondaryButton}>
-              <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} disabled={photosLoading || isReadonly} />
-              {photosLoading ? "Enviando..." : "Enviar foto"}
+            <label className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Serviço</span>
+              <select
+                className={styles.selectControl}
+                value={filterServiceType}
+                onChange={(event) => setFilterServiceType(event.target.value)}
+                disabled={loading}
+              >
+                <option value="">Todos</option>
+                {serviceTypes.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
+              <input
+                type="checkbox"
+                checked={onlyActive}
+                onChange={(event) => setOnlyActive(event.target.checked)}
+                disabled={loading}
+              />
+              <span className={styles.inputLabel}>Mostrar apenas opções ativas</span>
             </label>
           </div>
 
-          {photosLoading ? (
-            <div className={styles.helperText}>Carregando fotos...</div>
-          ) : photos.length ? (
-            <div className={styles.photoGrid}>
-              {photos.map((photo) => (
-                <div key={photo.id} className={styles.photoCard}>
-                  {photo.url ? <img src={photo.url} alt="" className={styles.photoPreview} /> : <div className={styles.photoPlaceholder}>Sem imagem</div>}
-                  <div className={styles.photoMeta}>
-                    <label className={styles.inputGroup}>
-                      <span className={styles.inputLabel}>Ordem</span>
-                      <input
-                        className={styles.inputControl}
-                        type="number"
-                        min={0}
-                        value={photo.order_index ?? 0}
-                        onChange={(event) => handlePhotoOrderChange(photo.id, normalizeInt(event.target.value, 0))}
-                        disabled={photosLoading || isReadonly}
-                      />
-                    </label>
+          {!loading && optionsWithoutService.length ? (
+            <div className={styles.helperText}>Opções sem serviço vinculado: {optionsWithoutService.map((option) => option.name).join(", ")}.</div>
+          ) : null}
+          {!loading && servicesWithoutOptions.length ? (
+            <div className={styles.helperText}>Serviços sem opções: {servicesWithoutOptions.map((service) => service.name).join(", ")}.</div>
+          ) : null}
+
+          {loading ? (
+            <div className={styles.helperText}>Carregando opções...</div>
+          ) : filteredOptions.length ? (
+            <div className={styles.optionGrid}>
+              {filteredOptions.map((option) => (
+                <div key={option.id} className={styles.optionCard}>
+                  <div className={styles.optionHeader}>
+                    <div>
+                      <h3 className={styles.optionTitle}>{option.name}</h3>
+                      <p className={styles.sectionDescription}>{option.description || "Sem descrição"}</p>
+                    </div>
+                    <span className={`${styles.badge} ${option.active ? styles.statusActive : styles.statusInactive}`}>
+                      {option.active ? "Ativa" : "Inativa"}
+                    </span>
+                  </div>
+                  <div className={styles.pillGroup}>
+                    <span className={styles.pill}>Slug: {option.slug || "sem-slug"}</span>
+                    <span className={styles.pill}>
+                      {option.assignments.length} {option.assignments.length === 1 ? "serviço" : "serviços"}
+                    </span>
+                  </div>
+                  <div className={styles.pillGroup}>
+                    {option.assignments.length ? (
+                      option.assignments.map((assignment) => (
+                        <span key={`${option.id}-${assignment.serviceTypeId}`} className={styles.pill}>
+                          {assignment.serviceTypeName}: {assignment.useDefaults ? "Padrão" : "Personalizado"} • {assignment.final.duration} min •{" "}
+                          {formatPriceLabel(assignment.final.price)} • Sinal {formatPriceLabel(assignment.final.deposit)} • Buffer {assignment.final.buffer} min
+                        </span>
+                      ))
+                    ) : (
+                      <span className={styles.muted}>Nenhum serviço vinculado</span>
+                    )}
+                  </div>
+                  <div className={styles.pillGroup}>
+                    {option.categoryNames.length ? (
+                      option.categoryNames.map((categoryName) => (
+                        <span key={categoryName} className={styles.pillMuted}>
+                          {categoryName}
+                        </span>
+                      ))
+                    ) : (
+                      <span className={styles.muted}>Sem categoria</span>
+                    )}
+                  </div>
+                  <div className={styles.actions}>
                     <button
                       type="button"
                       className={styles.secondaryButton}
-                      onClick={() => handlePhotoDelete(photo.id)}
-                      disabled={photosLoading || isReadonly}
+                      onClick={() => startEdit(option, "form")}
+                      disabled={saving || isReadonly}
                     >
-                      Remover
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() => startEdit(option, "personalize")}
+                      disabled={saving || isReadonly}
+                    >
+                      Personalizar
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.dangerButton}
+                      onClick={() => handleDelete(option)}
+                      disabled={saving || isReadonly}
+                    >
+                      Excluir
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className={styles.emptyState}>Nenhuma foto cadastrada.</div>
+            <div className={styles.emptyState}>Nenhuma opção encontrada com os filtros selecionados.</div>
           )}
         </section>
-      ) : null}
-
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>Lista de opções</p>
-          <h2 className={styles.sectionTitle}>Opções cadastradas</h2>
-          <p className={styles.sectionDescription}>Confira os vínculos e edite conforme necessário.</p>
-        </div>
-
-        {!loading && optionsWithoutService.length ? (
-          <div className={styles.helperText}>Opções sem serviço vinculado: {optionsWithoutService.map((option) => option.name).join(", ")}.</div>
-        ) : null}
-        {!loading && servicesWithoutOptions.length ? (
-          <div className={styles.helperText}>Serviços sem opções: {servicesWithoutOptions.map((service) => service.name).join(", ")}.</div>
-        ) : null}
-
-        {loading ? (
-          <div className={styles.helperText}>Carregando opções...</div>
-        ) : filteredOptions.length ? (
-          <div className={styles.optionGrid}>
-            {filteredOptions.map((option) => (
-              <div key={option.id} className={styles.optionCard}>
-                <div className={styles.optionHeader}>
-                  <div>
-                    <h3 className={styles.optionTitle}>{option.name}</h3>
-                    <p className={styles.sectionDescription}>{option.description || "Sem descrição"}</p>
-                  </div>
-                  <span className={`${styles.badge} ${option.active ? styles.statusActive : styles.statusInactive}`}>
-                    {option.active ? "Ativa" : "Inativa"}
-                  </span>
-                </div>
-                <div className={styles.pillGroup}>
-                  <span className={styles.pill}>Slug: {option.slug || "sem-slug"}</span>
-                  <span className={styles.pill}>
-                    {option.assignments.length} {option.assignments.length === 1 ? "serviço" : "serviços"}
-                  </span>
-                </div>
-                <div className={styles.pillGroup}>
-                  {option.assignments.length ? (
-                    option.assignments.map((assignment) => (
-                      <span key={`${option.id}-${assignment.serviceTypeId}`} className={styles.pill}>
-                        {assignment.serviceTypeName}: {assignment.useDefaults ? "Padrão" : "Personalizado"} • {assignment.final.duration} min •{" "}
-                        {formatPriceLabel(assignment.final.price)} • Sinal {formatPriceLabel(assignment.final.deposit)} • Buffer {assignment.final.buffer} min
-                      </span>
-                    ))
-                  ) : (
-                    <span className={styles.muted}>Nenhum serviço vinculado</span>
-                  )}
-                </div>
-                <div className={styles.pillGroup}>
-                  {option.categoryNames.length ? (
-                    option.categoryNames.map((categoryName) => (
-                      <span key={categoryName} className={styles.pillMuted}>
-                        {categoryName}
-                      </span>
-                    ))
-                  ) : (
-                    <span className={styles.muted}>Sem categoria</span>
-                  )}
-                </div>
-                <div className={styles.actions}>
-                  <button type="button" className={styles.secondaryButton} onClick={() => handleEdit(option)} disabled={saving || isReadonly}>
-                    Editar
-                  </button>
-                </div>
+      ) : (
+        <form className={styles.formStack} onSubmit={handleSubmit}>
+          <section className={`${styles.section} ${styles.formSection}`}>
+            <div className={styles.sectionTopBar}>
+              <div>
+                <p className={styles.sectionEyebrow}>
+                  {editingId ? (viewMode === "personalize" ? "Personalizar opção" : "Editar opção") : "Nova opção"}
+                </p>
+                <h2 className={styles.sectionTitle}>
+                  {editingId ? (viewMode === "personalize" ? "Configuração por serviço" : "Atualize uma opção existente") : "Cadastre uma opção"}
+                </h2>
+                <p className={styles.sectionDescription}>
+                  Defina nome, slug e vínculos. Os campos de serviço e personalização ficam no mesmo cartão, junto ao botão de salvar.
+                </p>
+                {note ? <div className={styles.helperText}>{note}</div> : null}
+                {error ? <div className={`${styles.helperText} ${styles.errorText}`}>{error}</div> : null}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptyState}>Nenhuma opção encontrada com os filtros selecionados.</div>
-        )}
-      </section>
+              <button type="button" className={styles.secondaryButton} onClick={backToList} disabled={saving}>
+                Voltar para a lista
+              </button>
+            </div>
+
+            <div className={styles.formGrid}>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Nome</span>
+                <input
+                  className={styles.inputControl}
+                  value={form.name}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      name: event.target.value,
+                      slug: prev.slug || slugify(event.target.value),
+                    }))
+                  }
+                  placeholder="Opção (ex: Foxy)"
+                  disabled={saving || isReadonly}
+                  required
+                />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Slug</span>
+                <input
+                  className={styles.inputControl}
+                  value={form.slug}
+                  onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
+                  onBlur={(event) => setForm((prev) => ({ ...prev, slug: normalizeSlug(event.target.value, prev.name) }))}
+                  placeholder="identificador-unico"
+                  disabled={saving || isReadonly}
+                  required
+                />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Descrição</span>
+                <textarea
+                  className={styles.textareaControl}
+                  value={form.description}
+                  onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                  placeholder="Detalhes da opção"
+                  disabled={saving || isReadonly}
+                />
+              </label>
+              <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))}
+                  disabled={saving || isReadonly}
+                />
+                <span className={styles.inputLabel}>Opção ativa</span>
+              </label>
+            </div>
+
+            <div className={styles.divider} />
+
+            <div className={styles.inlineHeader}>
+              <div>
+                <p className={styles.sectionEyebrow}>Serviços obrigatórios</p>
+                <h3 className={styles.sectionTitle}>Selecione onde esta opção aparece</h3>
+                <p className={styles.sectionDescription}>
+                  Escolha os serviços no mesmo fluxo do formulário. Uma opção precisa estar vinculada a pelo menos um serviço.
+                </p>
+              </div>
+              <div className={styles.inlineInfo}>
+                <span className={styles.inputLabel}>Selecionados</span>
+                <span className={styles.pill}>{selectedServiceTypeIds.size}</span>
+              </div>
+            </div>
+
+            <div className={styles.serviceToolbar}>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Buscar serviço</span>
+                <input
+                  className={styles.inputControl}
+                  value={serviceSearch}
+                  onChange={(event) => setServiceSearch(event.target.value)}
+                  placeholder="Digite o nome do serviço"
+                  disabled={saving || isReadonly}
+                />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Filtrar por categoria</span>
+                <select
+                  className={styles.selectControl}
+                  value={serviceSelectionCategory}
+                  onChange={(event) => setServiceSelectionCategory(event.target.value)}
+                  disabled={saving || isReadonly}
+                >
+                  <option value="">Todas</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {selectionError ? <div className={`${styles.helperText} ${styles.errorText}`}>{selectionError}</div> : null}
+
+            <div className={styles.serviceList}>
+              {groupedServiceTypes.length ? (
+                groupedServiceTypes.map((group) => (
+                  <div key={group.id ?? "sem-categoria"} className={styles.serviceGroup}>
+                    <div className={styles.serviceGroupTitle}>
+                      <div>
+                        <p className={styles.sectionEyebrow}>{group.name}</p>
+                        <p className={styles.sectionDescription}>{group.id ? "Categoria ativa" : "Sem categoria"}</p>
+                      </div>
+                      <span className={styles.pill}>{group.services.length} serviços</span>
+                    </div>
+                    <div className={styles.serviceGrid}>
+                      {group.services.map((service) => (
+                        <label
+                          key={service.id}
+                          className={`${styles.serviceRow} ${selectedServiceTypeIds.has(service.id) ? styles.serviceRowActive : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedServiceTypeIds.has(service.id)}
+                            onChange={(event) => {
+                              setSelectedServiceTypeIds((prev) => {
+                                const next = new Set(prev);
+                                if (event.target.checked) {
+                                  next.add(service.id);
+                                  setAssignmentForm((prevMap) => {
+                                    if (prevMap.has(service.id)) return prevMap;
+                                    const nextMap = new Map(prevMap);
+                                    nextMap.set(service.id, defaultAssignmentConfig);
+                                    return nextMap;
+                                  });
+                                } else {
+                                  next.delete(service.id);
+                                  setAssignmentForm((prevMap) => {
+                                    const nextMap = new Map(prevMap);
+                                    nextMap.delete(service.id);
+                                    return nextMap;
+                                  });
+                                }
+                                setSelectionError(next.size ? null : "Selecione pelo menos 1 serviço para esta opção.");
+                                return next;
+                              });
+                            }}
+                            disabled={saving || isReadonly}
+                          />
+                          <div className={styles.serviceRowBody}>
+                            <div className={styles.serviceRowHeader}>
+                              <span className={styles.serviceName}>{service.name}</span>
+                              <span className={`${styles.badge} ${service.active !== false ? styles.statusActive : styles.statusInactive}`}>
+                                {service.active !== false ? "Ativo" : "Inativo"}
+                              </span>
+                            </div>
+                            <p className={styles.serviceMeta}>
+                              {resolveCategoryMeta(service).name ?? "Sem categoria"} • {service.base_duration_min ?? 0} min •{" "}
+                              {formatPriceLabel(service.base_price_cents ?? 0)}
+                            </p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.helperText}>Nenhum serviço encontrado com os filtros informados.</div>
+              )}
+            </div>
+
+            <div className={styles.divider} />
+
+            <div className={styles.inlineHeader}>
+              <div>
+                <p className={styles.sectionEyebrow}>Configuração por serviço</p>
+                <h3 className={styles.sectionTitle}>Personalize onde for necessário</h3>
+                <p className={styles.sectionDescription}>
+                  Para cada serviço selecionado, mantenha o padrão ou personalize tempo, preço, sinal e buffer. Salvando, os valores são gravados em
+                  service_type_assignments.
+                </p>
+              </div>
+            </div>
+
+            {selectedServiceTypes.length === 0 ? (
+              <div className={styles.helperText}>Selecione ao menos um serviço para personalizar.</div>
+            ) : (
+              <div className={styles.optionGrid}>
+                {selectedServiceTypes.map((serviceType) => {
+                  const config = getAssignmentConfig(serviceType.id);
+                  const overridePayload: ServiceAssignmentOverride = {
+                    use_service_defaults: config.useDefaults,
+                    override_duration_min:
+                      !config.useDefaults && config.duration.length > 0
+                        ? normalizeInt(config.duration, serviceType.base_duration_min ?? 0)
+                        : null,
+                    override_price_cents:
+                      !config.useDefaults && config.price.length > 0 ? parseReaisToCents(config.price) : null,
+                    override_deposit_cents:
+                      !config.useDefaults && config.deposit.length > 0 ? parseReaisToCents(config.deposit) : null,
+                    override_buffer_min:
+                      !config.useDefaults && config.buffer.length > 0
+                        ? normalizeInt(config.buffer, serviceType.base_buffer_min ?? 0)
+                        : null,
+                  };
+                  const finalValues = resolveFinalServiceValues(
+                    {
+                      base_duration_min: serviceType.base_duration_min ?? 0,
+                      base_price_cents: serviceType.base_price_cents ?? 0,
+                      base_deposit_cents: serviceType.base_deposit_cents ?? 0,
+                      base_buffer_min: serviceType.base_buffer_min ?? 0,
+                    },
+                    overridePayload
+                  );
+                  const defaultValues = resolveFinalServiceValues(
+                    {
+                      base_duration_min: serviceType.base_duration_min ?? 0,
+                      base_price_cents: serviceType.base_price_cents ?? 0,
+                      base_deposit_cents: serviceType.base_deposit_cents ?? 0,
+                      base_buffer_min: serviceType.base_buffer_min ?? 0,
+                    },
+                    { use_service_defaults: true }
+                  );
+
+                  return (
+                    <div key={serviceType.id} className={styles.optionCard}>
+                      <div className={styles.optionHeader}>
+                        <div>
+                          <h3 className={styles.optionTitle}>{serviceType.name}</h3>
+                          <p className={styles.sectionDescription}>{serviceType.category_name || "Sem categoria"}</p>
+                        </div>
+                        <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
+                          <input
+                            type="checkbox"
+                            checked={config.useDefaults}
+                            onChange={(event) =>
+                              updateAssignmentConfig(serviceType.id, (prev) => ({
+                                ...prev,
+                                useDefaults: event.target.checked,
+                                duration: event.target.checked ? "" : prev.duration,
+                                price: event.target.checked ? "" : prev.price,
+                                deposit: event.target.checked ? "" : prev.deposit,
+                                buffer: event.target.checked ? "" : prev.buffer,
+                              }))
+                            }
+                            disabled={saving || isReadonly}
+                          />
+                          <span className={styles.inputLabel}>Usar padrão do serviço</span>
+                        </label>
+                      </div>
+
+                      {!config.useDefaults ? (
+                        <div className={styles.formGrid}>
+                          <label className={styles.inputGroup}>
+                            <span className={styles.inputLabel}>Tempo final (min)</span>
+                            <input
+                              className={styles.inputControl}
+                              type="number"
+                              min={0}
+                              value={config.duration}
+                              onChange={(event) =>
+                                updateAssignmentConfig(serviceType.id, (prev) => ({
+                                  ...prev,
+                                  duration: event.target.value,
+                                }))
+                              }
+                              disabled={saving || isReadonly}
+                            />
+                          </label>
+                          <label className={styles.inputGroup}>
+                            <span className={styles.inputLabel}>Preço final (R$)</span>
+                            <input
+                              className={styles.inputControl}
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={config.price}
+                              onChange={(event) =>
+                                updateAssignmentConfig(serviceType.id, (prev) => ({
+                                  ...prev,
+                                  price: event.target.value,
+                                }))
+                              }
+                              disabled={saving || isReadonly}
+                            />
+                          </label>
+                          <label className={styles.inputGroup}>
+                            <span className={styles.inputLabel}>Sinal final (R$)</span>
+                            <input
+                              className={styles.inputControl}
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={config.deposit}
+                              onChange={(event) =>
+                                updateAssignmentConfig(serviceType.id, (prev) => ({
+                                  ...prev,
+                                  deposit: event.target.value,
+                                }))
+                              }
+                              disabled={saving || isReadonly}
+                            />
+                            <p className={styles.helperText}>Se vazio, herda o sinal padrão.</p>
+                          </label>
+                          <label className={styles.inputGroup}>
+                            <span className={styles.inputLabel}>Buffer final (min)</span>
+                            <input
+                              className={styles.inputControl}
+                              type="number"
+                              min={0}
+                              value={config.buffer}
+                              onChange={(event) =>
+                                updateAssignmentConfig(serviceType.id, (prev) => ({
+                                  ...prev,
+                                  buffer: event.target.value,
+                                }))
+                              }
+                              disabled={saving || isReadonly}
+                            />
+                            <p className={styles.helperText}>Se vazio, herda o buffer padrão.</p>
+                          </label>
+                        </div>
+                      ) : null}
+
+                      <div className={styles.pillGroup}>
+                        <span className={styles.pill}>
+                          Padrão do serviço: {defaultValues.duration_min} min • {formatPriceLabel(defaultValues.price_cents)} • Sinal{" "}
+                          {formatPriceLabel(defaultValues.deposit_cents)} • Buffer {defaultValues.buffer_min} min
+                        </span>
+                      </div>
+                      <div className={styles.pillGroup}>
+                        <span className={styles.pill}>
+                          Final: {finalValues.duration_min} min • {formatPriceLabel(finalValues.price_cents)} • Sinal{" "}
+                          {formatPriceLabel(finalValues.deposit_cents)} • Buffer {finalValues.buffer_min} min
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className={styles.actionsSection}>
+              <div className={styles.buttonRow}>
+                <button type="submit" className={styles.primaryButton} disabled={saving || isReadonly}>
+                  {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar opção"}
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={backToList} disabled={saving}>
+                  Cancelar
+                </button>
+              </div>
+              <p className={styles.helperText}>Salvar aplica o vínculo obrigatório e as personalizações em um único envio.</p>
+            </div>
+          </section>
+
+          {editingId ? (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <p className={styles.sectionEyebrow}>Fotos</p>
+                <h2 className={styles.sectionTitle}>Galeria da opção</h2>
+                <p className={styles.sectionDescription}>
+                  Envie, remova ou reordene fotos desta opção. Os registros são salvos na tabela service_photos.
+                </p>
+              </div>
+
+              {photosError ? <div className={styles.helperText}>{photosError}</div> : null}
+              {photosNote ? <div className={styles.helperText}>{photosNote}</div> : null}
+
+              <div className={styles.photoActions}>
+                <label className={styles.secondaryButton}>
+                  <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} disabled={photosLoading || isReadonly} />
+                  {photosLoading ? "Enviando..." : "Enviar foto"}
+                </label>
+              </div>
+
+              {photosLoading ? (
+                <div className={styles.helperText}>Carregando fotos...</div>
+              ) : photos.length ? (
+                <div className={styles.photoGrid}>
+                  {photos.map((photo) => (
+                    <div key={photo.id} className={styles.photoCard}>
+                      {photo.url ? <img src={photo.url} alt="" className={styles.photoPreview} /> : <div className={styles.photoPlaceholder}>Sem imagem</div>}
+                      <div className={styles.photoMeta}>
+                        <label className={styles.inputGroup}>
+                          <span className={styles.inputLabel}>Ordem</span>
+                          <input
+                            className={styles.inputControl}
+                            type="number"
+                            min={0}
+                            value={photo.order_index ?? 0}
+                            onChange={(event) => handlePhotoOrderChange(photo.id, normalizeInt(event.target.value, 0))}
+                            disabled={photosLoading || isReadonly}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          className={styles.secondaryButton}
+                          onClick={() => handlePhotoDelete(photo.id)}
+                          disabled={photosLoading || isReadonly}
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>Nenhuma foto cadastrada.</div>
+              )}
+            </section>
+          ) : null}
+        </form>
+      )}
     </div>
   );
 }

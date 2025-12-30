@@ -34,27 +34,41 @@ export default function PersonalizarOpcaoPage({ params }: Params) {
   const [note, setNote] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const optionId = params.id;
+  const optionIdOrSlug = params.id;
   const isReadonly = role === "admin";
 
   useEffect(() => {
-    if (status !== "authorized" || !optionId) return;
-    void loadData(optionId);
-  }, [status, optionId]);
+    if (status !== "authorized" || !optionIdOrSlug) return;
+    void loadData(optionIdOrSlug);
+  }, [status, optionIdOrSlug]);
 
-  const loadData = async (id: string) => {
+  const loadData = async (idOrSlug: string) => {
     setLoading(true);
     setError(null);
 
-    const [optionResponse, serviceTypesResponse] = await Promise.all([fetchOptionWithAssignments(id), fetchServiceTypes()]);
+    const optionResponse = await fetchOptionWithAssignments(idOrSlug);
 
-    if (optionResponse.error || serviceTypesResponse.error || !optionResponse.data) {
-      setError("Não foi possível carregar esta opção.");
+    if (optionResponse.error) {
+      setError("Não foi possível carregar esta opção. Verifique permissões ou conexão.");
       setOption(null);
       setServiceTypes([]);
       setAssignmentForm(new Map());
       setLoading(false);
       return;
+    }
+
+    if (optionResponse.notFound || !optionResponse.data) {
+      setError("Opção não encontrada.");
+      setOption(null);
+      setServiceTypes([]);
+      setAssignmentForm(new Map());
+      setLoading(false);
+      return;
+    }
+
+    const serviceTypesResponse = await fetchServiceTypes();
+    if (serviceTypesResponse.error) {
+      setError("Não foi possível carregar serviços vinculados. Tente novamente.");
     }
 
     setOption(optionResponse.data);

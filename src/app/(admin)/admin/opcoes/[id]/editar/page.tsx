@@ -29,33 +29,53 @@ export default function EditarOpcaoPage({ params }: Params) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const optionId = params.id;
+  const optionIdOrSlug = params.id;
   const isReadonly = role === "admin";
 
   useEffect(() => {
-    if (status !== "authorized" || !optionId) return;
-    void loadData(optionId);
-  }, [status, optionId]);
+    if (status !== "authorized" || !optionIdOrSlug) return;
+    void loadData(optionIdOrSlug);
+  }, [status, optionIdOrSlug]);
 
-  const loadData = async (id: string) => {
+  const loadData = async (idOrSlug: string) => {
     setLoading(true);
     setError(null);
 
-    const [categoriesResponse, serviceTypesResponse, optionResponse, photosResponse] = await Promise.all([
-      fetchCategories(),
-      fetchServiceTypes(),
-      fetchOptionWithAssignments(id),
-      fetchOptionPhotos(id),
-    ]);
+    const optionResponse = await fetchOptionWithAssignments(idOrSlug);
 
-    if (categoriesResponse.error || serviceTypesResponse.error || optionResponse.error || photosResponse.error || !optionResponse.data) {
-      setError("Não foi possível carregar a opção selecionada.");
+    if (optionResponse.error) {
+      setError("Não foi possível carregar esta opção. Verifique permissões ou conexão.");
       setCategories([]);
       setServiceTypes([]);
       setOption(null);
       setPhotos([]);
       setLoading(false);
       return;
+    }
+
+    if (optionResponse.notFound || !optionResponse.data) {
+      setError("Opção não encontrada.");
+      setCategories([]);
+      setServiceTypes([]);
+      setOption(null);
+      setPhotos([]);
+      setLoading(false);
+      return;
+    }
+
+    const [categoriesResponse, serviceTypesResponse, photosResponse] = await Promise.all([
+      fetchCategories(),
+      fetchServiceTypes(),
+      fetchOptionPhotos(optionResponse.data.id),
+    ]);
+
+    const failedFetches = [];
+    if (categoriesResponse.error) failedFetches.push("categorias");
+    if (serviceTypesResponse.error) failedFetches.push("serviços");
+    if (photosResponse.error) failedFetches.push("fotos");
+
+    if (failedFetches.length) {
+      setError(`Alguns dados não puderam ser carregados (${failedFetches.join(", ")}). Tente novamente.`);
     }
 
     setCategories(categoriesResponse.data);
@@ -82,7 +102,7 @@ export default function EditarOpcaoPage({ params }: Params) {
       ) : option ? (
         <OptionForm
           mode="edit"
-          optionId={optionId}
+          optionId={option.id}
           categories={categories}
           serviceTypes={serviceTypes}
           initialOption={option}

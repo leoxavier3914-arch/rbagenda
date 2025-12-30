@@ -1,3 +1,5 @@
+import type { PostgrestError } from "@supabase/supabase-js";
+
 import { supabase } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { resolveFinalServiceValues, type ServiceAssignmentOverride } from "@/lib/servicePricing";
@@ -420,19 +422,38 @@ export const fetchOptionsList = async () => {
   return { data: normalizeOptions((data ?? []) as ServiceRow[]), error: null } as const;
 };
 
-export const fetchOptionWithAssignments = async (optionId: string) => {
-  const { data, error } = await supabase
-    .from("services")
-    .select(
-      "id, name, slug, description, duration_min, price_cents, deposit_cents, buffer_min, active, branch_id, assignments:service_type_assignments(service_type_id, use_service_defaults, override_duration_min, override_price_cents, override_deposit_cents, override_buffer_min, service_type:service_types(id, name, active, category_id, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min, category:service_categories(id, name)))"
-    )
-    .eq("id", optionId)
-    .maybeSingle();
+export type OptionWithAssignmentsResponse = {
+  data: NormalizedOption | null;
+  error: PostgrestError | null;
+  notFound: boolean;
+};
 
-  if (error || !data) return { data: null, error: error ?? new Error("Opção não encontrada") } as const;
+export const fetchOptionWithAssignments = async (optionIdOrSlug: string): Promise<OptionWithAssignmentsResponse> => {
+  const selectOption = (column: "id" | "slug", value: string) =>
+    supabase
+      .from("services")
+      .select(
+        "id, name, slug, description, duration_min, price_cents, deposit_cents, buffer_min, active, branch_id, assignments:service_type_assignments(service_type_id, use_service_defaults, override_duration_min, override_price_cents, override_deposit_cents, override_buffer_min, service_type:service_types(id, name, active, category_id, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min, category:service_categories(id, name)))"
+      )
+      .eq(column, value)
+      .maybeSingle();
 
-  const normalized = normalizeOptions([data as ServiceRow])[0];
-  return { data: normalized, error: null } as const;
+  const isUuidSyntaxError = (candidate: unknown) => {
+    const code = (candidate as { code?: string | null } | null)?.code?.toLowerCase() ?? "";
+    const message = (candidate as { message?: string | null } | null)?.message?.toLowerCase() ?? "";
+    return code === "22p02" || message.includes("invalid input syntax");
+  };
+
+  const byId = await selectOption("id", optionIdOrSlug);
+  const shouldFallbackToSlug = (!byId.data && !byId.error) || isUuidSyntaxError(byId.error);
+
+  const result = shouldFallbackToSlug ? await selectOption("slug", optionIdOrSlug) : byId;
+
+  if (result.error) return { data: null, error: result.error, notFound: false };
+  if (!result.data) return { data: null, error: null, notFound: true };
+
+  const normalized = normalizeOptions([result.data as ServiceRow])[0];
+  return { data: normalized, error: null, notFound: false };
 };
 
 export const fetchOptionPhotos = async (optionId: string) => {

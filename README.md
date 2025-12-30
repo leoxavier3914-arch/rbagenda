@@ -77,6 +77,13 @@ Caso o Supabase Scheduler não esteja disponível no plano do projeto, utilize o
 2. O workflow executa a cada 15 minutos (`cron: "*/15 * * * *"`) e faz um `POST` na função Edge. A execução manual também fica disponível em **Actions → Maintain Supabase appointments → Run workflow**.
 3. A função Edge deve estar implantada e com as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` configuradas em seu ambiente, pois ela usa a service role para atualizar as tabelas.
 
+## Armazenamento de fotos de serviços (Supabase Storage)
+
+- Bucket: `service-photos` (criado via migração). Ele é privado por padrão, mas possui uma policy de leitura pública para exibir as imagens.
+- Permissões: `insert`/`update`/`delete` exigem que `public.is_panel_admin(auth.uid())` seja `true` (mesma regra aplicada à tabela `service_photos`). Use usuários `adminsuper`/`adminmaster` para uploads.
+- Upload de staging: `supabase.storage.from("service-photos").upload(...)` deve ser testado com um usuário `adminsuper/adminmaster` após aplicar as migrações.
+- CORS: caso o painel rode em um domínio específico, configure os domínios permitidos em **Storage → Settings → Client settings → Allowed origins** do projeto Supabase para liberar chamadas do front-end.
+
 ## Scripts disponíveis
 
 - `npm run dev`: inicia o servidor de desenvolvimento com Turbopack.

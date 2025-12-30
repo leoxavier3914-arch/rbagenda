@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { supabase } from "@/lib/db";
@@ -46,7 +47,7 @@ type NormalizedService = {
   category_id: string | null;
   category_name: string | null;
   branch_name: string | null;
-  techniques: string[];
+  options: string[];
 };
 
 type ServiceFormState = {
@@ -77,7 +78,7 @@ const normalizeSlug = (value: string, fallback: string) => {
   return slugify(base || "servico");
 };
 
-const dedupeTechniques = (assignments: ServiceTypeRow["assignments"]) => {
+const dedupeOptions = (assignments: ServiceTypeRow["assignments"]) => {
   const seen = new Set<string>();
   const names: string[] = [];
 
@@ -173,7 +174,7 @@ export default function ServicosPage() {
           category_id: entry.category_id ?? null,
           category_name: category?.name ?? null,
           branch_name: branch?.name ?? null,
-          techniques: dedupeTechniques(entry.assignments),
+          options: dedupeOptions(entry.assignments),
         };
       }) ?? [];
 
@@ -248,14 +249,19 @@ export default function ServicosPage() {
     return map;
   }, [categories]);
 
+  const servicesWithoutOptions = useMemo(
+    () => serviceTypes.filter((service) => service.options.length === 0),
+    [serviceTypes]
+  );
+
   const groupedServices = useMemo(() => {
     const groups = new Map<string, { label: string; order: number; items: NormalizedService[] }>();
 
     serviceTypes.forEach((service) => {
-      const key = service.category_id ?? "sem-ramo";
+      const key = service.category_id ?? "sem-categoria";
       const categoryMeta = service.category_id ? categoryOrder.get(service.category_id) : null;
       const order = categoryMeta?.order ?? Number.POSITIVE_INFINITY;
-      const label = service.category_name ?? categoryMeta?.name ?? "Sem ramo";
+      const label = service.category_name ?? categoryMeta?.name ?? "Sem categoria";
 
       if (!groups.has(key)) {
         groups.set(key, { label, order, items: [] });
@@ -276,11 +282,11 @@ export default function ServicosPage() {
       <section className={styles.headerCard}>
         <h1 className={styles.headerTitle}>Serviços</h1>
         <p className={styles.headerDescription}>
-          Gerencie os serviços (service_types) e vincule cada um a um ramo. Técnicas vinculadas continuam sendo exibidas no
-          agrupamento por ramo.
+          Gerencie os Serviços (service_types) e vincule cada um a uma Categoria. Opções vinculadas continuam sendo exibidas no
+          agrupamento por categoria.
         </p>
         <div className={styles.tagRow}>
-          <span className={styles.tag}>Agrupamento por ramo</span>
+          <span className={styles.tag}>Agrupamento por categoria</span>
           {!isSuper ? <span className={styles.tag}>Modo somente leitura</span> : null}
         </div>
       </section>
@@ -290,7 +296,7 @@ export default function ServicosPage() {
           <p className={styles.sectionEyebrow}>{editingId ? "Editar serviço" : "Novo serviço"}</p>
           <h2 className={styles.sectionTitle}>{editingId ? "Atualize um serviço existente" : "Cadastre um serviço"}</h2>
           <p className={styles.sectionDescription}>
-            Defina nome, slug e a ordenação. Use o seletor para associar o serviço a um ramo ativo.
+            Defina nome, slug e a ordenação. Use o seletor para associar o serviço a uma categoria ativa.
           </p>
         </div>
 
@@ -393,11 +399,15 @@ export default function ServicosPage() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionEyebrow}>Serviços agrupados</p>
-          <h2 className={styles.sectionTitle}>Visualização por ramo</h2>
-          <p className={styles.sectionDescription}>
-            Veja os serviços agrupados pelo ramo selecionado e confira as técnicas vinculadas a cada um.
-          </p>
+          <h2 className={styles.sectionTitle}>Visualização por categoria</h2>
+          <p className={styles.sectionDescription}>Veja os serviços agrupados pela categoria selecionada e confira as opções vinculadas.</p>
         </div>
+
+        {!loading && servicesWithoutOptions.length ? (
+          <div className={styles.helperText}>
+            Serviços sem opções: {servicesWithoutOptions.map((service) => service.name || "Serviço").join(", ")}.
+          </div>
+        ) : null}
 
         {loading ? (
           <div className={styles.helperText}>Carregando serviços...</div>
@@ -423,17 +433,24 @@ export default function ServicosPage() {
                       <p className={styles.sectionDescription}>{service.description || "Sem descrição"}</p>
                     </div>
                     <div className={styles.pillGroup}>
-                      {service.techniques.length ? (
-                        service.techniques.map((technique) => (
-                          <span key={technique} className={styles.pill}>
-                            {technique}
+                      {service.options.length ? (
+                        service.options.map((option) => (
+                          <span key={option} className={styles.pill}>
+                            {option}
                           </span>
                         ))
                       ) : (
-                        <span className={styles.muted}>Nenhuma técnica vinculada</span>
+                        <span className={styles.muted}>Nenhuma opção vinculada</span>
                       )}
                     </div>
                     <div className={styles.actions}>
+                      <Link
+                        href={`/admin/opcoes?servico=${service.id}`}
+                        className={styles.secondaryButton}
+                        aria-label={`Gerenciar opções para ${service.name}`}
+                      >
+                        Gerenciar Opções
+                      </Link>
                       <button
                         type="button"
                         className={styles.secondaryButton}

@@ -221,6 +221,7 @@
   color: #1e293b;
   border: 1px solid #cbd5ff;
   cursor: pointer;
+  justify-content: space-between;
 }
 
 .pillActive {
@@ -241,27 +242,6 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-}
-
-.expandToggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
-  font-weight: 700;
-  cursor: pointer;
-  flex: 1;
-}
-
-.expandToggleActive {
-  border-color: #2563eb;
-  background: #e0e7ff;
-  color: #0f172a;
 }
 
 .expandIcon {

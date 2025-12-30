@@ -223,23 +223,15 @@ export default function OpcoesPage() {
                   <button
                     type="button"
                     className={`${styles.pill} ${expandedOptions.includes(option.id) ? styles.pillActive : ""}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggleExpandedOption(option.id);
-                    }}
-                  >
-                    {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.expandToggle} ${expandedOptions.includes(option.id) ? styles.expandToggleActive : ""}`}
                     aria-expanded={expandedOptions.includes(option.id)}
                     onClick={(event) => {
                       event.stopPropagation();
                       toggleExpandedOption(option.id);
                     }}
                   >
-                    <span>{expandedOptions.includes(option.id) ? "Ocultar detalhes" : "Ver serviços vinculados"}</span>
+                    <span>
+                      {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
+                    </span>
                     <span className={styles.expandIcon}>{expandedOptions.includes(option.id) ? "▲" : "▼"}</span>
                   </button>
                 </div>

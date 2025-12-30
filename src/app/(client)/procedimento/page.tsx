@@ -30,6 +30,7 @@ import {
   buildAvailabilityData,
   formatDateToIsoDay,
 } from '@/lib/availability'
+import { resolveFinalServiceValues } from '@/lib/servicePricing'
 import { stripePromise } from '@/lib/stripeClient'
 import { useLavaLamp } from '@/components/LavaLampProvider'
 import { useClientPageReady } from '@/hooks/useClientPageReady'
@@ -217,7 +218,7 @@ export default function ProcedimentoPage() {
         const { data, error } = await supabase
           .from('service_types')
           .select(
-            `id, name, slug, description, active, order_index, assignments:service_type_assignments(services:services(id, name, slug, duration_min, price_cents, deposit_cents, buffer_min, active))`,
+            `id, name, slug, description, active, order_index, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min, assignments:service_type_assignments(use_service_defaults, override_duration_min, override_price_cents, override_deposit_cents, override_buffer_min, services:services(id, name, slug, active))`,
           )
           .eq('active', true)
           .order('order_index', { ascending: true, nullsFirst: true })
@@ -228,13 +229,20 @@ export default function ProcedimentoPage() {
 
         const normalized = (data ?? []).map((entry) => {
           const assignments = Array.isArray(entry.assignments)
-            ? entry.assignments
+            ? (entry.assignments as ServiceTypeAssignment[])
             : entry.assignments
-            ? [entry.assignments]
-            : []
+            ? ([entry.assignments] as ServiceTypeAssignment[])
+            : ([] as ServiceTypeAssignment[])
 
-          const seenServices = new Set<string>()
-          const servicesRaw = assignments.flatMap((assignment: ServiceTypeAssignment) => {
+          const baseValues = {
+            base_duration_min: entry.base_duration_min ?? 0,
+            base_price_cents: entry.base_price_cents ?? 0,
+            base_deposit_cents: entry.base_deposit_cents ?? 0,
+            base_buffer_min: entry.base_buffer_min ?? 0,
+          }
+
+          const serviceMap = new Map<string, ServiceTechnique>()
+          assignments.forEach((assignment: ServiceTypeAssignment) => {
             const related = assignment?.services
             const relatedArray = Array.isArray(related)
               ? related
@@ -242,35 +250,35 @@ export default function ProcedimentoPage() {
               ? [related]
               : []
 
-            return relatedArray.filter((svc): svc is ServiceTechnique => {
-              if (!svc || typeof svc.id !== 'string') return false
-              if (seenServices.has(svc.id)) return false
-              seenServices.add(svc.id)
-              return true
+            relatedArray.forEach((svc) => {
+              if (!svc || typeof svc.id !== 'string') return
+              if (svc.active === false) return
+              if (serviceMap.has(svc.id)) return
+
+              const finalValues = resolveFinalServiceValues(baseValues, {
+                use_service_defaults: assignment?.use_service_defaults ?? true,
+                override_duration_min: assignment?.override_duration_min ?? null,
+                override_price_cents: assignment?.override_price_cents ?? null,
+                override_deposit_cents: assignment?.override_deposit_cents ?? null,
+                override_buffer_min: assignment?.override_buffer_min ?? null,
+              })
+
+              if (!Number.isFinite(finalValues.duration_min) || finalValues.duration_min <= 0) return
+
+              serviceMap.set(svc.id, {
+                id: svc.id,
+                name: svc.name ?? 'Opção',
+                slug: svc.slug ?? null,
+                duration_min: Math.max(0, Math.round(finalValues.duration_min)),
+                price_cents: Math.max(0, Math.round(finalValues.price_cents)),
+                deposit_cents: Math.max(0, Math.round(finalValues.deposit_cents)),
+                buffer_min: Math.max(0, Math.round(finalValues.buffer_min)),
+                active: svc.active,
+              })
             })
           })
 
-          const services = servicesRaw
-            .filter((svc) => svc && svc.active !== false)
-            .map((svc) => {
-              const duration = normalizeNumber(svc?.duration_min) ?? 0
-              const price = normalizeNumber(svc?.price_cents) ?? 0
-              const deposit = normalizeNumber(svc?.deposit_cents) ?? 0
-              const buffer = normalizeNumber(svc?.buffer_min)
-
-              return {
-                id: svc.id,
-                name: svc.name ?? 'Serviço',
-                slug: svc.slug ?? null,
-                duration_min: Math.max(0, Math.round(duration)),
-                price_cents: Math.max(0, Math.round(price)),
-                deposit_cents: Math.max(0, Math.round(deposit)),
-                buffer_min: buffer !== null ? Math.max(0, Math.round(buffer)) : null,
-                active: svc.active !== false,
-              }
-            })
-            .filter((svc) => svc.duration_min > 0)
-            .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+          const services = Array.from(serviceMap.values()).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 
           const orderIndex = normalizeNumber(entry.order_index)
 

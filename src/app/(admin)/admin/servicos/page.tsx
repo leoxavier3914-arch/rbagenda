@@ -24,6 +24,10 @@ type ServiceTypeRow = {
   active: boolean;
   order_index: number;
   category_id: string | null;
+  base_duration_min: number | null;
+  base_price_cents: number | null;
+  base_deposit_cents: number | null;
+  base_buffer_min: number | null;
   category?: { id?: string | null; name?: string | null } | { id?: string | null; name?: string | null }[] | null;
   branch_id: string | null;
   branch?: { id?: string | null; name?: string | null } | { id?: string | null; name?: string | null }[] | null;
@@ -47,6 +51,12 @@ type NormalizedService = {
   category_id: string | null;
   category_name: string | null;
   branch_name: string | null;
+  defaults: {
+    duration: number;
+    price: number;
+    deposit: number;
+    buffer: number;
+  };
   options: string[];
 };
 
@@ -57,6 +67,10 @@ type ServiceFormState = {
   order_index: number;
   active: boolean;
   category_id: string;
+  base_duration_min: number;
+  base_price_reais: string;
+  base_deposit_reais: string;
+  base_buffer_min: number;
 };
 
 const defaultForm: ServiceFormState = {
@@ -66,6 +80,10 @@ const defaultForm: ServiceFormState = {
   order_index: 0,
   active: true,
   category_id: "",
+  base_duration_min: 0,
+  base_price_reais: "0",
+  base_deposit_reais: "0",
+  base_buffer_min: 0,
 };
 
 const normalizeOrder = (value: string | number) => {
@@ -77,6 +95,31 @@ const normalizeSlug = (value: string, fallback: string) => {
   const base = value?.trim().length ? value : fallback;
   return slugify(base || "servico");
 };
+
+const normalizeMinutes = (value: string | number) => {
+  const parsed = typeof value === "string" ? Number.parseInt(value, 10) : value;
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.round(parsed));
+};
+
+const formatMoneyInput = (cents: number | null | undefined) => {
+  const safeValue = Math.max(0, Number.isFinite(cents ?? 0) ? Number(cents) : 0);
+  return (safeValue / 100).toFixed(2);
+};
+
+const parseReaisToCents = (value: string | number | null | undefined) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? Math.max(0, Math.round(value * 100)) : 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.replace(/,/g, ".");
+    const parsed = Number.parseFloat(normalized);
+    if (Number.isFinite(parsed)) return Math.max(0, Math.round(parsed * 100));
+  }
+  return 0;
+};
+
+const formatPriceLabel = (cents: number) => `R$ ${(cents / 100).toFixed(2)}`;
 
 const dedupeOptions = (assignments: ServiceTypeRow["assignments"]) => {
   const seen = new Set<string>();
@@ -137,7 +180,7 @@ export default function ServicosPage() {
       supabase
         .from("service_types")
         .select(
-          "id, name, slug, description, active, order_index, category_id, branch_id, category:service_categories(id, name), branch:branches(id, name), assignments:service_type_assignments(services:services(id, name, active))"
+          "id, name, slug, description, active, order_index, category_id, branch_id, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min, category:service_categories(id, name), branch:branches(id, name), assignments:service_type_assignments(services:services(id, name, active))"
         )
         .order("order_index", { ascending: true, nullsFirst: true })
         .order("name", { ascending: true }),
@@ -174,6 +217,12 @@ export default function ServicosPage() {
           category_id: entry.category_id ?? null,
           category_name: category?.name ?? null,
           branch_name: branch?.name ?? null,
+          defaults: {
+            duration: normalizeMinutes(entry.base_duration_min ?? 0),
+            price: Math.max(0, Math.round(entry.base_price_cents ?? 0)),
+            deposit: Math.max(0, Math.min(Math.round(entry.base_price_cents ?? 0), Math.round(entry.base_deposit_cents ?? 0))),
+            buffer: normalizeMinutes(entry.base_buffer_min ?? 0),
+          },
           options: dedupeOptions(entry.assignments),
         };
       }) ?? [];
@@ -204,6 +253,9 @@ export default function ServicosPage() {
     setError(null);
     setNote(null);
 
+    const basePrice = parseReaisToCents(form.base_price_reais);
+    const baseDeposit = Math.min(basePrice, parseReaisToCents(form.base_deposit_reais));
+
     const payload = {
       name: form.name.trim() || "Serviço",
       slug: normalizeSlug(form.slug, form.name),
@@ -211,6 +263,10 @@ export default function ServicosPage() {
       active: Boolean(form.active),
       order_index: normalizeOrder(form.order_index),
       category_id: form.category_id ? form.category_id : null,
+      base_duration_min: normalizeMinutes(form.base_duration_min),
+      base_price_cents: basePrice,
+      base_deposit_cents: baseDeposit,
+      base_buffer_min: normalizeMinutes(form.base_buffer_min),
     };
 
     const response = editingId
@@ -237,6 +293,10 @@ export default function ServicosPage() {
       order_index: normalizeOrder(service.order_index),
       active: service.active !== false,
       category_id: service.category_id ?? "",
+      base_duration_min: service.defaults.duration,
+      base_price_reais: formatMoneyInput(service.defaults.price),
+      base_deposit_reais: formatMoneyInput(service.defaults.deposit),
+      base_buffer_min: service.defaults.buffer,
     });
     setNote("Editando serviço. Salve para confirmar ou cancele para limpar.");
   };
@@ -365,6 +425,55 @@ export default function ServicosPage() {
             <p className={styles.helperText}>Apenas categorias ativas são exibidas.</p>
           </label>
           <label className={styles.inputGroup}>
+            <span className={styles.inputLabel}>Duração padrão (min)</span>
+            <input
+              className={styles.inputControl}
+              type="number"
+              min={0}
+              value={form.base_duration_min}
+              onChange={(event) => setForm((prev) => ({ ...prev, base_duration_min: normalizeMinutes(event.target.value) }))}
+              disabled={saving || isReadonly}
+            />
+          </label>
+          <label className={styles.inputGroup}>
+            <span className={styles.inputLabel}>Preço padrão (R$)</span>
+            <input
+              className={styles.inputControl}
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.base_price_reais}
+              onChange={(event) => setForm((prev) => ({ ...prev, base_price_reais: event.target.value }))}
+              disabled={saving || isReadonly}
+            />
+            <p className={styles.helperText}>Valor base do serviço. Centavos são calculados automaticamente.</p>
+          </label>
+          <label className={styles.inputGroup}>
+            <span className={styles.inputLabel}>Sinal padrão (R$)</span>
+            <input
+              className={styles.inputControl}
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.base_deposit_reais}
+              onChange={(event) => setForm((prev) => ({ ...prev, base_deposit_reais: event.target.value }))}
+              disabled={saving || isReadonly}
+            />
+            <p className={styles.helperText}>Será limitado ao preço padrão.</p>
+          </label>
+          <label className={styles.inputGroup}>
+            <span className={styles.inputLabel}>Buffer padrão (min)</span>
+            <input
+              className={styles.inputControl}
+              type="number"
+              min={0}
+              value={form.base_buffer_min}
+              onChange={(event) => setForm((prev) => ({ ...prev, base_buffer_min: normalizeMinutes(event.target.value) }))}
+              disabled={saving || isReadonly}
+            />
+            <p className={styles.helperText}>Tempo extra antes/depois para todas as opções deste serviço.</p>
+          </label>
+          <label className={styles.inputGroup}>
             <span className={styles.inputLabel}>Descrição</span>
             <textarea
               className={styles.textareaControl}
@@ -431,6 +540,12 @@ export default function ServicosPage() {
                       </div>
                       <span className={styles.muted}>{service.slug || "Sem slug"}</span>
                       <p className={styles.sectionDescription}>{service.description || "Sem descrição"}</p>
+                      <div className={styles.pillGroup}>
+                        <span className={styles.pill}>
+                          Padrão: {service.defaults.duration} min • {formatPriceLabel(service.defaults.price)} • Sinal{" "}
+                          {formatPriceLabel(service.defaults.deposit)} • Buffer {service.defaults.buffer} min
+                        </span>
+                      </div>
                     </div>
                     <div className={styles.pillGroup}>
                       {service.options.length ? (

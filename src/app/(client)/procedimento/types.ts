@@ -5,12 +5,17 @@ export type ServiceTechnique = {
   duration_min: number
   price_cents: number
   deposit_cents: number
-  buffer_min: number | null
+  buffer_min: number
   active: boolean
 }
 
 export type ServiceTypeAssignment = {
   services?: ServiceTechnique | ServiceTechnique[] | null
+  use_service_defaults?: boolean | null
+  override_duration_min?: number | null
+  override_price_cents?: number | null
+  override_deposit_cents?: number | null
+  override_buffer_min?: number | null
 }
 
 export type TechniqueCatalogEntry = {

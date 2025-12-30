@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 
+import { resolveFinalServiceValues, type ServiceAssignmentOverride } from "@/lib/servicePricing";
 import { useAdminGuard } from "../../useAdminGuard";
 import styles from "./opcoes.module.css";
 
@@ -22,11 +23,21 @@ type ServiceTypeOption = {
   name: string;
   active: boolean;
   category_id: string | null;
+  base_duration_min?: number | null;
+  base_price_cents?: number | null;
+  base_deposit_cents?: number | null;
+  base_buffer_min?: number | null;
   category_name?: string | null;
   category?: { id?: string | null; name?: string | null } | { id?: string | null; name?: string | null }[] | null;
 };
 
 type ServiceAssignmentRow = {
+  service_type_id?: string | null;
+  use_service_defaults?: boolean | null;
+  override_duration_min?: number | null;
+  override_price_cents?: number | null;
+  override_deposit_cents?: number | null;
+  override_buffer_min?: number | null;
   service_type?: ServiceTypeOption | ServiceTypeOption[] | null;
 };
 
@@ -35,13 +46,29 @@ type ServiceRow = {
   name: string;
   slug: string | null;
   description: string | null;
-  duration_min: number | null;
-  price_cents: number | null;
-  deposit_cents: number | null;
-  buffer_min: number | null;
+  duration_min?: number | null;
+  price_cents?: number | null;
+  deposit_cents?: number | null;
+  buffer_min?: number | null;
   active: boolean;
   branch_id: string | null;
   assignments?: ServiceAssignmentRow[] | null;
+};
+
+type AssignmentDisplay = {
+  serviceTypeId: string;
+  serviceTypeName: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  useDefaults: boolean;
+  overrides: ServiceAssignmentOverride;
+  final: {
+    duration: number;
+    price: number;
+    deposit: number;
+    buffer: number;
+  };
+  active: boolean;
 };
 
 type NormalizedOption = {
@@ -49,16 +76,19 @@ type NormalizedOption = {
   name: string;
   slug: string | null;
   description: string | null;
-  duration_min: number;
-  price_cents: number;
-  deposit_cents: number;
-  buffer_min: number;
   active: boolean;
   branch_id: string | null;
   serviceTypeIds: string[];
   serviceTypeNames: string[];
   categoryIds: string[];
   categoryNames: string[];
+  assignments: AssignmentDisplay[];
+  legacy: {
+    duration_min: number;
+    price_cents: number;
+    deposit_cents: number;
+    buffer_min: number;
+  };
 };
 
 type ServicePhoto = {
@@ -72,22 +102,22 @@ type OptionFormState = {
   name: string;
   slug: string;
   description: string;
-  duration_min: number;
-  price_cents: number;
-  deposit_cents: number;
-  buffer_min: number;
   active: boolean;
+  legacy_duration_min: number;
+  legacy_price_cents: number;
+  legacy_deposit_cents: number;
+  legacy_buffer_min: number;
 };
 
 const defaultForm: OptionFormState = {
   name: "",
   slug: "",
   description: "",
-  duration_min: 30,
-  price_cents: 0,
-  deposit_cents: 0,
-  buffer_min: 15,
   active: true,
+  legacy_duration_min: 30,
+  legacy_price_cents: 0,
+  legacy_deposit_cents: 0,
+  legacy_buffer_min: 15,
 };
 
 const normalizeInt = (value: string | number, fallback = 0) => {
@@ -95,6 +125,25 @@ const normalizeInt = (value: string | number, fallback = 0) => {
   if (!Number.isFinite(parsed)) return fallback;
   return Math.max(0, Math.round(parsed));
 };
+
+const formatMoneyInput = (cents: number | null | undefined) => {
+  const safeValue = Math.max(0, Number.isFinite(cents ?? 0) ? Number(cents) : 0);
+  return (safeValue / 100).toFixed(2);
+};
+
+const parseReaisToCents = (value: string | number | null | undefined) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? Math.max(0, Math.round(value * 100)) : 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.replace(/,/g, ".");
+    const parsed = Number.parseFloat(normalized);
+    if (Number.isFinite(parsed)) return Math.max(0, Math.round(parsed * 100));
+  }
+  return 0;
+};
+
+const formatPriceLabel = (cents: number) => `R$ ${(cents / 100).toFixed(2)}`;
 
 const normalizeSlug = (value: string, fallback: string) => {
   const base = value?.trim().length ? value : fallback;
@@ -128,6 +177,10 @@ export default function OpcoesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<OptionFormState>(defaultForm);
   const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<Set<string>>(new Set());
+  const [assignmentForm, setAssignmentForm] = useState<Map<
+    string,
+    { useDefaults: boolean; duration: string; price: string; deposit: string; buffer: string }
+  >>(new Map());
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterServiceType, setFilterServiceType] = useState<string>(initialServiceFilter);
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
@@ -141,6 +194,27 @@ export default function OpcoesPage() {
 
   const isSuper = role === "adminsuper" || role === "adminmaster";
   const isReadonly = role === "admin";
+  const defaultAssignmentConfig = { useDefaults: true, duration: "", price: "", deposit: "", buffer: "" };
+
+  const getAssignmentConfig = (serviceTypeId: string) => assignmentForm.get(serviceTypeId) ?? defaultAssignmentConfig;
+
+  const updateAssignmentConfig = (
+    serviceTypeId: string,
+    updater: (config: { useDefaults: boolean; duration: string; price: string; deposit: string; buffer: string }) => {
+      useDefaults: boolean;
+      duration: string;
+      price: string;
+      deposit: string;
+      buffer: string;
+    }
+  ) => {
+    setAssignmentForm((prev) => {
+      const next = new Map(prev);
+      const current = prev.get(serviceTypeId) ?? defaultAssignmentConfig;
+      next.set(serviceTypeId, updater(current));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (status !== "authorized") return;
@@ -168,13 +242,15 @@ export default function OpcoesPage() {
         .order("name", { ascending: true }),
       supabase
         .from("service_types")
-        .select("id, name, active, category_id, order_index, category:service_categories(id, name)")
+        .select(
+          "id, name, active, category_id, order_index, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min, category:service_categories(id, name)"
+        )
         .order("order_index", { ascending: true, nullsFirst: true })
         .order("name", { ascending: true }),
       supabase
         .from("services")
         .select(
-          "id, name, slug, description, duration_min, price_cents, deposit_cents, buffer_min, active, branch_id, assignments:service_type_assignments(service_type:service_types(id, name, category_id, category:service_categories(id, name), active))"
+          "id, name, slug, description, duration_min, price_cents, deposit_cents, buffer_min, active, branch_id, assignments:service_type_assignments(service_type_id, use_service_defaults, override_duration_min, override_price_cents, override_deposit_cents, override_buffer_min, service_type:service_types(id, name, active, category_id, base_duration_min, base_price_cents, base_deposit_cents, base_buffer_min, category:service_categories(id, name)))"
         )
         .order("name", { ascending: true }),
     ]);
@@ -204,30 +280,67 @@ export default function OpcoesPage() {
         category_id: entry.category_id ?? null,
         category_name: toArray(entry.category).find((category) => category && typeof category === "object")?.name ?? null,
         category: entry.category ?? null,
+        base_duration_min: entry.base_duration_min ?? 0,
+        base_price_cents: entry.base_price_cents ?? 0,
+        base_deposit_cents: entry.base_deposit_cents ?? 0,
+        base_buffer_min: entry.base_buffer_min ?? 0,
       })) ?? [];
 
     const normalizedOptions =
       (optionsResponse.data ?? []).map((entry: ServiceRow) => {
-        const serviceTypesList = (entry.assignments ?? [])
-          .map((assignment) => {
-            const services = toArray(assignment?.service_type);
-            return services.filter((service) => service && typeof service === "object");
-          })
-          .flat()
-          .filter(Boolean) as ServiceTypeOption[];
+        const assignmentEntries = (entry.assignments ?? []).flatMap((assignment) => {
+          const serviceType = toArray(assignment?.service_type).find((service) => service && typeof service === "object");
+          if (!serviceType?.id) return [];
 
-        const uniqueServiceTypes = new Map<string, ServiceTypeOption>();
-        serviceTypesList.forEach((serviceType) => {
-          if (!serviceType.id) return;
-          if (uniqueServiceTypes.has(serviceType.id)) return;
-          uniqueServiceTypes.set(serviceType.id, serviceType);
+          const overrides: ServiceAssignmentOverride = {
+            use_service_defaults: assignment?.use_service_defaults ?? true,
+            override_duration_min: assignment?.override_duration_min ?? null,
+            override_price_cents: assignment?.override_price_cents ?? null,
+            override_deposit_cents: assignment?.override_deposit_cents ?? null,
+            override_buffer_min: assignment?.override_buffer_min ?? null,
+          };
+
+          const finalValues = resolveFinalServiceValues(
+            {
+              base_duration_min: serviceType.base_duration_min ?? 0,
+              base_price_cents: serviceType.base_price_cents ?? 0,
+              base_deposit_cents: serviceType.base_deposit_cents ?? 0,
+              base_buffer_min: serviceType.base_buffer_min ?? 0,
+            },
+            overrides
+          );
+
+          const { id: catId, name: catName } = resolveCategoryMeta(serviceType);
+
+          return [
+            {
+              serviceTypeId: serviceType.id,
+              serviceTypeName: serviceType.name ?? "Serviço",
+              categoryName: catName ?? null,
+              useDefaults: overrides.use_service_defaults !== false,
+              overrides,
+              final: {
+                duration: finalValues.duration_min,
+                price: finalValues.price_cents,
+                deposit: finalValues.deposit_cents,
+                buffer: finalValues.buffer_min,
+              },
+              active: serviceType.active !== false,
+              categoryId: catId ?? null,
+            },
+          ] as AssignmentDisplay[];
+        });
+
+        const uniqueServiceTypes = new Map<string, AssignmentDisplay>();
+        assignmentEntries.forEach((assignment) => {
+          if (!assignment.serviceTypeId || uniqueServiceTypes.has(assignment.serviceTypeId)) return;
+          uniqueServiceTypes.set(assignment.serviceTypeId, assignment);
         });
 
         const categoryNames = new Map<string, string>();
-        Array.from(uniqueServiceTypes.values()).forEach((serviceType) => {
-          const { id: catId, name: catName } = resolveCategoryMeta(serviceType);
-          if (catId) {
-            categoryNames.set(catId, catName ?? "Categoria");
+        Array.from(uniqueServiceTypes.values()).forEach((assignment) => {
+          if (assignment.categoryName && assignment.categoryId) {
+            categoryNames.set(assignment.categoryId, assignment.categoryName);
           }
         });
 
@@ -236,16 +349,19 @@ export default function OpcoesPage() {
           name: entry.name ?? "Opção",
           slug: entry.slug ?? null,
           description: entry.description ?? null,
-          duration_min: normalizeInt(entry.duration_min ?? 30, 30) || 30,
-          price_cents: normalizeInt(entry.price_cents ?? 0, 0),
-          deposit_cents: normalizeInt(entry.deposit_cents ?? 0, 0),
-          buffer_min: normalizeInt(entry.buffer_min ?? 15, 15),
           active: entry.active !== false,
           branch_id: entry.branch_id ?? null,
           serviceTypeIds: Array.from(uniqueServiceTypes.keys()),
-          serviceTypeNames: Array.from(uniqueServiceTypes.values()).map((item) => item.name ?? "Serviço"),
+          serviceTypeNames: Array.from(uniqueServiceTypes.values()).map((item) => item.serviceTypeName ?? "Serviço"),
           categoryIds: Array.from(categoryNames.keys()),
           categoryNames: Array.from(categoryNames.values()),
+          assignments: Array.from(uniqueServiceTypes.values()),
+          legacy: {
+            duration_min: normalizeInt(entry.duration_min ?? 30, 30) || 30,
+            price_cents: normalizeInt(entry.price_cents ?? 0, 0),
+            deposit_cents: normalizeInt(entry.deposit_cents ?? 0, 0),
+            buffer_min: normalizeInt(entry.buffer_min ?? 15, 15),
+          },
         } as NormalizedOption;
       }) ?? [];
 
@@ -282,6 +398,7 @@ export default function OpcoesPage() {
     setEditingId(null);
     setSelectedServiceTypeIds(new Set());
     setPhotos([]);
+    setAssignmentForm(new Map());
   };
 
   const handleEdit = (option: NormalizedOption) => {
@@ -290,13 +407,36 @@ export default function OpcoesPage() {
       name: option.name ?? "",
       slug: option.slug ?? "",
       description: option.description ?? "",
-      duration_min: option.duration_min,
-      price_cents: option.price_cents,
-      deposit_cents: option.deposit_cents,
-      buffer_min: option.buffer_min,
       active: option.active !== false,
+      legacy_duration_min: option.legacy.duration_min,
+      legacy_price_cents: option.legacy.price_cents,
+      legacy_deposit_cents: option.legacy.deposit_cents,
+      legacy_buffer_min: option.legacy.buffer_min,
     });
     setSelectedServiceTypeIds(new Set(option.serviceTypeIds));
+    const nextAssignments = new Map<
+      string,
+      { useDefaults: boolean; duration: string; price: string; deposit: string; buffer: string }
+    >();
+    option.assignments.forEach((assignment) => {
+      nextAssignments.set(assignment.serviceTypeId, {
+        useDefaults: assignment.useDefaults,
+        duration: assignment.overrides.override_duration_min !== null && assignment.overrides.override_duration_min !== undefined
+          ? String(assignment.overrides.override_duration_min)
+          : "",
+        price: assignment.overrides.override_price_cents !== null && assignment.overrides.override_price_cents !== undefined
+          ? formatMoneyInput(assignment.overrides.override_price_cents)
+          : "",
+        deposit:
+          assignment.overrides.override_deposit_cents !== null && assignment.overrides.override_deposit_cents !== undefined
+            ? formatMoneyInput(assignment.overrides.override_deposit_cents)
+            : "",
+        buffer: assignment.overrides.override_buffer_min !== null && assignment.overrides.override_buffer_min !== undefined
+          ? String(assignment.overrides.override_buffer_min)
+          : "",
+      });
+    });
+    setAssignmentForm(nextAssignments);
     setNote("Editando opção. Salve para confirmar ou cancele para limpar.");
   };
 
@@ -311,14 +451,37 @@ export default function OpcoesPage() {
     setError(null);
     setNote(null);
 
+    const desiredAssignments = Array.from(selectedServiceTypeIds);
+    const primaryServiceType = desiredAssignments.length
+      ? serviceTypes.find((serviceType) => serviceType.id === desiredAssignments[0])
+      : null;
+
+    const legacyDuration = Math.max(
+      1,
+      normalizeInt(form.legacy_duration_min ?? primaryServiceType?.base_duration_min ?? 30, 30)
+    );
+    const legacyPrice =
+      form.legacy_price_cents !== undefined && form.legacy_price_cents !== null
+        ? Math.max(0, normalizeInt(form.legacy_price_cents, 0))
+        : Math.max(0, Math.round(primaryServiceType?.base_price_cents ?? 0));
+    const legacyDepositRaw =
+      form.legacy_deposit_cents !== undefined && form.legacy_deposit_cents !== null
+        ? Math.max(0, normalizeInt(form.legacy_deposit_cents, 0))
+        : Math.max(0, Math.round(primaryServiceType?.base_deposit_cents ?? 0));
+    const legacyDeposit = Math.min(legacyPrice, legacyDepositRaw);
+    const legacyBuffer =
+      form.legacy_buffer_min !== undefined && form.legacy_buffer_min !== null
+        ? Math.max(0, normalizeInt(form.legacy_buffer_min, 0))
+        : Math.max(0, normalizeInt(primaryServiceType?.base_buffer_min ?? 0, 0));
+
     const payload = {
       name: form.name.trim() || "Opção",
       slug: normalizeSlug(form.slug, form.name),
       description: form.description.trim() || null,
-      duration_min: Math.max(1, normalizeInt(form.duration_min, 30)),
-      price_cents: Math.max(0, normalizeInt(form.price_cents, 0)),
-      deposit_cents: Math.max(0, normalizeInt(form.deposit_cents, 0)),
-      buffer_min: Math.max(0, normalizeInt(form.buffer_min, 15)),
+      duration_min: legacyDuration,
+      price_cents: legacyPrice,
+      deposit_cents: legacyDeposit,
+      buffer_min: legacyBuffer,
       active: Boolean(form.active),
     };
 
@@ -334,7 +497,6 @@ export default function OpcoesPage() {
 
     const targetId = response.data[0].id as string;
     const previousAssignments = editingId ? options.find((option) => option.id === editingId)?.serviceTypeIds ?? [] : [];
-    const desiredAssignments = Array.from(selectedServiceTypeIds);
 
     const assignmentError = await syncAssignments(targetId, previousAssignments, desiredAssignments);
     if (assignmentError) {
@@ -349,6 +511,45 @@ export default function OpcoesPage() {
     setSaving(false);
   };
 
+  const buildAssignmentPayload = (serviceId: string, serviceTypeId: string) => {
+    const base = serviceTypes.find((serviceType) => serviceType.id === serviceTypeId);
+    const config = assignmentForm.get(serviceTypeId);
+    const useDefaults = config?.useDefaults !== false;
+
+    if (useDefaults) {
+      return {
+        service_id: serviceId,
+        service_type_id: serviceTypeId,
+        use_service_defaults: true,
+        override_duration_min: null,
+        override_price_cents: null,
+        override_deposit_cents: null,
+        override_buffer_min: null,
+      };
+    }
+
+    const basePrice = Math.max(0, Math.round(base?.base_price_cents ?? 0));
+    const priceOverride = config?.price ? parseReaisToCents(config.price) : null;
+    const depositOverrideRaw = config?.deposit ? parseReaisToCents(config.deposit) : null;
+    const depositLimit = priceOverride ?? basePrice;
+    const depositOverride =
+      depositOverrideRaw !== null && depositOverrideRaw !== undefined && Number.isFinite(depositOverrideRaw)
+        ? Math.min(depositLimit, depositOverrideRaw)
+        : null;
+
+    return {
+      service_id: serviceId,
+      service_type_id: serviceTypeId,
+      use_service_defaults: false,
+      override_duration_min:
+        config?.duration && config.duration.length > 0 ? normalizeInt(config.duration, base?.base_duration_min ?? 0) : null,
+      override_price_cents: priceOverride,
+      override_deposit_cents: depositOverride,
+      override_buffer_min:
+        config?.buffer && config.buffer.length > 0 ? normalizeInt(config.buffer, base?.base_buffer_min ?? 0) : null,
+    };
+  };
+
   const syncAssignments = async (serviceId: string, existing: string[], desired: string[]) => {
     const toAdd = desired.filter((id) => !existing.includes(id));
     const toRemove = existing.filter((id) => !desired.includes(id));
@@ -356,8 +557,16 @@ export default function OpcoesPage() {
     if (toAdd.length) {
       const { error } = await supabase
         .from("service_type_assignments")
-        .insert(toAdd.map((serviceTypeId) => ({ service_id: serviceId, service_type_id: serviceTypeId })));
+        .upsert(toAdd.map((serviceTypeId) => buildAssignmentPayload(serviceId, serviceTypeId)), { onConflict: "service_id,service_type_id" });
       if (error) return "Não foi possível vincular todos os serviços à opção.";
+    }
+
+    const staying = desired.filter((id) => existing.includes(id));
+    if (staying.length) {
+      const { error } = await supabase
+        .from("service_type_assignments")
+        .upsert(staying.map((serviceTypeId) => buildAssignmentPayload(serviceId, serviceTypeId)), { onConflict: "service_id,service_type_id" });
+      if (error) return "Não foi possível salvar as personalizações de algumas combinações.";
     }
 
     if (toRemove.length) {
@@ -459,6 +668,10 @@ export default function OpcoesPage() {
     () => serviceTypes.filter((serviceType) => !options.some((option) => option.serviceTypeIds.includes(serviceType.id))),
     [options, serviceTypes]
   );
+  const selectedServiceTypes = useMemo(
+    () => serviceTypes.filter((serviceType) => selectedServiceTypeIds.has(serviceType.id)),
+    [selectedServiceTypeIds, serviceTypes]
+  );
 
   return (
     <div className={styles.page}>
@@ -533,7 +746,7 @@ export default function OpcoesPage() {
           <p className={styles.sectionEyebrow}>{editingId ? "Editar opção" : "Nova opção"}</p>
           <h2 className={styles.sectionTitle}>{editingId ? "Atualize uma opção existente" : "Cadastre uma opção"}</h2>
           <p className={styles.sectionDescription}>
-            Defina nome, slug, duração, valores e vínculo com os serviços. O depósito é opcional; o preço precisa estar em centavos.
+            Defina nome, slug e vínculos. Os valores finais vêm do Serviço ou podem ser personalizados por combinação Serviço + Opção.
           </p>
         </div>
 
@@ -571,51 +784,6 @@ export default function OpcoesPage() {
             />
           </label>
           <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Duração (min)</span>
-            <input
-              className={styles.inputControl}
-              type="number"
-              min={1}
-              value={form.duration_min}
-              onChange={(event) => setForm((prev) => ({ ...prev, duration_min: normalizeInt(event.target.value, 30) }))}
-              disabled={saving || isReadonly}
-            />
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Preço (centavos)</span>
-            <input
-              className={styles.inputControl}
-              type="number"
-              min={0}
-              value={form.price_cents}
-              onChange={(event) => setForm((prev) => ({ ...prev, price_cents: normalizeInt(event.target.value, 0) }))}
-              disabled={saving || isReadonly}
-            />
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Sinal (centavos)</span>
-            <input
-              className={styles.inputControl}
-              type="number"
-              min={0}
-              value={form.deposit_cents}
-              onChange={(event) => setForm((prev) => ({ ...prev, deposit_cents: normalizeInt(event.target.value, 0) }))}
-              disabled={saving || isReadonly}
-            />
-          </label>
-          <label className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Buffer (min)</span>
-            <input
-              className={styles.inputControl}
-              type="number"
-              min={0}
-              value={form.buffer_min}
-              onChange={(event) => setForm((prev) => ({ ...prev, buffer_min: normalizeInt(event.target.value, 15) }))}
-              disabled={saving || isReadonly}
-            />
-            <p className={styles.helperText}>Tempo extra antes/depois da opção.</p>
-          </label>
-          <label className={styles.inputGroup}>
             <span className={styles.inputLabel}>Descrição</span>
             <textarea
               className={styles.textareaControl}
@@ -625,6 +793,30 @@ export default function OpcoesPage() {
               disabled={saving || isReadonly}
             />
           </label>
+          <div className={styles.inputGroup}>
+            <span className={styles.inputLabel}>Campos legados (não usados no cálculo final)</span>
+            <p className={styles.helperText}>
+              Mantidos apenas para compatibilidade. Os valores finais seguem o Serviço ou a personalização do vínculo.
+            </p>
+            <div className={styles.formGrid}>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Duração (min)</span>
+                <input className={styles.inputControl} type="number" value={form.legacy_duration_min} disabled />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Preço (centavos)</span>
+                <input className={styles.inputControl} type="number" value={form.legacy_price_cents} disabled />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Sinal (centavos)</span>
+                <input className={styles.inputControl} type="number" value={form.legacy_deposit_cents} disabled />
+              </label>
+              <label className={styles.inputGroup}>
+                <span className={styles.inputLabel}>Buffer (min)</span>
+                <input className={styles.inputControl} type="number" value={form.legacy_buffer_min} disabled />
+              </label>
+            </div>
+          </div>
           <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
             <input
               type="checkbox"
@@ -651,7 +843,9 @@ export default function OpcoesPage() {
         <div className={styles.sectionHeader}>
           <p className={styles.sectionEyebrow}>Vínculos</p>
           <h2 className={styles.sectionTitle}>Em quais serviços esta opção aparece?</h2>
-          <p className={styles.sectionDescription}>Selecione os serviços. Salvando, os vínculos são atualizados em service_type_assignments.</p>
+          <p className={styles.sectionDescription}>
+            Selecione os serviços. Salvando, os vínculos são atualizados em service_type_assignments.
+          </p>
         </div>
         <div className={styles.checkboxGrid}>
           {serviceTypes.map((service) => (
@@ -664,8 +858,19 @@ export default function OpcoesPage() {
                     const next = new Set(prev);
                     if (event.target.checked) {
                       next.add(service.id);
+                      setAssignmentForm((prevMap) => {
+                        if (prevMap.has(service.id)) return prevMap;
+                        const nextMap = new Map(prevMap);
+                        nextMap.set(service.id, defaultAssignmentConfig);
+                        return nextMap;
+                      });
                     } else {
                       next.delete(service.id);
+                      setAssignmentForm((prevMap) => {
+                        const nextMap = new Map(prevMap);
+                        nextMap.delete(service.id);
+                        return nextMap;
+                      });
                     }
                     return next;
                   });
@@ -679,6 +884,169 @@ export default function OpcoesPage() {
             </label>
           ))}
         </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionEyebrow}>Personalização</p>
+          <h2 className={styles.sectionTitle}>Valor final por Serviço + Opção</h2>
+          <p className={styles.sectionDescription}>
+            Por padrão, a opção herda o valor do Serviço. Desligue o toggle para personalizar apenas esta combinação.
+          </p>
+        </div>
+        {selectedServiceTypes.length === 0 ? (
+          <div className={styles.helperText}>Selecione ao menos um serviço para personalizar.</div>
+        ) : (
+          <div className={styles.optionGrid}>
+            {selectedServiceTypes.map((serviceType) => {
+              const config = getAssignmentConfig(serviceType.id);
+              const overridePayload: ServiceAssignmentOverride = {
+                use_service_defaults: config.useDefaults,
+                override_duration_min:
+                  !config.useDefaults && config.duration.length > 0
+                    ? normalizeInt(config.duration, serviceType.base_duration_min ?? 0)
+                    : null,
+                override_price_cents:
+                  !config.useDefaults && config.price.length > 0 ? parseReaisToCents(config.price) : null,
+                override_deposit_cents:
+                  !config.useDefaults && config.deposit.length > 0 ? parseReaisToCents(config.deposit) : null,
+                override_buffer_min:
+                  !config.useDefaults && config.buffer.length > 0
+                    ? normalizeInt(config.buffer, serviceType.base_buffer_min ?? 0)
+                    : null,
+              };
+              const finalValues = resolveFinalServiceValues(
+                {
+                  base_duration_min: serviceType.base_duration_min ?? 0,
+                  base_price_cents: serviceType.base_price_cents ?? 0,
+                  base_deposit_cents: serviceType.base_deposit_cents ?? 0,
+                  base_buffer_min: serviceType.base_buffer_min ?? 0,
+                },
+                overridePayload
+              );
+              const defaultValues = resolveFinalServiceValues(
+                {
+                  base_duration_min: serviceType.base_duration_min ?? 0,
+                  base_price_cents: serviceType.base_price_cents ?? 0,
+                  base_deposit_cents: serviceType.base_deposit_cents ?? 0,
+                  base_buffer_min: serviceType.base_buffer_min ?? 0,
+                },
+                { use_service_defaults: true }
+              );
+
+              return (
+                <div key={serviceType.id} className={styles.optionCard}>
+                  <div className={styles.optionHeader}>
+                    <div>
+                      <h3 className={styles.optionTitle}>{serviceType.name}</h3>
+                      <p className={styles.sectionDescription}>{serviceType.category_name || "Sem categoria"}</p>
+                    </div>
+                    <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
+                      <input
+                        type="checkbox"
+                        checked={config.useDefaults}
+                        onChange={(event) =>
+                          updateAssignmentConfig(serviceType.id, (prev) => ({
+                            ...prev,
+                            useDefaults: event.target.checked,
+                          }))
+                        }
+                        disabled={saving || isReadonly}
+                      />
+                      <span className={styles.inputLabel}>Usar padrão do serviço</span>
+                    </label>
+                  </div>
+
+                  {!config.useDefaults ? (
+                    <div className={styles.formGrid}>
+                      <label className={styles.inputGroup}>
+                        <span className={styles.inputLabel}>Tempo final (min)</span>
+                        <input
+                          className={styles.inputControl}
+                          type="number"
+                          min={0}
+                          value={config.duration}
+                          onChange={(event) =>
+                            updateAssignmentConfig(serviceType.id, (prev) => ({
+                              ...prev,
+                              duration: event.target.value,
+                            }))
+                          }
+                          disabled={saving || isReadonly}
+                        />
+                      </label>
+                      <label className={styles.inputGroup}>
+                        <span className={styles.inputLabel}>Preço final (R$)</span>
+                        <input
+                          className={styles.inputControl}
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={config.price}
+                          onChange={(event) =>
+                            updateAssignmentConfig(serviceType.id, (prev) => ({
+                              ...prev,
+                              price: event.target.value,
+                            }))
+                          }
+                          disabled={saving || isReadonly}
+                        />
+                      </label>
+                      <label className={styles.inputGroup}>
+                        <span className={styles.inputLabel}>Sinal final (R$)</span>
+                        <input
+                          className={styles.inputControl}
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={config.deposit}
+                          onChange={(event) =>
+                            updateAssignmentConfig(serviceType.id, (prev) => ({
+                              ...prev,
+                              deposit: event.target.value,
+                            }))
+                          }
+                          disabled={saving || isReadonly}
+                        />
+                        <p className={styles.helperText}>Se vazio, herda o sinal padrão.</p>
+                      </label>
+                      <label className={styles.inputGroup}>
+                        <span className={styles.inputLabel}>Buffer final (min)</span>
+                        <input
+                          className={styles.inputControl}
+                          type="number"
+                          min={0}
+                          value={config.buffer}
+                          onChange={(event) =>
+                            updateAssignmentConfig(serviceType.id, (prev) => ({
+                              ...prev,
+                              buffer: event.target.value,
+                            }))
+                          }
+                          disabled={saving || isReadonly}
+                        />
+                        <p className={styles.helperText}>Se vazio, herda o buffer padrão.</p>
+                      </label>
+                    </div>
+                  ) : null}
+
+                  <div className={styles.pillGroup}>
+                    <span className={styles.pill}>
+                      Padrão do serviço: {defaultValues.duration_min} min • {formatPriceLabel(defaultValues.price_cents)} • Sinal{" "}
+                      {formatPriceLabel(defaultValues.deposit_cents)} • Buffer {defaultValues.buffer_min} min
+                    </span>
+                  </div>
+                  <div className={styles.pillGroup}>
+                    <span className={styles.pill}>
+                      Final: {finalValues.duration_min} min • {formatPriceLabel(finalValues.price_cents)} • Sinal{" "}
+                      {formatPriceLabel(finalValues.deposit_cents)} • Buffer {finalValues.buffer_min} min
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {editingId ? (
@@ -767,18 +1135,18 @@ export default function OpcoesPage() {
                     {option.active ? "Ativa" : "Inativa"}
                   </span>
                 </div>
-                <div className={styles.optionMeta}>
+                <div className={styles.pillGroup}>
                   <span className={styles.pill}>Slug: {option.slug || "sem-slug"}</span>
-                  <span className={styles.pill}>Duração: {option.duration_min} min</span>
-                  <span className={styles.pill}>Preço: R$ {(option.price_cents / 100).toFixed(2)}</span>
-                  <span className={styles.pill}>Sinal: R$ {(option.deposit_cents / 100).toFixed(2)}</span>
-                  <span className={styles.pill}>Buffer: {option.buffer_min} min</span>
+                  <span className={styles.pill}>
+                    {option.assignments.length} {option.assignments.length === 1 ? "serviço" : "serviços"}
+                  </span>
                 </div>
                 <div className={styles.pillGroup}>
-                  {option.serviceTypeNames.length ? (
-                    option.serviceTypeNames.map((serviceName) => (
-                      <span key={serviceName} className={styles.pill}>
-                        {serviceName}
+                  {option.assignments.length ? (
+                    option.assignments.map((assignment) => (
+                      <span key={`${option.id}-${assignment.serviceTypeId}`} className={styles.pill}>
+                        {assignment.serviceTypeName}: {assignment.useDefaults ? "Padrão" : "Personalizado"} • {assignment.final.duration} min •{" "}
+                        {formatPriceLabel(assignment.final.price)} • Sinal {formatPriceLabel(assignment.final.deposit)} • Buffer {assignment.final.buffer} min
                       </span>
                     ))
                   ) : (

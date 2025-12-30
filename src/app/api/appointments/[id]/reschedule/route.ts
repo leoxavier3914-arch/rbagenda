@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { getSupabaseAdmin } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth'
+import { resolveServicePricing } from '@/lib/servicePricing'
 
 const supabaseAdmin = getSupabaseAdmin()
 
@@ -13,6 +14,7 @@ type AppointmentRecord = {
   status: string
   starts_at: string
   service_id: string | null
+  service_type_id?: string | null
 }
 
 type ServiceRecord = {
@@ -36,7 +38,7 @@ export async function POST(
 
   const { data: appointment } = await supabaseAdmin
     .from('appointments')
-    .select('id, customer_id, status, starts_at, service_id')
+    .select('id, customer_id, status, starts_at, service_id, service_type_id')
     .eq('id', id)
     .maybeSingle<AppointmentRecord>()
 
@@ -75,7 +77,10 @@ export async function POST(
     return NextResponse.json({ error: 'service not found' }, { status: 404 })
   }
 
-  const durationMinutes = Math.max(0, Number(service.duration_min) || 0)
+  const pricing = await resolveServicePricing(supabaseAdmin, serviceId, appointment.service_type_id ?? null).catch(() => null)
+  const durationMinutes =
+    pricing?.finalValues?.duration_min ??
+    Math.max(0, Number(service.duration_min) || 0)
   const endsAt = new Date(nextStartsAt.getTime() + durationMinutes * 60 * 1000)
 
   const { error } = await supabaseAdmin

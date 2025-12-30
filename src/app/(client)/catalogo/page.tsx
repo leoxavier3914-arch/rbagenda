@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ClientGlassPanel,
@@ -264,6 +264,10 @@ export default function CatalogoPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
   const [onlyFeatured, setOnlyFeatured] = useState(false)
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number; title: string } | null>(null)
+
+  const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     let active = true
@@ -333,6 +337,31 @@ export default function CatalogoPage() {
   }, [catalog])
 
   const hasMultipleCategories = categoryOptions.length > 1
+
+  useEffect(() => {
+    if (!categoryDropdownOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!categoryDropdownRef.current) return
+      if (!categoryDropdownRef.current.contains(event.target as Node)) {
+        setCategoryDropdownOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setCategoryDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [categoryDropdownOpen])
 
   useEffect(() => {
     if (categoryOptions.length === 1) {
@@ -435,6 +464,49 @@ export default function CatalogoPage() {
     return categoryOptions.find((item) => item.id === activeCategoryId)?.name ?? null
   }, [activeCategoryId, categoryOptions])
 
+  const handleCategorySelect = useCallback(
+    (categoryId: string) => {
+      const normalized = categoryId === ALL_CATEGORIES ? ALL_CATEGORIES : categoryId
+      setSelectedCategoryId(normalized)
+      setCategoryDropdownOpen(false)
+    },
+    [setSelectedCategoryId],
+  )
+
+  const openLightbox = useCallback((images: string[], startIndex: number, title: string) => {
+    if (!images.length) return
+    setLightbox({ images, index: startIndex, title })
+  }, [])
+
+  useEffect(() => {
+    if (!lightbox) return
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLightbox(null)
+      }
+      if (event.key === 'ArrowRight') {
+        setLightbox((prev) =>
+          prev
+            ? { ...prev, index: (prev.index + 1) % prev.images.length }
+            : prev,
+        )
+      }
+      if (event.key === 'ArrowLeft') {
+        setLightbox((prev) =>
+          prev
+            ? { ...prev, index: (prev.index - 1 + prev.images.length) % prev.images.length }
+            : prev,
+        )
+      }
+    }
+
+    document.addEventListener('keydown', handleKeydown)
+    return () => {
+      document.removeEventListener('keydown', handleKeydown)
+    }
+  }, [lightbox])
+
   return (
     <ClientPageShell heroReady={heroReady} forceMotion>
       <ClientSection className={styles.section}>
@@ -447,7 +519,7 @@ export default function CatalogoPage() {
           />
         </div>
 
-        <ClientGlassPanel label="OPÇÕES DISPONÍVEIS" className={styles.panel}>
+        <ClientGlassPanel className={styles.panel}>
           {hasMultipleCategories ? (
             <div className={styles.filters}>
               <div className={styles.filterGroup}>
@@ -508,9 +580,40 @@ export default function CatalogoPage() {
           ) : null}
 
           {activeCategoryLabel ? (
-            <div className={styles.selectedCategory}>
+            <div className={styles.selectedCategory} ref={categoryDropdownRef}>
               <span className={styles.selectedCategoryLabel}>Categoria</span>
-              <span className={styles.categoryBadge}>{activeCategoryLabel}</span>
+              <button
+                type="button"
+                className={`${styles.categoryBadge} ${categoryDropdownOpen ? styles.categoryBadgeOpen : ''}`}
+                onClick={() => {
+                  if (!hasMultipleCategories) return
+                  setCategoryDropdownOpen((prev) => !prev)
+                }}
+                aria-expanded={categoryDropdownOpen}
+                aria-haspopup="listbox"
+                disabled={!hasMultipleCategories}
+              >
+                <span>{activeCategoryLabel}</span>
+                {hasMultipleCategories ? <span className={styles.caret}>{categoryDropdownOpen ? '▲' : '▼'}</span> : null}
+              </button>
+
+              {hasMultipleCategories && categoryDropdownOpen ? (
+                <div className={styles.categoryDropdown} role="listbox" aria-label="Categorias disponíveis">
+                  <button type="button" className={styles.categoryOption} onClick={() => handleCategorySelect(ALL_CATEGORIES)}>
+                    Todas as categorias
+                  </button>
+                  {categoryOptions.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className={styles.categoryOption}
+                      onClick={() => handleCategorySelect(category.id)}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -533,32 +636,40 @@ export default function CatalogoPage() {
                 return (
                   <article key={option.id} className={styles.card}>
                     <div className={styles.coverWrapper}>
+                      <div className={styles.coverBadges}>
+                        {service ? <span className={styles.serviceBadge}>{service.name}</span> : null}
+                        <button
+                          type="button"
+                          className={styles.photoBadge}
+                          onClick={() => openLightbox(option.gallery, 0, option.name)}
+                          disabled={option.gallery.length === 0}
+                        >
+                          {option.gallery.length > 0
+                            ? `${option.gallery.length} foto${option.gallery.length > 1 ? 's' : ''}`
+                            : 'Sem fotos'}
+                        </button>
+                      </div>
                       {option.coverUrl ? (
                         <div
                           className={styles.cover}
                           style={{ backgroundImage: `url(${option.coverUrl})` }}
                           role="img"
                           aria-label={`Foto da opção ${option.name}`}
+                          onClick={() => openLightbox(option.gallery, 0, option.name)}
+                          tabIndex={0}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openLightbox(option.gallery, 0, option.name)
+                            }
+                          }}
                         />
                       ) : (
                         <div className={styles.coverPlaceholder}>Fotos em breve</div>
                       )}
-                      <div className={styles.photoBadge}>
-                        {option.gallery.length > 0
-                          ? `${option.gallery.length} foto${option.gallery.length > 1 ? 's' : ''}`
-                          : 'Sem fotos'}
-                      </div>
                     </div>
 
                     <div className={styles.cardBody}>
-                      {service ? (
-                        <div className={styles.tags} aria-label="Serviços relacionados">
-                          <span key={service.id} className={styles.tag}>
-                            {service.name}
-                          </span>
-                        </div>
-                      ) : null}
-
                       <h3 className={styles.optionTitle}>{option.name}</h3>
                       {option.description ? (
                         <p className={styles.optionDescription}>{option.description}</p>
@@ -595,6 +706,66 @@ export default function CatalogoPage() {
                   </article>
                 )
               })}
+            </div>
+          ) : null}
+
+          {lightbox ? (
+            <div
+              className={styles.lightboxOverlay}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Galeria de fotos de ${lightbox.title}`}
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setLightbox(null)
+                }
+              }}
+            >
+              <div className={styles.lightboxContent}>
+                <header className={styles.lightboxHeader}>
+                  <span className={styles.lightboxTitle}>{lightbox.title}</span>
+                  <button type="button" className={styles.lightboxClose} onClick={() => setLightbox(null)}>
+                    ×
+                  </button>
+                </header>
+                <div className={styles.lightboxImageArea}>
+                  <button
+                    type="button"
+                    className={styles.lightboxNav}
+                    onClick={() =>
+                      setLightbox((prev) =>
+                        prev
+                          ? { ...prev, index: (prev.index - 1 + prev.images.length) % prev.images.length }
+                          : prev,
+                      )
+                    }
+                    aria-label="Foto anterior"
+                  >
+                    ‹
+                  </button>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className={styles.lightboxImage} src={lightbox.images[lightbox.index]} alt="" />
+                  <button
+                    type="button"
+                    className={styles.lightboxNav}
+                    onClick={() =>
+                      setLightbox((prev) =>
+                        prev
+                          ? { ...prev, index: (prev.index + 1) % prev.images.length }
+                          : prev,
+                      )
+                    }
+                    aria-label="Próxima foto"
+                  >
+                    ›
+                  </button>
+                </div>
+                {lightbox.images.length > 1 ? (
+                  <div className={styles.lightboxCounter}>
+                    {lightbox.index + 1} / {lightbox.images.length}
+                  </div>
+                ) : null}
+              </div>
             </div>
           ) : null}
         </ClientGlassPanel>

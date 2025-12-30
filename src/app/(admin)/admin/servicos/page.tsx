@@ -365,8 +365,8 @@ export default function ServicosPage() {
       <section className={styles.headerCard}>
         <h1 className={styles.headerTitle}>Serviços</h1>
         <p className={styles.headerDescription}>
-          Gerencie os Serviços (service_types) e vincule cada um a uma Categoria. Opções vinculadas continuam sendo exibidas no
-          agrupamento por categoria.
+          Gerencie os Serviços (service_types) e vincule cada um a uma Categoria. Use &ldquo;Gerenciar opções&rdquo; para abrir a tela
+          dedicada de vínculo e personalização por serviço.
         </p>
         <div className={styles.tagRow}>
           <span className={styles.tag}>Agrupamento por categoria</span>
@@ -582,11 +582,7 @@ export default function ServicosPage() {
                       )}
                     </div>
                     <div className={styles.actions}>
-                      <Link
-                        href={`/admin/opcoes?servico=${service.id}`}
-                        className={styles.secondaryButton}
-                        aria-label={`Gerenciar opções para ${service.name}`}
-                      >
+                      <Link href={`/admin/servicos/${service.id}/opcoes`} className={styles.secondaryButton} aria-label={`Gerenciar opções para ${service.name}`}>
                         Gerenciar Opções
                       </Link>
                       <button

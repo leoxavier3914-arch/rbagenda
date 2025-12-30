@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import Link from "next/link";
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -112,23 +113,6 @@ const normalizeInt = (value: string | number, fallback = 0) => {
   return Math.max(0, Math.round(parsed));
 };
 
-const formatMoneyInput = (cents: number | null | undefined) => {
-  const safeValue = Math.max(0, Number.isFinite(cents ?? 0) ? Number(cents) : 0);
-  return (safeValue / 100).toFixed(2);
-};
-
-const parseReaisToCents = (value: string | number | null | undefined) => {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? Math.max(0, Math.round(value * 100)) : 0;
-  }
-  if (typeof value === "string") {
-    const normalized = value.replace(/,/g, ".");
-    const parsed = Number.parseFloat(normalized);
-    if (Number.isFinite(parsed)) return Math.max(0, Math.round(parsed * 100));
-  }
-  return 0;
-};
-
 const formatPriceLabel = (cents: number) => `R$ ${(cents / 100).toFixed(2)}`;
 
 const normalizeSlug = (value: string, fallback: string) => {
@@ -162,11 +146,6 @@ export default function OpcoesPage() {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<OptionFormState>(defaultForm);
-  const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<Set<string>>(new Set());
-  const [assignmentForm, setAssignmentForm] = useState<Map<
-    string,
-    { useDefaults: boolean; duration: string; price: string; deposit: string; buffer: string }
-  >>(new Map());
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterServiceType, setFilterServiceType] = useState<string>(initialServiceFilter);
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
@@ -180,27 +159,6 @@ export default function OpcoesPage() {
 
   const isSuper = role === "adminsuper" || role === "adminmaster";
   const isReadonly = role === "admin";
-  const defaultAssignmentConfig = { useDefaults: true, duration: "", price: "", deposit: "", buffer: "" };
-
-  const getAssignmentConfig = (serviceTypeId: string) => assignmentForm.get(serviceTypeId) ?? defaultAssignmentConfig;
-
-  const updateAssignmentConfig = (
-    serviceTypeId: string,
-    updater: (config: { useDefaults: boolean; duration: string; price: string; deposit: string; buffer: string }) => {
-      useDefaults: boolean;
-      duration: string;
-      price: string;
-      deposit: string;
-      buffer: string;
-    }
-  ) => {
-    setAssignmentForm((prev) => {
-      const next = new Map(prev);
-      const current = prev.get(serviceTypeId) ?? defaultAssignmentConfig;
-      next.set(serviceTypeId, updater(current));
-      return next;
-    });
-  };
 
   useEffect(() => {
     if (status !== "authorized") return;
@@ -218,7 +176,6 @@ export default function OpcoesPage() {
   const loadData = async () => {
     setLoading(true);
     setError(null);
-    setNote(null);
 
     const [categoriesResponse, serviceTypesResponse, optionsResponse] = await Promise.all([
       supabase
@@ -376,9 +333,7 @@ export default function OpcoesPage() {
   const resetForm = () => {
     setForm(defaultForm);
     setEditingId(null);
-    setSelectedServiceTypeIds(new Set());
     setPhotos([]);
-    setAssignmentForm(new Map());
   };
 
   const handleEdit = (option: NormalizedOption) => {
@@ -389,30 +344,6 @@ export default function OpcoesPage() {
       description: option.description ?? "",
       active: option.active !== false,
     });
-    setSelectedServiceTypeIds(new Set(option.serviceTypeIds));
-    const nextAssignments = new Map<
-      string,
-      { useDefaults: boolean; duration: string; price: string; deposit: string; buffer: string }
-    >();
-    option.assignments.forEach((assignment) => {
-      nextAssignments.set(assignment.serviceTypeId, {
-        useDefaults: assignment.useDefaults,
-        duration: assignment.overrides.override_duration_min !== null && assignment.overrides.override_duration_min !== undefined
-          ? String(assignment.overrides.override_duration_min)
-          : "",
-        price: assignment.overrides.override_price_cents !== null && assignment.overrides.override_price_cents !== undefined
-          ? formatMoneyInput(assignment.overrides.override_price_cents)
-          : "",
-        deposit:
-          assignment.overrides.override_deposit_cents !== null && assignment.overrides.override_deposit_cents !== undefined
-            ? formatMoneyInput(assignment.overrides.override_deposit_cents)
-            : "",
-        buffer: assignment.overrides.override_buffer_min !== null && assignment.overrides.override_buffer_min !== undefined
-          ? String(assignment.overrides.override_buffer_min)
-          : "",
-      });
-    });
-    setAssignmentForm(nextAssignments);
     setNote("Editando opção. Salve para confirmar ou cancele para limpar.");
   };
 
@@ -423,139 +354,34 @@ export default function OpcoesPage() {
       return;
     }
 
+    if (!editingId) {
+      setError('Opções devem ser criadas dentro de um Serviço. Use "Gerenciar opções" em /admin/servicos.');
+      setNote(null);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setNote(null);
-
-    const desiredAssignments = Array.from(selectedServiceTypeIds);
-    const primaryServiceType = desiredAssignments.length
-      ? serviceTypes.find((serviceType) => serviceType.id === desiredAssignments[0])
-      : null;
-
-    const existingOption = editingId ? options.find((option) => option.id === editingId) : null;
-    const legacyDuration = Math.max(
-      1,
-      normalizeInt(existingOption?.assignments[0]?.final.duration ?? primaryServiceType?.base_duration_min ?? 30, 30)
-    );
-    const legacyPrice = Math.max(
-      0,
-      normalizeInt(existingOption?.assignments[0]?.final.price ?? primaryServiceType?.base_price_cents ?? 0, 0)
-    );
-    const legacyDepositRaw = Math.max(
-      0,
-      normalizeInt(existingOption?.assignments[0]?.final.deposit ?? primaryServiceType?.base_deposit_cents ?? 0, 0)
-    );
-    const legacyDeposit = Math.min(legacyPrice, legacyDepositRaw);
-    const legacyBuffer = Math.max(
-      0,
-      normalizeInt(existingOption?.assignments[0]?.final.buffer ?? primaryServiceType?.base_buffer_min ?? 0, 0)
-    );
 
     const payload = {
       name: form.name.trim() || "Opção",
       slug: normalizeSlug(form.slug, form.name),
       description: form.description.trim() || null,
-      duration_min: legacyDuration,
-      price_cents: legacyPrice,
-      deposit_cents: legacyDeposit,
-      buffer_min: legacyBuffer,
       active: Boolean(form.active),
     };
 
-    const response = editingId
-      ? await supabase.from("services").update(payload).eq("id", editingId).select("id")
-      : await supabase.from("services").insert(payload).select("id");
+    const response = await supabase.from("services").update(payload).eq("id", editingId);
 
-    if (response.error || !response.data?.length) {
+    if (response.error) {
       setError("Não foi possível salvar a opção. Verifique os campos e tente novamente.");
-      setSaving(false);
-      return;
+    } else {
+      setNote("Opção atualizada.");
+      resetForm();
+      void loadData();
     }
 
-    const targetId = response.data[0].id as string;
-    const previousAssignments = editingId ? options.find((option) => option.id === editingId)?.serviceTypeIds ?? [] : [];
-
-    const assignmentError = await syncAssignments(targetId, previousAssignments, desiredAssignments);
-    if (assignmentError) {
-      setError(assignmentError);
-      setSaving(false);
-      return;
-    }
-
-    setNote(editingId ? "Opção atualizada." : "Opção criada.");
-    resetForm();
-    void loadData();
     setSaving(false);
-  };
-
-  const buildAssignmentPayload = (serviceId: string, serviceTypeId: string) => {
-    const base = serviceTypes.find((serviceType) => serviceType.id === serviceTypeId);
-    const config = assignmentForm.get(serviceTypeId);
-    const useDefaults = config?.useDefaults !== false;
-
-    if (useDefaults) {
-      return {
-        service_id: serviceId,
-        service_type_id: serviceTypeId,
-        use_service_defaults: true,
-        override_duration_min: null,
-        override_price_cents: null,
-        override_deposit_cents: null,
-        override_buffer_min: null,
-      };
-    }
-
-    const basePrice = Math.max(0, Math.round(base?.base_price_cents ?? 0));
-    const priceOverride = config?.price ? parseReaisToCents(config.price) : null;
-    const depositOverrideRaw = config?.deposit ? parseReaisToCents(config.deposit) : null;
-    const depositLimit = priceOverride ?? basePrice;
-    const depositOverride =
-      depositOverrideRaw !== null && depositOverrideRaw !== undefined && Number.isFinite(depositOverrideRaw)
-        ? Math.min(depositLimit, depositOverrideRaw)
-        : null;
-
-    return {
-      service_id: serviceId,
-      service_type_id: serviceTypeId,
-      use_service_defaults: false,
-      override_duration_min:
-        config?.duration && config.duration.length > 0 ? normalizeInt(config.duration, base?.base_duration_min ?? 0) : null,
-      override_price_cents: priceOverride,
-      override_deposit_cents: depositOverride,
-      override_buffer_min:
-        config?.buffer && config.buffer.length > 0 ? normalizeInt(config.buffer, base?.base_buffer_min ?? 0) : null,
-    };
-  };
-
-  const syncAssignments = async (serviceId: string, existing: string[], desired: string[]) => {
-    const toAdd = desired.filter((id) => !existing.includes(id));
-    const toRemove = existing.filter((id) => !desired.includes(id));
-
-    if (toAdd.length) {
-      const { error } = await supabase
-        .from("service_type_assignments")
-        .upsert(toAdd.map((serviceTypeId) => buildAssignmentPayload(serviceId, serviceTypeId)), { onConflict: "service_id,service_type_id" });
-      if (error) return "Não foi possível vincular todos os serviços à opção.";
-    }
-
-    const staying = desired.filter((id) => existing.includes(id));
-    if (staying.length) {
-      const { error } = await supabase
-        .from("service_type_assignments")
-        .upsert(staying.map((serviceTypeId) => buildAssignmentPayload(serviceId, serviceTypeId)), { onConflict: "service_id,service_type_id" });
-      if (error) return "Não foi possível salvar as personalizações de algumas combinações.";
-    }
-
-    if (toRemove.length) {
-      const { error } = await supabase
-        .from("service_type_assignments")
-        .delete()
-        .eq("service_id", serviceId)
-        .in("service_type_id", toRemove);
-      if (error) return "Não foi possível remover alguns vínculos da opção.";
-    }
-
-    return null;
   };
 
   const handlePhotoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -645,21 +471,18 @@ export default function OpcoesPage() {
     () => serviceTypes.filter((serviceType) => !options.some((option) => option.serviceTypeIds.includes(serviceType.id))),
     [options, serviceTypes]
   );
-  const selectedServiceTypes = useMemo(
-    () => serviceTypes.filter((serviceType) => selectedServiceTypeIds.has(serviceType.id)),
-    [selectedServiceTypeIds, serviceTypes]
-  );
+  const currentOption = useMemo(() => options.find((option) => option.id === editingId) ?? null, [editingId, options]);
 
   return (
     <div className={styles.page}>
       <section className={styles.headerCard}>
         <h1 className={styles.headerTitle}>Opções</h1>
         <p className={styles.headerDescription}>
-          Cadastre e gerencie as opções (services) e vincule-as aos Serviços desejados. Não é necessário renomear tabelas; apenas
-          mantenha os vínculos e textos consistentes.
+          Catálogo de opções (services). Aqui você edita dados básicos e vê em quais serviços cada opção está vinculada. Criação e
+          vínculos acontecem dentro de Serviços.
         </p>
         <div className={styles.tagRow}>
-          <span className={styles.tag}>Categorias → Serviços → Opções</span>
+          <span className={styles.tag}>Catálogo de opções</span>
           {!isSuper ? <span className={styles.tag}>Modo somente leitura</span> : null}
         </div>
       </section>
@@ -720,10 +543,11 @@ export default function OpcoesPage() {
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>{editingId ? "Editar opção" : "Nova opção"}</p>
-          <h2 className={styles.sectionTitle}>{editingId ? "Atualize uma opção existente" : "Cadastre uma opção"}</h2>
+          <p className={styles.sectionEyebrow}>{editingId ? "Editar opção" : "Catálogo"}</p>
+          <h2 className={styles.sectionTitle}>{editingId ? "Atualize a opção selecionada" : "Selecione uma opção para editar"}</h2>
           <p className={styles.sectionDescription}>
-            Defina nome, slug e vínculos. Os valores finais vêm do Serviço ou podem ser personalizados por combinação Serviço + Opção.
+            Esta página é o catálogo de opções. Criação e vínculos acontecem dentro de Serviços. Aqui você pode editar nome, slug,
+            descrição, status e fotos.
           </p>
         </div>
 
@@ -779,15 +603,22 @@ export default function OpcoesPage() {
             />
             <span className={styles.inputLabel}>Opção ativa</span>
           </label>
+          <p className={styles.helperText}>
+            Para criar novas opções, use a ação &ldquo;Gerenciar opções&rdquo; dentro de um Serviço. Esta tela impede criar opções sem
+            vínculo.
+          </p>
           <div className={styles.buttonRow}>
             <button type="submit" className={styles.primaryButton} disabled={saving || isReadonly}>
-              {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar opção"}
+              {saving ? "Salvando..." : "Salvar alterações"}
             </button>
             {editingId ? (
               <button type="button" className={styles.secondaryButton} onClick={resetForm} disabled={saving}>
                 Cancelar
               </button>
             ) : null}
+            <Link href="/admin/servicos" className={styles.secondaryButton}>
+              Ir para Serviços
+            </Link>
           </div>
         </form>
       </section>
@@ -795,211 +626,49 @@ export default function OpcoesPage() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionEyebrow}>Vínculos</p>
-          <h2 className={styles.sectionTitle}>Em quais serviços esta opção aparece?</h2>
+          <h2 className={styles.sectionTitle}>Onde esta opção está vinculada?</h2>
           <p className={styles.sectionDescription}>
-            Selecione os serviços. Salvando, os vínculos são atualizados em service_type_assignments.
+            Visualize os serviços associados. Para criar, remover vínculos ou personalizar valores, use o botão &ldquo;Gerenciar opções&rdquo;
+            dentro de Serviços.
           </p>
         </div>
-        <div className={styles.checkboxGrid}>
-          {serviceTypes.map((service) => (
-            <label key={service.id} className={styles.checkboxItem}>
-              <input
-                type="checkbox"
-                checked={selectedServiceTypeIds.has(service.id)}
-                onChange={(event) => {
-                  setSelectedServiceTypeIds((prev) => {
-                    const next = new Set(prev);
-                    if (event.target.checked) {
-                      next.add(service.id);
-                      setAssignmentForm((prevMap) => {
-                        if (prevMap.has(service.id)) return prevMap;
-                        const nextMap = new Map(prevMap);
-                        nextMap.set(service.id, defaultAssignmentConfig);
-                        return nextMap;
-                      });
-                    } else {
-                      next.delete(service.id);
-                      setAssignmentForm((prevMap) => {
-                        const nextMap = new Map(prevMap);
-                        nextMap.delete(service.id);
-                        return nextMap;
-                      });
-                    }
-                    return next;
-                  });
-                }}
-                disabled={saving || isReadonly}
-              />
-              <div className={styles.checkboxLabel}>
-                <span className={styles.checkboxTitle}>{service.name}</span>
-                <span className={styles.checkboxHelper}>{service.category_name || "Sem categoria"}</span>
-              </div>
-            </label>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>Personalização</p>
-          <h2 className={styles.sectionTitle}>Valor final por Serviço + Opção</h2>
-          <p className={styles.sectionDescription}>
-            Por padrão, a opção herda o valor do Serviço. Desligue o toggle para personalizar apenas esta combinação.
-          </p>
-        </div>
-        {selectedServiceTypes.length === 0 ? (
-          <div className={styles.helperText}>Selecione ao menos um serviço para personalizar.</div>
-        ) : (
-          <div className={styles.optionGrid}>
-            {selectedServiceTypes.map((serviceType) => {
-              const config = getAssignmentConfig(serviceType.id);
-              const overridePayload: ServiceAssignmentOverride = {
-                use_service_defaults: config.useDefaults,
-                override_duration_min:
-                  !config.useDefaults && config.duration.length > 0
-                    ? normalizeInt(config.duration, serviceType.base_duration_min ?? 0)
-                    : null,
-                override_price_cents:
-                  !config.useDefaults && config.price.length > 0 ? parseReaisToCents(config.price) : null,
-                override_deposit_cents:
-                  !config.useDefaults && config.deposit.length > 0 ? parseReaisToCents(config.deposit) : null,
-                override_buffer_min:
-                  !config.useDefaults && config.buffer.length > 0
-                    ? normalizeInt(config.buffer, serviceType.base_buffer_min ?? 0)
-                    : null,
-              };
-              const finalValues = resolveFinalServiceValues(
-                {
-                  base_duration_min: serviceType.base_duration_min ?? 0,
-                  base_price_cents: serviceType.base_price_cents ?? 0,
-                  base_deposit_cents: serviceType.base_deposit_cents ?? 0,
-                  base_buffer_min: serviceType.base_buffer_min ?? 0,
-                },
-                overridePayload
-              );
-              const defaultValues = resolveFinalServiceValues(
-                {
-                  base_duration_min: serviceType.base_duration_min ?? 0,
-                  base_price_cents: serviceType.base_price_cents ?? 0,
-                  base_deposit_cents: serviceType.base_deposit_cents ?? 0,
-                  base_buffer_min: serviceType.base_buffer_min ?? 0,
-                },
-                { use_service_defaults: true }
-              );
-
-              return (
-                <div key={serviceType.id} className={styles.optionCard}>
+        {editingId ? (
+          currentOption && currentOption.assignments.length ? (
+            <div className={styles.optionGrid}>
+              {currentOption.assignments.map((assignment) => (
+                <div key={`${currentOption.id}-${assignment.serviceTypeId}`} className={styles.optionCard}>
                   <div className={styles.optionHeader}>
                     <div>
-                      <h3 className={styles.optionTitle}>{serviceType.name}</h3>
-                      <p className={styles.sectionDescription}>{serviceType.category_name || "Sem categoria"}</p>
+                      <h3 className={styles.optionTitle}>{assignment.serviceTypeName}</h3>
+                      <p className={styles.sectionDescription}>{assignment.categoryName || "Sem categoria"}</p>
                     </div>
-                    <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
-                      <input
-                        type="checkbox"
-                        checked={config.useDefaults}
-                        onChange={(event) =>
-                          updateAssignmentConfig(serviceType.id, (prev) => ({
-                            ...prev,
-                            useDefaults: event.target.checked,
-                          }))
-                        }
-                        disabled={saving || isReadonly}
-                      />
-                      <span className={styles.inputLabel}>Usar padrão do serviço</span>
-                    </label>
-                  </div>
-
-                  {!config.useDefaults ? (
-                    <div className={styles.formGrid}>
-                      <label className={styles.inputGroup}>
-                        <span className={styles.inputLabel}>Tempo final (min)</span>
-                        <input
-                          className={styles.inputControl}
-                          type="number"
-                          min={0}
-                          value={config.duration}
-                          onChange={(event) =>
-                            updateAssignmentConfig(serviceType.id, (prev) => ({
-                              ...prev,
-                              duration: event.target.value,
-                            }))
-                          }
-                          disabled={saving || isReadonly}
-                        />
-                      </label>
-                      <label className={styles.inputGroup}>
-                        <span className={styles.inputLabel}>Preço final (R$)</span>
-                        <input
-                          className={styles.inputControl}
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={config.price}
-                          onChange={(event) =>
-                            updateAssignmentConfig(serviceType.id, (prev) => ({
-                              ...prev,
-                              price: event.target.value,
-                            }))
-                          }
-                          disabled={saving || isReadonly}
-                        />
-                      </label>
-                      <label className={styles.inputGroup}>
-                        <span className={styles.inputLabel}>Sinal final (R$)</span>
-                        <input
-                          className={styles.inputControl}
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={config.deposit}
-                          onChange={(event) =>
-                            updateAssignmentConfig(serviceType.id, (prev) => ({
-                              ...prev,
-                              deposit: event.target.value,
-                            }))
-                          }
-                          disabled={saving || isReadonly}
-                        />
-                        <p className={styles.helperText}>Se vazio, herda o sinal padrão.</p>
-                      </label>
-                      <label className={styles.inputGroup}>
-                        <span className={styles.inputLabel}>Buffer final (min)</span>
-                        <input
-                          className={styles.inputControl}
-                          type="number"
-                          min={0}
-                          value={config.buffer}
-                          onChange={(event) =>
-                            updateAssignmentConfig(serviceType.id, (prev) => ({
-                              ...prev,
-                              buffer: event.target.value,
-                            }))
-                          }
-                          disabled={saving || isReadonly}
-                        />
-                        <p className={styles.helperText}>Se vazio, herda o buffer padrão.</p>
-                      </label>
-                    </div>
-                  ) : null}
-
-                  <div className={styles.pillGroup}>
-                    <span className={styles.pill}>
-                      Padrão do serviço: {defaultValues.duration_min} min • {formatPriceLabel(defaultValues.price_cents)} • Sinal{" "}
-                      {formatPriceLabel(defaultValues.deposit_cents)} • Buffer {defaultValues.buffer_min} min
+                    <span className={`${styles.badge} ${assignment.useDefaults ? styles.statusActive : styles.statusInactive}`}>
+                      {assignment.useDefaults ? "Padrão do serviço" : "Personalizado"}
                     </span>
                   </div>
                   <div className={styles.pillGroup}>
                     <span className={styles.pill}>
-                      Final: {finalValues.duration_min} min • {formatPriceLabel(finalValues.price_cents)} • Sinal{" "}
-                      {formatPriceLabel(finalValues.deposit_cents)} • Buffer {finalValues.buffer_min} min
+                      Final: {assignment.final.duration} min • {formatPriceLabel(assignment.final.price)} • Sinal{" "}
+                      {formatPriceLabel(assignment.final.deposit)} • Buffer {assignment.final.buffer} min
+                    </span>
+                    <span className={styles.pillMuted}>
+                      {assignment.useDefaults ? "Herdando valores do serviço" : "Override salvo na combinação"}
                     </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.helperText}>Nenhum vínculo ativo para esta opção. Ajuste dentro do Serviço correspondente.</div>
+          )
+        ) : (
+          <div className={styles.helperText}>Selecione uma opção para ver onde ela está vinculada.</div>
         )}
+        <div className={styles.buttonRow}>
+          <Link href="/admin/servicos" className={styles.secondaryButton}>
+            Gerenciar vínculos nos Serviços
+          </Link>
+        </div>
       </section>
 
       {editingId ? (
@@ -1063,11 +732,16 @@ export default function OpcoesPage() {
         <div className={styles.sectionHeader}>
           <p className={styles.sectionEyebrow}>Lista de opções</p>
           <h2 className={styles.sectionTitle}>Opções cadastradas</h2>
-          <p className={styles.sectionDescription}>Confira os vínculos e edite conforme necessário.</p>
+          <p className={styles.sectionDescription}>
+            Catálogo completo de opções. Para criar ou alterar vínculos, use &ldquo;Gerenciar opções&rdquo; dentro de Serviços.
+          </p>
         </div>
 
         {!loading && optionsWithoutService.length ? (
-          <div className={styles.helperText}>Opções sem serviço vinculado: {optionsWithoutService.map((option) => option.name).join(", ")}.</div>
+          <div className={styles.helperText}>
+            Opções sem serviço vinculado: {optionsWithoutService.map((option) => option.name).join(", ")}. Resolva em Serviços &rarr;
+            Gerenciar opções.
+          </div>
         ) : null}
         {!loading && servicesWithoutOptions.length ? (
           <div className={styles.helperText}>Serviços sem opções: {servicesWithoutOptions.map((service) => service.name).join(", ")}.</div>

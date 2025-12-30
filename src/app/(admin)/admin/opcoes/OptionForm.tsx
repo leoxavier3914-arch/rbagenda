@@ -21,6 +21,7 @@ import {
   parseReaisToCents,
   resolveCategoryMeta,
   resolveFinalServiceValues,
+  servicePhotosBucket,
   syncAssignments,
 } from "./shared";
 import { supabase } from "@/lib/db";
@@ -192,7 +193,7 @@ export function OptionForm({ mode, optionId, categories, serviceTypes, initialOp
     setPhotosError(null);
     setPhotosNote(null);
 
-    const bucket = "service-photos";
+    const bucket = servicePhotosBucket;
     const path = `${optionId}/${Date.now()}-${file.name}`;
 
     const uploadResponse = await supabase.storage.from(bucket).upload(path, file, { cacheControl: "3600", upsert: false });
@@ -202,10 +203,9 @@ export function OptionForm({ mode, optionId, categories, serviceTypes, initialOp
       return;
     }
 
-    const publicUrl = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
     const { error: insertError } = await supabase.from("service_photos").insert({
       service_id: optionId,
-      url: publicUrl,
+      url: path,
       order_index: photos.length,
     });
 
@@ -347,7 +347,11 @@ export function OptionForm({ mode, optionId, categories, serviceTypes, initialOp
             <div className={styles.photoGrid}>
               {photos.map((photo) => (
                 <div key={photo.id} className={styles.photoCard}>
-                  {photo.url ? <img src={photo.url} alt="" className={styles.photoPreview} /> : <div className={styles.photoPlaceholder}>Sem imagem</div>}
+                  {photo.signedUrl ? (
+                    <img src={photo.signedUrl} alt="" className={styles.photoPreview} />
+                  ) : (
+                    <div className={styles.photoPlaceholder}>Sem imagem</div>
+                  )}
                   <div className={styles.photoMeta}>
                     <label className={styles.inputGroup}>
                       <span className={styles.inputLabel}>Ordem</span>

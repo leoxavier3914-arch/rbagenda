@@ -301,6 +301,29 @@ export default function ServicosPage() {
     setNote("Editando serviço. Salve para confirmar ou cancele para limpar.");
   };
 
+  const handleDelete = async (serviceId: string) => {
+    if (!isSuper) {
+      setError("Apenas Master ou Super podem excluir serviços.");
+      return;
+    }
+    if (!window.confirm("Tem certeza que deseja excluir este serviço?")) return;
+
+    setSaving(true);
+    setError(null);
+    setNote(null);
+
+    const { error: deleteError } = await supabase.from("service_types").delete().eq("id", serviceId);
+    if (deleteError) {
+      setError("Não foi possível excluir o serviço. Verifique dependências e permissões.");
+    } else {
+      setNote("Serviço excluído.");
+      if (editingId === serviceId) resetForm();
+      void loadData();
+    }
+
+    setSaving(false);
+  };
+
   const categoryOrder = useMemo(() => {
     const map = new Map<string, { order: number; name: string }>();
     categories.forEach((cat) => {
@@ -573,6 +596,14 @@ export default function ServicosPage() {
                         disabled={saving || isReadonly}
                       >
                         Editar
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.secondaryButton} ${styles.dangerButton}`}
+                        onClick={() => handleDelete(service.id)}
+                        disabled={saving || isReadonly}
+                      >
+                        Excluir
                       </button>
                     </div>
                   </div>

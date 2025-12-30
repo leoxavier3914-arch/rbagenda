@@ -14,6 +14,11 @@ import styles from './indice.module.css'
 
 const quickLinks = [
   {
+    href: '/catalogo',
+    title: 'Catálogo',
+    description: 'Explore opções, fotos e valores antes de escolher seu procedimento.',
+  },
+  {
     href: '/procedimento',
     title: 'Agendar um atendimento',
     description: 'Escolha o melhor horário e confirme a reserva em poucos passos.',

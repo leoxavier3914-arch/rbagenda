@@ -317,6 +317,7 @@ export default function ClientMenu({
   const knowledgeItems = useMemo<NavItem[]>(
     () => [
       { href: "/indice", label: "Índice", icon: <MenuIcon /> },
+      { href: "/catalogo", label: "Catálogo", icon: <MenuIcon /> },
       { href: "/regras", label: "Regras", icon: <MenuIcon /> },
     ],
     [],

@@ -76,9 +76,17 @@ export type NormalizedOption = {
   assignments: AssignmentDisplay[];
 };
 
-export type ServicePhoto = {
+export type ServicePhotoRow = {
   id: string;
   url: string | null;
+  order_index: number | null;
+  created_at: string | null;
+};
+
+export type ServicePhoto = {
+  id: string;
+  path: string;
+  signedUrl: string | null;
   order_index: number | null;
   created_at: string | null;
 };
@@ -117,6 +125,8 @@ export type AssignmentConfig = {
   deposit: string;
   buffer: string;
 };
+
+export const servicePhotosBucket = "service-photos";
 
 export const defaultOptionForm: OptionFormState = {
   name: "",
@@ -444,7 +454,56 @@ export const fetchOptionPhotos = async (optionId: string) => {
     .order("created_at", { ascending: true });
 
   if (error) return { data: [], error } as const;
-  return { data: (data ?? []) as ServicePhoto[], error: null } as const;
+
+  const rows = (data ?? []) as ServicePhotoRow[];
+
+  const normalizeStoragePath = (value: string | null | undefined) => {
+    if (!value) return "";
+
+    try {
+      const parsed = new URL(value);
+      const publicPrefix = "/storage/v1/object/public/service-photos/";
+      if (parsed.pathname.includes(publicPrefix)) {
+        const normalized = parsed.pathname.split(publicPrefix)[1] ?? "";
+        return decodeURIComponent(normalized).replace(/^service-photos\//, "");
+      }
+      const signedPrefix = "/storage/v1/object/sign/service-photos/";
+      if (parsed.pathname.includes(signedPrefix)) {
+        const normalized = parsed.pathname.split(signedPrefix)[1] ?? "";
+        return decodeURIComponent(normalized).split("?")[0]?.replace(/^service-photos\//, "") ?? "";
+      }
+    } catch {
+      // value is not a full URL, treat as a stored path
+    }
+
+    return value.replace(/^service-photos\//, "").replace(/^\//, "");
+  };
+
+  const normalized = rows.map((photo) => ({
+    id: photo.id,
+    path: normalizeStoragePath(photo.url),
+    signedUrl: null,
+    order_index: photo.order_index ?? 0,
+    created_at: photo.created_at ?? null,
+  }));
+
+  const pathsToSign = normalized.map((photo) => photo.path).filter((path) => path.length > 0);
+  if (!pathsToSign.length) return { data: normalized, error: null } as const;
+
+  const { data: signedData, error: signedError } = await supabase.storage.from(servicePhotosBucket).createSignedUrls(pathsToSign, 60 * 60);
+  if (signedError) return { data: normalized, error: signedError } as const;
+
+  const signedByPath = new Map<string, string | null>();
+  (signedData ?? []).forEach((entry) => {
+    signedByPath.set(entry.path, entry.signedUrl ?? null);
+  });
+
+  const withSignedUrls = normalized.map((photo) => ({
+    ...photo,
+    signedUrl: photo.path ? signedByPath.get(photo.path) ?? null : null,
+  }));
+
+  return { data: withSignedUrls, error: null } as const;
 };
 
 export { resolveFinalServiceValues };

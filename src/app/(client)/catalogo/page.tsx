@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   ClientGlassPanel,
@@ -56,6 +56,7 @@ type ServiceRow = {
 type CatalogServiceType = {
   id: string
   name: string
+  categoryId: string | null
   categoryName: string | null
   price: number
   deposit: number
@@ -72,6 +73,7 @@ type CatalogOption = {
 }
 
 type CatalogStatus = 'idle' | 'loading' | 'ready' | 'error'
+type CategoryOption = { id: string; name: string }
 
 const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
   if (Array.isArray(value)) return value
@@ -96,6 +98,96 @@ const formatDuration = (minutes: number) => {
 
 const normalizeOrderIndex = (value: number | null | undefined) =>
   typeof value === 'number' && Number.isFinite(value) ? value : Number.POSITIVE_INFINITY
+
+const servicePhotosBucket = 'service-photos'
+const ALL_CATEGORIES = '__all__'
+const ALL_SERVICES = '__all_services__'
+const UNCATEGORIZED_CATEGORY = '__uncategorized__'
+
+const normalizeCategoryId = (value: string | null | undefined) => value ?? UNCATEGORIZED_CATEGORY
+const resolveCategoryLabel = (value: string | null | undefined) => value ?? 'Sem categoria'
+
+const isHttpUrl = (value: string | null | undefined) => {
+  if (!value) return false
+  try {
+    const parsed = new URL(value)
+    return Boolean(parsed.protocol && parsed.host)
+  } catch {
+    return false
+  }
+}
+
+const normalizeStoragePath = (value: string | null | undefined) => {
+  if (!value) return null
+  if (isHttpUrl(value)) {
+    try {
+      const parsed = new URL(value)
+      const publicPrefix = '/storage/v1/object/public/service-photos/'
+      if (parsed.pathname.includes(publicPrefix)) {
+        const normalized = parsed.pathname.split(publicPrefix)[1] ?? ''
+        return decodeURIComponent(normalized).replace(/^service-photos\//, '')
+      }
+      const signedPrefix = '/storage/v1/object/sign/service-photos/'
+      if (parsed.pathname.includes(signedPrefix)) {
+        const normalized = parsed.pathname.split(signedPrefix)[1] ?? ''
+        return decodeURIComponent(normalized).split('?')[0]?.replace(/^service-photos\//, '') ?? ''
+      }
+    } catch {
+      // ignore
+    }
+  }
+  const normalized = value.replace(/^service-photos\//, '').replace(/^\//, '')
+  return normalized.length ? normalized : null
+}
+
+const resolveSignedPhotoUrls = async (options: CatalogOption[]): Promise<CatalogOption[]> => {
+  const pathsToSign = new Set<string>()
+
+  options.forEach((option) => {
+    option.gallery.forEach((entry) => {
+      const normalized = normalizeStoragePath(entry)
+      if (normalized && !isHttpUrl(entry)) {
+        pathsToSign.add(normalized)
+      }
+    })
+  })
+
+  if (pathsToSign.size === 0) return options
+
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from(servicePhotosBucket)
+    .createSignedUrls(Array.from(pathsToSign), 60 * 60)
+
+  if (signedError) {
+    console.error('Erro ao gerar URLs assinadas do catálogo', signedError)
+    return options
+  }
+
+  const signedByPath = new Map<string, string>()
+  ;(signedData ?? []).forEach((entry) => {
+    if (entry.path && entry.signedUrl) {
+      signedByPath.set(entry.path, entry.signedUrl)
+    }
+  })
+
+  const resolveUrl = (original: string | null): string | null => {
+    if (!original) return null
+    if (isHttpUrl(original)) return original
+
+    const normalized = normalizeStoragePath(original)
+    if (!normalized) return original
+
+    return signedByPath.get(normalized) ?? original
+  }
+
+  return options.map((option) => {
+    const gallery = option.gallery
+      .map((entry) => resolveUrl(entry))
+      .filter(Boolean) as string[]
+
+    return { ...option, gallery, coverUrl: gallery[0] ?? null }
+  })
+}
 
 const normalizeOption = (entry: ServiceRow): CatalogOption | null => {
   const serviceTypes = toArray(entry.assignments).reduce<Map<string, CatalogServiceType>>((map, assignment) => {
@@ -124,6 +216,7 @@ const normalizeOption = (entry: ServiceRow): CatalogOption | null => {
     map.set(serviceType.id, {
       id: serviceType.id,
       name: serviceType.name ?? 'Serviço',
+      categoryId: category?.id ?? null,
       categoryName: category?.name ?? null,
       price: finalValues.price_cents,
       deposit: finalValues.deposit_cents,
@@ -168,6 +261,9 @@ export default function CatalogoPage() {
   const [catalog, setCatalog] = useState<CatalogOption[]>([])
   const [status, setStatus] = useState<CatalogStatus>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
+  const [onlyFeatured, setOnlyFeatured] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -197,7 +293,11 @@ export default function CatalogoPage() {
       }
 
       const normalized = (data ?? []).map(normalizeOption).filter(Boolean) as CatalogOption[]
-      setCatalog(normalized)
+      const withSignedPhotos = await resolveSignedPhotoUrls(normalized)
+
+      if (!active) return
+
+      setCatalog(withSignedPhotos)
       setStatus('ready')
     }
 
@@ -214,11 +314,131 @@ export default function CatalogoPage() {
     [],
   )
 
+  const categoryOptions = useMemo<CategoryOption[]>(() => {
+    const map = new Map<string, CategoryOption>()
+
+    catalog.forEach((option) => {
+      option.serviceTypes.forEach((serviceType) => {
+        const normalizedId = normalizeCategoryId(serviceType.categoryId)
+        if (!map.has(normalizedId)) {
+          map.set(normalizedId, {
+            id: normalizedId,
+            name: resolveCategoryLabel(serviceType.categoryName),
+          })
+        }
+      })
+    })
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  }, [catalog])
+
+  const hasMultipleCategories = categoryOptions.length > 1
+
+  useEffect(() => {
+    if (categoryOptions.length === 1) {
+      setSelectedCategoryId(categoryOptions[0]?.id ?? null)
+      return
+    }
+
+    if (categoryOptions.length > 1 && selectedCategoryId === null) {
+      setSelectedCategoryId(ALL_CATEGORIES)
+      return
+    }
+
+    if (categoryOptions.length === 0) {
+      setSelectedCategoryId(null)
+    }
+  }, [categoryOptions, selectedCategoryId])
+
+  const activeCategoryId = useMemo(() => {
+    if (hasMultipleCategories) return selectedCategoryId
+    if (categoryOptions.length === 1) return categoryOptions[0]?.id ?? null
+    return selectedCategoryId
+  }, [categoryOptions, hasMultipleCategories, selectedCategoryId])
+
+  const serviceOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>()
+
+    catalog.forEach((option) => {
+      option.serviceTypes.forEach((serviceType) => {
+        if (
+          activeCategoryId &&
+          activeCategoryId !== ALL_CATEGORIES &&
+          normalizeCategoryId(serviceType.categoryId) !== activeCategoryId
+        ) {
+          return
+        }
+
+        if (!map.has(serviceType.id)) {
+          map.set(serviceType.id, { id: serviceType.id, name: serviceType.name })
+        }
+      })
+    })
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  }, [activeCategoryId, catalog])
+
+  useEffect(() => {
+    if (!selectedServiceTypeId) return
+    const stillExists = serviceOptions.some((option) => option.id === selectedServiceTypeId)
+    if (!stillExists) {
+      setSelectedServiceTypeId(null)
+    }
+  }, [selectedServiceTypeId, serviceOptions])
+
+  const resolvePrimaryService = useCallback(
+    (option: CatalogOption): CatalogServiceType | null => {
+      if (selectedServiceTypeId) {
+        const byService = option.serviceTypes.find((serviceType) => serviceType.id === selectedServiceTypeId)
+        if (byService) return byService
+      }
+
+      if (activeCategoryId && activeCategoryId !== ALL_CATEGORIES) {
+        const byCategory = option.serviceTypes.find(
+          (serviceType) => normalizeCategoryId(serviceType.categoryId) === activeCategoryId,
+        )
+        if (byCategory) return byCategory
+      }
+
+      return option.serviceTypes[0] ?? null
+    },
+    [activeCategoryId, selectedServiceTypeId],
+  )
+
+  const filteredCatalog = useMemo(
+    () =>
+      catalog
+        .filter((option) => {
+          const matchesCategory =
+            activeCategoryId && activeCategoryId !== ALL_CATEGORIES
+              ? option.serviceTypes.some((serviceType) => normalizeCategoryId(serviceType.categoryId) === activeCategoryId)
+              : true
+
+          const matchesService = selectedServiceTypeId
+            ? option.serviceTypes.some((serviceType) => serviceType.id === selectedServiceTypeId)
+            : true
+
+          const matchesFeatured = onlyFeatured ? option.gallery.length > 0 : true
+
+          return matchesCategory && matchesService && matchesFeatured
+        })
+        .map((option) => ({
+          option,
+          primaryService: resolvePrimaryService(option),
+        })),
+    [activeCategoryId, catalog, onlyFeatured, resolvePrimaryService, selectedServiceTypeId],
+  )
+
+  const activeCategoryLabel = useMemo(() => {
+    if (!activeCategoryId) return null
+    if (activeCategoryId === ALL_CATEGORIES) return 'Todas as categorias'
+    return categoryOptions.find((item) => item.id === activeCategoryId)?.name ?? null
+  }, [activeCategoryId, categoryOptions])
+
   return (
     <ClientPageShell heroReady={heroReady} forceMotion>
       <ClientSection className={styles.section}>
         <div className={styles.headerArea}>
-          <span className="badge">Catálogo</span>
           <ClientPageHeader
             title="Catálogo do estúdio"
             subtitle={heroSubtitle}
@@ -228,6 +448,72 @@ export default function CatalogoPage() {
         </div>
 
         <ClientGlassPanel label="OPÇÕES DISPONÍVEIS" className={styles.panel}>
+          {hasMultipleCategories ? (
+            <div className={styles.filters}>
+              <div className={styles.filterGroup}>
+                <label htmlFor="catalog-category" className={styles.filterLabel}>
+                  Categoria
+                </label>
+                <select
+                  id="catalog-category"
+                  className={styles.select}
+                  value={activeCategoryId ?? ALL_CATEGORIES}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setSelectedCategoryId(value === ALL_CATEGORIES ? ALL_CATEGORIES : value)
+                  }}
+                >
+                  <option value={ALL_CATEGORIES}>Todas as categorias</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label htmlFor="catalog-service" className={styles.filterLabel}>
+                  Serviços
+                </label>
+                <select
+                  id="catalog-service"
+                  className={styles.select}
+                  value={selectedServiceTypeId ?? ALL_SERVICES}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setSelectedServiceTypeId(value === ALL_SERVICES ? null : value)
+                  }}
+                >
+                  <option value={ALL_SERVICES}>Todos os serviços</option>
+                  {serviceOptions.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <span className={styles.filterLabel}>Destaques</span>
+                <button
+                  type="button"
+                  className={`${styles.toggle} ${onlyFeatured ? styles.toggleActive : ''}`}
+                  onClick={() => setOnlyFeatured((previous) => !previous)}
+                >
+                  Somente opções com fotos
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {activeCategoryLabel ? (
+            <div className={styles.selectedCategory}>
+              <span className={styles.selectedCategoryLabel}>Categoria</span>
+              <span className={styles.categoryBadge}>{activeCategoryLabel}</span>
+            </div>
+          ) : null}
+
           {status === 'loading' ? <p className={styles.helper}>Carregando catálogo...</p> : null}
           {status === 'error' ? (
             <p className={`${styles.helper} ${styles.error}`}>{error ?? 'Algo deu errado ao carregar o catálogo.'}</p>
@@ -235,11 +521,14 @@ export default function CatalogoPage() {
           {status === 'ready' && catalog.length === 0 ? (
             <p className={styles.helper}>Nenhuma opção ativa no momento.</p>
           ) : null}
+          {status === 'ready' && catalog.length > 0 && filteredCatalog.length === 0 ? (
+            <p className={styles.helper}>Nenhuma opção encontrada com os filtros selecionados.</p>
+          ) : null}
 
-          {catalog.length ? (
+          {filteredCatalog.length ? (
             <div className={styles.grid}>
-              {catalog.map((option) => {
-                const primaryService = option.serviceTypes[0]
+              {filteredCatalog.map(({ option, primaryService }) => {
+                const service = primaryService ?? option.serviceTypes[0]
 
                 return (
                   <article key={option.id} className={styles.card}>
@@ -262,14 +551,11 @@ export default function CatalogoPage() {
                     </div>
 
                     <div className={styles.cardBody}>
-                      {option.serviceTypes.length ? (
+                      {service ? (
                         <div className={styles.tags} aria-label="Serviços relacionados">
-                          {option.serviceTypes.map((serviceType) => (
-                            <span key={serviceType.id} className={styles.tag}>
-                              {serviceType.categoryName ? `${serviceType.categoryName} · ` : ''}
-                              {serviceType.name}
-                            </span>
-                          ))}
+                          <span key={service.id} className={styles.tag}>
+                            {service.name}
+                          </span>
                         </div>
                       ) : null}
 
@@ -280,19 +566,19 @@ export default function CatalogoPage() {
                         <p className={styles.optionDescriptionMuted}>Sem descrição cadastrada.</p>
                       )}
 
-                      {primaryService ? (
+                      {service ? (
                         <dl className={styles.meta} aria-label="Faixa de preço e duração estimada">
                           <div>
                             <dt>Valor</dt>
-                            <dd>{formatPrice(primaryService.price)}</dd>
+                            <dd>{formatPrice(service.price)}</dd>
                           </div>
                           <div>
                             <dt>Duração</dt>
-                            <dd>{formatDuration(primaryService.duration)}</dd>
+                            <dd>{formatDuration(service.duration)}</dd>
                           </div>
                           <div>
                             <dt>Sinal</dt>
-                            <dd>{formatPrice(primaryService.deposit)}</dd>
+                            <dd>{formatPrice(service.deposit)}</dd>
                           </div>
                         </dl>
                       ) : null}

@@ -56,6 +56,12 @@
   font-size: 0.95rem;
 }
 
+.helperTextWarning {
+  margin: 0;
+  color: #b45309;
+  font-weight: 700;
+}
+
 .helperTextError {
   color: #b91c1c;
   font-weight: 800;

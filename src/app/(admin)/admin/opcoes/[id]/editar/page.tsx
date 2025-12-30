@@ -28,6 +28,7 @@ export default function EditarOpcaoPage({ params }: Params) {
   const [photos, setPhotos] = useState<ServicePhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
 
   const optionId = params.id;
   const isReadonly = role === "admin";
@@ -40,6 +41,7 @@ export default function EditarOpcaoPage({ params }: Params) {
   const loadData = async (id: string) => {
     setLoading(true);
     setError(null);
+    setWarnings([]);
 
     const [categoriesResponse, serviceTypesResponse, optionResponse, photosResponse] = await Promise.all([
       fetchCategories(),
@@ -48,8 +50,11 @@ export default function EditarOpcaoPage({ params }: Params) {
       fetchOptionPhotos(id),
     ]);
 
-    if (categoriesResponse.error || serviceTypesResponse.error || optionResponse.error || photosResponse.error || !optionResponse.data) {
-      setError("Não foi possível carregar a opção selecionada.");
+    if (optionResponse.error || !optionResponse.data) {
+      if (optionResponse.error) {
+        console.error("Erro ao carregar opção:", optionResponse.error.message ?? optionResponse.error);
+      }
+      setError(optionResponse.error ? `Erro ao carregar opção: ${optionResponse.error.message ?? "Erro desconhecido"}` : "Opção não encontrada.");
       setCategories([]);
       setServiceTypes([]);
       setOption(null);
@@ -58,10 +63,34 @@ export default function EditarOpcaoPage({ params }: Params) {
       return;
     }
 
-    setCategories(categoriesResponse.data);
-    setServiceTypes(serviceTypesResponse.data);
+    const nextWarnings: string[] = [];
+
+    if (categoriesResponse.error) {
+      console.error("Erro ao carregar categorias:", categoriesResponse.error.message ?? categoriesResponse.error);
+      nextWarnings.push("Erro ao carregar categorias.");
+      setCategories([]);
+    } else {
+      setCategories(categoriesResponse.data);
+    }
+
+    if (serviceTypesResponse.error) {
+      console.error("Erro ao carregar tipos de serviço:", serviceTypesResponse.error.message ?? serviceTypesResponse.error);
+      nextWarnings.push("Erro ao carregar tipos de serviço.");
+      setServiceTypes([]);
+    } else {
+      setServiceTypes(serviceTypesResponse.data);
+    }
+
+    if (photosResponse.error) {
+      console.error("Erro ao carregar fotos:", photosResponse.error.message ?? photosResponse.error);
+      nextWarnings.push("Erro ao carregar fotos.");
+      setPhotos([]);
+    } else {
+      setPhotos(photosResponse.data);
+    }
+
     setOption(optionResponse.data);
-    setPhotos(photosResponse.data);
+    setWarnings(nextWarnings);
     setLoading(false);
   };
 
@@ -77,6 +106,11 @@ export default function EditarOpcaoPage({ params }: Params) {
       </header>
 
       {error ? <div className={styles.helperText}>{error}</div> : null}
+      {warnings.map((message) => (
+        <div key={message} className={styles.helperTextWarning}>
+          {message}
+        </div>
+      ))}
       {loading ? (
         <div className={styles.helperText}>Carregando opção e serviços...</div>
       ) : option ? (

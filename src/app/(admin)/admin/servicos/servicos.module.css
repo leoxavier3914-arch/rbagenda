@@ -163,6 +163,12 @@
   cursor: pointer;
 }
 
+.dangerButton {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
 .groupGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

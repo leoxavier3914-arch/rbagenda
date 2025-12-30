@@ -143,6 +143,19 @@
   flex-direction: column;
   gap: 12px;
   background: #fdfefe;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.optionCard:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 4px;
+}
+
+.optionCardExpanded {
+  border-color: #2563eb;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.12);
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 60%);
 }
 
 .optionHeader {
@@ -207,12 +220,32 @@
   background: #eef2ff;
   color: #1e293b;
   border: 1px solid #cbd5ff;
+  cursor: pointer;
+  justify-content: space-between;
+}
+
+.pillActive {
+  background: #dbeafe;
+  border-color: #2563eb;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
 }
 
 .pillMuted {
   background: #f8fafc;
   color: #475569;
   border: 1px dashed #cbd5e1;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.expandIcon {
+  font-size: 0.9rem;
 }
 
 .assignmentList {

@@ -29,6 +29,7 @@ export default function OpcoesPage() {
   const [serviceFilter, setServiceFilter] = useState("");
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedOptions, setExpandedOptions] = useState<string[]>([]);
 
   const isSuper = role === "adminsuper" || role === "adminmaster";
   const isReadonly = role === "admin";
@@ -113,6 +114,12 @@ export default function OpcoesPage() {
     setDeletingId(null);
   };
 
+  const toggleExpandedOption = (optionId: string) => {
+    setExpandedOptions((previous) =>
+      previous.includes(optionId) ? previous.filter((id) => id !== optionId) : [...previous, optionId],
+    );
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
@@ -186,10 +193,24 @@ export default function OpcoesPage() {
         ) : filteredOptions.length ? (
           <div className={styles.optionGrid}>
             {filteredOptions.map((option) => (
-              <article key={option.id} className={styles.optionCard}>
+              <article
+                key={option.id}
+                className={`${styles.optionCard} ${expandedOptions.includes(option.id) ? styles.optionCardExpanded : ""}`}
+                onClick={() => toggleExpandedOption(option.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleExpandedOption(option.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
                 <div className={styles.optionHeader}>
                   <div>
-                    <p className={styles.eyebrow}>{option.slug || "sem-slug"}</p>
+                    <p className={styles.eyebrow}>
+                      {option.categoryNames.length ? option.categoryNames.join(" · ") : "Sem categoria"}
+                    </p>
                     <h3 className={styles.optionTitle}>{option.name}</h3>
                     <p className={styles.muted}>{option.description || "Sem descrição"}</p>
                   </div>
@@ -198,59 +219,76 @@ export default function OpcoesPage() {
                   </span>
                 </div>
 
-                <div className={styles.pillGroup}>
-                  <span className={styles.pill}>
-                    {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
-                  </span>
-                  {option.categoryNames.length ? (
-                    option.categoryNames.map((categoryName) => (
-                      <span key={categoryName} className={styles.pillMuted}>
-                        {categoryName}
-                      </span>
-                    ))
-                  ) : (
-                    <span className={styles.pillMuted}>Sem categoria</span>
-                  )}
-                </div>
-
-                <div className={styles.assignmentList}>
-                  {option.assignments.length ? (
-                    option.assignments.map((assignment) => (
-                      <div key={`${option.id}-${assignment.serviceTypeId}`} className={styles.assignmentRow}>
-                        <div>
-                          <p className={styles.assignmentTitle}>{assignment.serviceTypeName}</p>
-                          <p className={styles.assignmentMeta}>
-                            {assignment.useDefaults ? "Padrão do serviço" : "Personalizado"} · {assignment.final.duration} min ·{" "}
-                            {formatPriceLabel(assignment.final.price)} · Sinal {formatPriceLabel(assignment.final.deposit)} · Buffer{" "}
-                            {assignment.final.buffer} min
-                          </p>
-                        </div>
-                        <span className={`${styles.badge} ${assignment.active ? styles.badgeActive : styles.badgeInactive}`}>
-                          {assignment.active ? "Serviço ativo" : "Serviço inativo"}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className={styles.helperText}>Nenhum serviço vinculado.</p>
-                  )}
-                </div>
-
-                <div className={styles.actionRow}>
-                  <Link className={styles.secondaryButton} href={`/admin/opcoes/${option.id}/editar`}>
-                    Editar
-                  </Link>
-                  <Link className={styles.secondaryButton} href={`/admin/opcoes/${option.id}/personalizar`}>
-                    Personalizar
-                  </Link>
+                <div className={styles.metaRow}>
                   <button
                     type="button"
-                    className={styles.dangerButton}
-                    onClick={() => handleDelete(option.id)}
-                    disabled={isReadonly || deletingId === option.id}
+                    className={`${styles.pill} ${expandedOptions.includes(option.id) ? styles.pillActive : ""}`}
+                    aria-expanded={expandedOptions.includes(option.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleExpandedOption(option.id);
+                    }}
                   >
-                    {deletingId === option.id ? "Excluindo..." : "Excluir"}
+                    <span>
+                      {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
+                    </span>
+                    <span className={styles.expandIcon}>{expandedOptions.includes(option.id) ? "▲" : "▼"}</span>
                   </button>
                 </div>
+
+                {expandedOptions.includes(option.id) ? (
+                  <>
+                    <div className={styles.assignmentList}>
+                      {option.assignments.length ? (
+                        option.assignments.map((assignment) => (
+                          <div key={`${option.id}-${assignment.serviceTypeId}`} className={styles.assignmentRow}>
+                            <div>
+                              <p className={styles.assignmentTitle}>{assignment.serviceTypeName}</p>
+                              <p className={styles.assignmentMeta}>
+                                {assignment.useDefaults ? "Padrão" : "Personalizado"} · {assignment.final.duration} min ·{" "}
+                                {formatPriceLabel(assignment.final.price)} · Sinal {formatPriceLabel(assignment.final.deposit)} · Buffer{" "}
+                                {assignment.final.buffer} min
+                              </p>
+                            </div>
+                            <span className={`${styles.badge} ${assignment.active ? styles.badgeActive : styles.badgeInactive}`}>
+                              {assignment.active ? "Serviço ativo" : "Serviço inativo"}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className={styles.helperText}>Nenhum serviço vinculado.</p>
+                      )}
+                    </div>
+
+                    <div className={styles.actionRow}>
+                      <Link
+                        className={styles.secondaryButton}
+                        href={`/admin/opcoes/${option.id}/editar`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        Editar
+                      </Link>
+                      <Link
+                        className={styles.secondaryButton}
+                        href={`/admin/opcoes/${option.id}/personalizar`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        Personalizar
+                      </Link>
+                      <button
+                        type="button"
+                        className={styles.dangerButton}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDelete(option.id);
+                        }}
+                        disabled={isReadonly || deletingId === option.id}
+                      >
+                        {deletingId === option.id ? "Excluindo..." : "Excluir"}
+                      </button>
+                    </div>
+                  </>
+                ) : null}
               </article>
             ))}
           </div>

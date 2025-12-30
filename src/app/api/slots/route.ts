@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/db'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
+import { resolveServicePricing } from '@/lib/servicePricing'
 
 const supabaseAdmin = getSupabaseAdmin()
 
@@ -23,13 +24,15 @@ export async function GET(req: NextRequest) {
   if (!branch) return NextResponse.json({ slots: [] })
   const branchTimezone = branch.timezone || 'America/Sao_Paulo'
 
-  const durationMinRaw = Number(service.duration_min)
+  const pricing = await resolveServicePricing(supabaseAdmin, service_id).catch(() => null)
+  const durationMinRaw = pricing?.finalValues?.duration_min ?? Number(service.duration_min)
   if (!Number.isFinite(durationMinRaw) || durationMinRaw <= 0) {
     return NextResponse.json({ slots: [] })
   }
 
   const bufferMinEnv = Number(process.env.DEFAULT_BUFFER_MIN || 15)
-  const bufferMin = Number.isFinite(bufferMinEnv) && bufferMinEnv >= 0 ? bufferMinEnv : 15
+  const fallbackBuffer = Number.isFinite(bufferMinEnv) && bufferMinEnv >= 0 ? bufferMinEnv : 15
+  const bufferMin = pricing?.finalValues?.buffer_min ?? fallbackBuffer
   const normalizeTime = (time: string) => {
     const [rawHour = '0', rawMinute = '0', rawSecond] = time.split(':')
     const hour = rawHour.padStart(2, '0')

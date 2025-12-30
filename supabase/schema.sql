@@ -38,6 +38,16 @@ create table if not exists branches (
   created_at timestamptz not null default now()
 );
 create index if not exists branches_owner_id_idx on branches(owner_id);
+create table if not exists public.branch_admins (
+  id uuid primary key default gen_random_uuid(),
+  branch_id uuid not null references public.branches(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  assigned_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create unique index if not exists branch_admins_branch_user_uniq on public.branch_admins(branch_id, user_id);
+create index if not exists branch_admins_branch_id_idx on public.branch_admins(branch_id);
+create index if not exists branch_admins_user_id_idx on public.branch_admins(user_id);
 create table if not exists service_types (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete set null,
@@ -69,6 +79,14 @@ create table if not exists service_type_assignments (
   created_at timestamptz not null default now(),
   primary key (service_id, service_type_id)
 );
+create table if not exists service_photos (
+  id uuid primary key default gen_random_uuid(),
+  service_id uuid not null references services(id) on delete cascade,
+  url text not null,
+  order_index int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists service_photos_service_id_idx on service_photos(service_id, order_index);
 create table if not exists staff (
   id uuid primary key default gen_random_uuid(),
   branch_id uuid references branches(id) on delete cascade,
@@ -274,6 +292,72 @@ for each row execute function sync_paid_full();
 -- RLS básica (clientes veem só o que é deles; admin vê tudo)
 alter table profiles enable row level security;
 alter table appointments enable row level security;
+alter table public.service_photos enable row level security;
+alter table public.branch_admins enable row level security;
+create or replace function public.is_master(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p where p.id = uid and p.role = 'adminmaster'
+  );
+$$;
+
+grant execute on function public.is_master(uuid) to public;
+
+create or replace function public.is_super(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.is_master(uid)
+    or exists (
+      select 1 from public.profiles p where p.id = uid and p.role = 'adminsuper'
+    );
+$$;
+
+grant execute on function public.is_super(uuid) to public;
+
+create or replace function public.is_panel_admin(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p where p.id = uid and p.role in ('admin','adminsuper','adminmaster')
+  );
+$$;
+
+grant execute on function public.is_panel_admin(uuid) to public;
+
+create or replace function public.can_access_branch(uid uuid, branch uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    public.is_master(uid)
+    or (
+      public.is_super(uid)
+      and exists (
+        select 1 from public.branches b where b.id = branch and b.owner_id = uid
+      )
+    )
+    or exists (
+      select 1 from public.branch_admins ba where ba.branch_id = branch and ba.user_id = uid
+    );
+$$;
+
+grant execute on function public.can_access_branch(uuid, uuid) to public;
 create or replace function public.is_admin(uid uuid)
 returns boolean
 language plpgsql
@@ -317,6 +401,123 @@ create policy if not exists appt_select on appointments for select using (
 create policy if not exists appt_insert on appointments for insert with check (
   customer_id = auth.uid() or public.is_admin(auth.uid())
 );
+drop policy if exists branch_admins_select_policy on public.branch_admins;
+drop policy if exists branch_admins_insert_policy on public.branch_admins;
+drop policy if exists branch_admins_delete_policy on public.branch_admins;
+
+create policy branch_admins_select_policy
+  on public.branch_admins
+  for select
+  using (
+    user_id = auth.uid()
+    or public.is_master(auth.uid())
+    or (
+      public.is_super(auth.uid())
+      and exists (select 1 from public.branches b where b.id = branch_id and b.owner_id = auth.uid())
+    )
+  );
+
+create policy branch_admins_insert_policy
+  on public.branch_admins
+  for insert
+  with check (
+    public.is_master(auth.uid())
+    or (
+      public.is_super(auth.uid())
+      and exists (select 1 from public.branches b where b.id = branch_id and b.owner_id = auth.uid())
+    )
+  );
+
+create policy branch_admins_delete_policy
+  on public.branch_admins
+  for delete
+  using (
+    public.is_master(auth.uid())
+    or (
+      public.is_super(auth.uid())
+      and exists (select 1 from public.branches b where b.id = branch_id and b.owner_id = auth.uid())
+    )
+  );
+drop policy if exists service_photos_select_public on public.service_photos;
+drop policy if exists service_photos_insert_branch_admin on public.service_photos;
+drop policy if exists service_photos_update_branch_admin on public.service_photos;
+drop policy if exists service_photos_delete_branch_admin on public.service_photos;
+
+create policy service_photos_select_public
+  on public.service_photos
+  for select
+  using (
+    exists (
+      select 1
+      from public.services s
+      where s.id = service_id
+        and (
+          s.active = true
+          or s.branch_id is null
+          or public.can_access_branch(auth.uid(), s.branch_id)
+        )
+    )
+  );
+
+create policy service_photos_insert_branch_admin
+  on public.service_photos
+  for insert
+  with check (
+    public.is_panel_admin(auth.uid())
+    and exists (
+      select 1
+      from public.services s
+      where s.id = service_id
+        and (
+          s.branch_id is null
+          or public.can_access_branch(auth.uid(), s.branch_id)
+        )
+    )
+  );
+
+create policy service_photos_update_branch_admin
+  on public.service_photos
+  for update
+  using (
+    public.is_panel_admin(auth.uid())
+    and exists (
+      select 1
+      from public.services s
+      where s.id = service_id
+        and (
+          s.branch_id is null
+          or public.can_access_branch(auth.uid(), s.branch_id)
+        )
+    )
+  )
+  with check (
+    public.is_panel_admin(auth.uid())
+    and exists (
+      select 1
+      from public.services s
+      where s.id = service_id
+        and (
+          s.branch_id is null
+          or public.can_access_branch(auth.uid(), s.branch_id)
+        )
+    )
+  );
+
+create policy service_photos_delete_branch_admin
+  on public.service_photos
+  for delete
+  using (
+    public.is_panel_admin(auth.uid())
+    and exists (
+      select 1
+      from public.services s
+      where s.id = service_id
+        and (
+          s.branch_id is null
+          or public.can_access_branch(auth.uid(), s.branch_id)
+        )
+    )
+  );
 
 -- Suporte
 create table if not exists public.support_threads (

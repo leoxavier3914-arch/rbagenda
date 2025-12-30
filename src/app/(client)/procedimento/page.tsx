@@ -229,10 +229,10 @@ export default function ProcedimentoPage() {
 
         const normalized = (data ?? []).map((entry) => {
           const assignments = Array.isArray(entry.assignments)
-            ? entry.assignments
+            ? (entry.assignments as ServiceTypeAssignment[])
             : entry.assignments
-            ? [entry.assignments]
-            : []
+            ? ([entry.assignments] as ServiceTypeAssignment[])
+            : ([] as ServiceTypeAssignment[])
 
           const baseValues = {
             base_duration_min: entry.base_duration_min ?? 0,
@@ -273,7 +273,7 @@ export default function ProcedimentoPage() {
                 price_cents: Math.max(0, Math.round(finalValues.price_cents)),
                 deposit_cents: Math.max(0, Math.round(finalValues.deposit_cents)),
                 buffer_min: Math.max(0, Math.round(finalValues.buffer_min)),
-                active: svc.active !== false,
+                active: svc.active,
               })
             })
           })

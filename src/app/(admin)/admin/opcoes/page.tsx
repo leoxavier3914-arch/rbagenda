@@ -46,6 +46,10 @@ type ServiceRow = {
   name: string;
   slug: string | null;
   description: string | null;
+  duration_min?: number | null;
+  price_cents?: number | null;
+  deposit_cents?: number | null;
+  buffer_min?: number | null;
   active: boolean;
   branch_id: string | null;
   assignments?: ServiceAssignmentRow[] | null;
@@ -493,7 +497,6 @@ export default function OpcoesPage() {
 
     const targetId = response.data[0].id as string;
     const previousAssignments = editingId ? options.find((option) => option.id === editingId)?.serviceTypeIds ?? [] : [];
-    const desiredAssignments = Array.from(selectedServiceTypeIds);
 
     const assignmentError = await syncAssignments(targetId, previousAssignments, desiredAssignments);
     if (assignmentError) {

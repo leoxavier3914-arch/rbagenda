@@ -94,6 +94,12 @@
   gap: 12px;
 }
 
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .filterGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -139,6 +145,11 @@
   margin: 0;
   color: #7a86a2;
   font-size: 0.9rem;
+}
+
+.errorText {
+  color: #b91c1c;
+  font-weight: 800;
 }
 
 .buttonRow {
@@ -197,6 +208,101 @@
 .checkboxHelper {
   color: #7a86a2;
   font-size: 0.9rem;
+}
+
+.serviceSection {
+  gap: 10px;
+}
+
+.serviceToolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.inlineInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: flex-start;
+}
+
+.serviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.serviceGroup {
+  border: 1px dashed #d9e1ef;
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8fbff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.serviceGroupTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.serviceRow {
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.serviceRow input[type="checkbox"] {
+  margin-top: 4px;
+}
+
+.serviceRowActive {
+  border-color: #2563eb;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+  background: #f0f5ff;
+}
+
+.serviceRowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.serviceRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.serviceName {
+  font-weight: 800;
+}
+
+.serviceMeta {
+  margin: 0;
+  color: #526079;
+  font-size: 0.9rem;
+}
+
+.configSection {
+  gap: 10px;
 }
 
 .optionGrid {
@@ -341,4 +447,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.actionsSection {
+  gap: 8px;
 }

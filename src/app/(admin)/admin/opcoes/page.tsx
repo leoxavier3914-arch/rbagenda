@@ -83,12 +83,6 @@ type NormalizedOption = {
   categoryIds: string[];
   categoryNames: string[];
   assignments: AssignmentDisplay[];
-  legacy: {
-    duration_min: number;
-    price_cents: number;
-    deposit_cents: number;
-    buffer_min: number;
-  };
 };
 
 type ServicePhoto = {
@@ -103,10 +97,6 @@ type OptionFormState = {
   slug: string;
   description: string;
   active: boolean;
-  legacy_duration_min: number;
-  legacy_price_cents: number;
-  legacy_deposit_cents: number;
-  legacy_buffer_min: number;
 };
 
 const defaultForm: OptionFormState = {
@@ -114,10 +104,6 @@ const defaultForm: OptionFormState = {
   slug: "",
   description: "",
   active: true,
-  legacy_duration_min: 30,
-  legacy_price_cents: 0,
-  legacy_deposit_cents: 0,
-  legacy_buffer_min: 15,
 };
 
 const normalizeInt = (value: string | number, fallback = 0) => {
@@ -356,12 +342,6 @@ export default function OpcoesPage() {
           categoryIds: Array.from(categoryNames.keys()),
           categoryNames: Array.from(categoryNames.values()),
           assignments: Array.from(uniqueServiceTypes.values()),
-          legacy: {
-            duration_min: normalizeInt(entry.duration_min ?? 30, 30) || 30,
-            price_cents: normalizeInt(entry.price_cents ?? 0, 0),
-            deposit_cents: normalizeInt(entry.deposit_cents ?? 0, 0),
-            buffer_min: normalizeInt(entry.buffer_min ?? 15, 15),
-          },
         } as NormalizedOption;
       }) ?? [];
 
@@ -408,10 +388,6 @@ export default function OpcoesPage() {
       slug: option.slug ?? "",
       description: option.description ?? "",
       active: option.active !== false,
-      legacy_duration_min: option.legacy.duration_min,
-      legacy_price_cents: option.legacy.price_cents,
-      legacy_deposit_cents: option.legacy.deposit_cents,
-      legacy_buffer_min: option.legacy.buffer_min,
     });
     setSelectedServiceTypeIds(new Set(option.serviceTypeIds));
     const nextAssignments = new Map<
@@ -456,23 +432,24 @@ export default function OpcoesPage() {
       ? serviceTypes.find((serviceType) => serviceType.id === desiredAssignments[0])
       : null;
 
+    const existingOption = editingId ? options.find((option) => option.id === editingId) : null;
     const legacyDuration = Math.max(
       1,
-      normalizeInt(form.legacy_duration_min ?? primaryServiceType?.base_duration_min ?? 30, 30)
+      normalizeInt(existingOption?.assignments[0]?.final.duration ?? primaryServiceType?.base_duration_min ?? 30, 30)
     );
-    const legacyPrice =
-      form.legacy_price_cents !== undefined && form.legacy_price_cents !== null
-        ? Math.max(0, normalizeInt(form.legacy_price_cents, 0))
-        : Math.max(0, Math.round(primaryServiceType?.base_price_cents ?? 0));
-    const legacyDepositRaw =
-      form.legacy_deposit_cents !== undefined && form.legacy_deposit_cents !== null
-        ? Math.max(0, normalizeInt(form.legacy_deposit_cents, 0))
-        : Math.max(0, Math.round(primaryServiceType?.base_deposit_cents ?? 0));
+    const legacyPrice = Math.max(
+      0,
+      normalizeInt(existingOption?.assignments[0]?.final.price ?? primaryServiceType?.base_price_cents ?? 0, 0)
+    );
+    const legacyDepositRaw = Math.max(
+      0,
+      normalizeInt(existingOption?.assignments[0]?.final.deposit ?? primaryServiceType?.base_deposit_cents ?? 0, 0)
+    );
     const legacyDeposit = Math.min(legacyPrice, legacyDepositRaw);
-    const legacyBuffer =
-      form.legacy_buffer_min !== undefined && form.legacy_buffer_min !== null
-        ? Math.max(0, normalizeInt(form.legacy_buffer_min, 0))
-        : Math.max(0, normalizeInt(primaryServiceType?.base_buffer_min ?? 0, 0));
+    const legacyBuffer = Math.max(
+      0,
+      normalizeInt(existingOption?.assignments[0]?.final.buffer ?? primaryServiceType?.base_buffer_min ?? 0, 0)
+    );
 
     const payload = {
       name: form.name.trim() || "Opção",
@@ -793,30 +770,6 @@ export default function OpcoesPage() {
               disabled={saving || isReadonly}
             />
           </label>
-          <div className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Campos legados (não usados no cálculo final)</span>
-            <p className={styles.helperText}>
-              Mantidos apenas para compatibilidade. Os valores finais seguem o Serviço ou a personalização do vínculo.
-            </p>
-            <div className={styles.formGrid}>
-              <label className={styles.inputGroup}>
-                <span className={styles.inputLabel}>Duração (min)</span>
-                <input className={styles.inputControl} type="number" value={form.legacy_duration_min} disabled />
-              </label>
-              <label className={styles.inputGroup}>
-                <span className={styles.inputLabel}>Preço (centavos)</span>
-                <input className={styles.inputControl} type="number" value={form.legacy_price_cents} disabled />
-              </label>
-              <label className={styles.inputGroup}>
-                <span className={styles.inputLabel}>Sinal (centavos)</span>
-                <input className={styles.inputControl} type="number" value={form.legacy_deposit_cents} disabled />
-              </label>
-              <label className={styles.inputGroup}>
-                <span className={styles.inputLabel}>Buffer (min)</span>
-                <input className={styles.inputControl} type="number" value={form.legacy_buffer_min} disabled />
-              </label>
-            </div>
-          </div>
           <label className={`${styles.inputGroup} ${styles.toggleRow}`}>
             <input
               type="checkbox"

@@ -32,6 +32,7 @@ export default function PersonalizarOpcaoPage({ params }: Params) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const optionId = params.id;
@@ -45,11 +46,15 @@ export default function PersonalizarOpcaoPage({ params }: Params) {
   const loadData = async (id: string) => {
     setLoading(true);
     setError(null);
+    setWarnings([]);
 
     const [optionResponse, serviceTypesResponse] = await Promise.all([fetchOptionWithAssignments(id), fetchServiceTypes()]);
 
-    if (optionResponse.error || serviceTypesResponse.error || !optionResponse.data) {
-      setError("Não foi possível carregar esta opção.");
+    if (optionResponse.error || !optionResponse.data) {
+      if (optionResponse.error) {
+        console.error("Erro ao carregar opção:", optionResponse.error.message ?? optionResponse.error);
+      }
+      setError(optionResponse.error ? `Erro ao carregar opção: ${optionResponse.error.message ?? "Erro desconhecido"}` : "Opção não encontrada.");
       setOption(null);
       setServiceTypes([]);
       setAssignmentForm(new Map());
@@ -57,9 +62,19 @@ export default function PersonalizarOpcaoPage({ params }: Params) {
       return;
     }
 
+    const nextWarnings: string[] = [];
+
+    if (serviceTypesResponse.error) {
+      console.error("Erro ao carregar tipos de serviço:", serviceTypesResponse.error.message ?? serviceTypesResponse.error);
+      nextWarnings.push("Erro ao carregar tipos de serviço.");
+      setServiceTypes([]);
+    } else {
+      setServiceTypes(serviceTypesResponse.data);
+    }
+
     setOption(optionResponse.data);
-    setServiceTypes(serviceTypesResponse.data);
     setAssignmentForm(mapAssignmentFormFromDisplays(optionResponse.data.assignments));
+    setWarnings(nextWarnings);
     setLoading(false);
   };
 
@@ -117,6 +132,11 @@ export default function PersonalizarOpcaoPage({ params }: Params) {
 
       {error ? <div className={styles.helperTextError}>{error}</div> : null}
       {note ? <div className={styles.helperText}>{note}</div> : null}
+      {warnings.map((message) => (
+        <div key={message} className={styles.helperTextWarning}>
+          {message}
+        </div>
+      ))}
 
       {loading ? (
         <div className={styles.helperText}>Carregando serviços vinculados...</div>

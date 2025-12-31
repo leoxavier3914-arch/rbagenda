@@ -101,7 +101,6 @@ const normalizeOrderIndex = (value: number | null | undefined) =>
 
 const servicePhotosBucket = 'service-photos'
 const ALL_CATEGORIES = '__all__'
-const ALL_SERVICES = '__all_services__'
 const UNCATEGORIZED_CATEGORY = '__uncategorized__'
 
 const normalizeCategoryId = (value: string | null | undefined) => value ?? UNCATEGORIZED_CATEGORY
@@ -262,8 +261,6 @@ export default function CatalogoPage() {
   const [status, setStatus] = useState<CatalogStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
-  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
-  const [onlyFeatured, setOnlyFeatured] = useState(false)
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number; title: string } | null>(null)
 
@@ -385,43 +382,8 @@ export default function CatalogoPage() {
     return selectedCategoryId
   }, [categoryOptions, hasMultipleCategories, selectedCategoryId])
 
-  const serviceOptions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>()
-
-    catalog.forEach((option) => {
-      option.serviceTypes.forEach((serviceType) => {
-        if (
-          activeCategoryId &&
-          activeCategoryId !== ALL_CATEGORIES &&
-          normalizeCategoryId(serviceType.categoryId) !== activeCategoryId
-        ) {
-          return
-        }
-
-        if (!map.has(serviceType.id)) {
-          map.set(serviceType.id, { id: serviceType.id, name: serviceType.name })
-        }
-      })
-    })
-
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
-  }, [activeCategoryId, catalog])
-
-  useEffect(() => {
-    if (!selectedServiceTypeId) return
-    const stillExists = serviceOptions.some((option) => option.id === selectedServiceTypeId)
-    if (!stillExists) {
-      setSelectedServiceTypeId(null)
-    }
-  }, [selectedServiceTypeId, serviceOptions])
-
   const resolvePrimaryService = useCallback(
     (option: CatalogOption): CatalogServiceType | null => {
-      if (selectedServiceTypeId) {
-        const byService = option.serviceTypes.find((serviceType) => serviceType.id === selectedServiceTypeId)
-        if (byService) return byService
-      }
-
       if (activeCategoryId && activeCategoryId !== ALL_CATEGORIES) {
         const byCategory = option.serviceTypes.find(
           (serviceType) => normalizeCategoryId(serviceType.categoryId) === activeCategoryId,
@@ -431,7 +393,7 @@ export default function CatalogoPage() {
 
       return option.serviceTypes[0] ?? null
     },
-    [activeCategoryId, selectedServiceTypeId],
+    [activeCategoryId],
   )
 
   const filteredCatalog = useMemo(
@@ -443,19 +405,13 @@ export default function CatalogoPage() {
               ? option.serviceTypes.some((serviceType) => normalizeCategoryId(serviceType.categoryId) === activeCategoryId)
               : true
 
-          const matchesService = selectedServiceTypeId
-            ? option.serviceTypes.some((serviceType) => serviceType.id === selectedServiceTypeId)
-            : true
-
-          const matchesFeatured = onlyFeatured ? option.gallery.length > 0 : true
-
-          return matchesCategory && matchesService && matchesFeatured
+          return matchesCategory
         })
         .map((option) => ({
           option,
           primaryService: resolvePrimaryService(option),
         })),
-    [activeCategoryId, catalog, onlyFeatured, resolvePrimaryService, selectedServiceTypeId],
+    [activeCategoryId, catalog, resolvePrimaryService],
   )
 
   const activeCategoryLabel = useMemo(() => {
@@ -520,65 +476,6 @@ export default function CatalogoPage() {
         </div>
 
         <ClientGlassPanel className={styles.panel}>
-          {hasMultipleCategories ? (
-            <div className={styles.filters}>
-              <div className={styles.filterGroup}>
-                <label htmlFor="catalog-category" className={styles.filterLabel}>
-                  Categoria
-                </label>
-                <select
-                  id="catalog-category"
-                  className={styles.select}
-                  value={activeCategoryId ?? ALL_CATEGORIES}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setSelectedCategoryId(value === ALL_CATEGORIES ? ALL_CATEGORIES : value)
-                  }}
-                >
-                  <option value={ALL_CATEGORIES}>Todas as categorias</option>
-                  {categoryOptions.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.filterGroup}>
-                <label htmlFor="catalog-service" className={styles.filterLabel}>
-                  Serviços
-                </label>
-                <select
-                  id="catalog-service"
-                  className={styles.select}
-                  value={selectedServiceTypeId ?? ALL_SERVICES}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setSelectedServiceTypeId(value === ALL_SERVICES ? null : value)
-                  }}
-                >
-                  <option value={ALL_SERVICES}>Todos os serviços</option>
-                  {serviceOptions.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.filterGroup}>
-                <span className={styles.filterLabel}>Destaques</span>
-                <button
-                  type="button"
-                  className={`${styles.toggle} ${onlyFeatured ? styles.toggleActive : ''}`}
-                  onClick={() => setOnlyFeatured((previous) => !previous)}
-                >
-                  Somente opções com fotos
-                </button>
-              </div>
-            </div>
-          ) : null}
-
           {activeCategoryLabel ? (
             <div className={styles.selectedCategory} ref={categoryDropdownRef}>
               <span className={styles.selectedCategoryLabel}>Categoria</span>

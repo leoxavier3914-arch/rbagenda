@@ -1,4 +1,4 @@
-import styles from "../threadView.module.css";
+import styles from "./threadView.module.css";
 
 type MessageBubbleProps = {
   message: string;

@@ -27,7 +27,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/servicos", label: "Serviços", icon: "🛠️" },
   { href: "/admin/opcoes", label: "Opções", icon: "💅" },
   { label: "Clientes", icon: "👥", comingSoon: true },
-  { label: "Tickets", icon: "🎫", comingSoon: true },
+  { href: "/admin/tickets", label: "Tickets", icon: "🎫" },
   { label: "Relatórios", icon: "📊", comingSoon: true },
   { label: "Configurações", icon: "⚙️", comingSoon: true },
 ];

@@ -1,6 +1,6 @@
 import MessageBubble from "./MessageBubble";
 
-import styles from "../threadView.module.css";
+import styles from "./threadView.module.css";
 
 type SupportMessage = {
   id: string;

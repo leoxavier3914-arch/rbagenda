@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/db";
 
-import styles from "../threadView.module.css";
+import styles from "./threadView.module.css";
 
 const MESSAGE_PREVIEW_LIMIT = 120;
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { supabase } from "@/lib/db";
 
@@ -17,6 +18,11 @@ import {
 import { useAdminGuard } from "../../useAdminGuard";
 import styles from "./opcoes.module.css";
 
+type OverlayState = {
+  optionId: string | null;
+  anchorEl: HTMLElement | null;
+};
+
 export default function OpcoesPage() {
   const { status, role } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -29,7 +35,7 @@ export default function OpcoesPage() {
   const [serviceFilter, setServiceFilter] = useState("");
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedOptions, setExpandedOptions] = useState<string[]>([]);
+  const [overlayState, setOverlayState] = useState<OverlayState>({ optionId: null, anchorEl: null });
 
   const isSuper = role === "adminsuper" || role === "adminmaster";
   const isReadonly = role === "admin";
@@ -89,6 +95,7 @@ export default function OpcoesPage() {
     const confirmation = window.confirm(`Excluir a opção “${target.name}”? Esta ação remove os vínculos.`);
     if (!confirmation) return;
 
+    handleCloseOverlay();
     setDeletingId(optionId);
     setError(null);
 
@@ -111,13 +118,20 @@ export default function OpcoesPage() {
     }
 
     await loadData();
+    handleCloseOverlay();
     setDeletingId(null);
   };
 
-  const toggleExpandedOption = (optionId: string) => {
-    setExpandedOptions((previous) =>
-      previous.includes(optionId) ? previous.filter((id) => id !== optionId) : [...previous, optionId],
-    );
+  const handleOverlayToggle = (optionId: string, target: HTMLElement) => {
+    const anchor = (target.closest("article") as HTMLElement | null) ?? target;
+    setOverlayState((previous) => {
+      const isSame = previous.optionId === optionId;
+      return isSame ? { optionId: null, anchorEl: null } : { optionId, anchorEl: anchor };
+    });
+  };
+
+  const handleCloseOverlay = () => {
+    setOverlayState({ optionId: null, anchorEl: null });
   };
 
   return (
@@ -195,12 +209,12 @@ export default function OpcoesPage() {
             {filteredOptions.map((option) => (
               <article
                 key={option.id}
-                className={`${styles.optionCard} ${expandedOptions.includes(option.id) ? styles.optionCardExpanded : ""}`}
-                onClick={() => toggleExpandedOption(option.id)}
+                className={`${styles.optionCard} ${overlayState.optionId === option.id ? styles.optionCardExpanded : ""}`}
+                onClick={(event) => handleOverlayToggle(option.id, event.currentTarget)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    toggleExpandedOption(option.id);
+                    handleOverlayToggle(option.id, event.currentTarget);
                   }
                 }}
                 role="button"
@@ -222,73 +236,19 @@ export default function OpcoesPage() {
                 <div className={styles.metaRow}>
                   <button
                     type="button"
-                    className={`${styles.pill} ${expandedOptions.includes(option.id) ? styles.pillActive : ""}`}
-                    aria-expanded={expandedOptions.includes(option.id)}
+                    className={`${styles.pill} ${overlayState.optionId === option.id ? styles.pillActive : ""}`}
+                    aria-expanded={overlayState.optionId === option.id}
                     onClick={(event) => {
                       event.stopPropagation();
-                      toggleExpandedOption(option.id);
+                      handleOverlayToggle(option.id, event.currentTarget);
                     }}
                   >
                     <span>
                       {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
                     </span>
-                    <span className={styles.expandIcon}>{expandedOptions.includes(option.id) ? "▲" : "▼"}</span>
+                    <span className={styles.expandIcon}>{overlayState.optionId === option.id ? "▲" : "▼"}</span>
                   </button>
                 </div>
-
-                {expandedOptions.includes(option.id) ? (
-                  <>
-                    <div className={styles.assignmentList}>
-                      {option.assignments.length ? (
-                        option.assignments.map((assignment) => (
-                          <div key={`${option.id}-${assignment.serviceTypeId}`} className={styles.assignmentRow}>
-                            <div>
-                              <p className={styles.assignmentTitle}>{assignment.serviceTypeName}</p>
-                              <p className={styles.assignmentMeta}>
-                                {assignment.useDefaults ? "Padrão" : "Personalizado"} · {assignment.final.duration} min ·{" "}
-                                {formatPriceLabel(assignment.final.price)} · Sinal {formatPriceLabel(assignment.final.deposit)} · Buffer{" "}
-                                {assignment.final.buffer} min
-                              </p>
-                            </div>
-                            <span className={`${styles.badge} ${assignment.active ? styles.badgeActive : styles.badgeInactive}`}>
-                              {assignment.active ? "Serviço ativo" : "Serviço inativo"}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className={styles.helperText}>Nenhum serviço vinculado.</p>
-                      )}
-                    </div>
-
-                    <div className={styles.actionRow}>
-                      <Link
-                        className={styles.secondaryButton}
-                        href={`/admin/opcoes/${option.id}/editar`}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        Editar
-                      </Link>
-                      <Link
-                        className={styles.secondaryButton}
-                        href={`/admin/opcoes/${option.id}/personalizar`}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        Personalizar
-                      </Link>
-                      <button
-                        type="button"
-                        className={styles.dangerButton}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleDelete(option.id);
-                        }}
-                        disabled={isReadonly || deletingId === option.id}
-                      >
-                        {deletingId === option.id ? "Excluindo..." : "Excluir"}
-                      </button>
-                    </div>
-                  </>
-                ) : null}
               </article>
             ))}
           </div>
@@ -296,6 +256,150 @@ export default function OpcoesPage() {
           <div className={styles.emptyState}>Nenhuma opção encontrada com os filtros atuais.</div>
         )}
       </section>
+      {overlayState.optionId && overlayState.anchorEl
+        ? (() => {
+            const overlayOption =
+              options.find((current) => current.id === overlayState.optionId) ??
+              filteredOptions.find((current) => current.id === overlayState.optionId);
+            if (!overlayOption) return null;
+            return (
+              <OptionOverlay
+                option={overlayOption}
+                anchorEl={overlayState.anchorEl}
+                onClose={handleCloseOverlay}
+                onDelete={handleDelete}
+                isReadonly={isReadonly}
+                deletingId={deletingId}
+              />
+            );
+          })()
+        : null}
     </div>
+  );
+}
+
+type OptionOverlayProps = {
+  option: NormalizedOption;
+  anchorEl: HTMLElement;
+  onClose: () => void;
+  onDelete: (optionId: string) => void;
+  isReadonly: boolean;
+  deletingId: string | null;
+};
+
+function OptionOverlay({ option, anchorEl, onClose, onDelete, isReadonly, deletingId }: OptionOverlayProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ left: number; top: number; width: number }>({ left: 0, top: 0, width: 0 });
+
+  const updatePosition = useCallback(() => {
+    if (!anchorEl || !overlayRef.current) return;
+    const baseAnchor = (anchorEl.closest("article") as HTMLElement | null) ?? anchorEl;
+    const rect = baseAnchor.getBoundingClientRect();
+    const overlayWidth = rect.width;
+    const overlayHeight = overlayRef.current.offsetHeight;
+
+    const maxLeft = Math.max(8, window.innerWidth - overlayWidth - 8);
+    const clampedLeft = Math.min(Math.max(rect.left, 8), maxLeft);
+    let top = rect.bottom + 8;
+    if (top + overlayHeight > window.innerHeight) {
+      top = rect.top - overlayHeight - 8;
+    }
+
+    setPosition({ left: clampedLeft, top, width: overlayWidth });
+  }, [anchorEl]);
+
+  useLayoutEffect(() => {
+    const frame = requestAnimationFrame(updatePosition);
+    return () => cancelAnimationFrame(frame);
+  }, [updatePosition]);
+
+  useEffect(() => {
+    const handleScroll = () => updatePosition();
+    const handleResize = () => updatePosition();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      const baseAnchor = (anchorEl.closest("article") as HTMLElement | null) ?? anchorEl;
+      if (overlayRef.current?.contains(target)) return;
+      if (baseAnchor?.contains(target)) return;
+      onClose();
+    };
+
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [anchorEl, onClose, updatePosition]);
+
+  return createPortal(
+    <>
+      <div className={styles.overlayBackdrop} />
+      <div
+        ref={overlayRef}
+        className={styles.overlayPanel}
+        style={{ left: position.left, top: position.top, width: position.width }}
+        role="dialog"
+        aria-label={`Vínculos da opção ${option.name}`}
+        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className={styles.overlayHeader}>
+          <div>
+            <p className={styles.eyebrow}>{option.categoryNames.length ? option.categoryNames.join(" · ") : "Sem categoria"}</p>
+            <h3 className={styles.optionTitle}>{option.name}</h3>
+          </div>
+          <span className={`${styles.badge} ${option.active ? styles.badgeActive : styles.badgeInactive}`}>
+            {option.active ? "Ativa" : "Inativa"}
+          </span>
+        </div>
+
+        <div className={styles.assignmentList}>
+          {option.assignments.length ? (
+            option.assignments.map((assignment) => (
+              <div key={`${option.id}-${assignment.serviceTypeId}`} className={styles.assignmentRow}>
+                <div>
+                  <p className={styles.assignmentTitle}>{assignment.serviceTypeName}</p>
+                  <p className={styles.assignmentMeta}>
+                    {assignment.useDefaults ? "Padrão" : "Personalizado"} · {assignment.final.duration} min · {formatPriceLabel(assignment.final.price)} ·
+                    Sinal {formatPriceLabel(assignment.final.deposit)} · Buffer {assignment.final.buffer} min
+                  </p>
+                </div>
+                <span className={`${styles.badge} ${assignment.active ? styles.badgeActive : styles.badgeInactive}`}>
+                  {assignment.active ? "Serviço ativo" : "Serviço inativo"}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className={styles.helperText}>Nenhum serviço vinculado.</p>
+          )}
+        </div>
+
+        <div className={styles.actionRow}>
+          <Link className={styles.secondaryButton} href={`/admin/opcoes/${option.id}/editar`}>
+            Editar
+          </Link>
+          <Link className={styles.secondaryButton} href={`/admin/opcoes/${option.id}/personalizar`}>
+            Personalizar
+          </Link>
+          <button
+            type="button"
+            className={styles.dangerButton}
+            onClick={() => onDelete(option.id)}
+            disabled={isReadonly || deletingId === option.id}
+          >
+            {deletingId === option.id ? "Excluindo..." : "Excluir"}
+          </button>
+        </div>
+      </div>
+    </>,
+    document.body,
   );
 }

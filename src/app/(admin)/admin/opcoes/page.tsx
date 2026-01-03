@@ -120,11 +120,6 @@ export default function OpcoesPage() {
     );
   };
 
-  const expandedOptionDetails = useMemo(
-    () => expandedOptions.map((id) => filteredOptions.find((option) => option.id === id)).filter(Boolean) as NormalizedOption[],
-    [expandedOptions, filteredOptions],
-  );
-
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
@@ -196,70 +191,53 @@ export default function OpcoesPage() {
         {loading ? (
           <div className={styles.helperText}>Carregando opções...</div>
         ) : filteredOptions.length ? (
-          <>
-            <div className={styles.optionGrid}>
-              {filteredOptions.map((option) => (
-                <article
-                  key={option.id}
-                  className={`${styles.optionCard} ${expandedOptions.includes(option.id) ? styles.optionCardExpanded : ""}`}
-                  onClick={() => toggleExpandedOption(option.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
+          <div className={styles.optionGrid}>
+            {filteredOptions.map((option) => (
+              <article
+                key={option.id}
+                className={`${styles.optionCard} ${expandedOptions.includes(option.id) ? styles.optionCardExpanded : ""}`}
+                onClick={() => toggleExpandedOption(option.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleExpandedOption(option.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
+                <div className={styles.optionHeader}>
+                  <div>
+                    <p className={styles.eyebrow}>
+                      {option.categoryNames.length ? option.categoryNames.join(" · ") : "Sem categoria"}
+                    </p>
+                    <h3 className={styles.optionTitle}>{option.name}</h3>
+                    <p className={styles.muted}>{option.description || "Sem descrição"}</p>
+                  </div>
+                  <span className={`${styles.badge} ${option.active ? styles.badgeActive : styles.badgeInactive}`}>
+                    {option.active ? "Ativa" : "Inativa"}
+                  </span>
+                </div>
+
+                <div className={styles.metaRow}>
+                  <button
+                    type="button"
+                    className={`${styles.pill} ${expandedOptions.includes(option.id) ? styles.pillActive : ""}`}
+                    aria-expanded={expandedOptions.includes(option.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
                       toggleExpandedOption(option.id);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className={styles.optionHeader}>
-                    <div>
-                      <p className={styles.eyebrow}>
-                        {option.categoryNames.length ? option.categoryNames.join(" · ") : "Sem categoria"}
-                      </p>
-                      <h3 className={styles.optionTitle}>{option.name}</h3>
-                      <p className={styles.muted}>{option.description || "Sem descrição"}</p>
-                    </div>
-                    <span className={`${styles.badge} ${option.active ? styles.badgeActive : styles.badgeInactive}`}>
-                      {option.active ? "Ativa" : "Inativa"}
+                    }}
+                  >
+                    <span>
+                      {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
                     </span>
-                  </div>
+                    <span className={styles.expandIcon}>{expandedOptions.includes(option.id) ? "▲" : "▼"}</span>
+                  </button>
+                </div>
 
-                  <div className={styles.metaRow}>
-                    <button
-                      type="button"
-                      className={`${styles.pill} ${expandedOptions.includes(option.id) ? styles.pillActive : ""}`}
-                      aria-expanded={expandedOptions.includes(option.id)}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        toggleExpandedOption(option.id);
-                      }}
-                    >
-                      <span>
-                        {option.assignments.length} {option.assignments.length === 1 ? "serviço vinculado" : "serviços vinculados"}
-                      </span>
-                      <span className={styles.expandIcon}>{expandedOptions.includes(option.id) ? "▲" : "▼"}</span>
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            {expandedOptionDetails.length ? (
-              <div className={styles.optionDetailsArea}>
-                {expandedOptionDetails.map((option) => (
-                  <div key={option.id} className={styles.optionDetailsCard}>
-                    <div className={styles.optionDetailsHeader}>
-                      <div>
-                        <p className={styles.eyebrow}>{option.categoryNames.length ? option.categoryNames.join(" · ") : "Sem categoria"}</p>
-                        <h3 className={styles.optionTitle}>{option.name}</h3>
-                        <p className={styles.muted}>{option.description || "Sem descrição"}</p>
-                      </div>
-                      <span className={`${styles.badge} ${option.active ? styles.badgeActive : styles.badgeInactive}`}>
-                        {option.active ? "Ativa" : "Inativa"}
-                      </span>
-                    </div>
-
+                {expandedOptions.includes(option.id) ? (
+                  <>
                     <div className={styles.assignmentList}>
                       {option.assignments.length ? (
                         option.assignments.map((assignment) => (
@@ -309,11 +287,11 @@ export default function OpcoesPage() {
                         {deletingId === option.id ? "Excluindo..." : "Excluir"}
                       </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </>
+                  </>
+                ) : null}
+              </article>
+            ))}
+          </div>
         ) : (
           <div className={styles.emptyState}>Nenhuma opção encontrada com os filtros atuais.</div>
         )}

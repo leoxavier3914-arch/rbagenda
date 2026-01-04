@@ -1,0 +1,404 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #0f172a;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #64748b;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.6rem, 2vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.listCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.listHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cardDescription {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filterControl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterControlCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d9e1ef;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.filterLabel {
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.selectControl,
+.inputControl {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d9e1ef;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  font: inherit;
+  color: inherit;
+}
+
+.helperText {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.emptyState {
+  padding: 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #64748b;
+  text-align: center;
+}
+
+.clientGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.clientCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  background: linear-gradient(145deg, #fdfefe, #f8fbff);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.clientHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.clientIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clientAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #4338ca;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  border: 1px solid #c7d2fe;
+}
+
+.clientText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clientName {
+  margin: 0;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.clientEmail {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.clientStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.statLabel {
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.93rem;
+}
+
+.statValue {
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.clientFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.branchGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metaLabel {
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.93rem;
+}
+
+.branchBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.branchBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #1d4ed8;
+  border: 1px solid #c7d2fe;
+  font-weight: 700;
+}
+
+.branchBadgeMuted {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  font-weight: 700;
+}
+
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: none;
+  border: none;
+  min-width: 110px;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+}
+
+.openLink:hover {
+  transform: translateY(-1px);
+}
+
+.detailLayout {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr;
+  gap: 14px;
+}
+
+.infoCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.infoRow:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.infoLabel {
+  color: #475569;
+  font-weight: 700;
+}
+
+.infoValue {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.sectionDescription {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.appointmentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appointmentItem {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.appointmentMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.appointmentTitle {
+  margin: 0;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.appointmentSub {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 800;
+  border: 1px solid #c7d2fe;
+  height: fit-content;
+}
+
+.badgeAccent {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #99f6e4;
+}
+
+.ticketLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+@media (max-width: 960px) {
+  .detailLayout {
+    grid-template-columns: 1fr;
+  }
+}

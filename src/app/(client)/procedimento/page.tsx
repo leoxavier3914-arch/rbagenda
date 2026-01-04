@@ -37,12 +37,10 @@ import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { useClientAvailability } from '@/hooks/useClientAvailability'
 import type {
-  ServiceOption,
   ServiceTechnique,
   ServiceTypeAssignment,
   SummarySnapshot,
   TechniqueCatalogEntry,
-  TechniqueSummary,
 } from './types'
 
 function normalizeNumber(value: unknown): number | null {
@@ -104,7 +102,7 @@ export default function ProcedimentoPage() {
   const [techniqueCatalog, setTechniqueCatalog] = useState<TechniqueCatalogEntry[]>([])
   const [catalogStatus, setCatalogStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [catalogError, setCatalogError] = useState<string | null>(null)
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
+  const [selectedProcedureId, setSelectedProcedureId] = useState<string | null>(null)
   const [selectedTechniqueId, setSelectedTechniqueId] = useState<string | null>(null)
   const [showAllTechniques, setShowAllTechniques] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -316,99 +314,48 @@ export default function ProcedimentoPage() {
     }
   }, [])
 
-  const techniqueMap = useMemo(() => {
-    const map = new Map<string, TechniqueCatalogEntry>()
-    techniqueCatalog.forEach((technique) => {
-      map.set(technique.id, technique)
-    })
-    return map
-  }, [techniqueCatalog])
-
-  const serviceOptions = useMemo<ServiceOption[]>(() => {
-    const grouped = new Map<
-      string,
-      { service: ServiceTechnique; techniques: Map<string, TechniqueSummary> }
-    >()
-
-    techniqueCatalog.forEach((technique) => {
-      const techniqueSummary: TechniqueSummary = {
-        id: technique.id,
-        name: technique.name,
-        slug: technique.slug,
-        description: technique.description,
-        order_index: technique.order_index,
-      }
-
-      technique.services.forEach((service) => {
-        const existing = grouped.get(service.id)
-        if (!existing) {
-          grouped.set(service.id, {
-            service,
-            techniques: new Map([[techniqueSummary.id, techniqueSummary]]),
-          })
-          return
-        }
-
-        if (!existing.techniques.has(techniqueSummary.id)) {
-          existing.techniques.set(techniqueSummary.id, techniqueSummary)
-        }
-      })
-    })
-
-    return Array.from(grouped.values())
-      .map(({ service, techniques }) => ({
-        ...service,
-        techniques: Array.from(techniques.values()).sort((a, b) => {
-          const orderDiff = a.order_index - b.order_index
-          if (orderDiff !== 0) return orderDiff
-          return a.name.localeCompare(b.name, 'pt-BR')
-        }),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
-  }, [techniqueCatalog])
-
-  const availableServices = useMemo(
-    () => serviceOptions.filter((service) => service.techniques.length > 0),
-    [serviceOptions],
+  const availableProcedures = useMemo(
+    () => techniqueCatalog.filter((procedure) => procedure.services.length > 0),
+    [techniqueCatalog],
   )
 
   useEffect(() => {
     if (catalogStatus !== 'ready') return
 
-    if (availableServices.length === 0) {
-      setSelectedServiceId(null)
+    if (availableProcedures.length === 0) {
+      setSelectedProcedureId(null)
       return
     }
 
-    if (selectedServiceId && !availableServices.some((service) => service.id === selectedServiceId)) {
-      setSelectedServiceId(null)
+    if (selectedProcedureId && !availableProcedures.some((procedure) => procedure.id === selectedProcedureId)) {
+      setSelectedProcedureId(null)
     }
-  }, [availableServices, catalogStatus, selectedServiceId])
+  }, [availableProcedures, catalogStatus, selectedProcedureId])
 
-  const selectedService = useMemo(
-    () => availableServices.find((service) => service.id === selectedServiceId) ?? null,
-    [availableServices, selectedServiceId],
+  const selectedProcedure = useMemo(
+    () => availableProcedures.find((procedure) => procedure.id === selectedProcedureId) ?? null,
+    [availableProcedures, selectedProcedureId],
   )
 
   const visibleTechniques = useMemo(() => {
-    if (!selectedService) return []
-    if (showAllTechniques) return selectedService.techniques
-    return selectedService.techniques.slice(0, 6)
-  }, [selectedService, showAllTechniques])
+    if (!selectedProcedure) return []
+    if (showAllTechniques) return selectedProcedure.services
+    return selectedProcedure.services.slice(0, 6)
+  }, [selectedProcedure, showAllTechniques])
 
   useEffect(() => {
     setShowAllTechniques(false)
-  }, [selectedServiceId])
+  }, [selectedProcedureId])
 
   useEffect(() => {
-    if (!selectedService) {
+    if (!selectedProcedure) {
       if (selectedTechniqueId !== null) {
         setSelectedTechniqueId(null)
       }
       return
     }
 
-    const activeTechniques = selectedService.techniques
+    const activeTechniques = selectedProcedure.services
     if (activeTechniques.length === 0) {
       if (selectedTechniqueId !== null) {
         setSelectedTechniqueId(null)
@@ -419,25 +366,12 @@ export default function ProcedimentoPage() {
     if (selectedTechniqueId && !activeTechniques.some((tech) => tech.id === selectedTechniqueId)) {
       setSelectedTechniqueId(null)
     }
-  }, [selectedService, selectedTechniqueId])
+  }, [selectedProcedure, selectedTechniqueId])
 
   const selectedTechnique = useMemo(() => {
-    if (!selectedTechniqueId) return null
-
-    const withinService = selectedService?.techniques.find((tech) => tech.id === selectedTechniqueId)
-    if (withinService) return withinService
-
-    const fallback = techniqueMap.get(selectedTechniqueId)
-    if (!fallback) return null
-
-    return {
-      id: fallback.id,
-      name: fallback.name,
-      slug: fallback.slug,
-      description: fallback.description,
-      order_index: fallback.order_index,
-    }
-  }, [selectedService, selectedTechniqueId, techniqueMap])
+    if (!selectedTechniqueId || !selectedProcedure) return null
+    return selectedProcedure.services.find((tech) => tech.id === selectedTechniqueId) ?? null
+  }, [selectedProcedure, selectedTechniqueId])
 
   useEffect(() => {
     setSelectedSlot(null)
@@ -462,15 +396,15 @@ export default function ProcedimentoPage() {
   }, [month, year])
 
   const serviceBufferMinutes = useMemo(() => {
-    const normalized = normalizeNumber(selectedService?.buffer_min)
+    const normalized = normalizeNumber(selectedTechnique?.buffer_min)
     const fallback = FALLBACK_BUFFER_MINUTES
     if (normalized === null) return Math.max(0, fallback)
     return Math.max(0, Math.round(normalized))
-  }, [selectedService])
+  }, [selectedTechnique])
 
   const canInteract =
     catalogStatus === 'ready' &&
-    !!selectedService &&
+    !!selectedProcedure &&
     !!selectedTechnique &&
     !isLoadingAvailability &&
     !availabilityError
@@ -568,9 +502,9 @@ export default function ProcedimentoPage() {
   }, [availability.bookedSlots, selectedDate])
 
   const slots = useMemo(() => {
-    if (!selectedDate || !canInteract || !selectedService) return []
+    if (!selectedDate || !canInteract || !selectedTechnique) return []
 
-    const durationMinutes = selectedService.duration_min
+    const durationMinutes = selectedTechnique.duration_min
     if (!durationMinutes) return []
 
     const template = availability.daySlots[selectedDate] ?? DEFAULT_SLOT_TEMPLATE
@@ -603,7 +537,7 @@ export default function ProcedimentoPage() {
     canInteract,
     now,
     selectedDate,
-    selectedService,
+    selectedTechnique,
     serviceBufferMinutes,
   ])
 
@@ -626,16 +560,16 @@ export default function ProcedimentoPage() {
     setMonth(next.getMonth())
   }, [month, year])
 
-  const handleServiceSelect = useCallback(
-    (serviceId: string) => {
-      if (serviceId === selectedServiceId) return
-      setSelectedServiceId(serviceId)
+  const handleProcedureSelect = useCallback(
+    (procedureId: string) => {
+      if (procedureId === selectedProcedureId) return
+      setSelectedProcedureId(procedureId)
       setSelectedTechniqueId(null)
       setSelectedDate(null)
       setSelectedSlot(null)
       setPendingScrollTarget('technique')
     },
-    [selectedServiceId],
+    [selectedProcedureId],
   )
 
   const handleTechniqueSelect = useCallback((techniqueId: string) => {
@@ -684,17 +618,17 @@ export default function ProcedimentoPage() {
   }, [pendingScrollTarget, shouldReduceMotion])
 
   const summaryData = useMemo(() => {
-    if (!selectedService || !selectedTechnique || !selectedDate || !selectedSlot) return null
+    if (!selectedProcedure || !selectedTechnique || !selectedDate || !selectedSlot) return null
 
-    const priceValue = Number.isFinite(selectedService.price_cents)
-      ? selectedService.price_cents / 100
+    const priceValue = Number.isFinite(selectedTechnique.price_cents)
+      ? selectedTechnique.price_cents / 100
       : 0
     const priceLabel = priceValue > 0
       ? priceValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
       : 'R$ 0,00'
 
-    const depositCents = Number.isFinite(selectedService.deposit_cents)
-      ? Math.max(0, selectedService.deposit_cents)
+    const depositCents = Number.isFinite(selectedTechnique.deposit_cents)
+      ? Math.max(0, selectedTechnique.deposit_cents)
       : 0
     const depositLabel = depositCents > 0
       ? (depositCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -707,27 +641,27 @@ export default function ProcedimentoPage() {
     })
 
     return {
-      typeId: selectedService.id,
-      typeName: selectedService.name,
+      typeId: selectedProcedure.id,
+      typeName: selectedProcedure.name,
       techniqueId: selectedTechnique.id,
       techniqueName: selectedTechnique.name,
       priceLabel,
-      priceCents: Number.isFinite(selectedService.price_cents)
-        ? selectedService.price_cents
+      priceCents: Number.isFinite(selectedTechnique.price_cents)
+        ? selectedTechnique.price_cents
         : 0,
       depositLabel,
       depositCents,
-      durationLabel: formatDuration(selectedService.duration_min),
+      durationLabel: formatDuration(selectedTechnique.duration_min),
       dateLabel,
       timeLabel: selectedSlot,
       payload: {
-        typeId: selectedTechnique.id,
-        serviceId: selectedService.id,
+        typeId: selectedProcedure.id,
+        serviceId: selectedTechnique.id,
         date: selectedDate,
         slot: selectedSlot,
       },
     } satisfies SummarySnapshot
-  }, [selectedDate, selectedService, selectedSlot, selectedTechnique])
+  }, [selectedDate, selectedProcedure, selectedSlot, selectedTechnique])
 
   useEffect(() => {
     setAppointmentId(null)
@@ -738,7 +672,7 @@ export default function ProcedimentoPage() {
     setIsProcessingPayment(false)
     setActionMessage(null)
     setIsPayLaterNoticeOpen(false)
-  }, [selectedServiceId, selectedTechniqueId, selectedDate, selectedSlot])
+  }, [selectedProcedureId, selectedTechniqueId, selectedDate, selectedSlot])
 
   const ensureSession = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession()
@@ -975,7 +909,7 @@ export default function ProcedimentoPage() {
     }
   }, [handleCancelPayLaterNotice, isPayLaterNoticeOpen])
 
-  const canSelectTechnique = Boolean(selectedServiceId)
+  const canSelectTechnique = Boolean(selectedProcedureId)
   const canSelectDate = Boolean(selectedTechniqueId)
   const canSelectTime = Boolean(selectedDate)
   const continueButtonLabel = isCreatingAppointment ? 'Salvando agendamento…' : 'Ver resumo'
@@ -988,9 +922,9 @@ export default function ProcedimentoPage() {
         ref={typeSectionRef}
         catalogError={catalogError}
         catalogStatus={catalogStatus}
-        availableServices={availableServices}
-        selectedServiceId={selectedServiceId}
-        onSelect={handleServiceSelect}
+        availableProcedures={availableProcedures}
+        selectedProcedureId={selectedProcedureId}
+        onSelect={handleProcedureSelect}
         defaultLabels={DEFAULT_SERVICE_LABELS}
       />
 
@@ -998,7 +932,7 @@ export default function ProcedimentoPage() {
         <TechniqueSelectionSection
           ref={techniqueSectionRef}
           catalogStatus={catalogStatus}
-          selectedService={selectedService}
+          selectedProcedure={selectedProcedure}
           selectedTechniqueId={selectedTechniqueId}
           onTechniqueSelect={handleTechniqueSelect}
           visibleTechniques={visibleTechniques}

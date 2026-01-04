@@ -28,18 +28,6 @@ export type TechniqueCatalogEntry = {
   services: ServiceTechnique[]
 }
 
-export type TechniqueSummary = {
-  id: string
-  name: string
-  slug: string | null
-  description: string | null
-  order_index: number
-}
-
-export type ServiceOption = ServiceTechnique & {
-  techniques: TechniqueSummary[]
-}
-
 export type SummarySnapshot = {
   typeId: string
   typeName: string

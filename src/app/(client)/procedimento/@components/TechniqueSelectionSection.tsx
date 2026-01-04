@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useMemo, useState } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
@@ -16,9 +16,6 @@ type Props = {
   selectedProcedure: TechniqueCatalogEntry | null
   selectedTechniqueId: string | null
   onTechniqueSelect: (techniqueId: string) => void
-  visibleTechniques: ServiceTechnique[]
-  showAllTechniques: boolean
-  onShowAllTechniques: () => void
 }
 
 export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionSection(
@@ -27,12 +24,41 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
     selectedProcedure,
     selectedTechniqueId,
     onTechniqueSelect,
-    visibleTechniques,
-    showAllTechniques,
-    onShowAllTechniques,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
+  const pageSize = 4
+  const techniques = useMemo<ServiceTechnique[]>(() => selectedProcedure?.services ?? [], [selectedProcedure])
+  const [pageIndex, setPageIndex] = useState(0)
+  const totalPages = useMemo(
+    () => (techniques.length > 0 ? Math.ceil(techniques.length / pageSize) : 0),
+    [pageSize, techniques.length],
+  )
+
+  useEffect(() => {
+    setPageIndex(0)
+  }, [selectedProcedure?.id])
+
+  useEffect(() => {
+    setPageIndex((previous) => Math.min(previous, Math.max(totalPages - 1, 0)))
+  }, [totalPages])
+
+  const selectedTechniqueIndex = useMemo(
+    () => techniques.findIndex((technique) => technique.id === selectedTechniqueId),
+    [selectedTechniqueId, techniques],
+  )
+
+  useEffect(() => {
+    if (selectedTechniqueIndex < 0) return
+    const targetPage = Math.floor(selectedTechniqueIndex / pageSize)
+    setPageIndex((previous) => (previous === targetPage ? previous : targetPage))
+  }, [pageSize, selectedTechniqueIndex])
+
+  const techniquesPage = useMemo(() => {
+    const start = pageIndex * pageSize
+    return techniques.slice(start, start + pageSize)
+  }, [pageIndex, pageSize, techniques])
+
   return (
     <section
       ref={ref}
@@ -54,8 +80,13 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
           {catalogStatus === 'ready' && selectedProcedure ? (
             <>
               {selectedProcedure.services.length > 0 ? (
-                <ProcedimentoGrid>
-                  {visibleTechniques.map((technique) => (
+                <ProcedimentoGrid
+                  pageIndex={pageIndex}
+                  totalPages={totalPages}
+                  onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+                  onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+                >
+                  {techniquesPage.map((technique) => (
                     <ProcedimentoCard
                       key={technique.id}
                       active={selectedTechniqueId === technique.id}
@@ -70,11 +101,6 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
                 <div className={`${styles.status} ${styles.statusInfo}`}>
                   Nenhuma técnica disponível para este tipo.
                 </div>
-              )}
-              {!showAllTechniques && selectedProcedure.services.length > visibleTechniques.length && (
-                <button type="button" className={styles.viewMore} onClick={onShowAllTechniques}>
-                  Ver mais técnicas
-                </button>
               )}
             </>
           ) : (

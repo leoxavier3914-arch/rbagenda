@@ -16,6 +16,7 @@ type ThreadProfile = {
 
 type SupportThreadRow = {
   id: string;
+  branch_id: string | null;
   status: "open" | "closed" | "escalated" | string | null;
   updated_at: string;
   last_message_preview: string | null;
@@ -24,6 +25,12 @@ type SupportThreadRow = {
 };
 
 type StatusFilter = "all" | "open" | "escalated" | "closed";
+type BranchFilter = "all" | string;
+
+type Branch = {
+  id: string;
+  name: string;
+};
 
 const STATUS_LABEL: Record<Exclude<StatusFilter, "all">, string> = {
   open: "Aberto",
@@ -46,9 +53,11 @@ function formatDate(value: string | null | undefined) {
 export default function TicketsPage() {
   const { status } = useAdminGuard({ allowedRoles: ["admin", "adminsuper", "adminmaster"] });
   const [threads, setThreads] = useState<SupportThreadRow[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [branchFilter, setBranchFilter] = useState<BranchFilter>("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -59,20 +68,23 @@ export default function TicketsPage() {
       setLoading(true);
       setError(null);
 
-      const { data, error: queryError } = await supabase
-        .from("support_threads")
-        .select("id, status, updated_at, last_message_preview, last_actor, profiles(full_name, email)")
-        .order("updated_at", { ascending: false });
+      const [{ data: threadsData, error: threadsError }, { data: branchesData, error: branchesError }] = await Promise.all([
+        supabase
+          .from("support_threads")
+          .select("id, branch_id, status, updated_at, last_message_preview, last_actor, profiles(full_name, email)")
+          .order("updated_at", { ascending: false }),
+        supabase.from("branches").select("id, name").order("name"),
+      ]);
 
       if (!active) return;
 
-      if (queryError) {
-        console.error("Erro ao carregar tickets", queryError);
+      if (threadsError || branchesError) {
+        console.error("Erro ao carregar tickets ou filiais", threadsError, branchesError);
         setError("Não foi possível carregar os tickets agora.");
-        setThreads([]);
-      } else {
-        setThreads(data ?? []);
       }
+
+      setThreads(threadsData ?? []);
+      setBranches(branchesData ?? []);
 
       setLoading(false);
     };
@@ -84,11 +96,20 @@ export default function TicketsPage() {
     };
   }, [status]);
 
+  const branchesById = useMemo(() => {
+    const map: Record<string, string> = {};
+    branches.forEach(({ id, name }) => {
+      map[id] = name;
+    });
+    return map;
+  }, [branches]);
+
   const filteredThreads = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     return threads.filter((thread) => {
       const normalizedStatus = (thread.status ?? "").toString().toLowerCase();
       if (statusFilter !== "all" && normalizedStatus !== statusFilter) return false;
+      if (branchFilter !== "all" && thread.branch_id !== branchFilter) return false;
 
       if (!normalizedSearch) return true;
 
@@ -104,7 +125,7 @@ export default function TicketsPage() {
         thread.id.toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [search, statusFilter, threads]);
+  }, [branchFilter, search, statusFilter, threads]);
 
   return (
     <div className={styles.page}>
@@ -136,6 +157,23 @@ export default function TicketsPage() {
                 <option value="open">Abertos</option>
                 <option value="escalated">Escalados</option>
                 <option value="closed">Fechados</option>
+              </select>
+            </label>
+
+            <label className={styles.filterControl}>
+              <span className={styles.filterLabel}>Filial</span>
+              <select
+                className={styles.selectControl}
+                value={branchFilter}
+                onChange={(event) => setBranchFilter(event.target.value as BranchFilter)}
+                disabled={loading}
+              >
+                <option value="all">Todas as filiais</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
               </select>
             </label>
 
@@ -175,6 +213,7 @@ export default function TicketsPage() {
                     .trim()
                     .slice(0, 2)
                     .toUpperCase() || "CL";
+                const branchName = thread.branch_id ? branchesById[thread.branch_id] ?? "—" : "Global";
 
                 return (
                   <article key={thread.id} className={styles.ticketCard}>
@@ -197,6 +236,10 @@ export default function TicketsPage() {
                     <p className={styles.preview}>{thread.last_message_preview || "Sem prévia de mensagem."}</p>
 
                     <div className={styles.actionsRow}>
+                      <div className={styles.metaRow}>
+                        <span className={styles.metaLabel}>Filial</span>
+                        <span className={styles.metaValue}>{branchName}</span>
+                      </div>
                       <div className={styles.metaRow}>
                         <span className={styles.metaLabel}>Último ator</span>
                         <span className={styles.metaValue}>

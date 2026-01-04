@@ -8,19 +8,19 @@ import { ProcedimentoGrid } from './ProcedimentoGrid'
 import { ProcedimentoHeader } from './ProcedimentoHeader'
 import styles from '../procedimento.module.css'
 
-import type { ServiceOption } from '../types'
+import type { TechniqueCatalogEntry } from '../types'
 
 type Props = {
   catalogError: string | null
   catalogStatus: 'idle' | 'loading' | 'ready' | 'error'
-  availableServices: ServiceOption[]
-  selectedServiceId: string | null
-  onSelect: (serviceId: string) => void
+  availableProcedures: TechniqueCatalogEntry[]
+  selectedProcedureId: string | null
+  onSelect: (procedureId: string) => void
   defaultLabels: readonly string[]
 }
 
 export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
-  { catalogError, catalogStatus, availableServices, selectedServiceId, onSelect, defaultLabels }: Props,
+  { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect, defaultLabels }: Props,
     ref: ForwardedRef<HTMLDivElement>,
 ) {
   return (
@@ -36,19 +36,19 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           aria-label="Tipos de procedimento"
         >
           {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-          {catalogStatus === 'ready' && availableServices.length === 0 && (
+          {catalogStatus === 'ready' && availableProcedures.length === 0 && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
           )}
           <ProcedimentoGrid variant="tipo">
-            {catalogStatus === 'ready' && availableServices.length > 0 ? (
-              availableServices.map((service) => (
+            {catalogStatus === 'ready' && availableProcedures.length > 0 ? (
+              availableProcedures.map((procedure) => (
                 <ProcedimentoCard
-                  key={service.id}
-                  active={selectedServiceId === service.id}
-                  onClick={() => onSelect(service.id)}
+                  key={procedure.id}
+                  active={selectedProcedureId === procedure.id}
+                  onClick={() => onSelect(procedure.id)}
                 >
                   <LashIcon />
-                  <span>{service.name}</span>
+                  <span>{procedure.name}</span>
                 </ProcedimentoCard>
               ))
             ) : (

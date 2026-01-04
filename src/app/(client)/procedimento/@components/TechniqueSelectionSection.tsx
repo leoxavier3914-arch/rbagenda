@@ -8,15 +8,15 @@ import { ProcedimentoGrid } from './ProcedimentoGrid'
 import { ProcedimentoHeader } from './ProcedimentoHeader'
 import styles from '../procedimento.module.css'
 
-import type { ServiceOption, TechniqueSummary } from '../types'
+import type { ServiceTechnique, TechniqueCatalogEntry } from '../types'
 
 type Props = {
   sectionRef?: ForwardedRef<HTMLDivElement>
   catalogStatus: 'idle' | 'loading' | 'ready' | 'error'
-  selectedService: ServiceOption | null
+  selectedProcedure: TechniqueCatalogEntry | null
   selectedTechniqueId: string | null
   onTechniqueSelect: (techniqueId: string) => void
-  visibleTechniques: TechniqueSummary[]
+  visibleTechniques: ServiceTechnique[]
   showAllTechniques: boolean
   onShowAllTechniques: () => void
 }
@@ -24,7 +24,7 @@ type Props = {
 export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionSection(
   {
     catalogStatus,
-    selectedService,
+    selectedProcedure,
     selectedTechniqueId,
     onTechniqueSelect,
     visibleTechniques,
@@ -51,9 +51,9 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
           labelClassName={styles.label}
           aria-label="Técnicas de cílios"
         >
-          {catalogStatus === 'ready' && selectedService ? (
+          {catalogStatus === 'ready' && selectedProcedure ? (
             <>
-              {selectedService.techniques.length > 0 ? (
+              {selectedProcedure.services.length > 0 ? (
                 <ProcedimentoGrid>
                   {visibleTechniques.map((technique) => (
                     <ProcedimentoCard
@@ -71,7 +71,7 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
                   Nenhuma técnica disponível para este tipo.
                 </div>
               )}
-              {!showAllTechniques && selectedService.techniques.length > visibleTechniques.length && (
+              {!showAllTechniques && selectedProcedure.services.length > visibleTechniques.length && (
                 <button type="button" className={styles.viewMore} onClick={onShowAllTechniques}>
                   Ver mais técnicas
                 </button>

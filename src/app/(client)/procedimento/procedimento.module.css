@@ -113,6 +113,13 @@
   margin-bottom: 12px;
 }
 
+.gridWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -121,6 +128,50 @@
 
 .tipoGrid {
   gap: clamp(12px, 2vw, 18px);
+}
+
+.gridControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.navButton {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--glass-stroke);
+  color: var(--ink);
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(16, 54, 37, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.navButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.navButton:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(16, 54, 37, 0.16);
+}
+
+.navButton:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.pageIndicator {
+  min-width: 52px;
+  text-align: center;
 }
 
 .footer {

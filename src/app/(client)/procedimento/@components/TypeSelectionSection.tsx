@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useMemo, useState } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
@@ -23,6 +23,37 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
   { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect, defaultLabels }: Props,
     ref: ForwardedRef<HTMLDivElement>,
 ) {
+  const pageSize = 4
+  const procedures = useMemo(
+    () => (catalogStatus === 'ready' ? availableProcedures : []),
+    [availableProcedures, catalogStatus],
+  )
+  const [pageIndex, setPageIndex] = useState(0)
+  const totalPages = useMemo(
+    () => (procedures.length > 0 ? Math.ceil(procedures.length / pageSize) : 0),
+    [procedures.length, pageSize],
+  )
+
+  useEffect(() => {
+    setPageIndex((previous) => Math.min(previous, Math.max(totalPages - 1, 0)))
+  }, [totalPages])
+
+  const selectedProcedureIndex = useMemo(
+    () => procedures.findIndex((procedure) => procedure.id === selectedProcedureId),
+    [procedures, selectedProcedureId],
+  )
+
+  useEffect(() => {
+    if (selectedProcedureIndex < 0) return
+    const targetPage = Math.floor(selectedProcedureIndex / pageSize)
+    setPageIndex((previous) => (previous === targetPage ? previous : targetPage))
+  }, [pageSize, selectedProcedureIndex])
+
+  const proceduresPage = useMemo(() => {
+    const start = pageIndex * pageSize
+    return procedures.slice(start, start + pageSize)
+  }, [pageIndex, pageSize, procedures])
+
   return (
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
       <div className={styles.stack}>
@@ -39,9 +70,15 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           {catalogStatus === 'ready' && availableProcedures.length === 0 && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
           )}
-          <ProcedimentoGrid variant="tipo">
-            {catalogStatus === 'ready' && availableProcedures.length > 0 ? (
-              availableProcedures.map((procedure) => (
+          <ProcedimentoGrid
+            variant="tipo"
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+            onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+          >
+            {catalogStatus === 'ready' && procedures.length > 0 ? (
+              proceduresPage.map((procedure) => (
                 <ProcedimentoCard
                   key={procedure.id}
                   active={selectedProcedureId === procedure.id}

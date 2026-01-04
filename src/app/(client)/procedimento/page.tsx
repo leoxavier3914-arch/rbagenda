@@ -104,7 +104,6 @@ export default function ProcedimentoPage() {
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [selectedProcedureId, setSelectedProcedureId] = useState<string | null>(null)
   const [selectedTechniqueId, setSelectedTechniqueId] = useState<string | null>(null)
-  const [showAllTechniques, setShowAllTechniques] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
@@ -336,16 +335,6 @@ export default function ProcedimentoPage() {
     () => availableProcedures.find((procedure) => procedure.id === selectedProcedureId) ?? null,
     [availableProcedures, selectedProcedureId],
   )
-
-  const visibleTechniques = useMemo(() => {
-    if (!selectedProcedure) return []
-    if (showAllTechniques) return selectedProcedure.services
-    return selectedProcedure.services.slice(0, 6)
-  }, [selectedProcedure, showAllTechniques])
-
-  useEffect(() => {
-    setShowAllTechniques(false)
-  }, [selectedProcedureId])
 
   useEffect(() => {
     if (!selectedProcedure) {
@@ -930,15 +919,12 @@ export default function ProcedimentoPage() {
 
       {canSelectTechnique ? (
         <TechniqueSelectionSection
-          ref={techniqueSectionRef}
-          catalogStatus={catalogStatus}
-          selectedProcedure={selectedProcedure}
-          selectedTechniqueId={selectedTechniqueId}
-          onTechniqueSelect={handleTechniqueSelect}
-          visibleTechniques={visibleTechniques}
-          showAllTechniques={showAllTechniques}
-          onShowAllTechniques={() => setShowAllTechniques(true)}
-        />
+        ref={techniqueSectionRef}
+        catalogStatus={catalogStatus}
+        selectedProcedure={selectedProcedure}
+        selectedTechniqueId={selectedTechniqueId}
+        onTechniqueSelect={handleTechniqueSelect}
+      />
       ) : null}
 
       {canSelectDate ? (

@@ -577,7 +577,25 @@ export default function MeuPerfilPage() {
   return (
     <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
       <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-        <ProfileHeader revealStage={revealStage} />
+        <ProfileHeader
+          revealStage={revealStage}
+          resolvedName={resolvedName}
+          avatarSlot={
+            <AvatarUploader
+              avatarDataUrl={avatarDataUrl}
+              resolvedName={resolvedName}
+              showName={false}
+              isAvatarMenuOpen={isAvatarMenuOpen}
+              avatarBoxRef={avatarBoxRef}
+              avatarActionsRef={avatarActionsRef}
+              avatarInputRef={avatarInputRef}
+              onToggle={toggleAvatarMenu}
+              onKeyDown={handleAvatarKeyDown}
+              onChange={handleAvatarChange}
+              onRemove={handleRemoveAvatar}
+            />
+          }
+        />
 
         <ClientGlassPanel
           className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
@@ -591,21 +609,6 @@ export default function MeuPerfilPage() {
         >
           <form onSubmit={handleSubmit} className="profile-form">
             <div className={styles.profileGrid}>
-              <div className={styles.avatarColumn}>
-                <AvatarUploader
-                  avatarDataUrl={avatarDataUrl}
-                  resolvedName={resolvedName}
-                  isAvatarMenuOpen={isAvatarMenuOpen}
-                  avatarBoxRef={avatarBoxRef}
-                  avatarActionsRef={avatarActionsRef}
-                  avatarInputRef={avatarInputRef}
-                  onToggle={toggleAvatarMenu}
-                  onKeyDown={handleAvatarKeyDown}
-                  onChange={handleAvatarChange}
-                  onRemove={handleRemoveAvatar}
-                />
-              </div>
-
               <ProfileForm
                 fullName={fullName}
                 email={email}
@@ -682,4 +685,3 @@ export default function MeuPerfilPage() {
     </ClientPageShell>
   )
 }
-

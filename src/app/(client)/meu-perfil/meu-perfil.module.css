@@ -67,34 +67,39 @@
   width: min(920px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 12px;
+  gap: 8px;
   position: relative;
   z-index: 1;
-  padding: clamp(18px, 4vw, 26px);
-  padding-top: clamp(76px, 16vw, 112px);
+  padding: clamp(16px, 3.5vw, 24px);
+  padding-top: clamp(64px, 14vw, 96px);
+  padding-bottom: clamp(10px, 3vw, 16px);
+  min-height: calc(var(--avatar-size) + clamp(26px, 6vw, 40px));
 }
 
 .profileHeaderInner {
   display: flex;
   align-items: center;
   gap: clamp(12px, 3vw, 20px);
-  min-height: var(--avatar-size);
-  padding-left: calc(var(--avatar-size) + clamp(12px, 3vw, 20px));
+  position: absolute;
+  top: clamp(20px, 5vw, 34px);
+  left: clamp(20px, 5vw, 32px);
+  right: clamp(20px, 5vw, 32px);
+  z-index: 2;
 }
 
 .profileHeaderAvatar {
   display: flex;
   align-items: center;
-  position: absolute;
-  top: clamp(24px, 5vw, 36px);
-  left: clamp(20px, 5vw, 32px);
-  z-index: 2;
+  position: relative;
+  flex: 0 0 auto;
 }
 
 .profileHeaderText {
   display: grid;
   gap: 4px;
   z-index: 1;
+  min-width: 0;
+  flex: 1;
 }
 
 .profileHeaderName {
@@ -105,7 +110,7 @@
 }
 
 .profileHeaderLower {
-  min-height: 8px;
+  min-height: 4px;
 }
 
 .profileGrid {
@@ -232,13 +237,15 @@
   }
 
   .profileHeader {
-    --avatar-size: clamp(98px, 30vw, 144px);
+    --avatar-size: clamp(104px, 34vw, 160px);
     padding: 16px;
-    padding-top: clamp(72px, 20vw, 110px);
+    padding-top: clamp(64px, 20vw, 104px);
+    padding-bottom: 12px;
   }
 
   .profileHeaderInner {
-    padding-left: calc(var(--avatar-size) + 12px);
+    right: 16px;
+    left: 16px;
   }
 
   .sectionTabs {
@@ -321,7 +328,7 @@
   flex-wrap: nowrap;
   gap: clamp(8px, 2.6vw, 12px);
   width: min(100%, 720px);
-  margin: 0 auto 12px;
+  margin: -8px auto 12px;
   padding: 4px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
@@ -331,6 +338,12 @@
   scroll-snap-type: x mandatory;
   scroll-padding-inline: 20px;
   scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sectionTabs::-webkit-scrollbar {
+  display: none;
 }
 
 .sectionBadge {

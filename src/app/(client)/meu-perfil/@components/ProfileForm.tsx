@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import styles from '../meu-perfil.module.css'
 
@@ -48,6 +48,7 @@ export function ProfileForm({
   >('dados')
   const [isEmailEditing, setIsEmailEditing] = useState(false)
   const [isPasswordEditing, setIsPasswordEditing] = useState(false)
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
   const handleSectionChange = (
     section: 'dados' | 'seguranca' | 'temas' | 'notificacoes',
@@ -55,6 +56,13 @@ export function ProfileForm({
     setActiveSection(section)
     setIsEmailEditing(false)
     setIsPasswordEditing(false)
+    requestAnimationFrame(() => {
+      tabRefs.current[section]?.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      })
+    })
   }
 
   return (
@@ -64,6 +72,9 @@ export function ProfileForm({
           type="button"
           className={styles.sectionBadge}
           data-active={activeSection === 'dados'}
+          ref={(node) => {
+            tabRefs.current.dados = node
+          }}
           onClick={() => handleSectionChange('dados')}
         >
           Dados pessoais
@@ -72,6 +83,9 @@ export function ProfileForm({
           type="button"
           className={styles.sectionBadge}
           data-active={activeSection === 'seguranca'}
+          ref={(node) => {
+            tabRefs.current.seguranca = node
+          }}
           onClick={() => handleSectionChange('seguranca')}
         >
           Segurança
@@ -80,6 +94,9 @@ export function ProfileForm({
           type="button"
           className={styles.sectionBadge}
           data-active={activeSection === 'temas'}
+          ref={(node) => {
+            tabRefs.current.temas = node
+          }}
           onClick={() => handleSectionChange('temas')}
         >
           Temas
@@ -88,6 +105,9 @@ export function ProfileForm({
           type="button"
           className={styles.sectionBadge}
           data-active={activeSection === 'notificacoes'}
+          ref={(node) => {
+            tabRefs.current.notificacoes = node
+          }}
           onClick={() => handleSectionChange('notificacoes')}
         >
           Notificações

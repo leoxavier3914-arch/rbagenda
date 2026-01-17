@@ -189,11 +189,38 @@
   gap: 6px;
 }
 
-.field label {
+.field label,
+.fieldLabel {
   font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--muted);
   text-transform: uppercase;
+}
+
+.fieldHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inlineAction {
+  border: none;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.inlineAction:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .input {
@@ -206,6 +233,54 @@
   font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 15px;
   color: var(--ink);
+}
+
+.readonlyValue {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  color: rgba(24, 63, 46, 0.85);
+}
+
+.sectionTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.sectionBadge {
+  border: 1px solid rgba(24, 63, 46, 0.2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(24, 63, 46, 0.85);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sectionBadge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(28, 75, 56, 0.12);
+}
+
+.sectionBadge[data-active='true'] {
+  background: rgba(31, 69, 55, 0.9);
+  color: #f8fbf8;
+  border-color: rgba(31, 69, 55, 0.4);
+}
+
+.emptyState {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  color: rgba(24, 63, 46, 0.8);
+  font-size: 14px;
 }
 
 .actions {

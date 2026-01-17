@@ -26,7 +26,6 @@ export function ProfileHeader({
         <div className={styles.profileHeaderInner}>
           <div className={styles.profileHeaderAvatar}>{avatarSlot}</div>
           <div className={styles.profileHeaderText}>
-            <span className={styles.profileHeaderKicker}>Meu perfil</span>
             <h1 className={styles.profileHeaderName}>
               {resolvedName || 'Sua conta'}
             </h1>

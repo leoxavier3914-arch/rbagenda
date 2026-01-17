@@ -46,21 +46,21 @@
 
 .profileCard {
   width: clamp(320px, 92vw, 880px);
+  display: grid;
+  gap: clamp(16px, 3vw, 24px);
 }
 
 .profileHeader {
   width: min(920px, 100%);
-  margin: 0 auto clamp(18px, 3vw, 24px);
+  margin: 0 auto;
   display: grid;
   gap: 12px;
 }
 
 .profileHeaderBand {
-  border-radius: 24px;
+  border-radius: 22px;
   padding: clamp(12px, 3vw, 18px);
   background: linear-gradient(120deg, rgba(58, 135, 101, 0.35), rgba(214, 243, 221, 0.55));
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 16px 32px rgba(18, 58, 38, 0.18);
   backdrop-filter: blur(12px);
 }
 
@@ -78,14 +78,6 @@
 .profileHeaderText {
   display: grid;
   gap: 4px;
-}
-
-.profileHeaderKicker {
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(24, 63, 46, 0.7);
-  font-weight: 600;
 }
 
 .profileHeaderName {
@@ -227,8 +219,8 @@
   }
 
   .avatar {
-    width: clamp(72px, 18vw, 112px);
-    height: clamp(72px, 18vw, 112px);
+    width: clamp(82px, 20vw, 120px);
+    height: clamp(82px, 20vw, 120px);
   }
 
   .sectionTabs {
@@ -309,21 +301,21 @@
 .sectionTabs {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
-  margin-bottom: 10px;
-  padding: 6px;
+  gap: 0;
+  width: min(100%, 640px);
+  margin: 0 auto 12px;
+  padding: 4px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
 .sectionBadge {
   border: none;
-  border-radius: 999px;
-  padding: 8px 14px;
+  border-radius: 0;
+  padding: 8px 10px;
   background: transparent;
   font-size: 12px;
   letter-spacing: 0.06em;
@@ -332,8 +324,27 @@
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
-  flex: 0 0 auto;
+  flex: 1 1 0;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.sectionBadge:first-child {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+.sectionBadge:last-child {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.sectionBadge:not(:last-child) {
+  border-right: 1px solid rgba(24, 63, 46, 0.12);
 }
 
 .sectionBadge:hover {

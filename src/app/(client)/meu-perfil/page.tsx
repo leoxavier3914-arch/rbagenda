@@ -578,36 +578,30 @@ export default function MeuPerfilPage() {
     <div className={styles.pageRoot}>
       <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
         <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-          <ProfileHeader
-            revealStage={revealStage}
-            resolvedName={resolvedName}
-            avatarSlot={
-              <AvatarUploader
-                avatarDataUrl={avatarDataUrl}
-                resolvedName={resolvedName}
-                showName={false}
-                isAvatarMenuOpen={isAvatarMenuOpen}
-                avatarBoxRef={avatarBoxRef}
-                avatarActionsRef={avatarActionsRef}
-                avatarInputRef={avatarInputRef}
-                onToggle={toggleAvatarMenu}
-                onKeyDown={handleAvatarKeyDown}
-                onChange={handleAvatarChange}
-                onRemove={handleRemoveAvatar}
-              />
-            }
-          />
-
           <ClientGlassPanel
             className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
             aria-label="Dados do perfil"
             data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-            label="PERFIL"
-            labelProps={{
-              className: `${styles.revealSeq} ${styles.revealDescription}`,
-              'data-visible': revealStage >= REVEAL_STAGE.DESCRIPTION,
-            }}
           >
+            <ProfileHeader
+              revealStage={revealStage}
+              resolvedName={resolvedName}
+              avatarSlot={
+                <AvatarUploader
+                  avatarDataUrl={avatarDataUrl}
+                  resolvedName={resolvedName}
+                  showName={false}
+                  isAvatarMenuOpen={isAvatarMenuOpen}
+                  avatarBoxRef={avatarBoxRef}
+                  avatarActionsRef={avatarActionsRef}
+                  avatarInputRef={avatarInputRef}
+                  onToggle={toggleAvatarMenu}
+                  onKeyDown={handleAvatarKeyDown}
+                  onChange={handleAvatarChange}
+                  onRemove={handleRemoveAvatar}
+                />
+              }
+            />
             <form onSubmit={handleSubmit} className="profile-form">
               <div className={styles.profileGrid}>
                 <ProfileForm

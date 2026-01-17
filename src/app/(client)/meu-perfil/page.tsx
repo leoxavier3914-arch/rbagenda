@@ -575,113 +575,115 @@ export default function MeuPerfilPage() {
 
 
   return (
-    <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
-      <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-        <ProfileHeader
-          revealStage={revealStage}
-          resolvedName={resolvedName}
-          avatarSlot={
-            <AvatarUploader
-              avatarDataUrl={avatarDataUrl}
-              resolvedName={resolvedName}
-              showName={false}
-              isAvatarMenuOpen={isAvatarMenuOpen}
-              avatarBoxRef={avatarBoxRef}
-              avatarActionsRef={avatarActionsRef}
-              avatarInputRef={avatarInputRef}
-              onToggle={toggleAvatarMenu}
-              onKeyDown={handleAvatarKeyDown}
-              onChange={handleAvatarChange}
-              onRemove={handleRemoveAvatar}
-            />
-          }
-        />
-
-        <ClientGlassPanel
-          className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
-          aria-label="Dados do perfil"
-          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          label="PERFIL"
-          labelProps={{
-            className: `${styles.revealSeq} ${styles.revealDescription}`,
-            'data-visible': revealStage >= REVEAL_STAGE.DESCRIPTION,
-          }}
-        >
-          <form onSubmit={handleSubmit} className="profile-form">
-            <div className={styles.profileGrid}>
-              <ProfileForm
-                fullName={fullName}
-                email={email}
-                whatsapp={whatsapp}
-                birthDate={birthDate}
-                password={password}
-                loading={loading}
-                saving={saving}
-                signingOut={signingOut}
-                error={error}
-                success={success}
-                signOutError={signOutError}
-                onFullNameChange={setFullName}
-                onEmailChange={setEmail}
-                onWhatsappChange={setWhatsapp}
-                onBirthDateChange={setBirthDate}
-                onPasswordChange={setPassword}
-                onSignOut={handleSignOut}
+    <div className={styles.pageRoot}>
+      <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
+        <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
+          <ProfileHeader
+            revealStage={revealStage}
+            resolvedName={resolvedName}
+            avatarSlot={
+              <AvatarUploader
+                avatarDataUrl={avatarDataUrl}
+                resolvedName={resolvedName}
+                showName={false}
+                isAvatarMenuOpen={isAvatarMenuOpen}
+                avatarBoxRef={avatarBoxRef}
+                avatarActionsRef={avatarActionsRef}
+                avatarInputRef={avatarInputRef}
+                onToggle={toggleAvatarMenu}
+                onKeyDown={handleAvatarKeyDown}
+                onChange={handleAvatarChange}
+                onRemove={handleRemoveAvatar}
               />
-            </div>
-          </form>
-        </ClientGlassPanel>
+            }
+          />
 
-        <footer
-          className={`${styles.revealSeq} ${styles.revealContent}`}
-          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-        >
-          ROMEIKE BEAUTY
-        </footer>
-      </ClientSection>
+          <ClientGlassPanel
+            className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
+            aria-label="Dados do perfil"
+            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+            label="PERFIL"
+            labelProps={{
+              className: `${styles.revealSeq} ${styles.revealDescription}`,
+              'data-visible': revealStage >= REVEAL_STAGE.DESCRIPTION,
+            }}
+          >
+            <form onSubmit={handleSubmit} className="profile-form">
+              <div className={styles.profileGrid}>
+                <ProfileForm
+                  fullName={fullName}
+                  email={email}
+                  whatsapp={whatsapp}
+                  birthDate={birthDate}
+                  password={password}
+                  loading={loading}
+                  saving={saving}
+                  signingOut={signingOut}
+                  error={error}
+                  success={success}
+                  signOutError={signOutError}
+                  onFullNameChange={setFullName}
+                  onEmailChange={setEmail}
+                  onWhatsappChange={setWhatsapp}
+                  onBirthDateChange={setBirthDate}
+                  onPasswordChange={setPassword}
+                  onSignOut={handleSignOut}
+                />
+              </div>
+            </form>
+          </ClientGlassPanel>
 
-      <ThemePreferencesPanel
-        theme={theme}
-        isPaletteOpen={isPaletteOpen}
-        revealStage={revealStage}
-        canEditAppearance={canEditAppearance}
-        onToggle={() => setIsPaletteOpen((open) => !open)}
-        onClose={() => setIsPaletteOpen(false)}
-        onPaletteSwatch={handlePaletteSwatch}
-        handleCardTopColor={handleCardTopColor}
-        handleCardBottomColor={handleCardBottomColor}
-        handleCardBorderColor={handleCardBorderColor}
-        handleCardBorderAlpha={handleCardBorderAlpha}
-        handleBackgroundTopColor={handleBackgroundTopColor}
-        handleBackgroundBottomColor={handleBackgroundBottomColor}
-        handleGlassBorderColor={handleGlassBorderColor}
-        handleGlassBorderAlpha={handleGlassBorderAlpha}
-        handleGlassColor={handleGlassColor}
-        handleGlassAlpha={handleGlassAlpha}
-        handleBubbleDarkColor={handleBubbleDarkColor}
-        handleBubbleLightColor={handleBubbleLightColor}
-        handleBubbleAlphaMin={handleBubbleAlphaMin}
-        handleBubbleAlphaMax={handleBubbleAlphaMax}
-        applyHexFromRef={applyHexFromRef}
-        applyCardTop={applyCardTop}
-        applyCardBottom={applyCardBottom}
-        applyCardBorder={applyCardBorder}
-        applyBackgroundTop={applyBackgroundTop}
-        applyBackgroundBottom={applyBackgroundBottom}
-        applyGlassBorder={applyGlassBorder}
-        applyGlass={applyGlass}
-        applyBubbleDark={applyBubbleDark}
-        applyBubbleLight={applyBubbleLight}
-        cardTopHexRef={cardTopHexRef}
-        cardBottomHexRef={cardBottomHexRef}
-        cardBorderHexRef={cardBorderHexRef}
-        bgTopHexRef={bgTopHexRef}
-        bgBottomHexRef={bgBottomHexRef}
-        glassBorderHexRef={glassBorderHexRef}
-        glassHexRef={glassHexRef}
-        bubbleDarkHexRef={bubbleDarkHexRef}
-        bubbleLightHexRef={bubbleLightHexRef}
-      />
-    </ClientPageShell>
+          <footer
+            className={`${styles.revealSeq} ${styles.revealContent}`}
+            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+          >
+            ROMEIKE BEAUTY
+          </footer>
+        </ClientSection>
+
+        <ThemePreferencesPanel
+          theme={theme}
+          isPaletteOpen={isPaletteOpen}
+          revealStage={revealStage}
+          canEditAppearance={canEditAppearance}
+          onToggle={() => setIsPaletteOpen((open) => !open)}
+          onClose={() => setIsPaletteOpen(false)}
+          onPaletteSwatch={handlePaletteSwatch}
+          handleCardTopColor={handleCardTopColor}
+          handleCardBottomColor={handleCardBottomColor}
+          handleCardBorderColor={handleCardBorderColor}
+          handleCardBorderAlpha={handleCardBorderAlpha}
+          handleBackgroundTopColor={handleBackgroundTopColor}
+          handleBackgroundBottomColor={handleBackgroundBottomColor}
+          handleGlassBorderColor={handleGlassBorderColor}
+          handleGlassBorderAlpha={handleGlassBorderAlpha}
+          handleGlassColor={handleGlassColor}
+          handleGlassAlpha={handleGlassAlpha}
+          handleBubbleDarkColor={handleBubbleDarkColor}
+          handleBubbleLightColor={handleBubbleLightColor}
+          handleBubbleAlphaMin={handleBubbleAlphaMin}
+          handleBubbleAlphaMax={handleBubbleAlphaMax}
+          applyHexFromRef={applyHexFromRef}
+          applyCardTop={applyCardTop}
+          applyCardBottom={applyCardBottom}
+          applyCardBorder={applyCardBorder}
+          applyBackgroundTop={applyBackgroundTop}
+          applyBackgroundBottom={applyBackgroundBottom}
+          applyGlassBorder={applyGlassBorder}
+          applyGlass={applyGlass}
+          applyBubbleDark={applyBubbleDark}
+          applyBubbleLight={applyBubbleLight}
+          cardTopHexRef={cardTopHexRef}
+          cardBottomHexRef={cardBottomHexRef}
+          cardBorderHexRef={cardBorderHexRef}
+          bgTopHexRef={bgTopHexRef}
+          bgBottomHexRef={bgBottomHexRef}
+          glassBorderHexRef={glassBorderHexRef}
+          glassHexRef={glassHexRef}
+          bubbleDarkHexRef={bubbleDarkHexRef}
+          bubbleLightHexRef={bubbleLightHexRef}
+        />
+      </ClientPageShell>
+    </div>
   )
 }

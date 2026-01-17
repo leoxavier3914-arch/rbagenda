@@ -10,6 +10,7 @@ import styles from '../meu-perfil.module.css'
 type AvatarUploaderProps = {
   avatarDataUrl: string
   resolvedName: string
+  showName?: boolean
   isAvatarMenuOpen: boolean
   avatarBoxRef: RefObject<HTMLDivElement | null>
   avatarActionsRef: RefObject<HTMLDivElement | null>
@@ -23,6 +24,7 @@ type AvatarUploaderProps = {
 export function AvatarUploader({
   avatarDataUrl,
   resolvedName,
+  showName = true,
   isAvatarMenuOpen,
   avatarBoxRef,
   avatarActionsRef,
@@ -82,7 +84,9 @@ export function AvatarUploader({
           </div>
         </div>
       </div>
-      {resolvedName ? <p className={styles.profileName}>{resolvedName}</p> : null}
+      {showName && resolvedName ? (
+        <p className={styles.profileName}>{resolvedName}</p>
+      ) : null}
     </div>
   )
 }

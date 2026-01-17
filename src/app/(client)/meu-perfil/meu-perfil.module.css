@@ -48,36 +48,53 @@
   width: clamp(320px, 92vw, 880px);
   display: grid;
   gap: clamp(16px, 3vw, 24px);
+  position: relative;
+  overflow: hidden;
+}
+
+.profileCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: clamp(120px, 26vw, 170px);
+  background: linear-gradient(120deg, rgba(58, 135, 101, 0.35), rgba(214, 243, 221, 0.55));
+  z-index: 0;
 }
 
 .profileHeader {
+  --avatar-size: clamp(96px, 24vw, 148px);
   width: min(920px, 100%);
   margin: 0 auto;
   display: grid;
   gap: 12px;
-}
-
-.profileHeaderBand {
-  border-radius: 22px;
-  padding: clamp(12px, 3vw, 18px);
-  background: linear-gradient(120deg, rgba(58, 135, 101, 0.35), rgba(214, 243, 221, 0.55));
-  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 1;
+  padding: clamp(18px, 4vw, 26px);
+  padding-top: clamp(76px, 16vw, 112px);
 }
 
 .profileHeaderInner {
   display: flex;
   align-items: center;
   gap: clamp(12px, 3vw, 20px);
+  min-height: var(--avatar-size);
+  padding-left: calc(var(--avatar-size) + clamp(12px, 3vw, 20px));
 }
 
 .profileHeaderAvatar {
   display: flex;
   align-items: center;
+  position: absolute;
+  top: clamp(24px, 5vw, 36px);
+  left: clamp(20px, 5vw, 32px);
+  z-index: 2;
 }
 
 .profileHeaderText {
   display: grid;
   gap: 4px;
+  z-index: 1;
 }
 
 .profileHeaderName {
@@ -109,8 +126,8 @@
 }
 
 .avatar {
-  width: clamp(88px, 20vw, 132px);
-  height: clamp(88px, 20vw, 132px);
+  width: var(--avatar-size);
+  height: var(--avatar-size);
   border-radius: 50%;
   border: 5px solid #ffffff;
   background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
@@ -214,21 +231,22 @@
     grid-template-columns: 1fr;
   }
 
-  .profileHeaderBand {
-    padding: 10px 12px;
+  .profileHeader {
+    --avatar-size: clamp(98px, 30vw, 144px);
+    padding: 16px;
+    padding-top: clamp(72px, 20vw, 110px);
   }
 
-  .avatar {
-    width: clamp(82px, 20vw, 120px);
-    height: clamp(82px, 20vw, 120px);
+  .profileHeaderInner {
+    padding-left: calc(var(--avatar-size) + 12px);
   }
 
   .sectionTabs {
-    padding: 4px;
+    padding: 6px;
   }
 
   .sectionBadge {
-    padding: 6px 10px;
+    padding: 7px 12px;
     font-size: 11px;
   }
 
@@ -301,21 +319,24 @@
 .sectionTabs {
   display: flex;
   flex-wrap: nowrap;
-  gap: 0;
-  width: min(100%, 640px);
+  gap: clamp(8px, 2.6vw, 12px);
+  width: min(100%, 720px);
   margin: 0 auto 12px;
   padding: 4px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  overflow: hidden;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 20px;
+  scroll-behavior: smooth;
 }
 
 .sectionBadge {
   border: none;
-  border-radius: 0;
-  padding: 8px 10px;
+  border-radius: 999px;
+  padding: 8px 14px;
   background: transparent;
   font-size: 12px;
   letter-spacing: 0.06em;
@@ -324,27 +345,13 @@
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
-  flex: 1 1 0;
+  flex: 0 0 auto;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-width: 0;
-}
-
-.sectionBadge:first-child {
-  border-top-left-radius: 999px;
-  border-bottom-left-radius: 999px;
-}
-
-.sectionBadge:last-child {
-  border-top-right-radius: 999px;
-  border-bottom-right-radius: 999px;
-}
-
-.sectionBadge:not(:last-child) {
-  border-right: 1px solid rgba(24, 63, 46, 0.12);
+  scroll-snap-align: center;
 }
 
 .sectionBadge:hover {

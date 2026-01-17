@@ -82,7 +82,7 @@ export function ProfileForm({
           data-active={activeSection === 'temas'}
           onClick={() => handleSectionChange('temas')}
         >
-          Temas (em breve)
+          Temas
         </button>
         <button
           type="button"
@@ -90,7 +90,7 @@ export function ProfileForm({
           data-active={activeSection === 'notificacoes'}
           onClick={() => handleSectionChange('notificacoes')}
         >
-          Notificações (em breve)
+          Notificações
         </button>
       </div>
 

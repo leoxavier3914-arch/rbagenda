@@ -602,29 +602,31 @@ export default function MeuPerfilPage() {
                 />
               }
             />
-            <form onSubmit={handleSubmit} className="profile-form">
-              <div className={styles.profileGrid}>
-                <ProfileForm
-                  fullName={fullName}
-                  email={email}
-                  whatsapp={whatsapp}
-                  birthDate={birthDate}
-                  password={password}
-                  loading={loading}
-                  saving={saving}
-                  signingOut={signingOut}
-                  error={error}
-                  success={success}
-                  signOutError={signOutError}
-                  onFullNameChange={setFullName}
-                  onEmailChange={setEmail}
-                  onWhatsappChange={setWhatsapp}
-                  onBirthDateChange={setBirthDate}
-                  onPasswordChange={setPassword}
-                  onSignOut={handleSignOut}
-                />
-              </div>
-            </form>
+            <div className={styles.profileBody}>
+              <form onSubmit={handleSubmit} className={styles.profileForm}>
+                <div className={styles.profileGrid}>
+                  <ProfileForm
+                    fullName={fullName}
+                    email={email}
+                    whatsapp={whatsapp}
+                    birthDate={birthDate}
+                    password={password}
+                    loading={loading}
+                    saving={saving}
+                    signingOut={signingOut}
+                    error={error}
+                    success={success}
+                    signOutError={signOutError}
+                    onFullNameChange={setFullName}
+                    onEmailChange={setEmail}
+                    onWhatsappChange={setWhatsapp}
+                    onBirthDateChange={setBirthDate}
+                    onPasswordChange={setPassword}
+                    onSignOut={handleSignOut}
+                  />
+                </div>
+              </form>
+            </div>
           </ClientGlassPanel>
 
           <footer

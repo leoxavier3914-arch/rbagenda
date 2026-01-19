@@ -84,10 +84,6 @@ export function ProfileForm({
                   disabled={loading || saving}
                 />
               </div>
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>CPF</span>
-                <p className={styles.readonlyValue}>Não configurado</p>
-              </div>
             </div>
           </div>
           <div className={styles.sectionCard}>
@@ -153,10 +149,6 @@ export function ProfileForm({
                 ) : (
                   <p className={styles.readonlyValue}>{whatsapp || 'Não informado'}</p>
                 )}
-              </div>
-              <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
-                <span className={styles.fieldLabel}>Instagram</span>
-                <p className={styles.readonlyValue}>Não configurado</p>
               </div>
             </div>
           </div>

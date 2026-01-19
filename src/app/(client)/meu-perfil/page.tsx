@@ -24,6 +24,7 @@ import {
   AvatarUploader,
   ProfileForm,
   ProfileHeader,
+  type ProfileSection,
   ThemePreferencesPanel,
 } from './@components'
 import { defaultTheme, type ThemeState } from './types'
@@ -156,6 +157,13 @@ export default function MeuPerfilPage() {
   useClientSessionGuard()
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
+  const [activeSection, setActiveSection] = useState<ProfileSection>('dados')
+  const tabRefs = useRef<Record<ProfileSection, HTMLButtonElement | null>>({
+    dados: null,
+    seguranca: null,
+    temas: null,
+    notificacoes: null,
+  })
 
   useEffect(() => {
     document.documentElement.classList.add(BODY_LOCK_CLASS)
@@ -171,6 +179,17 @@ export default function MeuPerfilPage() {
     profile?.role === 'admin' ||
     profile?.role === 'adminsuper' ||
     profile?.role === 'adminmaster'
+
+  const handleSectionChange = (section: ProfileSection) => {
+    setActiveSection(section)
+    requestAnimationFrame(() => {
+      tabRefs.current[section]?.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      })
+    })
+  }
 
   const cardTopHexRef = useRef<HTMLInputElement>(null)
   const cardBottomHexRef = useRef<HTMLInputElement>(null)
@@ -612,27 +631,80 @@ export default function MeuPerfilPage() {
               }
             />
             <div className={styles.profileBody}>
-              <form onSubmit={handleSubmit} className={styles.profileForm}>
-                <div className={styles.profileGrid}>
-                  <ProfileForm
-                    fullName={fullName}
-                    email={email}
-                    whatsapp={whatsapp}
-                    birthDate={birthDate}
-                    password={password}
-                    loading={loading}
-                    saving={saving}
-                    error={error}
-                    success={success}
-                    isDirty={isDirty}
-                    onFullNameChange={setFullName}
-                    onEmailChange={setEmail}
-                    onWhatsappChange={setWhatsapp}
-                    onBirthDateChange={setBirthDate}
-                    onPasswordChange={setPassword}
-                  />
-                </div>
-              </form>
+              <div
+                className={styles.sectionTabs}
+                role="tablist"
+                aria-label="Seções do perfil"
+              >
+                <button
+                  type="button"
+                  className={styles.sectionBadge}
+                  data-active={activeSection === 'dados'}
+                  ref={(node) => {
+                    tabRefs.current.dados = node
+                  }}
+                  onClick={() => handleSectionChange('dados')}
+                >
+                  Dados pessoais
+                </button>
+                <button
+                  type="button"
+                  className={styles.sectionBadge}
+                  data-active={activeSection === 'seguranca'}
+                  ref={(node) => {
+                    tabRefs.current.seguranca = node
+                  }}
+                  onClick={() => handleSectionChange('seguranca')}
+                >
+                  Segurança
+                </button>
+                <button
+                  type="button"
+                  className={styles.sectionBadge}
+                  data-active={activeSection === 'temas'}
+                  ref={(node) => {
+                    tabRefs.current.temas = node
+                  }}
+                  onClick={() => handleSectionChange('temas')}
+                >
+                  Temas
+                </button>
+                <button
+                  type="button"
+                  className={styles.sectionBadge}
+                  data-active={activeSection === 'notificacoes'}
+                  ref={(node) => {
+                    tabRefs.current.notificacoes = node
+                  }}
+                  onClick={() => handleSectionChange('notificacoes')}
+                >
+                  Notificações
+                </button>
+              </div>
+              <div className={styles.contentScroll}>
+                <form onSubmit={handleSubmit} className={styles.profileForm}>
+                  <div className={styles.profileGrid}>
+                    <ProfileForm
+                      activeSection={activeSection}
+                      fullName={fullName}
+                      email={email}
+                      whatsapp={whatsapp}
+                      birthDate={birthDate}
+                      password={password}
+                      loading={loading}
+                      saving={saving}
+                      error={error}
+                      success={success}
+                      isDirty={isDirty}
+                      onFullNameChange={setFullName}
+                      onEmailChange={setEmail}
+                      onWhatsappChange={setWhatsapp}
+                      onBirthDateChange={setBirthDate}
+                      onPasswordChange={setPassword}
+                    />
+                  </div>
+                </form>
+              </div>
             </div>
           </ClientGlassPanel>
 

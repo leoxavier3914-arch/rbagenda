@@ -90,8 +90,10 @@ export function ProfileForm({
                   id="cpf"
                   className={styles.input}
                   type="text"
-                  placeholder="Não configurado"
-                  disabled
+                  value="Não configurado"
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
                 />
               </div>
             </div>
@@ -166,8 +168,10 @@ export function ProfileForm({
                   id="instagram"
                   className={styles.input}
                   type="text"
-                  placeholder="Não configurado"
-                  disabled
+                  value="Não configurado"
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
                 />
               </div>
             </div>

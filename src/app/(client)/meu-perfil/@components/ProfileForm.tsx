@@ -84,6 +84,18 @@ export function ProfileForm({
                   disabled={loading || saving}
                 />
               </div>
+              <div className={styles.field}>
+                <label htmlFor="cpf">CPF</label>
+                <input
+                  id="cpf"
+                  className={styles.input}
+                  type="text"
+                  value="Não configurado"
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
+                />
+              </div>
             </div>
           </div>
           <div className={styles.sectionCard}>
@@ -149,6 +161,18 @@ export function ProfileForm({
                 ) : (
                   <p className={styles.readonlyValue}>{whatsapp || 'Não informado'}</p>
                 )}
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="instagram">Instagram</label>
+                <input
+                  id="instagram"
+                  className={styles.input}
+                  type="text"
+                  value="Não configurado"
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
+                />
               </div>
             </div>
           </div>

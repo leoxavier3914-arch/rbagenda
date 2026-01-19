@@ -18,6 +18,7 @@
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   min-height: 100vh;
+  height: 100vh;
   height: 100dvh;
   overflow: hidden;
   padding-inline: 0;
@@ -46,6 +47,7 @@
   align-items: stretch;
   justify-content: stretch;
   margin: 0;
+  overflow: hidden;
 }
 
 .wrapper :global(.stack) {
@@ -53,6 +55,7 @@
   height: 100%;
   gap: 0;
   margin: 0;
+  overflow: hidden;
 }
 
 .revealSeq {
@@ -100,6 +103,8 @@
   position: relative;
   overflow: hidden;
   border-radius: 0;
+  border: none;
+  outline: none;
 }
 
 .profileCard::before {
@@ -118,12 +123,14 @@
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2.4vw, 18px);
+  overflow: hidden;
 }
 
 .contentScroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scroll-behavior: smooth;
   display: flex;
   flex-direction: column;
   padding-bottom: calc(clamp(14px, 2.6vw, 22px) + env(safe-area-inset-bottom));

@@ -85,8 +85,14 @@ export function ProfileForm({
                 />
               </div>
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>CPF</span>
-                <p className={styles.readonlyValue}>Não configurado</p>
+                <label htmlFor="cpf">CPF</label>
+                <input
+                  id="cpf"
+                  className={styles.input}
+                  type="text"
+                  placeholder="Não configurado"
+                  disabled
+                />
               </div>
             </div>
           </div>
@@ -155,8 +161,14 @@ export function ProfileForm({
                 )}
               </div>
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>Instagram</span>
-                <p className={styles.readonlyValue}>Não configurado</p>
+                <label htmlFor="instagram">Instagram</label>
+                <input
+                  id="instagram"
+                  className={styles.input}
+                  type="text"
+                  placeholder="Não configurado"
+                  disabled
+                />
               </div>
             </div>
           </div>

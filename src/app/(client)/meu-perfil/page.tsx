@@ -30,6 +30,7 @@ import { defaultTheme, type ThemeState } from './types'
 import styles from './meu-perfil.module.css'
 
 const AVATAR_STORAGE_KEY = 'rb_meu_perfil_avatar'
+const BODY_LOCK_CLASS = 'meu-perfil-lock'
 
 const HEX_REGEX = /^#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/
 
@@ -155,6 +156,16 @@ export default function MeuPerfilPage() {
   useClientSessionGuard()
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
+
+  useEffect(() => {
+    document.documentElement.classList.add(BODY_LOCK_CLASS)
+    document.body.classList.add(BODY_LOCK_CLASS)
+
+    return () => {
+      document.documentElement.classList.remove(BODY_LOCK_CLASS)
+      document.body.classList.remove(BODY_LOCK_CLASS)
+    }
+  }, [])
 
   const canEditAppearance =
     profile?.role === 'admin' ||

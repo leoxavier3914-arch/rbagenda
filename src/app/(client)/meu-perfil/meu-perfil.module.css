@@ -36,6 +36,7 @@
   padding: 0;
   overflow: hidden;
   gap: 0;
+  margin: 0;
 }
 
 .wrapper :global(.center) {
@@ -43,12 +44,15 @@
   height: 100%;
   padding: 0;
   align-items: stretch;
+  justify-content: stretch;
+  margin: 0;
 }
 
 .wrapper :global(.stack) {
   width: 100%;
   height: 100%;
   gap: 0;
+  margin: 0;
 }
 
 .revealSeq {
@@ -109,6 +113,14 @@
 }
 
 .profileBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2.4vw, 18px);
+}
+
+.contentScroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;

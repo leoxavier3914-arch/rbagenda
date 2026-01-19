@@ -1,10 +1,13 @@
-import { useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import styles from '../meu-perfil.module.css'
 
 import { SaveActions } from './SaveActions'
 
+export type ProfileSection = 'dados' | 'seguranca' | 'temas' | 'notificacoes'
+
 type ProfileFormProps = {
+  activeSection: ProfileSection
   fullName: string
   email: string
   whatsapp: string
@@ -23,6 +26,7 @@ type ProfileFormProps = {
 }
 
 export function ProfileForm({
+  activeSection,
   fullName,
   email,
   whatsapp,
@@ -39,79 +43,18 @@ export function ProfileForm({
   onBirthDateChange,
   onPasswordChange,
 }: ProfileFormProps) {
-  const [activeSection, setActiveSection] = useState<
-    'dados' | 'seguranca' | 'temas' | 'notificacoes'
-  >('dados')
   const [isEmailEditing, setIsEmailEditing] = useState(false)
   const [isWhatsappEditing, setIsWhatsappEditing] = useState(false)
   const [isPasswordEditing, setIsPasswordEditing] = useState(false)
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
-  const handleSectionChange = (
-    section: 'dados' | 'seguranca' | 'temas' | 'notificacoes',
-  ) => {
-    setActiveSection(section)
+  useEffect(() => {
     setIsEmailEditing(false)
     setIsWhatsappEditing(false)
     setIsPasswordEditing(false)
-    requestAnimationFrame(() => {
-      tabRefs.current[section]?.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest',
-      })
-    })
-  }
+  }, [activeSection])
 
   return (
     <div className={styles.fieldsColumn}>
-      <div className={styles.sectionTabs} role="tablist" aria-label="Seções do perfil">
-        <button
-          type="button"
-          className={styles.sectionBadge}
-          data-active={activeSection === 'dados'}
-          ref={(node) => {
-            tabRefs.current.dados = node
-          }}
-          onClick={() => handleSectionChange('dados')}
-        >
-          Dados pessoais
-        </button>
-        <button
-          type="button"
-          className={styles.sectionBadge}
-          data-active={activeSection === 'seguranca'}
-          ref={(node) => {
-            tabRefs.current.seguranca = node
-          }}
-          onClick={() => handleSectionChange('seguranca')}
-        >
-          Segurança
-        </button>
-        <button
-          type="button"
-          className={styles.sectionBadge}
-          data-active={activeSection === 'temas'}
-          ref={(node) => {
-            tabRefs.current.temas = node
-          }}
-          onClick={() => handleSectionChange('temas')}
-        >
-          Temas
-        </button>
-        <button
-          type="button"
-          className={styles.sectionBadge}
-          data-active={activeSection === 'notificacoes'}
-          ref={(node) => {
-            tabRefs.current.notificacoes = node
-          }}
-          onClick={() => handleSectionChange('notificacoes')}
-        >
-          Notificações
-        </button>
-      </div>
-
       {activeSection === 'dados' ? (
         <div className={styles.sectionStack}>
           <div className={styles.sectionCard}>

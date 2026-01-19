@@ -2,12 +2,38 @@
   width: 100%;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  padding-inline: clamp(14px, 4vw, 22px);
+  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  padding-inline: 0;
 }
 
 .wrapper {
   position: relative;
   color: var(--ink);
+  height: 100%;
+  overflow: hidden;
+}
+
+.wrapper :global(.page) {
+  min-height: 100vh;
+  height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+.wrapper :global(.center) {
+  min-height: 100%;
+  height: 100%;
+  padding: 0;
+  align-items: stretch;
+}
+
+.wrapper :global(.stack) {
+  width: 100%;
+  height: 100%;
+  gap: 0;
 }
 
 .revealSeq {
@@ -45,11 +71,16 @@
 }
 
 .profileCard {
-  width: clamp(320px, 92vw, 880px);
-  display: grid;
-  gap: clamp(16px, 3vw, 24px);
+  width: 100%;
+  max-width: none;
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2.8vw, 20px);
   position: relative;
   overflow: hidden;
+  border-radius: 0;
 }
 
 .profileCard::before {
@@ -60,6 +91,24 @@
   height: clamp(120px, 26vw, 170px);
   background: linear-gradient(120deg, rgba(58, 135, 101, 0.35), rgba(214, 243, 221, 0.55));
   z-index: 0;
+}
+
+.profileBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(clamp(14px, 2.6vw, 22px) + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .profileHeader {
@@ -335,6 +384,9 @@
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: 20px;
   scroll-behavior: smooth;
@@ -453,6 +505,10 @@
 }
 
 @media (min-width: 640px) {
+  .profileCard {
+    border-radius: var(--radius-outer);
+  }
+
   .actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-items: center;

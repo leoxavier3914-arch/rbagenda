@@ -85,16 +85,8 @@ export function ProfileForm({
                 />
               </div>
               <div className={styles.field}>
-                <label htmlFor="cpf">CPF</label>
-                <input
-                  id="cpf"
-                  className={styles.input}
-                  type="text"
-                  value="Não configurado"
-                  readOnly
-                  aria-readonly="true"
-                  tabIndex={-1}
-                />
+                <span className={styles.fieldLabel}>CPF</span>
+                <p className={styles.readonlyValue}>Não configurado</p>
               </div>
             </div>
           </div>
@@ -162,17 +154,9 @@ export function ProfileForm({
                   <p className={styles.readonlyValue}>{whatsapp || 'Não informado'}</p>
                 )}
               </div>
-              <div className={styles.field}>
-                <label htmlFor="instagram">Instagram</label>
-                <input
-                  id="instagram"
-                  className={styles.input}
-                  type="text"
-                  value="Não configurado"
-                  readOnly
-                  aria-readonly="true"
-                  tabIndex={-1}
-                />
+              <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
+                <span className={styles.fieldLabel}>Instagram</span>
+                <p className={styles.readonlyValue}>Não configurado</p>
               </div>
             </div>
           </div>

@@ -144,10 +144,8 @@ export default function MeuPerfilPage() {
     saving,
     error,
     success,
-    signingOut,
-    signOutError,
+    isDirty,
     handleSubmit,
-    handleSignOut,
   } = useProfileForm()
   const [avatarDataUrl, setAvatarDataUrl] = useState<string>('')
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false)
@@ -613,16 +611,14 @@ export default function MeuPerfilPage() {
                     password={password}
                     loading={loading}
                     saving={saving}
-                    signingOut={signingOut}
                     error={error}
                     success={success}
-                    signOutError={signOutError}
+                    isDirty={isDirty}
                     onFullNameChange={setFullName}
                     onEmailChange={setEmail}
                     onWhatsappChange={setWhatsapp}
                     onBirthDateChange={setBirthDate}
                     onPasswordChange={setPassword}
-                    onSignOut={handleSignOut}
                   />
                 </div>
               </form>

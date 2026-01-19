@@ -170,6 +170,7 @@
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
+  flex: 1;
 }
 
 .item {
@@ -219,6 +220,43 @@
 
 .contentNoPadding {
   padding: 0 !important;
+}
+
+.menuFooter {
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.signOutButton {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.signOutButton:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.signOutButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.signOutError {
+  font-size: 12px;
+  color: #ffe4e6;
+  opacity: 0.9;
 }
 
 @media (max-width: 600px) {

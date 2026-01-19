@@ -203,6 +203,8 @@ export default function ClientMenu({
     role: "client",
     isLoading: true,
   });
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const closeTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -414,6 +416,24 @@ export default function ClientMenu({
 
   const closeMenu = () => setIsMenuOpen(false);
 
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    setSignOutError(null);
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setSignOutError(
+        error.message || "Não foi possível encerrar a sessão. Tente novamente.",
+      );
+      setSigningOut(false);
+      return;
+    }
+
+    setIsMenuOpen(false);
+    router.replace("/login");
+  };
+
   const contentClassName = [
     styles.content,
     disableContentPadding ? styles.contentNoPadding : "",
@@ -479,6 +499,22 @@ export default function ClientMenu({
         <nav className={styles.menu} aria-label="Navegação">
           {navElements}
         </nav>
+
+        <div className={styles.menuFooter}>
+          {signOutError ? (
+            <span className={styles.signOutError} role="alert">
+              {signOutError}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className={styles.signOutButton}
+            onClick={handleSignOut}
+            disabled={signingOut}
+          >
+            {signingOut ? "Saindo…" : "Encerrar sessão"}
+          </button>
+        </div>
       </aside>
 
       <main className={contentClassName}>

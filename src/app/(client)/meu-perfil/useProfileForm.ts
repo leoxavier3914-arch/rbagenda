@@ -1,7 +1,6 @@
 "use client"
 
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import type { Session } from '@supabase/supabase-js'
 
 import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
@@ -10,7 +9,6 @@ import { supabase } from '@/lib/db'
 import type { Profile } from './types'
 
 export function useProfileForm() {
-  const router = useRouter()
   const { session: guardSession, isReady: isSessionReady } = useClientSessionGuard()
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -19,12 +17,16 @@ export function useProfileForm() {
   const [whatsapp, setWhatsapp] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [password, setPassword] = useState('')
+  const [initialValues, setInitialValues] = useState({
+    fullName: '',
+    email: '',
+    whatsapp: '',
+    birthDate: '',
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [signingOut, setSigningOut] = useState(false)
-  const [signOutError, setSignOutError] = useState<string | null>(null)
 
   useEffect(() => {
     setSession(guardSession ?? null)
@@ -91,11 +93,22 @@ export function useProfileForm() {
         (user.user_metadata as Record<string, string | null> | null)?.birth_date ?? ''
       const fallbackEmail = user.email ?? ''
 
+      const resolvedFullName = resolvedProfile?.full_name ?? fallbackFullName
+      const resolvedEmail = resolvedProfile?.email ?? fallbackEmail
+      const resolvedWhatsapp = resolvedProfile?.whatsapp ?? fallbackWhatsapp
+      const resolvedBirthDate = resolvedProfile?.birth_date ?? fallbackBirthDate
+
       setProfile(resolvedProfile)
-      setFullName(resolvedProfile?.full_name ?? fallbackFullName)
-      setEmail(resolvedProfile?.email ?? fallbackEmail)
-      setWhatsapp(resolvedProfile?.whatsapp ?? fallbackWhatsapp)
-      setBirthDate(resolvedProfile?.birth_date ?? fallbackBirthDate)
+      setFullName(resolvedFullName)
+      setEmail(resolvedEmail)
+      setWhatsapp(resolvedWhatsapp)
+      setBirthDate(resolvedBirthDate)
+      setInitialValues({
+        fullName: resolvedFullName,
+        email: resolvedEmail,
+        whatsapp: resolvedWhatsapp,
+        birthDate: resolvedBirthDate,
+      })
       setLoading(false)
 
       if (profileError && !resolvedProfile) {
@@ -184,30 +197,25 @@ export function useProfileForm() {
 
       setProfile(updatedProfile)
       setPassword('')
+      setInitialValues({
+        fullName: updates.full_name ?? '',
+        email: updates.email ?? '',
+        whatsapp: updates.whatsapp ?? '',
+        birthDate: updates.birth_date ?? '',
+      })
       setSuccess('Dados atualizados com sucesso.')
       setSaving(false)
     },
     [birthDate, email, fullName, password, profile?.role, saving, session?.user?.email, session?.user?.id, whatsapp],
   )
 
-  const handleSignOut = useCallback(async () => {
-    if (signingOut) return
-
-    setSigningOut(true)
-    setSignOutError(null)
-
-    const { error: signOutError } = await supabase.auth.signOut()
-
-    if (signOutError) {
-      setSignOutError(
-        signOutError.message || 'Não foi possível encerrar a sessão. Tente novamente.',
-      )
-      setSigningOut(false)
-      return
-    }
-
-    router.replace('/login')
-  }, [router, signingOut])
+  const normalize = (value: string) => value.trim()
+  const isDirty =
+    normalize(fullName) !== normalize(initialValues.fullName) ||
+    normalize(email) !== normalize(initialValues.email) ||
+    normalize(whatsapp) !== normalize(initialValues.whatsapp) ||
+    normalize(birthDate) !== normalize(initialValues.birthDate) ||
+    normalize(password).length > 0
 
   return {
     session,
@@ -228,10 +236,8 @@ export function useProfileForm() {
     setError,
     success,
     setSuccess,
-    signingOut,
-    signOutError,
+    isDirty,
     handleSubmit,
-    handleSignOut,
     setProfile,
   }
 }

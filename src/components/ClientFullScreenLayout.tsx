@@ -16,6 +16,7 @@ const DISABLE_PADDING_ROUTES = [
   "/procedimento",
   "/meu-perfil",
 ];
+const FULL_WIDTH_ROUTES = ["/meu-perfil"];
 
 export default function ClientFullScreenLayout({
   children,
@@ -34,10 +35,18 @@ export default function ClientFullScreenLayout({
   const disableContentPadding = DISABLE_PADDING_ROUTES.some((route) =>
     pathname === route || pathname?.startsWith(`${route}/`),
   );
+  const fullWidthContent = FULL_WIDTH_ROUTES.some((route) =>
+    pathname === route || pathname?.startsWith(`${route}/`),
+  );
 
   return (
     <div className={styles.fullscreenWrapper}>
-      <ClientMenu disableContentPadding={disableContentPadding}>{children}</ClientMenu>
+      <ClientMenu
+        disableContentPadding={disableContentPadding}
+        fullWidthContent={fullWidthContent}
+      >
+        {children}
+      </ClientMenu>
     </div>
   );
 }

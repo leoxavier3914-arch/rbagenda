@@ -1,5 +1,5 @@
 export { AvatarUploader } from './AvatarUploader'
-export { ProfileForm, type ProfileSection } from './ProfileForm'
+export { ProfileForm } from './ProfileForm'
 export { ProfileHeader } from './ProfileHeader'
 export { SaveActions } from './SaveActions'
 export { ThemePreferencesPanel } from './ThemePreferencesPanel'

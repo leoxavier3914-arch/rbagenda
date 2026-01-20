@@ -573,109 +573,107 @@ export default function MeuPerfilPage() {
 
 
   return (
-    <div className={styles.pageRoot}>
-      <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
-        <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-          <ClientGlassPanel
-            className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
-            aria-label="Dados do perfil"
-            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          >
-            <ProfileHeader
-              revealStage={revealStage}
-              resolvedName={resolvedName}
-              avatarSlot={
-                <AvatarUploader
-                  avatarDataUrl={avatarDataUrl}
-                  resolvedName={resolvedName}
-                  showName={false}
-                  isAvatarMenuOpen={isAvatarMenuOpen}
-                  avatarBoxRef={avatarBoxRef}
-                  avatarActionsRef={avatarActionsRef}
-                  avatarInputRef={avatarInputRef}
-                  onToggle={toggleAvatarMenu}
-                  onKeyDown={handleAvatarKeyDown}
-                  onChange={handleAvatarChange}
-                  onRemove={handleRemoveAvatar}
+    <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
+      <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
+        <ClientGlassPanel
+          className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
+          aria-label="Dados do perfil"
+          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+        >
+          <ProfileHeader
+            revealStage={revealStage}
+            resolvedName={resolvedName}
+            avatarSlot={
+              <AvatarUploader
+                avatarDataUrl={avatarDataUrl}
+                resolvedName={resolvedName}
+                showName={false}
+                isAvatarMenuOpen={isAvatarMenuOpen}
+                avatarBoxRef={avatarBoxRef}
+                avatarActionsRef={avatarActionsRef}
+                avatarInputRef={avatarInputRef}
+                onToggle={toggleAvatarMenu}
+                onKeyDown={handleAvatarKeyDown}
+                onChange={handleAvatarChange}
+                onRemove={handleRemoveAvatar}
+              />
+            }
+          />
+          <div className={styles.profileBody}>
+            <form onSubmit={handleSubmit} className={styles.profileForm}>
+              <div className={styles.profileGrid}>
+                <ProfileForm
+                  fullName={fullName}
+                  email={email}
+                  whatsapp={whatsapp}
+                  birthDate={birthDate}
+                  password={password}
+                  loading={loading}
+                  saving={saving}
+                  error={error}
+                  success={success}
+                  isDirty={isDirty}
+                  onFullNameChange={setFullName}
+                  onEmailChange={setEmail}
+                  onWhatsappChange={setWhatsapp}
+                  onBirthDateChange={setBirthDate}
+                  onPasswordChange={setPassword}
                 />
-              }
-            />
-            <div className={styles.profileBody}>
-              <form onSubmit={handleSubmit} className={styles.profileForm}>
-                <div className={styles.profileGrid}>
-                  <ProfileForm
-                    fullName={fullName}
-                    email={email}
-                    whatsapp={whatsapp}
-                    birthDate={birthDate}
-                    password={password}
-                    loading={loading}
-                    saving={saving}
-                    error={error}
-                    success={success}
-                    isDirty={isDirty}
-                    onFullNameChange={setFullName}
-                    onEmailChange={setEmail}
-                    onWhatsappChange={setWhatsapp}
-                    onBirthDateChange={setBirthDate}
-                    onPasswordChange={setPassword}
-                  />
-                </div>
-              </form>
-            </div>
-          </ClientGlassPanel>
+              </div>
+            </form>
+          </div>
+        </ClientGlassPanel>
 
-          <footer
-            className={`${styles.revealSeq} ${styles.revealContent}`}
-            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          >
-            ROMEIKE BEAUTY
-          </footer>
-        </ClientSection>
+        <footer
+          className={`${styles.revealSeq} ${styles.revealContent}`}
+          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+        >
+          ROMEIKE BEAUTY
+        </footer>
+      </ClientSection>
 
-        <ThemePreferencesPanel
-          theme={theme}
-          isPaletteOpen={isPaletteOpen}
-          revealStage={revealStage}
-          canEditAppearance={canEditAppearance}
-          onToggle={() => setIsPaletteOpen((open) => !open)}
-          onClose={() => setIsPaletteOpen(false)}
-          onPaletteSwatch={handlePaletteSwatch}
-          handleCardTopColor={handleCardTopColor}
-          handleCardBottomColor={handleCardBottomColor}
-          handleCardBorderColor={handleCardBorderColor}
-          handleCardBorderAlpha={handleCardBorderAlpha}
-          handleBackgroundTopColor={handleBackgroundTopColor}
-          handleBackgroundBottomColor={handleBackgroundBottomColor}
-          handleGlassBorderColor={handleGlassBorderColor}
-          handleGlassBorderAlpha={handleGlassBorderAlpha}
-          handleGlassColor={handleGlassColor}
-          handleGlassAlpha={handleGlassAlpha}
-          handleBubbleDarkColor={handleBubbleDarkColor}
-          handleBubbleLightColor={handleBubbleLightColor}
-          handleBubbleAlphaMin={handleBubbleAlphaMin}
-          handleBubbleAlphaMax={handleBubbleAlphaMax}
-          applyHexFromRef={applyHexFromRef}
-          applyCardTop={applyCardTop}
-          applyCardBottom={applyCardBottom}
-          applyCardBorder={applyCardBorder}
-          applyBackgroundTop={applyBackgroundTop}
-          applyBackgroundBottom={applyBackgroundBottom}
-          applyGlassBorder={applyGlassBorder}
-          applyGlass={applyGlass}
-          applyBubbleDark={applyBubbleDark}
-          applyBubbleLight={applyBubbleLight}
-          cardTopHexRef={cardTopHexRef}
-          cardBottomHexRef={cardBottomHexRef}
-          cardBorderHexRef={cardBorderHexRef}
-          bgTopHexRef={bgTopHexRef}
-          bgBottomHexRef={bgBottomHexRef}
-          glassBorderHexRef={glassBorderHexRef}
-          glassHexRef={glassHexRef}
-          bubbleDarkHexRef={bubbleDarkHexRef}
-          bubbleLightHexRef={bubbleLightHexRef}
-        />
-      </ClientPageShell>
-    </div>
+      <ThemePreferencesPanel
+        theme={theme}
+        isPaletteOpen={isPaletteOpen}
+        revealStage={revealStage}
+        canEditAppearance={canEditAppearance}
+        onToggle={() => setIsPaletteOpen((open) => !open)}
+        onClose={() => setIsPaletteOpen(false)}
+        onPaletteSwatch={handlePaletteSwatch}
+        handleCardTopColor={handleCardTopColor}
+        handleCardBottomColor={handleCardBottomColor}
+        handleCardBorderColor={handleCardBorderColor}
+        handleCardBorderAlpha={handleCardBorderAlpha}
+        handleBackgroundTopColor={handleBackgroundTopColor}
+        handleBackgroundBottomColor={handleBackgroundBottomColor}
+        handleGlassBorderColor={handleGlassBorderColor}
+        handleGlassBorderAlpha={handleGlassBorderAlpha}
+        handleGlassColor={handleGlassColor}
+        handleGlassAlpha={handleGlassAlpha}
+        handleBubbleDarkColor={handleBubbleDarkColor}
+        handleBubbleLightColor={handleBubbleLightColor}
+        handleBubbleAlphaMin={handleBubbleAlphaMin}
+        handleBubbleAlphaMax={handleBubbleAlphaMax}
+        applyHexFromRef={applyHexFromRef}
+        applyCardTop={applyCardTop}
+        applyCardBottom={applyCardBottom}
+        applyCardBorder={applyCardBorder}
+        applyBackgroundTop={applyBackgroundTop}
+        applyBackgroundBottom={applyBackgroundBottom}
+        applyGlassBorder={applyGlassBorder}
+        applyGlass={applyGlass}
+        applyBubbleDark={applyBubbleDark}
+        applyBubbleLight={applyBubbleLight}
+        cardTopHexRef={cardTopHexRef}
+        cardBottomHexRef={cardBottomHexRef}
+        cardBorderHexRef={cardBorderHexRef}
+        bgTopHexRef={bgTopHexRef}
+        bgBottomHexRef={bgBottomHexRef}
+        glassBorderHexRef={glassBorderHexRef}
+        glassHexRef={glassHexRef}
+        bubbleDarkHexRef={bubbleDarkHexRef}
+        bubbleLightHexRef={bubbleLightHexRef}
+      />
+    </ClientPageShell>
   )
 }

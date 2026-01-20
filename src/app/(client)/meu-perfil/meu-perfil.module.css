@@ -1,39 +1,6 @@
-.pageRoot {
-  width: 100%;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  min-height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-  padding-inline: 0;
-}
-
 .wrapper {
   position: relative;
   color: var(--ink);
-  height: 100%;
-  overflow: hidden;
-}
-
-.wrapper :global(.page) {
-  min-height: 100vh;
-  height: 100dvh;
-  padding: 0;
-  overflow: hidden;
-  gap: 0;
-}
-
-.wrapper :global(.center) {
-  min-height: 100%;
-  height: 100%;
-  padding: 0;
-  align-items: stretch;
-}
-
-.wrapper :global(.stack) {
-  width: 100%;
-  height: 100%;
-  gap: 0;
 }
 
 .revealSeq {
@@ -73,13 +40,10 @@
 .profileCard {
   width: 100%;
   max-width: none;
-  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2.8vw, 20px);
   position: relative;
-  overflow: hidden;
   border-radius: 0;
 }
 
@@ -94,14 +58,9 @@
 }
 
 .profileBody {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding-bottom: calc(clamp(14px, 2.6vw, 22px) + env(safe-area-inset-bottom));
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 .profileForm {

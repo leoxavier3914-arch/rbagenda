@@ -577,8 +577,12 @@ export default function MeuPerfilPage() {
   return (
     <div className={styles.pageRoot}>
       <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
-        <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-          <ClientGlassPanel
+        <ClientSection
+          id="sectionPerfil"
+          aria-label="Meu Perfil"
+          className={styles.fullWidthSection}
+        >
+          <div
             className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
             aria-label="Dados do perfil"
             data-visible={revealStage >= REVEAL_STAGE.CONTENT}
@@ -627,7 +631,7 @@ export default function MeuPerfilPage() {
                 </div>
               </form>
             </div>
-          </ClientGlassPanel>
+          </div>
 
           <footer
             className={`${styles.revealSeq} ${styles.revealContent}`}

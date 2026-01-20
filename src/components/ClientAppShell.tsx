@@ -12,8 +12,7 @@ type ClientAppShellProps = {
 export default function ClientAppShell({ children }: ClientAppShellProps) {
   return (
     <div className={styles.shell}>
-      <ClientMenu />
-      <main className={styles.content}>{children}</main>
+      <ClientMenu>{children}</ClientMenu>
     </div>
   );
 }

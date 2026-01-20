@@ -92,12 +92,21 @@
 
 .profileHeader {
   --avatar-size: clamp(96px, 24vw, 148px);
+  width: 100%;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  padding: 0;
+}
+
+.profileHeaderContent {
   width: min(920px, 100%);
   margin: 0 auto;
   display: grid;
   gap: 8px;
   position: relative;
-  z-index: 1;
   padding: clamp(16px, 3.5vw, 24px);
   padding-top: clamp(64px, 14vw, 96px);
   padding-bottom: clamp(10px, 3vw, 16px);
@@ -109,9 +118,9 @@
   align-items: center;
   gap: clamp(12px, 3vw, 20px);
   position: absolute;
-  top: clamp(20px, 5vw, 34px);
-  left: clamp(20px, 5vw, 32px);
-  right: clamp(20px, 5vw, 32px);
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 2;
 }
 
@@ -270,14 +279,18 @@
 
   .profileHeader {
     --avatar-size: clamp(104px, 34vw, 160px);
+    padding: 0;
+  }
+
+  .profileHeaderContent {
     padding: 16px;
     padding-top: clamp(64px, 20vw, 104px);
     padding-bottom: 12px;
   }
 
   .profileHeaderInner {
-    right: 16px;
-    left: 16px;
+    right: 0;
+    left: 0;
   }
 
   .sectionTabs {

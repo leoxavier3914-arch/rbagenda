@@ -86,7 +86,7 @@
   position: absolute;
   inset: 0 auto auto 0;
   width: 100%;
-  height: clamp(120px, 26vw, 170px);
+  height: clamp(150px, 32vw, 220px);
   background: linear-gradient(120deg, rgba(58, 135, 101, 0.35), rgba(214, 243, 221, 0.55));
   z-index: 0;
 }
@@ -113,7 +113,6 @@
   position: relative;
   z-index: 1;
   padding: clamp(16px, 3.5vw, 24px);
-  padding-top: clamp(64px, 14vw, 96px);
   padding-bottom: clamp(10px, 3vw, 16px);
   min-height: calc(var(--avatar-size) + clamp(26px, 6vw, 40px));
 }

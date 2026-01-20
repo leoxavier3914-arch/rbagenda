@@ -55,6 +55,20 @@
   gap: clamp(12px, 2.8vw, 20px);
   position: relative;
   border-radius: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.fullWidthSection {
+  padding: 0;
+  align-items: stretch;
+}
+
+.fullWidthSection :global(.stack) {
+  width: 100%;
+  justify-items: stretch;
 }
 
 .fullWidthSection {

@@ -41,7 +41,7 @@ export default function DashboardIndexPage() {
 
   return (
     <ClientPageShell heroReady={heroReady} forceMotion>
-      <ClientSection>
+      <ClientSection className={styles.section}>
         <div className={styles.panel}>
           <div className={styles.headerArea}>
             <span className="badge">Central rápida</span>

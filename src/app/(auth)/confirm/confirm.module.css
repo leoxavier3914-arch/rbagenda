@@ -1,0 +1,9 @@
+.section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: calc(72px + env(safe-area-inset-top)) 18px
+    calc(40px + env(safe-area-inset-bottom));
+}

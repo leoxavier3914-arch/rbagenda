@@ -280,7 +280,7 @@
   .profileHeader {
     --avatar-size: clamp(104px, 34vw, 160px);
     padding: 16px;
-    padding-top: clamp(64px, 20vw, 104px);
+    padding-top: clamp(64px, 14vw, 96px);
     padding-bottom: 12px;
   }
 

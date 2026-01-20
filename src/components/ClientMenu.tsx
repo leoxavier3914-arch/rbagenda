@@ -33,9 +33,7 @@ type NavItem = {
 };
 
 type ClientMenuProps = {
-  children: ReactNode;
-  disableContentPadding?: boolean;
-  fullWidthContent?: boolean;
+  children?: ReactNode;
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -192,11 +190,7 @@ const SettingsIcon = () => (
   </svg>
 );
 
-export default function ClientMenu({
-  children,
-  disableContentPadding = false,
-  fullWidthContent = false,
-}: ClientMenuProps) {
+export default function ClientMenu({ children }: ClientMenuProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -436,20 +430,6 @@ export default function ClientMenu({
     router.replace("/login");
   };
 
-  const contentClassName = [
-    styles.content,
-    disableContentPadding ? styles.contentNoPadding : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const contentInnerClassName = [
-    styles.contentInner,
-    fullWidthContent ? styles.contentInnerFullWidth : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
     <div className={styles.wrapper}>
       <button
@@ -526,9 +506,7 @@ export default function ClientMenu({
         </div>
       </aside>
 
-      <main className={contentClassName}>
-        <div className={contentInnerClassName}>{children}</div>
-      </main>
+      {children}
     </div>
   );
 }

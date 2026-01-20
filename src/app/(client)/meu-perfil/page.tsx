@@ -577,65 +577,67 @@ export default function MeuPerfilPage() {
   return (
     <div className={styles.pageRoot}>
       <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
-        <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-          <ClientGlassPanel
-            className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
-            aria-label="Dados do perfil"
-            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          >
-            <ProfileHeader
-              revealStage={revealStage}
-              resolvedName={resolvedName}
-              avatarSlot={
-                <AvatarUploader
-                  avatarDataUrl={avatarDataUrl}
-                  resolvedName={resolvedName}
-                  showName={false}
-                  isAvatarMenuOpen={isAvatarMenuOpen}
-                  avatarBoxRef={avatarBoxRef}
-                  avatarActionsRef={avatarActionsRef}
-                  avatarInputRef={avatarInputRef}
-                  onToggle={toggleAvatarMenu}
-                  onKeyDown={handleAvatarKeyDown}
-                  onChange={handleAvatarChange}
-                  onRemove={handleRemoveAvatar}
-                />
-              }
-            />
-            <div className={styles.profileBody}>
-              <form onSubmit={handleSubmit} className={styles.profileForm}>
-                <div className={styles.profileGrid}>
-                  <ProfileForm
-                    fullName={fullName}
-                    email={email}
-                    whatsapp={whatsapp}
-                    birthDate={birthDate}
-                    password={password}
-                    loading={loading}
-                    saving={saving}
-                    signingOut={signingOut}
-                    error={error}
-                    success={success}
-                    signOutError={signOutError}
-                    onFullNameChange={setFullName}
-                    onEmailChange={setEmail}
-                    onWhatsappChange={setWhatsapp}
-                    onBirthDateChange={setBirthDate}
-                    onPasswordChange={setPassword}
-                    onSignOut={handleSignOut}
+        <section id="sectionPerfil" aria-label="Meu Perfil" className={styles.profileSection}>
+          <div className={styles.profileStack}>
+            <div
+              className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
+              aria-label="Dados do perfil"
+              data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+            >
+              <ProfileHeader
+                revealStage={revealStage}
+                resolvedName={resolvedName}
+                avatarSlot={
+                  <AvatarUploader
+                    avatarDataUrl={avatarDataUrl}
+                    resolvedName={resolvedName}
+                    showName={false}
+                    isAvatarMenuOpen={isAvatarMenuOpen}
+                    avatarBoxRef={avatarBoxRef}
+                    avatarActionsRef={avatarActionsRef}
+                    avatarInputRef={avatarInputRef}
+                    onToggle={toggleAvatarMenu}
+                    onKeyDown={handleAvatarKeyDown}
+                    onChange={handleAvatarChange}
+                    onRemove={handleRemoveAvatar}
                   />
-                </div>
-              </form>
+                }
+              />
+              <div className={styles.profileBody}>
+                <form onSubmit={handleSubmit} className={styles.profileForm}>
+                  <div className={styles.profileGrid}>
+                    <ProfileForm
+                      fullName={fullName}
+                      email={email}
+                      whatsapp={whatsapp}
+                      birthDate={birthDate}
+                      password={password}
+                      loading={loading}
+                      saving={saving}
+                      signingOut={signingOut}
+                      error={error}
+                      success={success}
+                      signOutError={signOutError}
+                      onFullNameChange={setFullName}
+                      onEmailChange={setEmail}
+                      onWhatsappChange={setWhatsapp}
+                      onBirthDateChange={setBirthDate}
+                      onPasswordChange={setPassword}
+                      onSignOut={handleSignOut}
+                    />
+                  </div>
+                </form>
+              </div>
             </div>
-          </ClientGlassPanel>
 
-          <footer
-            className={`${styles.revealSeq} ${styles.revealContent}`}
-            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-          >
-            ROMEIKE BEAUTY
-          </footer>
-        </ClientSection>
+            <footer
+              className={`${styles.revealSeq} ${styles.revealContent}`}
+              data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+            >
+              ROMEIKE BEAUTY
+            </footer>
+          </div>
+        </section>
 
         <ThemePreferencesPanel
           theme={theme}

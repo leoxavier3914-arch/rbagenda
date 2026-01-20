@@ -12,14 +12,16 @@ type ProfileFormProps = {
   password: string
   loading: boolean
   saving: boolean
+  signingOut: boolean
   error: string | null
   success: string | null
-  isDirty: boolean
+  signOutError: string | null
   onFullNameChange: (value: string) => void
   onEmailChange: (value: string) => void
   onWhatsappChange: (value: string) => void
   onBirthDateChange: (value: string) => void
   onPasswordChange: (value: string) => void
+  onSignOut: () => void
 }
 
 export function ProfileForm({
@@ -30,20 +32,21 @@ export function ProfileForm({
   password,
   loading,
   saving,
+  signingOut,
   error,
   success,
-  isDirty,
+  signOutError,
   onFullNameChange,
   onEmailChange,
   onWhatsappChange,
   onBirthDateChange,
   onPasswordChange,
+  onSignOut,
 }: ProfileFormProps) {
   const [activeSection, setActiveSection] = useState<
     'dados' | 'seguranca' | 'temas' | 'notificacoes'
   >('dados')
   const [isEmailEditing, setIsEmailEditing] = useState(false)
-  const [isWhatsappEditing, setIsWhatsappEditing] = useState(false)
   const [isPasswordEditing, setIsPasswordEditing] = useState(false)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
@@ -52,7 +55,6 @@ export function ProfileForm({
   ) => {
     setActiveSection(section)
     setIsEmailEditing(false)
-    setIsWhatsappEditing(false)
     setIsPasswordEditing(false)
     requestAnimationFrame(() => {
       tabRefs.current[section]?.scrollIntoView({
@@ -178,34 +180,16 @@ export function ProfileForm({
                 )}
               </div>
               <div className={styles.field}>
-                <div className={styles.fieldHeader}>
-                  {isWhatsappEditing ? (
-                    <label htmlFor="whatsapp">WhatsApp</label>
-                  ) : (
-                    <span className={styles.fieldLabel}>WhatsApp</span>
-                  )}
-                  <button
-                    type="button"
-                    className={styles.inlineAction}
-                    onClick={() => setIsWhatsappEditing((prev) => !prev)}
-                    disabled={loading || saving}
-                  >
-                    {isWhatsappEditing ? 'Cancelar' : 'Alterar'}
-                  </button>
-                </div>
-                {isWhatsappEditing ? (
-                  <input
-                    id="whatsapp"
-                    className={styles.input}
-                    type="tel"
-                    placeholder="(11) 99999-9999"
-                    value={whatsapp}
-                    onChange={(event) => onWhatsappChange(event.target.value)}
-                    disabled={loading || saving}
-                  />
-                ) : (
-                  <p className={styles.readonlyValue}>{whatsapp || 'Não informado'}</p>
-                )}
+                <label htmlFor="whatsapp">WhatsApp</label>
+                <input
+                  id="whatsapp"
+                  className={styles.input}
+                  type="tel"
+                  placeholder="(11) 99999-9999"
+                  value={whatsapp}
+                  onChange={(event) => onWhatsappChange(event.target.value)}
+                  disabled={loading || saving}
+                />
               </div>
             </div>
           </div>
@@ -277,7 +261,14 @@ export function ProfileForm({
       {loading ? <p className={styles.statusMessage}>Carregando suas informações…</p> : null}
       {error ? <div className={`${styles.alert} ${styles.error}`}>{error}</div> : null}
       {success ? <div className={`${styles.alert} ${styles.success}`}>{success}</div> : null}
-      <SaveActions saving={saving} loading={loading} isDirty={isDirty} />
+      {signOutError ? <div className={`${styles.alert} ${styles.error}`}>{signOutError}</div> : null}
+
+      <SaveActions
+        saving={saving}
+        loading={loading}
+        signingOut={signingOut}
+        onSignOut={onSignOut}
+      />
     </div>
   )
 }

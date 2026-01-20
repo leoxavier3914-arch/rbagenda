@@ -254,12 +254,8 @@
 }
 
 .btn:disabled {
-  opacity: 1;
+  opacity: 0.6;
   cursor: not-allowed;
-  background: rgba(210, 210, 210, 0.85);
-  border-color: rgba(160, 160, 160, 0.4);
-  box-shadow: none;
-  color: rgba(24, 63, 46, 0.6);
 }
 
 .btn:active {
@@ -371,10 +367,9 @@
   margin: 0;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(210, 210, 210, 0.5);
-  border: 1px solid rgba(24, 63, 46, 0.18);
+  background: rgba(255, 255, 255, 0.6);
   font-size: 15px;
-  color: rgba(24, 63, 46, 0.62);
+  color: rgba(24, 63, 46, 0.85);
 }
 
 .sectionTabs {

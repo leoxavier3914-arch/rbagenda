@@ -21,9 +21,7 @@ export default function ClientLayout({
   if (shouldHideMenu) {
     return (
       <LavaLampProvider>
-        <div className="relative flex min-h-[100dvh] w-screen flex-1 flex-col">
-          {children}
-        </div>
+        <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
       </LavaLampProvider>
     );
   }

@@ -6,8 +6,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 72px 18px 40px;
 }
 
 .card {

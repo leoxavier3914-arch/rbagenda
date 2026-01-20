@@ -7,28 +7,23 @@
   padding: 0;
 }
 
-.wrapper :global(.page) {
+.pageSection {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.wrapper :global(.center) {
+.page {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
   justify-content: flex-start;
-}
-
-.wrapper :global(.stack) {
-  width: 100%;
-  justify-items: stretch;
-}
-
-.wrapper :global(.stack) > * {
-  width: 100%;
 }
 
 .revealSeq {

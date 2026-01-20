@@ -12,11 +12,6 @@ import {
 
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 import { useLavaLamp } from '@/components/LavaLampProvider'
-import {
-  ClientPageShell,
-  ClientSection,
-} from '@/components/client/ClientPageLayout'
-import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { useProfileForm } from './useProfileForm'
 import {
@@ -150,7 +145,6 @@ export default function MeuPerfilPage() {
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false)
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
-  const heroReady = useClientPageReady()
   useClientSessionGuard()
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
@@ -572,64 +566,66 @@ export default function MeuPerfilPage() {
 
 
   return (
-    <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
-      <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-        <div
-          className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
-          aria-label="Dados do perfil"
-          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-        >
-          <ProfileHeader
-            revealStage={revealStage}
-            resolvedName={resolvedName}
-            avatarSlot={
-              <AvatarUploader
-                avatarDataUrl={avatarDataUrl}
-                resolvedName={resolvedName}
-                showName={false}
-                isAvatarMenuOpen={isAvatarMenuOpen}
-                avatarBoxRef={avatarBoxRef}
-                avatarActionsRef={avatarActionsRef}
-                avatarInputRef={avatarInputRef}
-                onToggle={toggleAvatarMenu}
-                onKeyDown={handleAvatarKeyDown}
-                onChange={handleAvatarChange}
-                onRemove={handleRemoveAvatar}
-              />
-            }
-          />
-          <div className={styles.profileBody}>
-            <form onSubmit={handleSubmit} className={styles.profileForm}>
-              <div className={styles.profileGrid}>
-                <ProfileForm
-                  fullName={fullName}
-                  email={email}
-                  whatsapp={whatsapp}
-                  birthDate={birthDate}
-                  password={password}
-                  loading={loading}
-                  saving={saving}
-                  error={error}
-                  success={success}
-                  isDirty={isDirty}
-                  onFullNameChange={setFullName}
-                  onEmailChange={setEmail}
-                  onWhatsappChange={setWhatsapp}
-                  onBirthDateChange={setBirthDate}
-                  onPasswordChange={setPassword}
+    <main className={styles.wrapper}>
+      <section className={styles.pageSection} id="sectionPerfil" aria-label="Meu Perfil">
+        <div className={styles.page}>
+          <div
+            className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
+            aria-label="Dados do perfil"
+            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+          >
+            <ProfileHeader
+              revealStage={revealStage}
+              resolvedName={resolvedName}
+              avatarSlot={
+                <AvatarUploader
+                  avatarDataUrl={avatarDataUrl}
+                  resolvedName={resolvedName}
+                  showName={false}
+                  isAvatarMenuOpen={isAvatarMenuOpen}
+                  avatarBoxRef={avatarBoxRef}
+                  avatarActionsRef={avatarActionsRef}
+                  avatarInputRef={avatarInputRef}
+                  onToggle={toggleAvatarMenu}
+                  onKeyDown={handleAvatarKeyDown}
+                  onChange={handleAvatarChange}
+                  onRemove={handleRemoveAvatar}
                 />
-              </div>
-            </form>
+              }
+            />
+            <div className={styles.profileBody}>
+              <form onSubmit={handleSubmit} className={styles.profileForm}>
+                <div className={styles.profileGrid}>
+                  <ProfileForm
+                    fullName={fullName}
+                    email={email}
+                    whatsapp={whatsapp}
+                    birthDate={birthDate}
+                    password={password}
+                    loading={loading}
+                    saving={saving}
+                    error={error}
+                    success={success}
+                    isDirty={isDirty}
+                    onFullNameChange={setFullName}
+                    onEmailChange={setEmail}
+                    onWhatsappChange={setWhatsapp}
+                    onBirthDateChange={setBirthDate}
+                    onPasswordChange={setPassword}
+                  />
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
 
-        <footer
-          className={`${styles.revealSeq} ${styles.revealContent}`}
-          data-visible={revealStage >= REVEAL_STAGE.CONTENT}
-        >
-          ROMEIKE BEAUTY
-        </footer>
-      </ClientSection>
+          <footer
+            className={`${styles.revealSeq} ${styles.revealContent}`}
+            data-visible={revealStage >= REVEAL_STAGE.CONTENT}
+          >
+            ROMEIKE BEAUTY
+          </footer>
+        </div>
+      </section>
 
       <ThemePreferencesPanel
         theme={theme}
@@ -673,6 +669,6 @@ export default function MeuPerfilPage() {
         bubbleDarkHexRef={bubbleDarkHexRef}
         bubbleLightHexRef={bubbleLightHexRef}
       />
-    </ClientPageShell>
+    </main>
   )
 }

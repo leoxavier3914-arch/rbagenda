@@ -2,7 +2,10 @@
   --shell-stroke: rgba(255, 255, 255, 0.14);
   --shell-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
   --shell-blur: 20px;
+  min-height: 100vh;
+  width: 100%;
   position: relative;
+  overflow-x: hidden;
   color: inherit;
 }
 
@@ -201,6 +204,24 @@
   flex-shrink: 0;
 }
 
+.content {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 24px 56px;
+  color: inherit;
+}
+
+.contentInner {
+  margin: 0 auto;
+  width: min(100%, 1120px);
+}
+
+.contentNoPadding {
+  padding: 0 !important;
+}
+
 .menuFooter {
   padding: 12px;
   display: grid;
@@ -238,6 +259,12 @@
   opacity: 0.9;
 }
 
+@media (max-width: 600px) {
+  .content {
+    padding-inline: 12px;
+  }
+}
+
 @media (min-width: 1024px) {
   .hamburger {
     top: 20px;
@@ -248,4 +275,17 @@
     width: 280px;
   }
 
+  .content {
+    padding: 0 48px 72px;
+  }
+
+  .contentInner {
+    width: min(100%, 1180px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .contentInner {
+    width: min(100%, 1240px);
+  }
 }

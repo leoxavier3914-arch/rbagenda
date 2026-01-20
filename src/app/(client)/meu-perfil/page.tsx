@@ -13,7 +13,6 @@ import {
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 import { useLavaLamp } from '@/components/LavaLampProvider'
 import {
-  ClientGlassPanel,
   ClientPageShell,
   ClientSection,
 } from '@/components/client/ClientPageLayout'
@@ -575,7 +574,7 @@ export default function MeuPerfilPage() {
   return (
     <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
       <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
-        <ClientGlassPanel
+        <div
           className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
           aria-label="Dados do perfil"
           data-visible={revealStage >= REVEAL_STAGE.CONTENT}
@@ -622,7 +621,7 @@ export default function MeuPerfilPage() {
               </div>
             </form>
           </div>
-        </ClientGlassPanel>
+        </div>
 
         <footer
           className={`${styles.revealSeq} ${styles.revealContent}`}

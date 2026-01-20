@@ -217,6 +217,11 @@
   width: min(100%, 1120px);
 }
 
+.contentInnerFullBleed {
+  width: 100%;
+  margin: 0;
+}
+
 .contentNoPadding {
   padding: 0 !important;
 }

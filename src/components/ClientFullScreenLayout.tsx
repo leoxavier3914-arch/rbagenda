@@ -17,6 +17,8 @@ const DISABLE_PADDING_ROUTES = [
   "/meu-perfil",
 ];
 
+const FULL_BLEED_CONTENT_ROUTES = ["/meu-perfil"];
+
 export default function ClientFullScreenLayout({
   children,
 }: ClientFullScreenLayoutProps) {
@@ -35,9 +37,15 @@ export default function ClientFullScreenLayout({
     pathname === route || pathname?.startsWith(`${route}/`),
   );
 
+  const fullBleedContent = FULL_BLEED_CONTENT_ROUTES.some((route) =>
+    pathname === route || pathname?.startsWith(`${route}/`),
+  );
+
   return (
     <div className={styles.fullscreenWrapper}>
-      <ClientMenu disableContentPadding={disableContentPadding}>{children}</ClientMenu>
+      <ClientMenu disableContentPadding={disableContentPadding} fullBleedContent={fullBleedContent}>
+        {children}
+      </ClientMenu>
     </div>
   );
 }

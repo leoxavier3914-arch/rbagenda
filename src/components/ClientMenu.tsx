@@ -35,6 +35,7 @@ type NavItem = {
 type ClientMenuProps = {
   children: ReactNode;
   disableContentPadding?: boolean;
+  fullBleedContent?: boolean;
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -194,6 +195,7 @@ const SettingsIcon = () => (
 export default function ClientMenu({
   children,
   disableContentPadding = false,
+  fullBleedContent = false,
 }: ClientMenuProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -421,6 +423,13 @@ export default function ClientMenu({
     .filter(Boolean)
     .join(" ");
 
+  const contentInnerClassName = [
+    styles.contentInner,
+    fullBleedContent ? styles.contentInnerFullBleed : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className={styles.wrapper}>
       <button
@@ -482,7 +491,7 @@ export default function ClientMenu({
       </aside>
 
       <main className={contentClassName}>
-        <div className={styles.contentInner}>{children}</div>
+        <div className={contentInnerClassName}>{children}</div>
       </main>
     </div>
   );

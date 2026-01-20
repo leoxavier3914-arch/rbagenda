@@ -67,6 +67,10 @@
   align-items: stretch;
 }
 
+.fullWidthSection:global(.center) {
+  padding: 0;
+}
+
 .fullWidthSection :global(.stack) {
   width: 100%;
   justify-items: stretch;

@@ -1,5 +1,5 @@
 .pageRoot {
-  width: 100vw;
+  width: 100%;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   min-height: 100vh;
@@ -7,6 +7,11 @@
   overflow: hidden;
   overscroll-behavior: none;
   padding-inline: 0;
+  margin: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  box-sizing: border-box;
 }
 
 .wrapper {
@@ -82,6 +87,8 @@
   max-width: none;
   height: 100%;
   min-height: 0;
+  margin: 0;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2.8vw, 20px);

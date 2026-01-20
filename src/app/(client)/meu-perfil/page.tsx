@@ -577,7 +577,11 @@ export default function MeuPerfilPage() {
   return (
     <div className={styles.pageRoot}>
       <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
-        <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
+        <ClientSection
+          id="sectionPerfil"
+          aria-label="Meu Perfil"
+          className={styles.fullWidthSection}
+        >
           <ClientGlassPanel
             className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
             aria-label="Dados do perfil"

@@ -9,6 +9,10 @@
   color: var(--ink);
 }
 
+.wrapper :global(.page) {
+  padding: 0;
+}
+
 .revealSeq {
   opacity: 0;
   transform: translateY(12px);

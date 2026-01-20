@@ -19,6 +19,16 @@
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  justify-content: flex-start;
+}
+
+.wrapper :global(.stack) {
+  width: 100%;
+  justify-items: stretch;
+}
+
+.wrapper :global(.stack) > * {
+  width: 100%;
 }
 
 .revealSeq {

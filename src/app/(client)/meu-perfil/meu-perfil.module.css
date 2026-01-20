@@ -14,6 +14,19 @@
   box-sizing: border-box;
 }
 
+.pageRoot :global(.client-hero-wrapper .glass) {
+  width: 100vw !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
 .wrapper {
   position: relative;
   color: var(--ink);
@@ -102,14 +115,14 @@
   border-radius: 0;
   border: none;
   box-shadow: none;
+  padding: clamp(14px, 2.6vw, 22px);
+  padding-bottom: calc(clamp(14px, 2.6vw, 22px) + env(safe-area-inset-bottom));
 }
 
 .profileCard::before {
   content: '';
   position: absolute;
-  inset: 0 auto auto 0;
-  width: 100%;
-  height: clamp(120px, 26vw, 170px);
+  inset: 0;
   background: linear-gradient(120deg, rgba(58, 135, 101, 0.35), rgba(214, 243, 221, 0.55));
   z-index: 0;
 }
@@ -120,7 +133,6 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(clamp(14px, 2.6vw, 22px) + env(safe-area-inset-bottom));
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }

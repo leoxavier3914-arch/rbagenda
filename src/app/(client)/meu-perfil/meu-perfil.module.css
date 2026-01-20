@@ -11,7 +11,7 @@
   min-height: 100vh;
 }
 
-.wrapper :global(.page) {
+.wrapper:global(.client-hero-wrapper) :global(.page) {
   padding: 0;
   min-height: 100vh;
 }

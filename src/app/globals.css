@@ -48,7 +48,6 @@
 
   /* === Romeike hero layout (client-hero-wrapper) === */
   .client-hero-wrapper {
-    min-height: 100vh;
     color: var(--ink);
     font-family: var(--font-family);
     font-size: var(--base-font-size);
@@ -63,32 +62,6 @@
 
   .client-hero-wrapper * {
     box-sizing: border-box;
-  }
-
-  .client-hero-wrapper .page {
-    position: relative;
-    min-height: 100vh;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(20px, 2.6vw, 30px);
-    padding: calc(64px + env(safe-area-inset-top)) 0
-      calc(26px + env(safe-area-inset-bottom));
-  }
-
-  .client-hero-wrapper .center {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 64px 18px 32px;
-    min-height: auto;
-  }
-
-  .client-hero-wrapper .stack {
-    display: grid;
-    justify-items: center;
-    gap: clamp(12px, 2.2vw, 18px);
   }
 
   .client-hero-wrapper header {
@@ -235,31 +208,6 @@
 }
 
 @layer components {
-  .page {
-    position: relative;
-    min-height: 100vh;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    padding: calc(20px + env(safe-area-inset-top)) 0
-      calc(36px + env(safe-area-inset-bottom));
-  }
-
-  .center {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 72px 18px 40px;
-    min-height: 100vh;
-  }
-
-  .stack {
-    display: grid;
-    justify-items: center;
-    gap: clamp(12px, 2.2vw, 18px);
-  }
-
   .diamond {
     display: block;
     margin: 0 auto 10px;

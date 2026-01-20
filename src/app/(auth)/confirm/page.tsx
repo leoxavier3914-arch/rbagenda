@@ -13,6 +13,8 @@ import {
 import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { supabase } from '@/lib/db'
 
+import styles from './confirm.module.css'
+
 export default function ConfirmEmailPage() {
   const heroReady = useClientPageReady()
   const router = useRouter()
@@ -61,7 +63,7 @@ export default function ConfirmEmailPage() {
   return (
     <LavaLampProvider>
       <ClientPageShell heroReady={heroReady}>
-        <ClientSection>
+        <ClientSection className={styles.section}>
           <ClientGlassPanel label="CONFIRMAÇÃO DE E-MAIL">
             {status === 'checking' && (
               <p>Validando seu e-mail, aguarde...</p>

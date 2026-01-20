@@ -1,5 +1,10 @@
 .section {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: calc(128px + env(safe-area-inset-top)) 18px
+    calc(58px + env(safe-area-inset-bottom));
 }
 
 .headerArea {

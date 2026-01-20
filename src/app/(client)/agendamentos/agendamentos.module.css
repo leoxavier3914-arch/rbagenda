@@ -3,6 +3,10 @@
   color: var(--ink);
 }
 
+.shellPadding {
+  padding: 0 24px 56px;
+}
+
 .pageSection {
   width: 100%;
   display: flex;
@@ -193,9 +197,21 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+@media (max-width: 600px) {
+  .shellPadding {
+    padding-inline: 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .cards {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shellPadding {
+    padding: 0 48px 72px;
   }
 }
 

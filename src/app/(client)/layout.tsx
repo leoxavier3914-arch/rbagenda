@@ -1,9 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
 
-import ClientFullScreenLayout from "@/components/ClientFullScreenLayout";
+import ClientAppShell from "@/components/ClientAppShell";
 import { LavaLampProvider } from "@/components/LavaLampProvider";
 
 export default function ClientLayout({
@@ -11,24 +10,9 @@ export default function ClientLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const pathname = usePathname();
-  const routesWithoutShell = ["/checkout"];
-
-  const shouldHideMenu = routesWithoutShell.some((route) =>
-    pathname?.startsWith(route),
-  );
-
-  if (shouldHideMenu) {
-    return (
-      <LavaLampProvider>
-        <div className="relative flex min-h-screen flex-1 flex-col">{children}</div>
-      </LavaLampProvider>
-    );
-  }
-
   return (
     <LavaLampProvider>
-      <ClientFullScreenLayout>{children}</ClientFullScreenLayout>
+      <ClientAppShell>{children}</ClientAppShell>
     </LavaLampProvider>
   );
 }

@@ -582,7 +582,7 @@ export default function MeuPerfilPage() {
           aria-label="Meu Perfil"
           className={styles.fullWidthSection}
         >
-          <ClientGlassPanel
+          <div
             className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
             aria-label="Dados do perfil"
             data-visible={revealStage >= REVEAL_STAGE.CONTENT}
@@ -631,7 +631,7 @@ export default function MeuPerfilPage() {
                 </div>
               </form>
             </div>
-          </ClientGlassPanel>
+          </div>
 
           <footer
             className={`${styles.revealSeq} ${styles.revealContent}`}

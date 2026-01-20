@@ -218,6 +218,12 @@
   width: min(100%, 1120px);
 }
 
+.contentInnerFullWidth {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+}
+
 .contentNoPadding {
   padding: 0 !important;
 }

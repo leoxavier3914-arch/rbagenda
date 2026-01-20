@@ -113,7 +113,6 @@
   position: relative;
   z-index: 1;
   padding: clamp(16px, 3.5vw, 24px);
-  padding-top: clamp(64px, 14vw, 96px);
   padding-bottom: clamp(10px, 3vw, 16px);
   min-height: calc(var(--avatar-size) + clamp(26px, 6vw, 40px));
 }

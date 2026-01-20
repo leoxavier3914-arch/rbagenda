@@ -22,15 +22,17 @@ export function ProfileHeader({
       className={`${styles.profileHeader} ${styles.revealSeq} ${styles.revealTitle}`}
       data-visible={revealStage >= REVEAL_STAGE.TITLE}
     >
-      <div className={styles.profileHeaderInner}>
-        <div className={styles.profileHeaderAvatar}>{avatarSlot}</div>
-        <div className={styles.profileHeaderText}>
-          <h1 className={styles.profileHeaderName}>
-            {resolvedName || 'Sua conta'}
-          </h1>
+      <div className={styles.profileHeaderContent}>
+        <div className={styles.profileHeaderInner}>
+          <div className={styles.profileHeaderAvatar}>{avatarSlot}</div>
+          <div className={styles.profileHeaderText}>
+            <h1 className={styles.profileHeaderName}>
+              {resolvedName || 'Sua conta'}
+            </h1>
+          </div>
         </div>
+        <div className={styles.profileHeaderLower}>{children}</div>
       </div>
-      <div className={styles.profileHeaderLower}>{children}</div>
     </header>
   )
 }

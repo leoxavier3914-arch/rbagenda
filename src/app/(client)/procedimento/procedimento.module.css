@@ -7,6 +7,10 @@
   transition: opacity 1s ease-out 0.5s;
 }
 
+.shellPadding {
+  padding: 0 24px 56px;
+}
+
 .heroReady {
   opacity: 1;
 }
@@ -21,6 +25,18 @@
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 2.6vw, 28px);
+}
+
+@media (max-width: 600px) {
+  .shellPadding {
+    padding-inline: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shellPadding {
+    padding: 0 48px 72px;
+  }
 }
 
 .pageSection {

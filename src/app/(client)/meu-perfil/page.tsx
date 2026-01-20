@@ -12,6 +12,12 @@ import {
 
 import { REVEAL_STAGE, useLavaRevealStage } from '@/lib/useLavaRevealStage'
 import { useLavaLamp } from '@/components/LavaLampProvider'
+import {
+  ClientGlassPanel,
+  ClientPageShell,
+  ClientSection,
+} from '@/components/client/ClientPageLayout'
+import { useClientPageReady } from '@/hooks/useClientPageReady'
 import { useClientSessionGuard } from '@/hooks/useClientSessionGuard'
 import { useProfileForm } from './useProfileForm'
 import {
@@ -145,6 +151,7 @@ export default function MeuPerfilPage() {
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false)
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeState>(defaultTheme)
+  const heroReady = useClientPageReady()
   useClientSessionGuard()
   const revealStage = useLavaRevealStage()
   const { refreshPalette } = useLavaLamp()
@@ -566,10 +573,10 @@ export default function MeuPerfilPage() {
 
 
   return (
-    <main className={styles.wrapper}>
-      <section className={styles.pageSection} id="sectionPerfil" aria-label="Meu Perfil">
-        <div className={styles.page}>
-          <div
+    <div className={styles.pageRoot}>
+      <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
+        <ClientSection id="sectionPerfil" aria-label="Meu Perfil">
+          <ClientGlassPanel
             className={`${styles.profileCard} ${styles.revealSeq} ${styles.revealContent}`}
             aria-label="Dados do perfil"
             data-visible={revealStage >= REVEAL_STAGE.CONTENT}
@@ -616,7 +623,7 @@ export default function MeuPerfilPage() {
                 </div>
               </form>
             </div>
-          </div>
+          </ClientGlassPanel>
 
           <footer
             className={`${styles.revealSeq} ${styles.revealContent}`}
@@ -624,51 +631,51 @@ export default function MeuPerfilPage() {
           >
             ROMEIKE BEAUTY
           </footer>
-        </div>
-      </section>
+        </ClientSection>
 
-      <ThemePreferencesPanel
-        theme={theme}
-        isPaletteOpen={isPaletteOpen}
-        revealStage={revealStage}
-        canEditAppearance={canEditAppearance}
-        onToggle={() => setIsPaletteOpen((open) => !open)}
-        onClose={() => setIsPaletteOpen(false)}
-        onPaletteSwatch={handlePaletteSwatch}
-        handleCardTopColor={handleCardTopColor}
-        handleCardBottomColor={handleCardBottomColor}
-        handleCardBorderColor={handleCardBorderColor}
-        handleCardBorderAlpha={handleCardBorderAlpha}
-        handleBackgroundTopColor={handleBackgroundTopColor}
-        handleBackgroundBottomColor={handleBackgroundBottomColor}
-        handleGlassBorderColor={handleGlassBorderColor}
-        handleGlassBorderAlpha={handleGlassBorderAlpha}
-        handleGlassColor={handleGlassColor}
-        handleGlassAlpha={handleGlassAlpha}
-        handleBubbleDarkColor={handleBubbleDarkColor}
-        handleBubbleLightColor={handleBubbleLightColor}
-        handleBubbleAlphaMin={handleBubbleAlphaMin}
-        handleBubbleAlphaMax={handleBubbleAlphaMax}
-        applyHexFromRef={applyHexFromRef}
-        applyCardTop={applyCardTop}
-        applyCardBottom={applyCardBottom}
-        applyCardBorder={applyCardBorder}
-        applyBackgroundTop={applyBackgroundTop}
-        applyBackgroundBottom={applyBackgroundBottom}
-        applyGlassBorder={applyGlassBorder}
-        applyGlass={applyGlass}
-        applyBubbleDark={applyBubbleDark}
-        applyBubbleLight={applyBubbleLight}
-        cardTopHexRef={cardTopHexRef}
-        cardBottomHexRef={cardBottomHexRef}
-        cardBorderHexRef={cardBorderHexRef}
-        bgTopHexRef={bgTopHexRef}
-        bgBottomHexRef={bgBottomHexRef}
-        glassBorderHexRef={glassBorderHexRef}
-        glassHexRef={glassHexRef}
-        bubbleDarkHexRef={bubbleDarkHexRef}
-        bubbleLightHexRef={bubbleLightHexRef}
-      />
-    </main>
+        <ThemePreferencesPanel
+          theme={theme}
+          isPaletteOpen={isPaletteOpen}
+          revealStage={revealStage}
+          canEditAppearance={canEditAppearance}
+          onToggle={() => setIsPaletteOpen((open) => !open)}
+          onClose={() => setIsPaletteOpen(false)}
+          onPaletteSwatch={handlePaletteSwatch}
+          handleCardTopColor={handleCardTopColor}
+          handleCardBottomColor={handleCardBottomColor}
+          handleCardBorderColor={handleCardBorderColor}
+          handleCardBorderAlpha={handleCardBorderAlpha}
+          handleBackgroundTopColor={handleBackgroundTopColor}
+          handleBackgroundBottomColor={handleBackgroundBottomColor}
+          handleGlassBorderColor={handleGlassBorderColor}
+          handleGlassBorderAlpha={handleGlassBorderAlpha}
+          handleGlassColor={handleGlassColor}
+          handleGlassAlpha={handleGlassAlpha}
+          handleBubbleDarkColor={handleBubbleDarkColor}
+          handleBubbleLightColor={handleBubbleLightColor}
+          handleBubbleAlphaMin={handleBubbleAlphaMin}
+          handleBubbleAlphaMax={handleBubbleAlphaMax}
+          applyHexFromRef={applyHexFromRef}
+          applyCardTop={applyCardTop}
+          applyCardBottom={applyCardBottom}
+          applyCardBorder={applyCardBorder}
+          applyBackgroundTop={applyBackgroundTop}
+          applyBackgroundBottom={applyBackgroundBottom}
+          applyGlassBorder={applyGlassBorder}
+          applyGlass={applyGlass}
+          applyBubbleDark={applyBubbleDark}
+          applyBubbleLight={applyBubbleLight}
+          cardTopHexRef={cardTopHexRef}
+          cardBottomHexRef={cardBottomHexRef}
+          cardBorderHexRef={cardBorderHexRef}
+          bgTopHexRef={bgTopHexRef}
+          bgBottomHexRef={bgBottomHexRef}
+          glassBorderHexRef={glassBorderHexRef}
+          glassHexRef={glassHexRef}
+          bubbleDarkHexRef={bubbleDarkHexRef}
+          bubbleLightHexRef={bubbleLightHexRef}
+        />
+      </ClientPageShell>
+    </div>
   )
 }

@@ -51,6 +51,12 @@
   min-height: 0;
 }
 
+.wrapper :global(.glass).profileCard {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
 .revealSeq {
   opacity: 0;
   transform: translateY(12px);

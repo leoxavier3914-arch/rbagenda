@@ -21,16 +21,12 @@
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 2.6vw, 28px);
-  padding: calc(64px + env(safe-area-inset-top)) 0
-    calc(26px + env(safe-area-inset-bottom));
 }
 
 .pageSection {
   width: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 64px 18px 32px;
 }
 
 .section {

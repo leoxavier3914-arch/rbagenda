@@ -3,8 +3,7 @@
   --shell-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
   --shell-blur: 20px;
   min-height: 100vh;
-  min-height: 100dvh;
-  width: 100vw;
+  width: 100%;
   position: relative;
   overflow-x: hidden;
   color: inherit;
@@ -97,8 +96,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100dvh;
-  min-height: 100vh;
+  height: 100vh;
   width: 260px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(var(--shell-blur));
@@ -172,8 +170,6 @@
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
-  flex: 1;
-  min-height: 0;
 }
 
 .item {
@@ -210,57 +206,25 @@
 .content {
   position: relative;
   min-height: 100vh;
-  min-height: 100dvh;
-  width: 100vw;
+  width: 100%;
   box-sizing: border-box;
-  padding: 0;
+  padding: 0 24px 56px;
   color: inherit;
 }
 
 .contentInner {
-  margin: 0;
-  width: 100%;
+  margin: 0 auto;
+  width: min(100%, 1120px);
 }
 
 .contentNoPadding {
   padding: 0 !important;
 }
 
-.menuFooter {
-  padding: 12px;
-  display: grid;
-  gap: 8px;
-}
-
-.signOutButton {
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.18);
-  color: inherit;
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 160ms ease, transform 160ms ease;
-}
-
-.signOutButton:hover {
-  background: rgba(255, 255, 255, 0.28);
-  transform: translateY(-1px);
-}
-
-.signOutButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.signOutError {
-  font-size: 12px;
-  color: #ffe4e6;
-  opacity: 0.9;
+@media (max-width: 600px) {
+  .content {
+    padding-inline: 12px;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -273,4 +237,17 @@
     width: 280px;
   }
 
+  .content {
+    padding: 0 48px 72px;
+  }
+
+  .contentInner {
+    width: min(100%, 1180px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .contentInner {
+    width: min(100%, 1240px);
+  }
 }

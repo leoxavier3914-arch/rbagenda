@@ -32,7 +32,7 @@ export default function DashboardSettingsPage() {
 
   return (
     <ClientPageShell heroReady={heroReady} forceMotion>
-      <ClientSection className={styles.section}>
+      <ClientSection>
         <div className={`${styles.panel} card`}>
           <div className={styles.headerArea}>
             <span className="badge">Seu jeito</span>

@@ -7,6 +7,8 @@
 .wrapper {
   position: relative;
   color: var(--ink);
+  width: 100%;
+  min-height: 100vh;
 }
 
 .wrapper :global(.page) {

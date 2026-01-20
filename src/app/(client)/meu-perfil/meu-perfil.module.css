@@ -128,9 +128,9 @@
   align-items: center;
   gap: clamp(12px, 3vw, 20px);
   position: absolute;
-  top: clamp(20px, 5vw, 34px);
-  left: clamp(20px, 5vw, 32px);
-  right: clamp(20px, 5vw, 32px);
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 2;
 }
 
@@ -299,8 +299,8 @@
   }
 
   .profileHeaderInner {
-    right: 16px;
-    left: 16px;
+    right: 0;
+    left: 0;
   }
 
   .sectionTabs {

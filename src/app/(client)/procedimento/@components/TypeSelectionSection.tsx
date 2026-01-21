@@ -59,6 +59,7 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
         <ProcedimentoHeader
           title="Escolha seu procedimento"
           subtitle="Selecione o tipo de atendimento"
+          className={styles.headerNoWrap}
         />
         <ClientGlassPanel
           className={styles.glass}

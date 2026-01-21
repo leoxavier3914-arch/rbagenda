@@ -23,7 +23,7 @@
   align-items: center;
   gap: clamp(12px, 2vw, 20px);
   min-height: 100vh;
-  padding-bottom: clamp(80px, 10vh, 120px);
+  padding-bottom: clamp(28px, 6vh, 48px);
 }
 
 .pageSection {
@@ -84,11 +84,8 @@
 }
 
 .wizardFooter {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 16px 24px calc(18px + env(safe-area-inset-bottom));
+  width: 100%;
+  padding: clamp(12px, 2vh, 18px) 24px calc(14px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
   z-index: 5;
@@ -116,6 +113,10 @@
 
 .header {
   text-align: center;
+}
+
+.headerNoWrap .title {
+  white-space: nowrap;
 }
 
 .diamond {

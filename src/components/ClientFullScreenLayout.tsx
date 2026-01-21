@@ -3,6 +3,7 @@
 import { useLayoutEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
+import ClientContent from "./ClientContent";
 import ClientMenu from "./ClientMenu";
 import styles from "./ClientFullScreenLayout.module.css";
 
@@ -43,9 +44,13 @@ export default function ClientFullScreenLayout({
 
   return (
     <div className={styles.fullscreenWrapper}>
-      <ClientMenu disableContentPadding={disableContentPadding} fullBleedContent={fullBleedContent}>
+      <ClientMenu />
+      <ClientContent
+        disableContentPadding={disableContentPadding}
+        fullBleedContent={fullBleedContent}
+      >
         {children}
-      </ClientMenu>
+      </ClientContent>
     </div>
   );
 }

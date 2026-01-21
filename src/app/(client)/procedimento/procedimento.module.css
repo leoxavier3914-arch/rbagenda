@@ -15,6 +15,15 @@
   box-sizing: border-box;
 }
 
+.wrapper :global(.page) {
+  min-height: auto;
+  padding-bottom: 0;
+}
+
+.wrapper :global(.center) {
+  padding-bottom: 0;
+}
+
 .page {
   position: relative;
   z-index: 1;
@@ -22,14 +31,14 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(12px, 2vw, 20px);
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding-bottom: 0;
 }
 
 .pageSection {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 32px 18px 20px;
+  padding: 32px 18px 0;
 }
 
 .wizard {
@@ -85,7 +94,7 @@
 .wizardFooter {
   position: static;
   width: 100%;
-  padding: 0 24px calc(12px + env(safe-area-inset-bottom));
+  padding: 0 24px calc(8px + env(safe-area-inset-bottom));
   margin-top: clamp(12px, 2vw, 20px);
   display: flex;
   justify-content: center;

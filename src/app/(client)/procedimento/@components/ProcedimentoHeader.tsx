@@ -3,11 +3,12 @@ import { type ReactNode } from 'react'
 import styles from '../procedimento.module.css'
 
 type ProcedimentoHeaderProps = {
-  children: ReactNode
+  title: ReactNode
+  subtitle?: ReactNode
   className?: string
 }
 
-export function ProcedimentoHeader({ children, className }: ProcedimentoHeaderProps) {
+export function ProcedimentoHeader({ title, subtitle, className }: ProcedimentoHeaderProps) {
   const headerClassName = [styles.header, className].filter(Boolean).join(' ')
   return (
     <header className={headerClassName}>
@@ -15,7 +16,10 @@ export function ProcedimentoHeader({ children, className }: ProcedimentoHeaderPr
         <path d="M12 3l4 4-4 4-4-4 4-4Z" />
         <path d="M12 13l4 4-4 4-4-4 4-4Z" />
       </svg>
-      <h1 className={styles.title}>{children}</h1>
+      <div className={styles.headerCopy}>
+        <h1 className={styles.title}>{title}</h1>
+        {subtitle ? <p className={styles.headerSubtitle}>{subtitle}</p> : null}
+      </div>
     </header>
   )
 }

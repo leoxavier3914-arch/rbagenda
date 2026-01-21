@@ -68,9 +68,11 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
       aria-label="Escolha da técnica"
     >
       <div className={styles.stack}>
-        <ProcedimentoHeader className={styles.procedimentoHeader}>
-          <>Escolha <span className={styles.subtitle}>sua</span> Técnica:</>
-        </ProcedimentoHeader>
+        <ProcedimentoHeader
+          className={styles.procedimentoHeader}
+          title="Escolha sua técnica"
+          subtitle="Qual técnica você deseja? Você poderá ajustar depois."
+        />
         <ClientGlassPanel
           className={styles.glass}
           label="TÉCNICA"
@@ -86,16 +88,51 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
                   onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
                   onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
                 >
-                  {techniquesPage.map((technique) => (
-                    <ProcedimentoCard
-                      key={technique.id}
-                      active={selectedTechniqueId === technique.id}
-                      onClick={() => onTechniqueSelect(technique.id)}
-                    >
-                      <LashIcon />
-                      <span>{technique.name}</span>
-                    </ProcedimentoCard>
-                  ))}
+                  {techniquesPage.map((technique) => {
+                    const isActive = selectedTechniqueId === technique.id
+                    return (
+                      <ProcedimentoCard
+                        key={technique.id}
+                        active={isActive}
+                        onClick={() => onTechniqueSelect(technique.id)}
+                      >
+                        <span className={styles.cardIcon} aria-hidden="true">
+                          <LashIcon />
+                        </span>
+                        <span className={styles.cardContent}>
+                          <span className={styles.cardTitle}>{technique.name}</span>
+                          {technique.description ? (
+                            <span className={styles.cardDescription}>{technique.description}</span>
+                          ) : null}
+                        </span>
+                        <span className={styles.cardIndicator} aria-hidden="true">
+                          {isActive ? (
+                            <svg viewBox="0 0 24 24" role="presentation">
+                              <path
+                                d="M20 6L9 17l-5-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.6"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" role="presentation">
+                              <path
+                                d="M9 6l6 6-6 6"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </span>
+                      </ProcedimentoCard>
+                    )
+                  })}
                 </ProcedimentoGrid>
               ) : (
                 <div className={`${styles.status} ${styles.statusInfo}`}>

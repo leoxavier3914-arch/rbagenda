@@ -16,6 +16,10 @@
   min-height: 100vh;
 }
 
+.wrapper :global(.page) {
+  padding: 0;
+}
+
 .revealSeq {
   opacity: 0;
   transform: translateY(12px);
@@ -57,6 +61,7 @@
   flex-direction: column;
   gap: 0;
   position: relative;
+  min-height: 100vh;
   border-radius: 0;
   padding: 0;
   border: none;

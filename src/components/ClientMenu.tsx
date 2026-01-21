@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
   type ReactElement,
-  type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -32,11 +31,6 @@ type NavItem = {
   icon: ReactElement;
 };
 
-type ClientMenuProps = {
-  children: ReactNode;
-  disableContentPadding?: boolean;
-  fullBleedContent?: boolean;
-};
 
 const roleLabels: Record<AppRole, string> = {
   client: "Cliente",
@@ -192,11 +186,7 @@ const SettingsIcon = () => (
   </svg>
 );
 
-export default function ClientMenu({
-  children,
-  disableContentPadding = false,
-  fullBleedContent = false,
-}: ClientMenuProps) {
+export default function ClientMenu() {
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -416,22 +406,8 @@ export default function ClientMenu({
 
   const closeMenu = () => setIsMenuOpen(false);
 
-  const contentClassName = [
-    styles.content,
-    disableContentPadding ? styles.contentNoPadding : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const contentInnerClassName = [
-    styles.contentInner,
-    fullBleedContent ? styles.contentInnerFullBleed : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.menuRoot}>
       <button
         type="button"
         className={styles.hamburger}
@@ -489,10 +465,6 @@ export default function ClientMenu({
           {navElements}
         </nav>
       </aside>
-
-      <main className={contentClassName}>
-        <div className={contentInnerClassName}>{children}</div>
-      </main>
     </div>
   );
 }

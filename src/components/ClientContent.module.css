@@ -1,0 +1,44 @@
+.content {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 24px 56px;
+  color: inherit;
+}
+
+.contentInner {
+  margin: 0 auto;
+  width: min(100%, 1120px);
+}
+
+.contentInnerFullBleed {
+  width: 100%;
+  margin: 0;
+}
+
+.contentNoPadding {
+  padding: 0 !important;
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding-inline: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding: 0 48px 72px;
+  }
+
+  .contentInner {
+    width: min(100%, 1180px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .contentInner {
+    width: min(100%, 1240px);
+  }
+}

@@ -4,14 +4,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-}
-
-.content {
-  position: relative;
-  flex: 1 1 auto;
-  width: 100%;
-  min-height: 100dvh;
-  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  overflow-x: hidden;
 }
 
 :global(body.client-fullscreen .brand-texture-overlay) {

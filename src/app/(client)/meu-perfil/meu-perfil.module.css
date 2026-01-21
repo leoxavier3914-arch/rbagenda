@@ -59,7 +59,7 @@
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 2.8vw, 20px);
+  gap: 0;
   position: relative;
   min-height: 100vh;
   border-radius: 0;
@@ -99,6 +99,9 @@
 .profileBody {
   display: flex;
   flex-direction: column;
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding-inline: clamp(16px, 3.5vw, 24px);
   padding-bottom: calc(clamp(14px, 2.6vw, 22px) + env(safe-area-inset-bottom));
 }
 

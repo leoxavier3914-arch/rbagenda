@@ -16,11 +16,10 @@ type Props = {
   availableProcedures: TechniqueCatalogEntry[]
   selectedProcedureId: string | null
   onSelect: (procedureId: string) => void
-  defaultLabels: readonly string[]
 }
 
 export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
-  { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect, defaultLabels }: Props,
+  { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect }: Props,
     ref: ForwardedRef<HTMLDivElement>,
 ) {
   const pageSize = 4
@@ -57,9 +56,10 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
   return (
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
       <div className={styles.stack}>
-        <ProcedimentoHeader>
-          <>Escolha <span className={styles.subtitle}>seu</span> Procedimento:</>
-        </ProcedimentoHeader>
+        <ProcedimentoHeader
+          title="Escolha seu procedimento"
+          subtitle="Selecione o tipo de atendimento"
+        />
         <ClientGlassPanel
           className={styles.glass}
           label="TIPO"
@@ -67,38 +67,65 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           aria-label="Tipos de procedimento"
         >
           {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+          {!catalogError && catalogStatus === 'loading' && (
+            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando procedimentos...</div>
+          )}
           {catalogStatus === 'ready' && availableProcedures.length === 0 && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
           )}
-          <ProcedimentoGrid
-            variant="tipo"
-            pageIndex={pageIndex}
-            totalPages={totalPages}
-            onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-            onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-          >
-            {catalogStatus === 'ready' && procedures.length > 0 ? (
-              proceduresPage.map((procedure) => (
-                <ProcedimentoCard
-                  key={procedure.id}
-                  active={selectedProcedureId === procedure.id}
-                  onClick={() => onSelect(procedure.id)}
-                >
-                  <LashIcon />
-                  <span>{procedure.name}</span>
-                </ProcedimentoCard>
-              ))
-            ) : (
-              defaultLabels.map((label) => (
-                <ProcedimentoCard key={label} as="div">
-                  <LashIcon />
-                  <span>{label}</span>
-                </ProcedimentoCard>
-              ))
-            )}
-          </ProcedimentoGrid>
+          {catalogStatus === 'ready' && procedures.length > 0 ? (
+            <ProcedimentoGrid
+              variant="tipo"
+              pageIndex={pageIndex}
+              totalPages={totalPages}
+              onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+              onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+            >
+              {proceduresPage.map((procedure) => {
+                const isActive = selectedProcedureId === procedure.id
+                return (
+                  <ProcedimentoCard
+                    key={procedure.id}
+                    active={isActive}
+                    onClick={() => onSelect(procedure.id)}
+                  >
+                    <span className={styles.cardIcon} aria-hidden="true">
+                      <LashIcon />
+                    </span>
+                    <span className={styles.cardContent}>
+                      <span className={styles.cardTitle}>{procedure.name}</span>
+                    </span>
+                    <span className={styles.cardIndicator} aria-hidden="true">
+                      {isActive ? (
+                        <svg viewBox="0 0 24 24" role="presentation">
+                          <path
+                            d="M20 6L9 17l-5-5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" role="presentation">
+                          <path
+                            d="M9 6l6 6-6 6"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </span>
+                  </ProcedimentoCard>
+                )
+              })}
+            </ProcedimentoGrid>
+          ) : null}
         </ClientGlassPanel>
-        <footer className={styles.footer}>ROMEIKE BEAUTY</footer>
       </div>
     </section>
   )

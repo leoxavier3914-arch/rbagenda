@@ -141,7 +141,7 @@
   align-items: center;
   position: relative;
   flex: 0 0 auto;
-  transform: translateX(clamp(8px, 3vw, 16px));
+  transform: translateX(clamp(12px, 4vw, 22px));
 }
 
 .profileHeaderText {

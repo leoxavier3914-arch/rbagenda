@@ -141,6 +141,7 @@
   align-items: center;
   position: relative;
   flex: 0 0 auto;
+  transform: translateX(clamp(8px, 3vw, 16px));
 }
 
 .profileHeaderText {
@@ -377,7 +378,7 @@
   flex-wrap: nowrap;
   gap: clamp(8px, 2.6vw, 12px);
   width: min(100%, 720px);
-  margin: -8px auto 12px;
+  margin: 6px auto 12px;
   padding: 4px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);

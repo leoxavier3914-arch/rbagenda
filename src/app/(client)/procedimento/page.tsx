@@ -42,6 +42,7 @@ import type {
   SummarySnapshot,
   TechniqueCatalogEntry,
 } from './types'
+import styles from './procedimento.module.css'
 
 function normalizeNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -62,11 +63,6 @@ function formatDuration(minutes: number) {
   return parts.join(' ')
 }
 
-function prefersReducedMotion() {
-  if (typeof window === 'undefined' || !window.matchMedia) return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
 function combineDateAndTime(dateIso: string, time: string, timeZone = DEFAULT_TIMEZONE) {
   const [hour, minute] = time.split(':')
 
@@ -84,13 +80,6 @@ function combineDateAndTime(dateIso: string, time: string, timeZone = DEFAULT_TI
 
   return candidate
 }
-
-const DEFAULT_SERVICE_LABELS = [
-  'Aplicação',
-  'Manutenção',
-  'Reaplicação',
-  'Remoção',
-] as const
 
 const FALLBACK_BUFFER_MINUTES = DEFAULT_FALLBACK_BUFFER_MINUTES
 const WORK_DAY_END = '18:00'
@@ -119,10 +108,7 @@ export default function ProcedimentoPage() {
     { kind: 'success' | 'error'; text: string } | null
   >(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [shouldReduceMotion, setShouldReduceMotion] = useState(false)
-  const [pendingScrollTarget, setPendingScrollTarget] = useState<
-    'technique' | 'date' | 'time' | null
-  >(null)
+  const [currentStep, setCurrentStep] = useState(1)
 
   const {
     availability: availabilitySnapshot,
@@ -141,28 +127,7 @@ export default function ProcedimentoPage() {
   const { refreshPalette } = useLavaLamp()
   const heroReady = useClientPageReady()
   const { session, isReady: isSessionReady } = useClientSessionGuard()
-  const typeSectionRef = useRef<HTMLDivElement | null>(null)
-  const techniqueSectionRef = useRef<HTMLDivElement | null>(null)
-  const dateSectionRef = useRef<HTMLDivElement | null>(null)
-  const timeSectionRef = useRef<HTMLDivElement | null>(null)
   const slotsContainerRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      setShouldReduceMotion(prefersReducedMotion())
-      return
-    }
-
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const syncPreference = () => setShouldReduceMotion(media.matches)
-
-    syncPreference()
-
-    media.addEventListener('change', syncPreference)
-    return () => {
-      media.removeEventListener('change', syncPreference)
-    }
-  }, [router])
 
   useEffect(() => {
     if (!isSessionReady) return
@@ -556,7 +521,6 @@ export default function ProcedimentoPage() {
       setSelectedTechniqueId(null)
       setSelectedDate(null)
       setSelectedSlot(null)
-      setPendingScrollTarget('technique')
     },
     [selectedProcedureId],
   )
@@ -566,7 +530,6 @@ export default function ProcedimentoPage() {
     setSelectedTechniqueId(techniqueId)
     setSelectedDate(null)
     setSelectedSlot(null)
-    setPendingScrollTarget('date')
   }, [selectedTechniqueId])
 
   const handleDaySelect = useCallback(
@@ -574,7 +537,6 @@ export default function ProcedimentoPage() {
       if (disabled || !canInteract) return
       setSelectedDate(dayIso)
       setSelectedSlot(null)
-      setPendingScrollTarget('time')
     },
     [canInteract],
   )
@@ -588,23 +550,18 @@ export default function ProcedimentoPage() {
   )
 
   useEffect(() => {
-    if (!pendingScrollTarget) return
-
-    const targetSection = pendingScrollTarget === 'technique'
-      ? techniqueSectionRef.current
-      : pendingScrollTarget === 'date'
-        ? dateSectionRef.current
-        : pendingScrollTarget === 'time'
-          ? timeSectionRef.current
-          : null
-
-    targetSection?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    })
-
-    setPendingScrollTarget(null)
-  }, [pendingScrollTarget, shouldReduceMotion])
+    if (currentStep > 1 && !selectedProcedureId) {
+      setCurrentStep(1)
+      return
+    }
+    if (currentStep > 2 && !selectedTechniqueId) {
+      setCurrentStep(2)
+      return
+    }
+    if (currentStep > 3 && !selectedDate) {
+      setCurrentStep(3)
+    }
+  }, [currentStep, selectedDate, selectedProcedureId, selectedTechniqueId])
 
   const summaryData = useMemo(() => {
     if (!selectedProcedure || !selectedTechnique || !selectedDate || !selectedSlot) return null
@@ -898,66 +855,99 @@ export default function ProcedimentoPage() {
     }
   }, [handleCancelPayLaterNotice, isPayLaterNoticeOpen])
 
-  const canSelectTechnique = Boolean(selectedProcedureId)
-  const canSelectDate = Boolean(selectedTechniqueId)
-  const canSelectTime = Boolean(selectedDate)
   const continueButtonLabel = isCreatingAppointment ? 'Salvando agendamento…' : 'Ver resumo'
   const continueButtonDisabled = !summaryData || isCreatingAppointment
   const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
+  const totalSteps = 4
+  const stepProgress = `${Math.round((currentStep / totalSteps) * 100)}%`
+  const stepContinueDisabled = (() => {
+    if (currentStep === 1) return !selectedProcedureId || catalogStatus !== 'ready'
+    if (currentStep === 2) return !selectedTechniqueId
+    if (currentStep === 3) return !selectedDate
+    return continueButtonDisabled
+  })()
+  const stepContinueLabel = currentStep === 4 ? continueButtonLabel : 'Continuar'
+
+  const handleStepContinue = useCallback(() => {
+    if (currentStep === 1 && (!selectedProcedureId || catalogStatus !== 'ready')) return
+    if (currentStep === 2 && !selectedTechniqueId) return
+    if (currentStep === 3 && !selectedDate) return
+    if (currentStep === 4) {
+      handleContinue()
+      return
+    }
+    setCurrentStep((previous) => Math.min(totalSteps, previous + 1))
+  }, [catalogStatus, currentStep, handleContinue, selectedDate, selectedProcedureId, selectedTechniqueId])
 
   return (
     <ProcedimentoWrapper heroReady={heroReady}>
-      <TypeSelectionSection
-        ref={typeSectionRef}
-        catalogError={catalogError}
-        catalogStatus={catalogStatus}
-        availableProcedures={availableProcedures}
-        selectedProcedureId={selectedProcedureId}
-        onSelect={handleProcedureSelect}
-        defaultLabels={DEFAULT_SERVICE_LABELS}
-      />
+      <div className={styles.wizard}>
+        <div className={styles.wizardHeader}>
+          <span className={styles.stepIndicator}>Etapa {currentStep} de {totalSteps}</span>
+          <div className={styles.progressTrack} role="presentation">
+            <span className={styles.progressFill} style={{ width: stepProgress }} />
+          </div>
+        </div>
 
-      {canSelectTechnique ? (
-        <TechniqueSelectionSection
-        ref={techniqueSectionRef}
-        catalogStatus={catalogStatus}
-        selectedProcedure={selectedProcedure}
-        selectedTechniqueId={selectedTechniqueId}
-        onTechniqueSelect={handleTechniqueSelect}
-      />
-      ) : null}
+        <div className={styles.wizardBody}>
+          {currentStep === 1 ? (
+            <TypeSelectionSection
+              catalogError={catalogError}
+              catalogStatus={catalogStatus}
+              availableProcedures={availableProcedures}
+              selectedProcedureId={selectedProcedureId}
+              onSelect={handleProcedureSelect}
+            />
+          ) : null}
 
-      {canSelectDate ? (
-        <DateSelectionSection
-          ref={dateSectionRef}
-          availabilityError={availabilityError}
-          isLoadingAvailability={isLoadingAvailability}
-          calendarHeaderDays={calendarHeaderDays}
-          calendarDays={calendarDays}
-          monthTitle={monthTitle}
-          selectedTechnique={selectedTechnique}
-          selectedDate={selectedDate}
-          onPreviousMonth={goToPreviousMonth}
-          onNextMonth={goToNextMonth}
-          onDaySelect={handleDaySelect}
-        />
-      ) : null}
+          {currentStep === 2 ? (
+            <TechniqueSelectionSection
+              catalogStatus={catalogStatus}
+              selectedProcedure={selectedProcedure}
+              selectedTechniqueId={selectedTechniqueId}
+              onTechniqueSelect={handleTechniqueSelect}
+            />
+          ) : null}
 
-      {canSelectTime ? (
-        <TimeSelectionSection
-          ref={timeSectionRef}
-          slotsContainerRef={slotsContainerRef}
-          selectedDate={selectedDate}
-          slots={slots}
-          bookedSlots={bookedSlots}
-          selectedSlot={selectedSlot}
-          actionMessage={actionMessage}
-          continueButtonDisabled={continueButtonDisabled}
-          continueButtonLabel={continueButtonLabel}
-          onSlotSelect={handleSlotSelect}
-          onContinue={handleContinue}
-        />
-      ) : null}
+          {currentStep === 3 ? (
+            <DateSelectionSection
+              availabilityError={availabilityError}
+              isLoadingAvailability={isLoadingAvailability}
+              calendarHeaderDays={calendarHeaderDays}
+              calendarDays={calendarDays}
+              monthTitle={monthTitle}
+              selectedTechnique={selectedTechnique}
+              selectedDate={selectedDate}
+              onPreviousMonth={goToPreviousMonth}
+              onNextMonth={goToNextMonth}
+              onDaySelect={handleDaySelect}
+            />
+          ) : null}
+
+          {currentStep === 4 ? (
+            <TimeSelectionSection
+              slotsContainerRef={slotsContainerRef}
+              selectedDate={selectedDate}
+              slots={slots}
+              bookedSlots={bookedSlots}
+              selectedSlot={selectedSlot}
+              actionMessage={actionMessage}
+              onSlotSelect={handleSlotSelect}
+            />
+          ) : null}
+        </div>
+
+        <div className={styles.wizardFooter}>
+          <button
+            type="button"
+            className={styles.continueButton}
+            onClick={handleStepContinue}
+            disabled={stepContinueDisabled}
+          >
+            {stepContinueLabel}
+          </button>
+        </div>
+      </div>
 
       <SummaryModal
         summarySnapshot={summarySnapshot}

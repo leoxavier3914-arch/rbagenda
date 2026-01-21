@@ -14,10 +14,7 @@ type Props = {
   bookedSlots: Set<string>
   selectedSlot: string | null
   actionMessage: { kind: 'success' | 'error'; text: string } | null
-  continueButtonDisabled: boolean
-  continueButtonLabel: string
   onSlotSelect: (slot: string, disabled: boolean) => void
-  onContinue: () => void
 }
 
 export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
@@ -28,10 +25,7 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
     bookedSlots,
     selectedSlot,
     actionMessage,
-    continueButtonDisabled,
-    continueButtonLabel,
     onSlotSelect,
-    onContinue,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -44,9 +38,11 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
       aria-label="Escolha do horário"
     >
       <div className={styles.stack}>
-        <ProcedimentoHeader className={styles.procedimentoHeader}>
-          <>Escolha <span className={styles.subtitle}>o</span> Horário:</>
-        </ProcedimentoHeader>
+        <ProcedimentoHeader
+          className={styles.procedimentoHeader}
+          title="Escolha o horário"
+          subtitle="Selecione um horário disponível"
+        />
         <ClientGlassPanel
           className={styles.glass}
           label="HORÁRIO"
@@ -88,14 +84,6 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
               {actionMessage.text}
             </div>
           ) : null}
-          <button
-            type="button"
-            className={styles.continueButton}
-            onClick={onContinue}
-            disabled={continueButtonDisabled}
-          >
-            {continueButtonLabel}
-          </button>
         </ClientGlassPanel>
       </div>
     </section>

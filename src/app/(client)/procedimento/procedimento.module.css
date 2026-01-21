@@ -22,8 +22,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(12px, 2vw, 20px);
-  min-height: 100vh;
-  padding-bottom: clamp(80px, 10vh, 120px);
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
 .pageSection {
@@ -84,11 +83,10 @@
 }
 
 .wizardFooter {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 16px 24px calc(18px + env(safe-area-inset-bottom));
+  position: static;
+  width: 100%;
+  padding: 0 24px calc(12px + env(safe-area-inset-bottom));
+  margin-top: clamp(12px, 2vw, 20px);
   display: flex;
   justify-content: center;
   z-index: 5;

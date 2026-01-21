@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 
-import { ClientPageShell, ClientSection } from '@/components/client/ClientPageLayout'
+import { ClientPageShell } from '@/components/client/ClientPageLayout'
 
 import styles from '../procedimento.module.css'
 
@@ -19,9 +19,7 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
       forceMotion
       respectNoMotionHash
     >
-      <ClientSection className={styles.pageSection}>
-        <div className={styles.page}>{children}</div>
-      </ClientSection>
+      <div className={styles.pageSection}>{children}</div>
     </ClientPageShell>
   )
 }

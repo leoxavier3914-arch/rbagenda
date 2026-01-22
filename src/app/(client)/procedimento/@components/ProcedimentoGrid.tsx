@@ -4,7 +4,6 @@ import styles from '../procedimento.module.css'
 
 type ProcedimentoGridProps = {
   children: ReactNode
-  variant?: 'tipo' | 'tecnica'
   pageIndex?: number
   totalPages?: number
   onPreviousPage?: () => void
@@ -14,16 +13,13 @@ type ProcedimentoGridProps = {
 
 export function ProcedimentoGrid({
   children,
-  variant,
   pageIndex,
   totalPages,
   onNextPage,
   onPreviousPage,
   showControls = true,
 }: ProcedimentoGridProps) {
-  const className = [styles.grid, variant === 'tipo' ? styles.tipoGrid : undefined]
-    .filter(Boolean)
-    .join(' ')
+  const className = styles.grid
 
   const showPagination =
     showControls &&

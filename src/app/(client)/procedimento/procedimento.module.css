@@ -17,6 +17,7 @@
 
 .wrapper :global(.page) {
   min-height: auto;
+  padding-top: 0;
   padding-bottom: 0;
 }
 
@@ -47,6 +48,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(12px, 2vw, 18px);
+  min-height: calc(100dvh - 32px - env(safe-area-inset-top));
 }
 
 .wizardHeader {
@@ -89,13 +91,14 @@
   justify-content: center;
   align-items: flex-start;
   min-height: auto;
+  flex: 1;
 }
 
 .wizardFooter {
   position: static;
   width: 100%;
   padding: 0 24px calc(8px + env(safe-area-inset-bottom));
-  margin-top: clamp(12px, 2vw, 20px);
+  margin-top: auto;
   display: flex;
   justify-content: center;
   z-index: 5;

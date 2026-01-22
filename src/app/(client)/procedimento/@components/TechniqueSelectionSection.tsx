@@ -59,6 +59,10 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
     return techniques.slice(start, start + pageSize)
   }, [pageIndex, pageSize, techniques])
 
+  const showPagination =
+    techniques.length > 0 &&
+    totalPages > 1
+
   return (
     <section
       ref={ref}
@@ -83,6 +87,7 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
             <>
               {selectedProcedure.services.length > 0 ? (
                 <ProcedimentoGrid
+                  showControls={false}
                   pageIndex={pageIndex}
                   totalPages={totalPages}
                   onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
@@ -143,6 +148,29 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
             </div>
           )}
         </ClientGlassPanel>
+        {showPagination ? (
+          <div className={styles.gridControls} aria-label="Paginação do grid">
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+              disabled={pageIndex === 0}
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+            <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+              disabled={pageIndex + 1 >= totalPages}
+              aria-label="Próxima página"
+            >
+              ›
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   )

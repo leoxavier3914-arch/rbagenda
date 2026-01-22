@@ -9,6 +9,7 @@ type ProcedimentoGridProps = {
   totalPages?: number
   onPreviousPage?: () => void
   onNextPage?: () => void
+  showControls?: boolean
 }
 
 export function ProcedimentoGrid({
@@ -18,12 +19,14 @@ export function ProcedimentoGrid({
   totalPages,
   onNextPage,
   onPreviousPage,
+  showControls = true,
 }: ProcedimentoGridProps) {
   const className = [styles.grid, variant === 'tipo' ? styles.tipoGrid : undefined]
     .filter(Boolean)
     .join(' ')
 
   const showPagination =
+    showControls &&
     typeof pageIndex === 'number' &&
     typeof totalPages === 'number' &&
     totalPages > 1 &&

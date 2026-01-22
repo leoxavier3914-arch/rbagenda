@@ -202,6 +202,11 @@
   font-size: 14px;
 }
 
+.gridControlsHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .navButton {
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--glass-stroke);

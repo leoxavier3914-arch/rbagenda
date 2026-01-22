@@ -32,7 +32,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(12px, 2vw, 20px);
-  padding-bottom: 0;
+  padding-bottom: clamp(10px, 1.6vw, 16px);
 }
 
 .pageSection {
@@ -98,7 +98,7 @@
   position: static;
   width: 100%;
   padding: 0 24px calc(8px + env(safe-area-inset-bottom));
-  margin-top: auto;
+  margin-top: clamp(10px, 1.6vw, 14px);
   display: flex;
   justify-content: center;
   z-index: 5;

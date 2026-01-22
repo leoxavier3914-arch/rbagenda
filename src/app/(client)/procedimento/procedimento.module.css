@@ -188,10 +188,6 @@
   gap: clamp(10px, 1.6vw, 14px);
 }
 
-.tipoGrid {
-  gap: clamp(12px, 2vw, 18px);
-}
-
 .gridControls {
   display: flex;
   align-items: center;
@@ -200,11 +196,6 @@
   color: var(--muted);
   font-weight: 600;
   font-size: 14px;
-}
-
-.gridControlsHidden {
-  visibility: hidden;
-  pointer-events: none;
 }
 
 .navButton {

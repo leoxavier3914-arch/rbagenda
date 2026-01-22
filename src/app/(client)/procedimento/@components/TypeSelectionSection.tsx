@@ -59,6 +59,7 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
       <div className={styles.stack}>
         <ProcedimentoHeader
+          className={styles.procedimentoHeader}
           title="Escolha seu procedimento"
           subtitle="Selecione o tipo de atendimento"
         />
@@ -77,7 +78,6 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           )}
           {catalogStatus === 'ready' && procedures.length > 0 ? (
             <ProcedimentoGrid
-              variant="tipo"
               showControls={false}
               pageIndex={pageIndex}
               totalPages={totalPages}
@@ -129,30 +129,29 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
             </ProcedimentoGrid>
           ) : null}
         </ClientGlassPanel>
-        <div
-          className={`${styles.gridControls} ${showPagination ? '' : styles.gridControlsHidden}`}
-          aria-label="Paginação do grid"
-        >
-          <button
-            type="button"
-            className={styles.navButton}
-            onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-            disabled={pageIndex === 0}
-            aria-label="Página anterior"
-          >
-            ‹
-          </button>
-          <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-          <button
-            type="button"
-            className={styles.navButton}
-            onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-            disabled={pageIndex + 1 >= totalPages}
-            aria-label="Próxima página"
-          >
-            ›
-          </button>
-        </div>
+        {showPagination ? (
+          <div className={styles.gridControls} aria-label="Paginação do grid">
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+              disabled={pageIndex === 0}
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+            <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+              disabled={pageIndex + 1 >= totalPages}
+              aria-label="Próxima página"
+            >
+              ›
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   )

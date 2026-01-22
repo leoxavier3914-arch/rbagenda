@@ -890,62 +890,64 @@ export default function ProcedimentoPage() {
         </div>
 
         <div className={styles.wizardBody}>
-          {currentStep === 1 ? (
-            <TypeSelectionSection
-              catalogError={catalogError}
-              catalogStatus={catalogStatus}
-              availableProcedures={availableProcedures}
-              selectedProcedureId={selectedProcedureId}
-              onSelect={handleProcedureSelect}
-            />
-          ) : null}
+          <div className={styles.stack}>
+            {currentStep === 1 ? (
+              <TypeSelectionSection
+                catalogError={catalogError}
+                catalogStatus={catalogStatus}
+                availableProcedures={availableProcedures}
+                selectedProcedureId={selectedProcedureId}
+                onSelect={handleProcedureSelect}
+              />
+            ) : null}
 
-          {currentStep === 2 ? (
-            <TechniqueSelectionSection
-              catalogStatus={catalogStatus}
-              selectedProcedure={selectedProcedure}
-              selectedTechniqueId={selectedTechniqueId}
-              onTechniqueSelect={handleTechniqueSelect}
-            />
-          ) : null}
+            {currentStep === 2 ? (
+              <TechniqueSelectionSection
+                catalogStatus={catalogStatus}
+                selectedProcedure={selectedProcedure}
+                selectedTechniqueId={selectedTechniqueId}
+                onTechniqueSelect={handleTechniqueSelect}
+              />
+            ) : null}
 
-          {currentStep === 3 ? (
-            <DateSelectionSection
-              availabilityError={availabilityError}
-              isLoadingAvailability={isLoadingAvailability}
-              calendarHeaderDays={calendarHeaderDays}
-              calendarDays={calendarDays}
-              monthTitle={monthTitle}
-              selectedTechnique={selectedTechnique}
-              selectedDate={selectedDate}
-              onPreviousMonth={goToPreviousMonth}
-              onNextMonth={goToNextMonth}
-              onDaySelect={handleDaySelect}
-            />
-          ) : null}
+            {currentStep === 3 ? (
+              <DateSelectionSection
+                availabilityError={availabilityError}
+                isLoadingAvailability={isLoadingAvailability}
+                calendarHeaderDays={calendarHeaderDays}
+                calendarDays={calendarDays}
+                monthTitle={monthTitle}
+                selectedTechnique={selectedTechnique}
+                selectedDate={selectedDate}
+                onPreviousMonth={goToPreviousMonth}
+                onNextMonth={goToNextMonth}
+                onDaySelect={handleDaySelect}
+              />
+            ) : null}
 
-          {currentStep === 4 ? (
-            <TimeSelectionSection
-              slotsContainerRef={slotsContainerRef}
-              selectedDate={selectedDate}
-              slots={slots}
-              bookedSlots={bookedSlots}
-              selectedSlot={selectedSlot}
-              actionMessage={actionMessage}
-              onSlotSelect={handleSlotSelect}
-            />
-          ) : null}
-        </div>
+            {currentStep === 4 ? (
+              <TimeSelectionSection
+                slotsContainerRef={slotsContainerRef}
+                selectedDate={selectedDate}
+                slots={slots}
+                bookedSlots={bookedSlots}
+                selectedSlot={selectedSlot}
+                actionMessage={actionMessage}
+                onSlotSelect={handleSlotSelect}
+              />
+            ) : null}
 
-        <div className={styles.wizardFooter}>
-          <button
-            type="button"
-            className={styles.continueButton}
-            onClick={handleStepContinue}
-            disabled={stepContinueDisabled}
-          >
-            {stepContinueLabel}
-          </button>
+            <div className={styles.wizardFooter}>
+              <button
+                type="button"
+                className={styles.continueButton}
+                onClick={handleStepContinue}
+                disabled={stepContinueDisabled}
+              >
+                {stepContinueLabel}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

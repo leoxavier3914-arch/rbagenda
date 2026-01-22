@@ -867,6 +867,12 @@ export default function ProcedimentoPage() {
     return continueButtonDisabled
   })()
   const stepContinueLabel = currentStep === 4 ? continueButtonLabel : 'Continuar'
+  const shouldShowContinueButton = (() => {
+    if (currentStep === 1) return Boolean(selectedProcedureId) && catalogStatus === 'ready'
+    if (currentStep === 2) return Boolean(selectedTechniqueId)
+    if (currentStep === 3) return Boolean(selectedDate)
+    return Boolean(summaryData)
+  })()
 
   const handleStepContinue = useCallback(() => {
     if (currentStep === 1 && (!selectedProcedureId || catalogStatus !== 'ready')) return
@@ -937,16 +943,18 @@ export default function ProcedimentoPage() {
           ) : null}
         </div>
 
-        <div className={styles.wizardFooter}>
-          <button
-            type="button"
-            className={styles.continueButton}
-            onClick={handleStepContinue}
-            disabled={stepContinueDisabled}
-          >
-            {stepContinueLabel}
-          </button>
-        </div>
+        {shouldShowContinueButton ? (
+          <div className={styles.wizardFooter}>
+            <button
+              type="button"
+              className={styles.continueButton}
+              onClick={handleStepContinue}
+              disabled={stepContinueDisabled}
+            >
+              {stepContinueLabel}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <SummaryModal

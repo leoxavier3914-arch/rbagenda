@@ -58,6 +58,10 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
   return (
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
       <div className={styles.stack}>
+        {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+        {!catalogError && catalogStatus === 'loading' && (
+          <div className={`${styles.status} ${styles.statusInfo}`}>Carregando procedimentos...</div>
+        )}
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
           title="Escolha seu procedimento"
@@ -69,10 +73,6 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           labelClassName={styles.label}
           aria-label="Tipos de procedimento"
         >
-          {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-          {!catalogError && catalogStatus === 'loading' && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando procedimentos...</div>
-          )}
           {catalogStatus === 'ready' && availableProcedures.length === 0 && (
             <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
           )}

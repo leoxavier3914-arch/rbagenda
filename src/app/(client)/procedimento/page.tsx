@@ -859,7 +859,13 @@ export default function ProcedimentoPage() {
   const continueButtonDisabled = !summaryData || isCreatingAppointment
   const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
   const totalSteps = 4
+  const stepLabel = `Etapa ${currentStep} de ${totalSteps}`
   const stepProgress = `${Math.round((currentStep / totalSteps) * 100)}%`
+  const stepProgressNode = (
+    <div className={styles.progressTrack} role="presentation">
+      <span className={styles.progressFill} style={{ width: stepProgress }} />
+    </div>
+  )
   const stepContinueDisabled = (() => {
     if (currentStep === 1) return !selectedProcedureId || catalogStatus !== 'ready'
     if (currentStep === 2) return !selectedTechniqueId
@@ -882,13 +888,6 @@ export default function ProcedimentoPage() {
   return (
     <ProcedimentoWrapper heroReady={heroReady}>
       <div className={styles.wizard}>
-        <div className={styles.wizardHeader}>
-          <span className={styles.stepIndicator}>Etapa {currentStep} de {totalSteps}</span>
-          <div className={styles.progressTrack} role="presentation">
-            <span className={styles.progressFill} style={{ width: stepProgress }} />
-          </div>
-        </div>
-
         <div className={styles.wizardBody}>
           <div className={styles.stack}>
             {currentStep === 1 ? (
@@ -898,6 +897,8 @@ export default function ProcedimentoPage() {
                 availableProcedures={availableProcedures}
                 selectedProcedureId={selectedProcedureId}
                 onSelect={handleProcedureSelect}
+                stepLabel={stepLabel}
+                stepProgress={stepProgressNode}
               />
             ) : null}
 
@@ -907,6 +908,8 @@ export default function ProcedimentoPage() {
                 selectedProcedure={selectedProcedure}
                 selectedTechniqueId={selectedTechniqueId}
                 onTechniqueSelect={handleTechniqueSelect}
+                stepLabel={stepLabel}
+                stepProgress={stepProgressNode}
               />
             ) : null}
 
@@ -922,6 +925,8 @@ export default function ProcedimentoPage() {
                 onPreviousMonth={goToPreviousMonth}
                 onNextMonth={goToNextMonth}
                 onDaySelect={handleDaySelect}
+                stepLabel={stepLabel}
+                stepProgress={stepProgressNode}
               />
             ) : null}
 
@@ -934,6 +939,8 @@ export default function ProcedimentoPage() {
                 selectedSlot={selectedSlot}
                 actionMessage={actionMessage}
                 onSlotSelect={handleSlotSelect}
+                stepLabel={stepLabel}
+                stepProgress={stepProgressNode}
               />
             ) : null}
 

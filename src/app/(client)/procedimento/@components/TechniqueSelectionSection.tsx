@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, useEffect, useMemo, useState } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
@@ -16,6 +16,8 @@ type Props = {
   selectedProcedure: TechniqueCatalogEntry | null
   selectedTechniqueId: string | null
   onTechniqueSelect: (techniqueId: string) => void
+  stepLabel?: string
+  stepProgress?: ReactNode
 }
 
 export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionSection(
@@ -24,6 +26,8 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
     selectedProcedure,
     selectedTechniqueId,
     onTechniqueSelect,
+    stepLabel,
+    stepProgress,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -74,6 +78,8 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
       <div className={styles.stack}>
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
+          eyebrow={stepLabel}
+          progress={stepProgress}
           title="Escolha sua técnica"
           subtitle="Qual técnica você deseja? Você poderá ajustar depois."
         />
@@ -148,29 +154,38 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
             </div>
           )}
         </ClientGlassPanel>
-        {showPagination ? (
-          <div className={styles.gridControls} aria-label="Paginação do grid">
-            <button
-              type="button"
-              className={styles.navButton}
-              onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-              disabled={pageIndex === 0}
-              aria-label="Página anterior"
-            >
-              ‹
-            </button>
-            <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-            <button
-              type="button"
-              className={styles.navButton}
-              onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-              disabled={pageIndex + 1 >= totalPages}
-              aria-label="Próxima página"
-            >
-              ›
-            </button>
-          </div>
-        ) : null}
+        <div
+          className={[
+            styles.gridControls,
+            showPagination ? '' : styles.gridControlsPlaceholder,
+          ].filter(Boolean).join(' ')}
+          aria-label="Paginação do grid"
+          aria-hidden={showPagination ? undefined : true}
+        >
+          {showPagination ? (
+            <>
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+                disabled={pageIndex === 0}
+                aria-label="Página anterior"
+              >
+                ‹
+              </button>
+              <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+                disabled={pageIndex + 1 >= totalPages}
+                aria-label="Próxima página"
+              >
+                ›
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
     </section>
   )

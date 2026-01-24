@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from 'react'
+import { ForwardedRef, forwardRef, type ReactNode } from 'react'
 import type { RefObject } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
@@ -15,6 +15,8 @@ type Props = {
   selectedSlot: string | null
   actionMessage: { kind: 'success' | 'error'; text: string } | null
   onSlotSelect: (slot: string, disabled: boolean) => void
+  stepLabel?: string
+  stepProgress?: ReactNode
 }
 
 export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
@@ -26,6 +28,8 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
     selectedSlot,
     actionMessage,
     onSlotSelect,
+    stepLabel,
+    stepProgress,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -40,6 +44,8 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
       <div className={styles.stack}>
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
+          eyebrow={stepLabel}
+          progress={stepProgress}
           title="Escolha o horário"
           subtitle="Selecione um horário disponível"
         />

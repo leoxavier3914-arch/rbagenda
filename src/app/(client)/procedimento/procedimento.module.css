@@ -31,8 +31,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(12px, 2vw, 20px);
-  min-height: auto;
+  gap: clamp(10px, 1.6vw, 16px);
+  min-height: 100dvh;
+  justify-content: center;
   padding-bottom: 0;
 }
 
@@ -40,7 +41,9 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 32px 18px 0;
+  padding: 20px 18px 8px;
+  min-height: 100dvh;
+  align-items: center;
 }
 
 .pageSection:global(.center) {
@@ -52,7 +55,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(12px, 2vw, 18px);
+  gap: clamp(10px, 1.6vw, 14px);
+  min-height: 100%;
+  justify-content: center;
 }
 
 .wizardHeader {
@@ -70,6 +75,8 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--ink) 70%, transparent);
+  display: inline-block;
+  margin-bottom: 6px;
 }
 
 .progressTrack {
@@ -79,6 +86,7 @@
   background: rgba(255, 255, 255, 0.5);
   overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  margin-bottom: 8px;
 }
 
 .progressFill {
@@ -93,14 +101,14 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  min-height: auto;
+  align-items: center;
+  min-height: 100%;
 }
 
 .wizardFooter {
   position: static;
   width: 100%;
-  padding: 16px 24px calc(18px + env(safe-area-inset-bottom));
+  padding: 10px 20px calc(12px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
 }
@@ -121,7 +129,7 @@
 .stack {
   display: grid;
   justify-items: center;
-  gap: clamp(10px, 1.8vw, 14px);
+  gap: clamp(8px, 1.4vw, 12px);
   width: 100%;
 }
 
@@ -160,10 +168,23 @@
   border: 1.2px solid var(--glass-stroke);
   border-radius: var(--radius-outer);
   box-shadow: var(--shadow-xl);
-  padding: clamp(12px, 2.2vw, 18px);
+  padding: clamp(10px, 1.8vw, 16px);
   min-height: auto;
+  max-height: calc(100dvh - 180px);
+  overflow-y: auto;
   position: relative;
   z-index: 1;
+}
+
+@supports not (height: 100dvh) {
+  .page,
+  .pageSection {
+    min-height: 100vh;
+  }
+
+  .glass {
+    max-height: calc(100vh - 180px);
+  }
 }
 
 @supports (backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px)) {
@@ -202,6 +223,12 @@
   color: var(--muted);
   font-weight: 600;
   font-size: 14px;
+  min-height: 38px;
+}
+
+.gridControlsPlaceholder {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .navButton {

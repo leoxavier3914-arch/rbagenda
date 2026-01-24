@@ -63,7 +63,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
           subtitle="Selecione uma data disponível"
         />
         <ClientGlassPanel
-          className={styles.glass}
+          className={[styles.glass, styles.stepPanelTall].join(' ')}
           label="DIA"
           labelClassName={styles.label}
           aria-label="Escolha do dia"

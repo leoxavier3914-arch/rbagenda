@@ -180,6 +180,10 @@
   z-index: 1;
 }
 
+.stepPanelTall {
+  min-height: clamp(360px, 48vh, 440px);
+}
+
 @supports not (height: 100dvh) {
   .page,
   .pageSection {

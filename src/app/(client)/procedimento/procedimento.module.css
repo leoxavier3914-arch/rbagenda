@@ -43,6 +43,10 @@
   padding: 32px 18px 0;
 }
 
+.pageSection:global(.center) {
+  min-height: auto;
+}
+
 .wizard {
   width: 100%;
   display: flex;

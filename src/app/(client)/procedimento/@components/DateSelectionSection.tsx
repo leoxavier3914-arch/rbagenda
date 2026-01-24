@@ -63,7 +63,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
           subtitle="Selecione uma data disponível"
         />
         <ClientGlassPanel
-          className={[styles.glass, styles.stepPanelTall].join(' ')}
+          className={styles.glass}
           label="DIA"
           labelClassName={styles.label}
           aria-label="Escolha do dia"
@@ -118,23 +118,6 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
                 {day}
               </button>
             ))}
-          </div>
-          <div className={styles.calendarLegend}>
-            <span className={styles.calendarLegendItem}>
-              <span className={`${styles.dot} ${styles.dotAvailable}`} /> Disponível
-            </span>
-            <span className={styles.calendarLegendItem}>
-              <span className={`${styles.dot} ${styles.dotPartial}`} /> Parcial
-            </span>
-            <span className={styles.calendarLegendItem}>
-              <span className={`${styles.dot} ${styles.dotFull}`} /> Lotado
-            </span>
-            <span className={styles.calendarLegendItem}>
-              <span className={`${styles.dot} ${styles.dotMine}`} /> Meus
-            </span>
-            <span className={styles.calendarLegendItem}>
-              <span className={`${styles.dot} ${styles.dotDisabled}`} /> Indisponível
-            </span>
           </div>
         </ClientGlassPanel>
       </div>

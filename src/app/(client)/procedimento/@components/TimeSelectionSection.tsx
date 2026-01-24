@@ -75,7 +75,7 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
           subtitle={selectedPeriod ? 'Selecione um horário disponível' : 'Selecione o período do dia'}
         />
         <ClientGlassPanel
-          className={[styles.glass, styles.stepPanelTall].join(' ')}
+          className={styles.glass}
           label="HORÁRIO"
           labelClassName={styles.label}
           aria-label="Escolha do horário"

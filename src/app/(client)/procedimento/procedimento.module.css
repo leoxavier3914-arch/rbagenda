@@ -180,8 +180,8 @@
   z-index: 1;
 }
 
-.stepPanelAligned {
-  height: clamp(360px, 48vh, 440px);
+.stepPanelTall {
+  min-height: clamp(360px, 48vh, 440px);
 }
 
 @supports not (height: 100dvh) {
@@ -458,21 +458,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
-  margin-bottom: 12px;
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
 .calendarNav {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.6);
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.78);
   color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -496,17 +496,16 @@
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .calendarDay {
   position: relative;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.78);
-  padding: 12px 0;
-  min-height: 44px;
+  padding: 10px 0;
   font-weight: 600;
   color: var(--ink);
   cursor: pointer;
@@ -576,7 +575,7 @@
   margin-right: 5px;
 }
 
-.stepPanelAligned .calendarLegend {
+.stepPanelTall .calendarLegend {
   margin-top: 6px;
 }
 

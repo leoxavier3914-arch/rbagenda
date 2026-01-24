@@ -84,7 +84,7 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
           subtitle="Qual técnica você deseja? Você poderá ajustar depois."
         />
         <ClientGlassPanel
-          className={[styles.glass, styles.stepPanelAligned].join(' ')}
+          className={styles.glass}
           label="TÉCNICA"
           labelClassName={styles.label}
           aria-label="Técnicas de cílios"

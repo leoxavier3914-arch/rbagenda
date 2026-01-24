@@ -75,6 +75,8 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--ink) 70%, transparent);
+  display: inline-block;
+  margin-bottom: 6px;
 }
 
 .progressTrack {
@@ -220,6 +222,12 @@
   color: var(--muted);
   font-weight: 600;
   font-size: 14px;
+  min-height: 38px;
+}
+
+.gridControlsPlaceholder {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .navButton {

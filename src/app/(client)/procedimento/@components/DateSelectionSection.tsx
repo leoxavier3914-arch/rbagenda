@@ -25,6 +25,7 @@ type Props = {
   onPreviousMonth: () => void
   onNextMonth: () => void
   onDaySelect: (iso: string, disabled: boolean) => void
+  stepLabel?: string
 }
 
 export const DateSelectionSection = forwardRef(function DateSelectionSection(
@@ -39,6 +40,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
     onPreviousMonth,
     onNextMonth,
     onDaySelect,
+    stepLabel,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -53,6 +55,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
       <div className={styles.stack}>
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
+          eyebrow={stepLabel}
           title="Escolha o dia"
           subtitle="Selecione uma data disponível"
         />

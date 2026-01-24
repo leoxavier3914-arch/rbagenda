@@ -15,6 +15,7 @@ type Props = {
   selectedSlot: string | null
   actionMessage: { kind: 'success' | 'error'; text: string } | null
   onSlotSelect: (slot: string, disabled: boolean) => void
+  stepLabel?: string
 }
 
 export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
@@ -26,6 +27,7 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
     selectedSlot,
     actionMessage,
     onSlotSelect,
+    stepLabel,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -40,6 +42,7 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
       <div className={styles.stack}>
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
+          eyebrow={stepLabel}
           title="Escolha o horário"
           subtitle="Selecione um horário disponível"
         />

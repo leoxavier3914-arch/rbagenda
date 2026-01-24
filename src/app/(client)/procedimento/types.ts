@@ -47,3 +47,5 @@ export type SummarySnapshot = {
     slot: string
   }
 }
+
+export type TimePeriod = 'all' | 'morning' | 'afternoon' | 'night'

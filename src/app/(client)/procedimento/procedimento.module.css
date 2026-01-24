@@ -129,14 +129,6 @@
   text-align: center;
 }
 
-.diamond {
-  display: block;
-  margin: 0 auto 10px;
-  width: 22px;
-  height: 22px;
-  color: color-mix(in srgb, var(--ink) 72%, transparent);
-}
-
 .title {
   font-family: var(--heading-font);
   font-weight: 700;

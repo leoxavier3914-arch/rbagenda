@@ -41,6 +41,7 @@ import type {
   ServiceTypeAssignment,
   SummarySnapshot,
   TechniqueCatalogEntry,
+  TimePeriod,
 } from './types'
 import styles from './procedimento.module.css'
 
@@ -96,6 +97,7 @@ export default function ProcedimentoPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null)
   const [summarySnapshot, setSummarySnapshot] = useState<SummarySnapshot | null>(null)
   const [appointmentId, setAppointmentId] = useState<string | null>(null)
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
@@ -495,12 +497,41 @@ export default function ProcedimentoPage() {
     serviceBufferMinutes,
   ])
 
+  const slotsByPeriod = useMemo(() => {
+    const grouped: Record<TimePeriod, string[]> = {
+      all: slots,
+      morning: [],
+      afternoon: [],
+      night: [],
+    }
+
+    slots.forEach((slotValue) => {
+      const [hourValue] = slotValue.split(':')
+      const hour = Number(hourValue)
+      if (!Number.isFinite(hour)) return
+      if (hour < 12) grouped.morning.push(slotValue)
+      else if (hour < 18) grouped.afternoon.push(slotValue)
+      else grouped.night.push(slotValue)
+    })
+
+    return grouped
+  }, [slots])
+
+  const visibleSlots = useMemo(() => {
+    if (!selectedPeriod) return []
+    if (selectedPeriod === 'all') return slotsByPeriod.all
+    return slotsByPeriod[selectedPeriod]
+  }, [selectedPeriod, slotsByPeriod])
+
   useEffect(() => {
-    if (!selectedSlot) return
-    if (!slots.includes(selectedSlot)) {
+    if (!selectedPeriod) {
+      if (selectedSlot !== null) setSelectedSlot(null)
+      return
+    }
+    if (selectedSlot && !visibleSlots.includes(selectedSlot)) {
       setSelectedSlot(null)
     }
-  }, [selectedSlot, slots])
+  }, [selectedPeriod, selectedSlot, visibleSlots])
 
   const goToPreviousMonth = useCallback(() => {
     const previous = new Date(year, month - 1, 1)
@@ -521,6 +552,7 @@ export default function ProcedimentoPage() {
       setSelectedTechniqueId(null)
       setSelectedDate(null)
       setSelectedSlot(null)
+      setSelectedPeriod(null)
     },
     [selectedProcedureId],
   )
@@ -530,6 +562,7 @@ export default function ProcedimentoPage() {
     setSelectedTechniqueId(techniqueId)
     setSelectedDate(null)
     setSelectedSlot(null)
+    setSelectedPeriod(null)
   }, [selectedTechniqueId])
 
   const handleDaySelect = useCallback(
@@ -537,6 +570,7 @@ export default function ProcedimentoPage() {
       if (disabled || !canInteract) return
       setSelectedDate(dayIso)
       setSelectedSlot(null)
+      setSelectedPeriod(null)
     },
     [canInteract],
   )
@@ -548,6 +582,16 @@ export default function ProcedimentoPage() {
     },
     [],
   )
+
+  const handlePeriodSelect = useCallback((period: TimePeriod) => {
+    setSelectedPeriod(period)
+    setSelectedSlot(null)
+  }, [])
+
+  const handlePeriodReset = useCallback(() => {
+    setSelectedPeriod(null)
+    setSelectedSlot(null)
+  }, [])
 
   useEffect(() => {
     if (currentStep > 1 && !selectedProcedureId) {
@@ -934,11 +978,14 @@ export default function ProcedimentoPage() {
               <TimeSelectionSection
                 slotsContainerRef={slotsContainerRef}
                 selectedDate={selectedDate}
-                slots={slots}
+                slots={visibleSlots}
                 bookedSlots={bookedSlots}
                 selectedSlot={selectedSlot}
+                selectedPeriod={selectedPeriod}
                 actionMessage={actionMessage}
                 onSlotSelect={handleSlotSelect}
+                onPeriodSelect={handlePeriodSelect}
+                onBackToPeriods={handlePeriodReset}
                 stepLabel={stepLabel}
                 stepProgress={stepProgressNode}
               />

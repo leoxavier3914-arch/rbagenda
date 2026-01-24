@@ -6,14 +6,16 @@ type ProcedimentoHeaderProps = {
   title: ReactNode
   subtitle?: ReactNode
   eyebrow?: ReactNode
+  progress?: ReactNode
   className?: string
 }
 
-export function ProcedimentoHeader({ title, subtitle, eyebrow, className }: ProcedimentoHeaderProps) {
+export function ProcedimentoHeader({ title, subtitle, eyebrow, progress, className }: ProcedimentoHeaderProps) {
   const headerClassName = [styles.header, className].filter(Boolean).join(' ')
   return (
     <header className={headerClassName}>
       {eyebrow ? <span className={styles.stepIndicator}>{eyebrow}</span> : null}
+      {progress}
       <div className={styles.headerCopy}>
         <h1 className={styles.title}>{title}</h1>
         {subtitle ? <p className={styles.headerSubtitle}>{subtitle}</p> : null}

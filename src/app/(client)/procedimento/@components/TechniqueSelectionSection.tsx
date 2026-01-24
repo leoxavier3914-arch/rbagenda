@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, useEffect, useMemo, useState } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
@@ -17,6 +17,7 @@ type Props = {
   selectedTechniqueId: string | null
   onTechniqueSelect: (techniqueId: string) => void
   stepLabel?: string
+  stepProgress?: ReactNode
 }
 
 export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionSection(
@@ -26,6 +27,7 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
     selectedTechniqueId,
     onTechniqueSelect,
     stepLabel,
+    stepProgress,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -77,6 +79,7 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
           eyebrow={stepLabel}
+          progress={stepProgress}
           title="Escolha sua técnica"
           subtitle="Qual técnica você deseja? Você poderá ajustar depois."
         />

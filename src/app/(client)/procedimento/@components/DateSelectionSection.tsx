@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from 'react'
+import { ForwardedRef, forwardRef, type ReactNode } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 
@@ -26,6 +26,7 @@ type Props = {
   onNextMonth: () => void
   onDaySelect: (iso: string, disabled: boolean) => void
   stepLabel?: string
+  stepProgress?: ReactNode
 }
 
 export const DateSelectionSection = forwardRef(function DateSelectionSection(
@@ -41,6 +42,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
     onNextMonth,
     onDaySelect,
     stepLabel,
+    stepProgress,
   }: Props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -56,6 +58,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
           eyebrow={stepLabel}
+          progress={stepProgress}
           title="Escolha o dia"
           subtitle="Selecione uma data disponível"
         />

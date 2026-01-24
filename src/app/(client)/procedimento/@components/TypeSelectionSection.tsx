@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, useEffect, useMemo, useState } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
@@ -17,10 +17,11 @@ type Props = {
   selectedProcedureId: string | null
   onSelect: (procedureId: string) => void
   stepLabel?: string
+  stepProgress?: ReactNode
 }
 
 export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
-  { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect, stepLabel }: Props,
+  { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect, stepLabel, stepProgress }: Props,
     ref: ForwardedRef<HTMLDivElement>,
 ) {
   const pageSize = 4
@@ -62,6 +63,7 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
         <ProcedimentoHeader
           className={styles.procedimentoHeader}
           eyebrow={stepLabel}
+          progress={stepProgress}
           title="Escolha seu procedimento"
           subtitle="Selecione o tipo de atendimento"
         />

@@ -65,7 +65,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
         <ClientGlassPanel
           className={styles.glass}
           label="DIA"
-          labelClassName={styles.label}
+          labelClassName={`${styles.label} ${styles.labelVisuallyHidden}`}
           aria-label="Escolha do dia"
         >
           {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
@@ -120,6 +120,7 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
             ))}
           </div>
         </ClientGlassPanel>
+        <div className={styles.calendarPicker} aria-hidden="true" />
       </div>
     </section>
   )

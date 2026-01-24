@@ -137,7 +137,6 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
             </span>
           </div>
         </ClientGlassPanel>
-        <div className={`${styles.gridControls} ${styles.gridControlsPlaceholder}`} aria-hidden="true" />
       </div>
     </section>
   )

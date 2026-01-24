@@ -559,27 +559,32 @@
 .calendarLegend {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
   justify-content: center;
-  margin-top: 12px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.1;
   color: var(--muted);
 }
 
 .calendarLegend .dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  margin-right: 6px;
+  margin-right: 5px;
+}
+
+.stepPanelTall .calendarLegend {
+  margin-top: 6px;
 }
 
 .dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  margin-right: 6px;
+  margin-right: 5px;
 }
 
 .dotAvailable {

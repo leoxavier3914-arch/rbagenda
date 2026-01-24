@@ -7,6 +7,16 @@
   transition: opacity 1s ease-out 0.5s;
 }
 
+.wrapper:global(.client-hero-wrapper) :global(.page) {
+  padding: 0;
+  min-height: auto;
+}
+
+.wrapper :global(.page) {
+  padding: 0;
+  min-height: auto;
+}
+
 .heroReady {
   opacity: 1;
 }
@@ -30,7 +40,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 32px 18px 20px;
+  padding: 32px 18px 0;
 }
 
 .wizard {

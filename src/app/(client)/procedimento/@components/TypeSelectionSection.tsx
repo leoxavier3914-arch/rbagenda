@@ -68,7 +68,7 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           subtitle="Selecione o tipo de atendimento"
         />
         <ClientGlassPanel
-          className={styles.glass}
+          className={[styles.glass, styles.stepPanelAligned].join(' ')}
           label="TIPO"
           labelClassName={styles.label}
           aria-label="Tipos de procedimento"

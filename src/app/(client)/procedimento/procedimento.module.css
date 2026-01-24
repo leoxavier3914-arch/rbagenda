@@ -180,8 +180,8 @@
   z-index: 1;
 }
 
-.stepPanelTall {
-  min-height: clamp(360px, 48vh, 440px);
+.stepPanelAligned {
+  height: clamp(360px, 48vh, 440px);
 }
 
 @supports not (height: 100dvh) {
@@ -576,7 +576,7 @@
   margin-right: 5px;
 }
 
-.stepPanelTall .calendarLegend {
+.stepPanelAligned .calendarLegend {
   margin-top: 6px;
 }
 
@@ -606,6 +606,37 @@
 
 .dotDisabled {
   background: #b8c7be;
+}
+
+.periodHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.periodBackButton {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-stroke);
+  background: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.periodBackButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(16, 54, 37, 0.14);
+}
+
+.periodLabel {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .slots {

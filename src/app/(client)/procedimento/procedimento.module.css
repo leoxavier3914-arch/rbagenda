@@ -222,6 +222,11 @@
   border: 0;
 }
 
+.labelGhost {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .gridWrapper {
   width: 100%;
   display: flex;

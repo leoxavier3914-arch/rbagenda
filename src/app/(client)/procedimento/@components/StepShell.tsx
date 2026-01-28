@@ -45,7 +45,9 @@ export function StepShell({
       >
         {children}
       </ClientGlassPanel>
-      {footer}
+      <div className={styles.stepFooter} aria-hidden={footer ? undefined : true}>
+        {footer}
+      </div>
     </div>
   )
 }

@@ -153,6 +153,7 @@
 .headerCopy {
   display: grid;
   gap: 6px;
+  min-height: calc(clamp(24px, 4.6vw, 36px) * 2.12 + clamp(13px, 2.2vw, 15px) + 6px);
 }
 
 .headerSubtitle {

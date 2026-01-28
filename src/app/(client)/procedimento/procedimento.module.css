@@ -142,18 +142,19 @@
 }
 
 .title {
+  display: block;
   font-family: var(--heading-font);
   font-weight: 700;
   font-size: var(--heading-size, clamp(24px, 4.6vw, 36px));
   line-height: 1.06;
   margin: 0;
   letter-spacing: -0.01em;
+  min-height: calc(clamp(24px, 4.6vw, 36px) * 2.12);
 }
 
 .headerCopy {
   display: grid;
   gap: 6px;
-  min-height: calc(clamp(24px, 4.6vw, 36px) * 2.12 + clamp(13px, 2.2vw, 15px) + 6px);
 }
 
 .headerSubtitle {
@@ -161,6 +162,7 @@
   color: var(--muted-2);
   font-style: normal;
   font-size: clamp(13px, 2.2vw, 15px);
+  min-height: clamp(13px, 2.2vw, 15px);
 }
 
 .glass {

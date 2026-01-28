@@ -1,11 +1,10 @@
 import { ForwardedRef, forwardRef, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 import { LashIcon } from '@/components/client/LashIcon'
 
 import { ProcedimentoCard } from './ProcedimentoCard'
 import { ProcedimentoGrid } from './ProcedimentoGrid'
-import { ProcedimentoHeader } from './ProcedimentoHeader'
+import { StepShell } from './StepShell'
 import styles from '../procedimento.module.css'
 
 import type { TechniqueCatalogEntry } from '../types'
@@ -59,119 +58,115 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
 
   return (
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
-      <div className={styles.stack}>
-        <ProcedimentoHeader
-          className={styles.procedimentoHeader}
-          eyebrow={stepLabel}
-          progress={stepProgress}
-          title={(
-            <>
-              <span>Escolha seu</span>
-              <br />
-              <span>procedimento</span>
-            </>
-          )}
-          subtitle="Selecione o tipo de atendimento"
-        />
-        <ClientGlassPanel
-          className={styles.glass}
-          label="TIPO"
-          labelClassName={styles.label}
-          aria-label="Tipos de procedimento"
-        >
-          {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
-          {!catalogError && catalogStatus === 'loading' && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando procedimentos...</div>
-          )}
-          {catalogStatus === 'ready' && availableProcedures.length === 0 && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
-          )}
-          {catalogStatus === 'ready' && procedures.length > 0 ? (
-            <ProcedimentoGrid
-              showControls={false}
-              pageIndex={pageIndex}
-              totalPages={totalPages}
-              onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-              onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-            >
-              {proceduresPage.map((procedure) => {
-                const isActive = selectedProcedureId === procedure.id
-                return (
-                  <ProcedimentoCard
-                    key={procedure.id}
-                    active={isActive}
-                    onClick={() => onSelect(procedure.id)}
-                  >
-                    <span className={styles.cardIcon} aria-hidden="true">
-                      <LashIcon />
-                    </span>
-                    <span className={styles.cardContent}>
-                      <span className={styles.cardTitle}>{procedure.name}</span>
-                    </span>
-                    <span className={styles.cardIndicator} aria-hidden="true">
-                      {isActive ? (
-                        <svg viewBox="0 0 24 24" role="presentation">
-                          <path
-                            d="M20 6L9 17l-5-5"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" role="presentation">
-                          <path
-                            d="M9 6l6 6-6 6"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                  </ProcedimentoCard>
-                )
-              })}
-            </ProcedimentoGrid>
-          ) : null}
-        </ClientGlassPanel>
-        <div
-          className={[
-            styles.gridControls,
-            showPagination ? '' : styles.gridControlsPlaceholder,
-          ].filter(Boolean).join(' ')}
-          aria-label="Paginação do grid"
-          aria-hidden={showPagination ? undefined : true}
-        >
-          {showPagination ? (
-            <>
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-                disabled={pageIndex === 0}
-                aria-label="Página anterior"
-              >
-                ‹
-              </button>
-              <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-                disabled={pageIndex + 1 >= totalPages}
-                aria-label="Próxima página"
-              >
-                ›
-              </button>
-            </>
-          ) : null}
-        </div>
-      </div>
+      <StepShell
+        title={(
+          <>
+            <span>Escolha seu</span>
+            <br />
+            <span>procedimento</span>
+          </>
+        )}
+        subtitle="Selecione o tipo de atendimento"
+        stepLabel={stepLabel}
+        stepProgress={stepProgress}
+        ariaLabel="Escolha do tipo"
+        panelLabel="TIPO"
+        panelLabelClassName={styles.label}
+        footer={(
+          <div
+            className={[
+              styles.gridControls,
+              showPagination ? '' : styles.gridControlsPlaceholder,
+            ].filter(Boolean).join(' ')}
+            aria-label="Paginação do grid"
+            aria-hidden={showPagination ? undefined : true}
+          >
+            {showPagination ? (
+              <>
+                <button
+                  type="button"
+                  className={styles.navButton}
+                  onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+                  disabled={pageIndex === 0}
+                  aria-label="Página anterior"
+                >
+                  ‹
+                </button>
+                <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
+                <button
+                  type="button"
+                  className={styles.navButton}
+                  onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+                  disabled={pageIndex + 1 >= totalPages}
+                  aria-label="Próxima página"
+                >
+                  ›
+                </button>
+              </>
+            ) : null}
+          </div>
+        )}
+      >
+        {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
+        {!catalogError && catalogStatus === 'loading' && (
+          <div className={`${styles.status} ${styles.statusInfo}`}>Carregando procedimentos...</div>
+        )}
+        {catalogStatus === 'ready' && availableProcedures.length === 0 && (
+          <div className={`${styles.status} ${styles.statusInfo}`}>Nenhum tipo disponível no momento.</div>
+        )}
+        {catalogStatus === 'ready' && procedures.length > 0 ? (
+          <ProcedimentoGrid
+            showControls={false}
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            onPreviousPage={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+            onNextPage={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+          >
+            {proceduresPage.map((procedure) => {
+              const isActive = selectedProcedureId === procedure.id
+              return (
+                <ProcedimentoCard
+                  key={procedure.id}
+                  active={isActive}
+                  onClick={() => onSelect(procedure.id)}
+                >
+                  <span className={styles.cardIcon} aria-hidden="true">
+                    <LashIcon />
+                  </span>
+                  <span className={styles.cardContent}>
+                    <span className={styles.cardTitle}>{procedure.name}</span>
+                  </span>
+                  <span className={styles.cardIndicator} aria-hidden="true">
+                    {isActive ? (
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <path
+                          d="M20 6L9 17l-5-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" role="presentation">
+                        <path
+                          d="M9 6l6 6-6 6"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                </ProcedimentoCard>
+              )
+            })}
+          </ProcedimentoGrid>
+        ) : null}
+      </StepShell>
     </section>
   )
 })

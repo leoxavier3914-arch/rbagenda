@@ -64,7 +64,13 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           className={styles.procedimentoHeader}
           eyebrow={stepLabel}
           progress={stepProgress}
-          title="Escolha seu procedimento"
+          title={(
+            <>
+              <span>Escolha seu</span>
+              <br />
+              <span>procedimento</span>
+            </>
+          )}
           subtitle="Selecione o tipo de atendimento"
         />
         <ClientGlassPanel

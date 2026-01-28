@@ -1,8 +1,6 @@
 import { ForwardedRef, forwardRef, type ReactNode } from 'react'
 
-import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
-
-import { ProcedimentoHeader } from './ProcedimentoHeader'
+import { StepShell } from './StepShell'
 import styles from '../procedimento.module.css'
 
 type CalendarDay = {
@@ -54,73 +52,68 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
       data-step="dia"
       aria-label="Escolha do dia"
     >
-      <div className={styles.stack}>
-        <ProcedimentoHeader
-          className={styles.procedimentoHeader}
-          eyebrow={stepLabel}
-          progress={stepProgress}
-          title="Escolha o dia"
-          subtitle="Selecione uma data disponível"
-        />
-        <ClientGlassPanel
-          className={styles.glass}
-          label="DIA"
-          labelClassName={`${styles.label} ${styles.labelGhost}`}
-          aria-label="Escolha do dia"
-        >
-          {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
-          {!availabilityError && isLoadingAvailability && (
-            <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
-          )}
-          <div className={styles.calendarHead}>
-            <button
-              type="button"
-              className={styles.calendarNav}
-              onClick={onPreviousMonth}
-              disabled={!selectedTechnique}
-              aria-label="Mês anterior"
-            >
-              ‹
-            </button>
-            <div className={styles.calendarTitle} id="cal-title">
-              {monthTitle}
+      <StepShell
+        title="Escolha o dia"
+        subtitle="Selecione uma data disponível"
+        stepLabel={stepLabel}
+        stepProgress={stepProgress}
+        ariaLabel="Escolha do dia"
+        panelLabel="DIA"
+        panelLabelClassName={`${styles.label} ${styles.labelGhost}`}
+        footer={<div className={styles.calendarPicker} aria-hidden="true" />}
+      >
+        {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
+        {!availabilityError && isLoadingAvailability && (
+          <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
+        )}
+        <div className={styles.calendarHead}>
+          <button
+            type="button"
+            className={styles.calendarNav}
+            onClick={onPreviousMonth}
+            disabled={!selectedTechnique}
+            aria-label="Mês anterior"
+          >
+            ‹
+          </button>
+          <div className={styles.calendarTitle} id="cal-title">
+            {monthTitle}
+          </div>
+          <button
+            type="button"
+            className={styles.calendarNav}
+            onClick={onNextMonth}
+            disabled={!selectedTechnique}
+            aria-label="Próximo mês"
+          >
+            ›
+          </button>
+        </div>
+        <div className={styles.calendarGrid} aria-hidden="true">
+          {calendarHeaderDays.map((label, index) => (
+            <div key={`dow-${index}`} className={`${styles.calendarDay} ${styles.calendarDayHeader}`}>
+              {label}
             </div>
+          ))}
+        </div>
+        <div className={styles.calendarGrid} role="grid">
+          {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
             <button
+              key={iso}
               type="button"
-              className={styles.calendarNav}
-              onClick={onNextMonth}
-              disabled={!selectedTechnique}
-              aria-label="Próximo mês"
+              className={styles.calendarDay}
+              data-state={state}
+              data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+              data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
+              aria-disabled={isDisabled}
+              disabled={isDisabled}
+              onClick={() => onDaySelect(iso, isDisabled)}
             >
-              ›
+              {day}
             </button>
-          </div>
-          <div className={styles.calendarGrid} aria-hidden="true">
-            {calendarHeaderDays.map((label, index) => (
-              <div key={`dow-${index}`} className={`${styles.calendarDay} ${styles.calendarDayHeader}`}>
-                {label}
-              </div>
-            ))}
-          </div>
-          <div className={styles.calendarGrid} role="grid">
-            {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
-              <button
-                key={iso}
-                type="button"
-                className={styles.calendarDay}
-                data-state={state}
-                data-selected={!isOutsideCurrentMonth && selectedDate === iso}
-                data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
-                aria-disabled={isDisabled}
-                disabled={isDisabled}
-                onClick={() => onDaySelect(iso, isDisabled)}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
-        </ClientGlassPanel>
-      </div>
+          ))}
+        </div>
+      </StepShell>
     </section>
   )
 })

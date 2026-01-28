@@ -120,7 +120,6 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
             ))}
           </div>
         </ClientGlassPanel>
-        <div className={styles.calendarPicker} aria-hidden="true" />
       </div>
     </section>
   )

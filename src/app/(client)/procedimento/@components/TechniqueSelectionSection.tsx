@@ -80,7 +80,13 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
           className={styles.procedimentoHeader}
           eyebrow={stepLabel}
           progress={stepProgress}
-          title="Escolha sua técnica"
+          title={(
+            <>
+              <span>Escolha sua</span>
+              <br />
+              <span>técnica</span>
+            </>
+          )}
           subtitle="Qual técnica você deseja? Você poderá ajustar depois."
         />
         <ClientGlassPanel

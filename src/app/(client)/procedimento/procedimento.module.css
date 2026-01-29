@@ -155,7 +155,6 @@
 .headerCopy {
   display: grid;
   gap: 6px;
-  min-height: 0;
 }
 
 .headerSubtitle {

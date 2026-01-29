@@ -991,16 +991,17 @@ export default function ProcedimentoPage() {
               />
             ) : null}
 
-            <div className={styles.wizardFooter}>
-              <button
-                type="button"
-                className={styles.continueButton}
-                onClick={handleStepContinue}
-                disabled={stepContinueDisabled}
-              >
-                {stepContinueLabel}
-              </button>
-            </div>
+            {!stepContinueDisabled ? (
+              <div className={styles.wizardFooter}>
+                <button
+                  type="button"
+                  className={styles.continueButton}
+                  onClick={handleStepContinue}
+                >
+                  {stepContinueLabel}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

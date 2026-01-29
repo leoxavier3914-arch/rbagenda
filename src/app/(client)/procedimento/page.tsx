@@ -991,8 +991,8 @@ export default function ProcedimentoPage() {
               />
             ) : null}
 
-            <div className={styles.wizardFooter}>
-              {!stepContinueDisabled ? (
+            {!stepContinueDisabled ? (
+              <div className={styles.wizardFooter}>
                 <button
                   type="button"
                   className={styles.continueButton}
@@ -1000,8 +1000,8 @@ export default function ProcedimentoPage() {
                 >
                   {stepContinueLabel}
                 </button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

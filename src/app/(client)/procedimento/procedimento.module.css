@@ -255,9 +255,12 @@
   min-height: 38px;
 }
 
-.gridControlsPlaceholder {
-  visibility: hidden;
-  pointer-events: none;
+.stepFooter {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .stepFooter {

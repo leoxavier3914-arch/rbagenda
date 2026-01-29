@@ -72,40 +72,29 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
         ariaLabel="Escolha do tipo"
         panelLabel="TIPO"
         panelLabelClassName={styles.label}
-        footer={(
-          <div
-            className={[
-              styles.gridControls,
-              showPagination ? '' : styles.gridControlsPlaceholder,
-            ].filter(Boolean).join(' ')}
-            aria-label="Paginação do grid"
-            aria-hidden={showPagination ? undefined : true}
-          >
-            {showPagination ? (
-              <>
-                <button
-                  type="button"
-                  className={styles.navButton}
-                  onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-                  disabled={pageIndex === 0}
-                  aria-label="Página anterior"
-                >
-                  ‹
-                </button>
-                <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-                <button
-                  type="button"
-                  className={styles.navButton}
-                  onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-                  disabled={pageIndex + 1 >= totalPages}
-                  aria-label="Próxima página"
-                >
-                  ›
-                </button>
-              </>
-            ) : null}
+        footer={showPagination ? (
+          <div className={styles.gridControls} aria-label="Paginação do grid">
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+              disabled={pageIndex === 0}
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+            <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+              disabled={pageIndex + 1 >= totalPages}
+              aria-label="Próxima página"
+            >
+              ›
+            </button>
           </div>
-        )}
+        ) : null}
       >
         {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
         {!catalogError && catalogStatus === 'loading' && (

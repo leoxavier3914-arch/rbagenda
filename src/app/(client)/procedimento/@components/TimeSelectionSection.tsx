@@ -66,7 +66,13 @@ export const TimeSelectionSection = forwardRef(function TimeSelectionSection(
       aria-label="Escolha do horário"
     >
       <StepShell
-        title="Escolha o horário"
+        title={
+          <>
+            <span>Escolha o</span>
+            <br />
+            <span>horário</span>
+          </>
+        }
         subtitle={selectedPeriod ? 'Selecione um horário disponível' : 'Selecione o período do dia'}
         stepLabel={stepLabel}
         stepProgress={stepProgress}

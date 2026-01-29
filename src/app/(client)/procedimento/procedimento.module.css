@@ -722,6 +722,11 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.continueButtonHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .continueButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;

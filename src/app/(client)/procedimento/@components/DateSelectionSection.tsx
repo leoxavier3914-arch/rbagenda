@@ -53,7 +53,13 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
       aria-label="Escolha do dia"
     >
       <StepShell
-        title="Escolha o dia"
+        title={
+          <>
+            <span>Escolha o</span>
+            <br />
+            <span>dia</span>
+          </>
+        }
         subtitle="Selecione uma data disponível"
         stepLabel={stepLabel}
         stepProgress={stepProgress}

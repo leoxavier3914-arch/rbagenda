@@ -142,6 +142,7 @@
 }
 
 .title {
+  display: block;
   font-family: var(--heading-font);
   font-weight: 700;
   font-size: var(--heading-size, clamp(24px, 4.6vw, 36px));

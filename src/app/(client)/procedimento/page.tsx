@@ -917,6 +917,7 @@ export default function ProcedimentoPage() {
     return continueButtonDisabled
   })()
   const stepContinueLabel = currentStep === 4 ? continueButtonLabel : 'Continuar'
+  const showContinueButton = !stepContinueDisabled
 
   const handleStepContinue = useCallback(() => {
     if (currentStep === 1 && (!selectedProcedureId || catalogStatus !== 'ready')) return
@@ -994,9 +995,14 @@ export default function ProcedimentoPage() {
             <div className={styles.wizardFooter}>
               <button
                 type="button"
-                className={styles.continueButton}
+                className={[
+                  styles.continueButton,
+                  showContinueButton ? '' : styles.continueButtonHidden,
+                ].filter(Boolean).join(' ')}
                 onClick={handleStepContinue}
-                disabled={stepContinueDisabled}
+                disabled={!showContinueButton}
+                aria-hidden={showContinueButton ? undefined : true}
+                tabIndex={showContinueButton ? 0 : -1}
               >
                 {stepContinueLabel}
               </button>

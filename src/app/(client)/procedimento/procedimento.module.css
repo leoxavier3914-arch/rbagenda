@@ -153,6 +153,7 @@
 .headerCopy {
   display: grid;
   gap: 6px;
+  min-height: calc(clamp(24px, 4.6vw, 36px) * 2.12 + clamp(13px, 2.2vw, 15px) + 6px);
 }
 
 .headerSubtitle {
@@ -251,9 +252,12 @@
   min-height: 38px;
 }
 
-.gridControlsPlaceholder {
-  visibility: hidden;
-  pointer-events: none;
+.stepFooter {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .calendarPicker {
@@ -713,6 +717,11 @@
   text-transform: uppercase;
   color: var(--ink);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.continueButtonHidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .continueButton:disabled {

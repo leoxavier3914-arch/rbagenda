@@ -32,7 +32,8 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 16px);
-  min-height: 100dvh;
+  min-height: 100svh;
+  height: 100svh;
   justify-content: center;
   padding-bottom: 0;
 }
@@ -41,9 +42,9 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 20px 18px 8px;
-  min-height: 100dvh;
+  padding: clamp(8px, 2.4vh, 20px) 18px clamp(4px, 1.4vh, 8px);
   align-items: center;
+  max-height: 100svh;
 }
 
 .pageSection:global(.center) {
@@ -108,7 +109,7 @@
 .wizardFooter {
   position: static;
   width: 100%;
-  padding: 10px 20px calc(12px + env(safe-area-inset-bottom));
+  padding: clamp(6px, 1.2vh, 10px) 20px calc(8px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
 }
@@ -186,6 +187,48 @@
 
 .stepPanelTall {
   min-height: clamp(360px, 48vh, 440px);
+}
+
+@media (max-height: 740px) {
+  .page {
+    gap: clamp(6px, 1.2vw, 12px);
+  }
+
+  .wizard {
+    gap: clamp(6px, 1.2vw, 10px);
+  }
+
+  .wizardHeader {
+    gap: 4px;
+  }
+
+  .stepIndicator {
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+
+  .progressTrack {
+    margin: 0 auto 6px;
+  }
+
+  .title {
+    font-size: clamp(20px, 4vw, 30px);
+    min-height: calc(clamp(20px, 4vw, 30px) * 1.9);
+  }
+
+  .headerSubtitle {
+    font-size: clamp(12px, 2vw, 14px);
+    min-height: calc(clamp(12px, 2vw, 14px) * 2.1);
+  }
+
+  .glass {
+    padding: clamp(8px, 1.4vw, 12px);
+    max-height: calc(100svh - 160px);
+  }
+
+  .stepPanelTall {
+    min-height: clamp(320px, 46vh, 400px);
+  }
 }
 
 @supports not (height: 100dvh) {

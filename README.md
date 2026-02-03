@@ -13,7 +13,7 @@ Se você precisa apenas rodar localmente, siga o passo a passo rápido abaixo. A
 
 ## Como rodar localmente
 
-1. **Pré-requisitos**
+1. **Pré-requisitos**.
    - Node.js 18+ e npm 10+.
    - Conta no Supabase com um projeto criado.
    - Chaves de teste do Stripe (publishable e secret) para habilitar os fluxos de checkout.

@@ -49,7 +49,6 @@
   /* === Romeike hero layout (client-hero-wrapper) === */
   .client-hero-wrapper {
     min-height: 100vh;
-    min-height: 100svh;
     color: var(--ink);
     font-family: var(--font-family);
     font-size: var(--base-font-size);
@@ -69,7 +68,6 @@
   .client-hero-wrapper .page {
     position: relative;
     min-height: 100vh;
-    min-height: 100svh;
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -281,7 +279,6 @@
   .procedimento-root {
     position: relative;
     min-height: 100vh;
-    min-height: 100svh;
     z-index: 0;
     color: var(--ink);
   }

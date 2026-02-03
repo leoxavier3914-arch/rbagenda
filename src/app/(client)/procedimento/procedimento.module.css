@@ -5,6 +5,8 @@
   opacity: 0;
   will-change: opacity;
   transition: opacity 1s ease-out 0.5s;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .wrapper:global(.client-hero-wrapper) :global(.page) {
@@ -13,8 +15,15 @@
 }
 
 .wrapper :global(.page) {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   padding: 0;
-  min-height: auto;
+}
+
+.wrapper :global(.center) {
+  padding: 0;
+  align-items: center;
 }
 
 .heroReady {
@@ -32,7 +41,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 16px);
-  min-height: 100dvh;
+  min-height: 0;
   justify-content: center;
   padding-bottom: 0;
 }
@@ -41,13 +50,9 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 20px 18px 8px;
+  padding: 20px 18px calc(8px + env(safe-area-inset-bottom));
   min-height: 100dvh;
   align-items: center;
-}
-
-.pageSection:global(.center) {
-  min-height: auto;
 }
 
 .wizard {
@@ -56,7 +61,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 14px);
-  min-height: 100%;
+  min-height: 0;
   justify-content: center;
 }
 
@@ -102,7 +107,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100%;
+  min-height: 0;
 }
 
 .wizardFooter {
@@ -178,7 +183,7 @@
   box-shadow: var(--shadow-xl);
   padding: clamp(10px, 1.8vw, 16px);
   min-height: auto;
-  max-height: calc(100dvh - 180px);
+  max-height: calc(100dvh - 140px);
   overflow-y: auto;
   position: relative;
   z-index: 1;
@@ -189,13 +194,17 @@
 }
 
 @supports not (height: 100dvh) {
-  .page,
+  .wrapper,
+  .wrapper :global(.page) {
+    height: 100vh;
+  }
+
   .pageSection {
     min-height: 100vh;
   }
 
   .glass {
-    max-height: calc(100vh - 180px);
+    max-height: calc(100vh - 140px);
   }
 }
 

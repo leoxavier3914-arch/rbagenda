@@ -32,22 +32,23 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 16px);
-  min-height: 100dvh;
+  min-height: max(
+    0px,
+    calc(100dvh - (var(--procedimento-page-padding-top) + var(--procedimento-page-padding-bottom)))
+  );
   justify-content: center;
   padding-bottom: 0;
 }
 
 .pageSection {
+  --procedimento-page-padding-top: 20px;
+  --procedimento-page-padding-bottom: calc(8px + env(safe-area-inset-bottom));
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 20px 18px 8px;
-  min-height: 100dvh;
-  align-items: center;
-}
-
-.pageSection:global(.center) {
+  padding: var(--procedimento-page-padding-top) 18px var(--procedimento-page-padding-bottom);
   min-height: auto;
+  align-items: center;
 }
 
 .wizard {

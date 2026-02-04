@@ -49,6 +49,7 @@
   /* === Romeike hero layout (client-hero-wrapper) === */
   .client-hero-wrapper {
     min-height: 100vh;
+    min-height: 100svh;
     color: var(--ink);
     font-family: var(--font-family);
     font-size: var(--base-font-size);
@@ -68,12 +69,22 @@
   .client-hero-wrapper .page {
     position: relative;
     min-height: 100vh;
+    min-height: 100svh;
     z-index: 1;
     display: flex;
     flex-direction: column;
     gap: clamp(20px, 2.6vw, 30px);
     padding: calc(64px + env(safe-area-inset-top)) 0
       calc(26px + env(safe-area-inset-bottom));
+  }
+
+  .client-hero-wrapper.client-app-shell {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  .client-hero-wrapper.client-app-shell .page {
+    min-height: 100%;
   }
 
   .client-hero-wrapper .center {
@@ -279,6 +290,7 @@
   .procedimento-root {
     position: relative;
     min-height: 100vh;
+    min-height: 100svh;
     z-index: 0;
     color: var(--ink);
   }

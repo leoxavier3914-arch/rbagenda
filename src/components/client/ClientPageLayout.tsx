@@ -13,6 +13,7 @@ type ClientPageShellProps = ComponentPropsWithoutRef<'main'> & {
   heroReady?: boolean
   forceMotion?: boolean
   respectNoMotionHash?: boolean
+  viewport?: 'default' | 'app'
   children: ReactNode
 }
 
@@ -21,11 +22,13 @@ export function ClientPageShell({
   className,
   forceMotion = false,
   respectNoMotionHash = false,
+  viewport = 'default',
   children,
   ...rest
 }: ClientPageShellProps) {
   const wrapperClassName = joinClasses(
     'client-hero-wrapper',
+    viewport === 'app' ? 'client-app-shell' : undefined,
     heroReady ? 'client-hero-ready' : undefined,
     className,
   )

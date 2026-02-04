@@ -12,7 +12,7 @@ export default function SuportePage() {
   const { session, isReady: isSessionReady } = useClientSessionGuard();
 
   return (
-    <ClientPageShell heroReady={heroReady} forceMotion viewport="app">
+    <ClientPageShell heroReady={heroReady} forceMotion>
       <ClientSection className={styles.section}>
         <SupportHeader />
 

@@ -11,7 +11,7 @@ type AppointmentsWrapperProps = {
 
 export function AppointmentsWrapper({ heroReady, children }: AppointmentsWrapperProps) {
   return (
-    <ClientPageShell heroReady={heroReady} className={styles.wrapper} viewport="app">
+    <ClientPageShell heroReady={heroReady} className={styles.wrapper}>
       <ClientSection className={styles.pageSection}>
         <div className={styles.page}>{children}</div>
       </ClientSection>

@@ -5,24 +5,16 @@
   opacity: 0;
   will-change: opacity;
   transition: opacity 1s ease-out 0.5s;
-  min-height: 100vh;
-  min-height: 100svh;
 }
 
 .wrapper:global(.client-hero-wrapper) :global(.page) {
   padding: 0;
-  min-height: 100%;
+  min-height: auto;
 }
 
 .wrapper :global(.page) {
-  height: 100%;
-  min-height: 0;
   padding: 0;
-}
-
-.wrapper :global(.center) {
-  padding: 0;
-  align-items: center;
+  min-height: auto;
 }
 
 .heroReady {
@@ -40,7 +32,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 16px);
-  min-height: 0;
+  min-height: 100dvh;
   justify-content: center;
   padding-bottom: 0;
 }
@@ -49,10 +41,13 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 20px 18px calc(8px + env(safe-area-inset-bottom));
-  flex: 1;
-  min-height: 0;
+  padding: 20px 18px 8px;
+  min-height: 100dvh;
   align-items: center;
+}
+
+.pageSection:global(.center) {
+  min-height: auto;
 }
 
 .wizard {
@@ -61,7 +56,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 14px);
-  min-height: 0;
+  min-height: 100%;
   justify-content: center;
 }
 
@@ -107,7 +102,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 0;
+  min-height: 100%;
 }
 
 .wizardFooter {
@@ -183,7 +178,7 @@
   box-shadow: var(--shadow-xl);
   padding: clamp(10px, 1.8vw, 16px);
   min-height: auto;
-  max-height: calc(100dvh - 140px);
+  max-height: calc(100dvh - 180px);
   overflow-y: auto;
   position: relative;
   z-index: 1;
@@ -194,17 +189,13 @@
 }
 
 @supports not (height: 100dvh) {
-  .wrapper,
-  .wrapper :global(.page) {
-    height: 100vh;
-  }
-
+  .page,
   .pageSection {
     min-height: 100vh;
   }
 
   .glass {
-    max-height: calc(100vh - 140px);
+    max-height: calc(100vh - 180px);
   }
 }
 

@@ -25,6 +25,14 @@
   box-sizing: border-box;
 }
 
+:global(.procedimento-root > div) {
+  min-height: auto;
+}
+
+:global(.procedimento-root > div > main) {
+  min-height: 0;
+}
+
 .page {
   position: relative;
   z-index: 1;

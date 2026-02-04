@@ -43,7 +43,7 @@ export default function DashboardRulesPage() {
   const heroReady = useClientPageReady()
 
   return (
-    <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
+    <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion viewport="app">
       <ClientSection className={styles.pageSection}>
         <div className={styles.page}>
           <div className={`${styles.content} ${styles.textReset}`}>

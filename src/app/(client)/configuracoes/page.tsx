@@ -31,7 +31,7 @@ export default function DashboardSettingsPage() {
   useClientSessionGuard()
 
   return (
-    <ClientPageShell heroReady={heroReady} forceMotion>
+    <ClientPageShell heroReady={heroReady} forceMotion viewport="app">
       <ClientSection>
         <div className={`${styles.panel} card`}>
           <div className={styles.headerArea}>

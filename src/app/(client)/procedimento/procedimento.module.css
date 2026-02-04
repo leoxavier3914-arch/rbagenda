@@ -5,20 +5,18 @@
   opacity: 0;
   will-change: opacity;
   transition: opacity 1s ease-out 0.5s;
-  height: 100dvh;
-  min-height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100svh;
 }
 
 .wrapper:global(.client-hero-wrapper) :global(.page) {
   padding: 0;
-  min-height: auto;
+  min-height: 100%;
 }
 
 .wrapper :global(.page) {
-  height: 100dvh;
+  height: 100%;
   min-height: 0;
-  overflow: hidden;
   padding: 0;
 }
 

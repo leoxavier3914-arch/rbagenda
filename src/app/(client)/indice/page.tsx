@@ -40,7 +40,7 @@ export default function DashboardIndexPage() {
   useClientSessionGuard()
 
   return (
-    <ClientPageShell heroReady={heroReady} forceMotion>
+    <ClientPageShell heroReady={heroReady} forceMotion viewport="app">
       <ClientSection>
         <div className={styles.panel}>
           <div className={styles.headerArea}>

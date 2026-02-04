@@ -464,7 +464,7 @@ export default function CatalogoPage() {
   }, [lightbox])
 
   return (
-    <ClientPageShell heroReady={heroReady} forceMotion viewport="app">
+    <ClientPageShell heroReady={heroReady} forceMotion>
       <ClientSection className={styles.section}>
         <div className={styles.headerArea}>
           <ClientPageHeader

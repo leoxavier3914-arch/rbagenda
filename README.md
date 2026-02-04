@@ -11,9 +11,9 @@ rbagenda é um aplicativo web para gerenciamento de agendamentos e pagamentos on
 
 Se você precisa apenas rodar localmente, siga o passo a passo rápido abaixo. As seções seguintes trazem detalhes de configuração, rotinas de manutenção e dicas para publicar o projeto.
 
-## Como rodar localmente. 
+## Como rodar localmente
 
-1. **Pré-requisitos**.
+1. **Pré-requisitos**
    - Node.js 18+ e npm 10+.
    - Conta no Supabase com um projeto criado.
    - Chaves de teste do Stripe (publishable e secret) para habilitar os fluxos de checkout.

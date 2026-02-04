@@ -576,7 +576,7 @@ export default function MeuPerfilPage() {
 
   return (
     <div className={styles.pageRoot}>
-      <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion viewport="app">
+      <ClientPageShell heroReady={heroReady} className={styles.wrapper} forceMotion>
         <section id="sectionPerfil" aria-label="Meu Perfil" className={styles.profileSection}>
           <div className={styles.profileStack}>
             <div

@@ -18,7 +18,6 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
       className={wrapperClassName}
       forceMotion
       respectNoMotionHash
-      viewport="app"
     >
       <ClientSection className={styles.pageSection}>
         <div className={styles.page}>{children}</div>

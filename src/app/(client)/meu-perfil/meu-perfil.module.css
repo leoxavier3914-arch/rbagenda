@@ -9,13 +9,11 @@
   color: var(--ink);
   width: 100%;
   min-height: 100vh;
-  min-height: 100svh;
 }
 
 .wrapper:global(.client-hero-wrapper) :global(.page) {
   padding: 0;
   min-height: 100vh;
-  min-height: 100svh;
 }
 
 .wrapper :global(.page) {

@@ -6,6 +6,7 @@
   will-change: opacity;
   transition: opacity 1s ease-out 0.5s;
   height: 100dvh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -51,7 +52,8 @@
   display: flex;
   justify-content: center;
   padding: 20px 18px calc(8px + env(safe-area-inset-bottom));
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
   align-items: center;
 }
 

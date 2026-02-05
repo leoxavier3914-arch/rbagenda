@@ -183,6 +183,12 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  html.procedimento-no-scroll,
+  body.procedimento-no-scroll {
+    height: 100%;
+    overflow: hidden;
+  }
+
   body.client-fullscreen {
     --ink: #183f2e;
     --muted: #6a8f7f;

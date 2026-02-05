@@ -50,7 +50,7 @@
 .viewport {
   --procedimento-shell-padding: clamp(12px, 2.4vh, 24px);
   width: 100%;
-  min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -207,6 +207,12 @@
 
   .glass {
     max-height: min(72vh, 620px);
+  }
+}
+
+@supports (height: 100dvh) {
+  .viewport {
+    min-height: 100dvh;
   }
 }
 

@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useLayoutEffect } from 'react'
 
 import { ClientPageShell } from '@/components/client/ClientPageLayout'
 
@@ -11,6 +11,18 @@ type ProcedimentoWrapperProps = {
 
 export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapperProps) {
   const wrapperClassName = `${styles.wrapper} ${heroReady ? styles.heroReady : ''}`
+
+  useLayoutEffect(() => {
+    const body = document.body
+    const root = document.documentElement
+    body.classList.add('procedimento-no-scroll')
+    root.classList.add('procedimento-no-scroll')
+
+    return () => {
+      body.classList.remove('procedimento-no-scroll')
+      root.classList.remove('procedimento-no-scroll')
+    }
+  }, [])
 
   return (
     <ClientPageShell

@@ -68,7 +68,7 @@
   gap: clamp(10px, 1.6vw, 14px);
   min-height: 100%;
   justify-content: center;
-  transform: translateY(-6px);
+  transform: translateY(var(--procedimento-center-offset, 0px));
 }
 
 .wizardHeader {

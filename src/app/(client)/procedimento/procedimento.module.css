@@ -9,12 +9,14 @@
 
 .wrapper:global(.client-hero-wrapper) :global(.page) {
   padding: 0;
-  min-height: auto;
+  min-height: 100dvh;
+  display: flex;
+  align-items: stretch;
 }
 
 .wrapper :global(.page) {
   padding: 0;
-  min-height: auto;
+  min-height: 100dvh;
 }
 
 .heroReady {
@@ -40,23 +42,22 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 16px);
-  min-height: max(
-    0px,
-    calc(100dvh - (var(--procedimento-page-padding-top) + var(--procedimento-page-padding-bottom)))
-  );
+  min-height: 100%;
   justify-content: center;
   padding-bottom: 0;
 }
 
-.pageSection {
-  --procedimento-page-padding-top: 20px;
-  --procedimento-page-padding-bottom: calc(8px + env(safe-area-inset-bottom));
+.viewport {
+  --procedimento-shell-padding: clamp(12px, 2.4vh, 24px);
   width: 100%;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
-  padding: var(--procedimento-page-padding-top) 18px var(--procedimento-page-padding-bottom);
-  min-height: auto;
   align-items: center;
+  padding:
+    calc(var(--procedimento-shell-padding) + env(safe-area-inset-top))
+    18px
+    calc(var(--procedimento-shell-padding) + env(safe-area-inset-bottom));
 }
 
 .wizard {
@@ -67,6 +68,7 @@
   gap: clamp(10px, 1.6vw, 14px);
   min-height: 100%;
   justify-content: center;
+  transform: translateY(-6px);
 }
 
 .wizardHeader {
@@ -187,7 +189,7 @@
   box-shadow: var(--shadow-xl);
   padding: clamp(10px, 1.8vw, 16px);
   min-height: auto;
-  max-height: calc(100dvh - 180px);
+  max-height: min(72dvh, 620px);
   overflow-y: auto;
   position: relative;
   z-index: 1;
@@ -199,12 +201,12 @@
 
 @supports not (height: 100dvh) {
   .page,
-  .pageSection {
+  .viewport {
     min-height: 100vh;
   }
 
   .glass {
-    max-height: calc(100vh - 180px);
+    max-height: min(72vh, 620px);
   }
 }
 

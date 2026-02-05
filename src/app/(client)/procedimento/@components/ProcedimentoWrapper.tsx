@@ -29,31 +29,27 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
     const target = viewportRef.current
     if (!target) return
 
-    const updateOffset = () => {
+    const updateViewport = () => {
       const visual = window.visualViewport
       if (!visual) {
-        target.style.setProperty('--procedimento-center-offset', '0px')
+        target.style.setProperty('--procedimento-vv-height', '100svh')
+        target.style.setProperty('--procedimento-vv-offset', '0px')
         return
       }
 
-      const layoutHeight = window.innerHeight
-      const visualHeight = visual.height
-      const offsetTop = visual.offsetTop || 0
-      const centerDelta = (visualHeight - layoutHeight) / 2 + offsetTop
-      const clamped = Math.max(-40, Math.min(40, Math.round(centerDelta)))
-
-      target.style.setProperty('--procedimento-center-offset', `${clamped}px`)
+      target.style.setProperty('--procedimento-vv-height', `${Math.round(visual.height)}px`)
+      target.style.setProperty('--procedimento-vv-offset', `${Math.round(visual.offsetTop || 0)}px`)
     }
 
-    updateOffset()
-    window.addEventListener('resize', updateOffset)
-    window.visualViewport?.addEventListener('resize', updateOffset)
-    window.visualViewport?.addEventListener('scroll', updateOffset)
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    window.visualViewport?.addEventListener('resize', updateViewport)
+    window.visualViewport?.addEventListener('scroll', updateViewport)
 
     return () => {
-      window.removeEventListener('resize', updateOffset)
-      window.visualViewport?.removeEventListener('resize', updateOffset)
-      window.visualViewport?.removeEventListener('scroll', updateOffset)
+      window.removeEventListener('resize', updateViewport)
+      window.visualViewport?.removeEventListener('resize', updateViewport)
+      window.visualViewport?.removeEventListener('scroll', updateViewport)
     }
   }, [])
 

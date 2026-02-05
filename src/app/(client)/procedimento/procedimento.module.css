@@ -50,7 +50,7 @@
 .viewport {
   --procedimento-shell-padding: clamp(12px, 2.4vh, 24px);
   width: 100%;
-  min-height: 100svh;
+  min-height: var(--procedimento-vv-height, 100svh);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -58,6 +58,7 @@
     calc(var(--procedimento-shell-padding) + env(safe-area-inset-top))
     18px
     calc(var(--procedimento-shell-padding) + env(safe-area-inset-bottom));
+  transform: translateY(var(--procedimento-vv-offset, 0px));
 }
 
 .wizard {
@@ -68,7 +69,7 @@
   gap: clamp(10px, 1.6vw, 14px);
   min-height: 100%;
   justify-content: center;
-  transform: translateY(var(--procedimento-center-offset, 0px));
+  transform: translateY(0);
 }
 
 .wizardHeader {

@@ -31,10 +31,18 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
 
     const updateOffset = () => {
       const visual = window.visualViewport
-      const visualHeight = visual?.height ?? window.innerHeight
-      const delta = window.innerHeight - visualHeight
-      const offset = Math.round(delta / 2)
-      target.style.setProperty('--procedimento-center-offset', `${offset}px`)
+      if (!visual) {
+        target.style.setProperty('--procedimento-center-offset', '0px')
+        return
+      }
+
+      const layoutHeight = window.innerHeight
+      const visualHeight = visual.height
+      const offsetTop = visual.offsetTop || 0
+      const centerDelta = (visualHeight - layoutHeight) / 2 + offsetTop
+      const clamped = Math.max(-40, Math.min(40, Math.round(centerDelta)))
+
+      target.style.setProperty('--procedimento-center-offset', `${clamped}px`)
     }
 
     updateOffset()

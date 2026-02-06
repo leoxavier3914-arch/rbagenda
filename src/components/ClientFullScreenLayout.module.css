@@ -7,6 +7,11 @@
   overflow-x: hidden;
 }
 
+:global(body.procedimento-no-scroll) .fullscreenWrapper {
+  height: var(--procedimento-vv-height, 100svh);
+  min-height: 0;
+}
+
 :global(body.client-fullscreen .brand-texture-overlay) {
   display: none;
 }

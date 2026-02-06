@@ -48,4 +48,3 @@ export type SummarySnapshot = {
   }
 }
 
-export type TimePeriod = 'all' | 'morning' | 'afternoon' | 'night'

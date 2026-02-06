@@ -18,7 +18,6 @@ import {
   ProcedimentoWrapper,
   SummaryModal,
   TechniqueSelectionSection,
-  TimeSelectionSection,
   TypeSelectionSection,
 } from './@components'
 
@@ -41,7 +40,6 @@ import type {
   ServiceTypeAssignment,
   SummarySnapshot,
   TechniqueCatalogEntry,
-  TimePeriod,
 } from './types'
 import styles from './procedimento.module.css'
 
@@ -97,7 +95,7 @@ export default function ProcedimentoPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null)
+  const [isPickingTime, setIsPickingTime] = useState(false)
   const [summarySnapshot, setSummarySnapshot] = useState<SummarySnapshot | null>(null)
   const [appointmentId, setAppointmentId] = useState<string | null>(null)
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
@@ -331,6 +329,8 @@ export default function ProcedimentoPage() {
 
   useEffect(() => {
     setSelectedSlot(null)
+    setSelectedDate(null)
+    setIsPickingTime(false)
   }, [selectedTechniqueId])
 
   const availability = useMemo(
@@ -497,41 +497,11 @@ export default function ProcedimentoPage() {
     serviceBufferMinutes,
   ])
 
-  const slotsByPeriod = useMemo(() => {
-    const grouped: Record<TimePeriod, string[]> = {
-      all: slots,
-      morning: [],
-      afternoon: [],
-      night: [],
-    }
-
-    slots.forEach((slotValue) => {
-      const [hourValue] = slotValue.split(':')
-      const hour = Number(hourValue)
-      if (!Number.isFinite(hour)) return
-      if (hour < 12) grouped.morning.push(slotValue)
-      else if (hour < 18) grouped.afternoon.push(slotValue)
-      else grouped.night.push(slotValue)
-    })
-
-    return grouped
-  }, [slots])
-
-  const visibleSlots = useMemo(() => {
-    if (!selectedPeriod) return []
-    if (selectedPeriod === 'all') return slotsByPeriod.all
-    return slotsByPeriod[selectedPeriod]
-  }, [selectedPeriod, slotsByPeriod])
-
   useEffect(() => {
-    if (!selectedPeriod) {
-      if (selectedSlot !== null) setSelectedSlot(null)
-      return
-    }
-    if (selectedSlot && !visibleSlots.includes(selectedSlot)) {
+    if (selectedSlot && !slots.includes(selectedSlot)) {
       setSelectedSlot(null)
     }
-  }, [selectedPeriod, selectedSlot, visibleSlots])
+  }, [selectedSlot, slots])
 
   const goToPreviousMonth = useCallback(() => {
     const previous = new Date(year, month - 1, 1)
@@ -552,7 +522,7 @@ export default function ProcedimentoPage() {
       setSelectedTechniqueId(null)
       setSelectedDate(null)
       setSelectedSlot(null)
-      setSelectedPeriod(null)
+      setIsPickingTime(false)
     },
     [selectedProcedureId],
   )
@@ -562,7 +532,7 @@ export default function ProcedimentoPage() {
     setSelectedTechniqueId(techniqueId)
     setSelectedDate(null)
     setSelectedSlot(null)
-    setSelectedPeriod(null)
+    setIsPickingTime(false)
   }, [selectedTechniqueId])
 
   const handleDaySelect = useCallback(
@@ -570,7 +540,7 @@ export default function ProcedimentoPage() {
       if (disabled || !canInteract) return
       setSelectedDate(dayIso)
       setSelectedSlot(null)
-      setSelectedPeriod(null)
+      setIsPickingTime(true)
     },
     [canInteract],
   )
@@ -582,14 +552,8 @@ export default function ProcedimentoPage() {
     },
     [],
   )
-
-  const handlePeriodSelect = useCallback((period: TimePeriod) => {
-    setSelectedPeriod(period)
-    setSelectedSlot(null)
-  }, [])
-
-  const handlePeriodReset = useCallback(() => {
-    setSelectedPeriod(null)
+  const handleBackToCalendar = useCallback(() => {
+    setIsPickingTime(false)
     setSelectedSlot(null)
   }, [])
 
@@ -602,10 +566,10 @@ export default function ProcedimentoPage() {
       setCurrentStep(2)
       return
     }
-    if (currentStep > 3 && !selectedDate) {
+    if (currentStep > 3) {
       setCurrentStep(3)
     }
-  }, [currentStep, selectedDate, selectedProcedureId, selectedTechniqueId])
+  }, [currentStep, selectedProcedureId, selectedTechniqueId])
 
   const summaryData = useMemo(() => {
     if (!selectedProcedure || !selectedTechnique || !selectedDate || !selectedSlot) return null
@@ -902,7 +866,7 @@ export default function ProcedimentoPage() {
   const continueButtonLabel = isCreatingAppointment ? 'Salvando agendamento…' : 'Ver resumo'
   const continueButtonDisabled = !summaryData || isCreatingAppointment
   const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
-  const totalSteps = 4
+  const totalSteps = 3
   const stepLabel = `Etapa ${currentStep} de ${totalSteps}`
   const stepProgress = `${Math.round((currentStep / totalSteps) * 100)}%`
   const stepProgressNode = (
@@ -913,22 +877,30 @@ export default function ProcedimentoPage() {
   const stepContinueDisabled = (() => {
     if (currentStep === 1) return !selectedProcedureId || catalogStatus !== 'ready'
     if (currentStep === 2) return !selectedTechniqueId
-    if (currentStep === 3) return !selectedDate
-    return continueButtonDisabled
+    if (currentStep === 3) return continueButtonDisabled
+    return true
   })()
-  const stepContinueLabel = currentStep === 4 ? continueButtonLabel : 'Continuar'
+  const stepContinueLabel = currentStep === totalSteps ? continueButtonLabel : 'Continuar'
   const showContinueButton = !stepContinueDisabled
 
   const handleStepContinue = useCallback(() => {
     if (currentStep === 1 && (!selectedProcedureId || catalogStatus !== 'ready')) return
     if (currentStep === 2 && !selectedTechniqueId) return
-    if (currentStep === 3 && !selectedDate) return
-    if (currentStep === 4) {
+    if (currentStep === 3 && continueButtonDisabled) return
+    if (currentStep === totalSteps) {
       handleContinue()
       return
     }
     setCurrentStep((previous) => Math.min(totalSteps, previous + 1))
-  }, [catalogStatus, currentStep, handleContinue, selectedDate, selectedProcedureId, selectedTechniqueId])
+  }, [
+    catalogStatus,
+    continueButtonDisabled,
+    currentStep,
+    handleContinue,
+    selectedProcedureId,
+    selectedTechniqueId,
+    totalSteps,
+  ])
 
   return (
     <ProcedimentoWrapper heroReady={heroReady}>
@@ -970,45 +942,41 @@ export default function ProcedimentoPage() {
                 onPreviousMonth={goToPreviousMonth}
                 onNextMonth={goToNextMonth}
                 onDaySelect={handleDaySelect}
-                stepLabel={stepLabel}
-                stepProgress={stepProgressNode}
-              />
-            ) : null}
-
-            {currentStep === 4 ? (
-              <TimeSelectionSection
+                isPickingTime={isPickingTime}
                 slotsContainerRef={slotsContainerRef}
-                selectedDate={selectedDate}
-                slots={visibleSlots}
+                slots={slots}
                 bookedSlots={bookedSlots}
                 selectedSlot={selectedSlot}
-                selectedPeriod={selectedPeriod}
-                actionMessage={actionMessage}
                 onSlotSelect={handleSlotSelect}
-                onPeriodSelect={handlePeriodSelect}
-                onBackToPeriods={handlePeriodReset}
+                onBackToCalendar={handleBackToCalendar}
+                actionMessage={actionMessage}
                 stepLabel={stepLabel}
                 stepProgress={stepProgressNode}
               />
             ) : null}
-
-            <div className={styles.wizardFooter}>
-              <button
-                type="button"
-                className={[
-                  styles.continueButton,
-                  showContinueButton ? '' : styles.continueButtonHidden,
-                ].filter(Boolean).join(' ')}
-                onClick={handleStepContinue}
-                disabled={!showContinueButton}
-                aria-hidden={showContinueButton ? undefined : true}
-                tabIndex={showContinueButton ? 0 : -1}
-              >
-                {stepContinueLabel}
-              </button>
-            </div>
           </div>
         </div>
+      </div>
+
+      <div
+        className={[
+          styles.continueDock,
+          showContinueButton ? '' : styles.continueDockHidden,
+        ].filter(Boolean).join(' ')}
+      >
+        <button
+          type="button"
+          className={[
+            styles.continueButton,
+            showContinueButton ? '' : styles.continueButtonHidden,
+          ].filter(Boolean).join(' ')}
+          onClick={handleStepContinue}
+          disabled={!showContinueButton}
+          aria-hidden={showContinueButton ? undefined : true}
+          tabIndex={showContinueButton ? 0 : -1}
+        >
+          {stepContinueLabel}
+        </button>
       </div>
 
       <SummaryModal

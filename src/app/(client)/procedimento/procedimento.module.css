@@ -7,16 +7,22 @@
   transition: opacity 1s ease-out 0.5s;
 }
 
+.wrapper:global(.client-hero-wrapper) {
+  min-height: var(--procedimento-vv-height, 100svh);
+  height: var(--procedimento-vv-height, 100svh);
+}
+
 .wrapper:global(.client-hero-wrapper) :global(.page) {
   padding: 0;
-  min-height: 100dvh;
-  display: flex;
-  align-items: stretch;
+  min-height: 100%;
+  height: 100%;
+  display: block;
 }
 
 .wrapper :global(.page) {
   padding: 0;
-  min-height: 100dvh;
+  min-height: 100%;
+  height: 100%;
 }
 
 .heroReady {
@@ -38,27 +44,57 @@
 .page {
   position: relative;
   z-index: 1;
+  --procedimento-step-gap: clamp(10px, 2vh, 16px);
+  --procedimento-card-gap: clamp(10px, 1.6vw, 14px);
+  --procedimento-card-height: 60px;
+  --procedimento-card-rows: 4;
+  --procedimento-card-stack: calc(
+    (var(--procedimento-card-height) * 4) + (var(--procedimento-card-gap) * 3)
+  );
+  --procedimento-panel-height: var(--procedimento-card-stack);
+  --procedimento-dock-width: clamp(320px, 92vw, 720px);
+  --procedimento-dock-bottom: calc(18px + env(safe-area-inset-bottom));
+  --procedimento-dock-height: 56px;
+  --procedimento-dock-gap: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 16px);
   min-height: 100%;
-  justify-content: center;
+  justify-content: flex-start;
   padding-bottom: 0;
 }
 
 .viewport {
   --procedimento-shell-padding: clamp(12px, 2.4vh, 24px);
+  --procedimento-top-offset: 0px;
+  --procedimento-bottom-offset: 0px;
   width: 100%;
-  min-height: var(--procedimento-vv-height, 100svh);
+  height: var(--procedimento-vv-height, 100svh);
+  min-height: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   padding:
-    calc(var(--procedimento-shell-padding) + env(safe-area-inset-top))
+    calc(
+      var(--procedimento-shell-padding) +
+      env(safe-area-inset-top) +
+      var(--procedimento-top-offset) +
+      var(--procedimento-vv-offset, 0px)
+    )
     18px
-    calc(var(--procedimento-shell-padding) + env(safe-area-inset-bottom));
-  transform: translateY(var(--procedimento-vv-offset, 0px));
+    calc(
+      var(--procedimento-shell-padding) +
+      env(safe-area-inset-bottom) +
+      var(--procedimento-bottom-offset)
+    );
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .viewport {
+    --procedimento-top-offset: clamp(72px, 11vh, 104px);
+    --procedimento-bottom-offset: clamp(12px, 5vh, 44px);
+  }
 }
 
 .wizard {
@@ -67,9 +103,10 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vw, 14px);
-  min-height: 100%;
-  justify-content: center;
-  transform: translateY(0);
+  min-height: 0;
+  justify-content: flex-start;
+  margin-block: auto;
+  transform: none;
 }
 
 .wizardHeader {
@@ -88,7 +125,7 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--ink) 70%, transparent);
   display: inline-block;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .progressTrack {
@@ -98,7 +135,7 @@
   background: rgba(255, 255, 255, 0.5);
   overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
-  margin: 0 auto 8px;
+  margin: 0 auto;
 }
 
 .progressFill {
@@ -112,9 +149,9 @@
 .wizardBody {
   width: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 100%;
+  min-height: 0;
+  justify-content: flex-start;
 }
 
 .wizardFooter {
@@ -141,8 +178,12 @@
 .stack {
   display: grid;
   justify-items: center;
-  gap: clamp(8px, 1.4vw, 12px);
+  gap: var(--procedimento-step-gap);
   width: 100%;
+}
+
+.stepShell {
+  gap: var(--procedimento-step-gap-tight, clamp(6px, 1.2vh, 10px));
 }
 
 .header {
@@ -151,6 +192,7 @@
   align-items: center;
   text-align: center;
   width: 100%;
+  gap: var(--procedimento-step-gap);
 }
 
 .title {
@@ -166,7 +208,7 @@
 
 .headerCopy {
   display: grid;
-  gap: 6px;
+  gap: var(--procedimento-step-gap);
 }
 
 .headerSubtitle {
@@ -213,7 +255,7 @@
 
 @supports (height: 100dvh) {
   .viewport {
-    min-height: 100dvh;
+    height: var(--procedimento-vv-height, 100dvh);
   }
 }
 
@@ -247,6 +289,11 @@
 .labelGhost {
   opacity: 0;
   pointer-events: none;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  line-height: 0;
 }
 
 .gridWrapper {
@@ -254,12 +301,16 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: var(--procedimento-panel-height);
+  min-height: var(--procedimento-panel-height);
+  max-height: var(--procedimento-panel-height);
 }
 
 .grid {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(10px, 1.6vw, 14px);
+  display: grid;
+  grid-template-rows: repeat(var(--procedimento-card-rows), minmax(0, 1fr));
+  gap: var(--procedimento-card-gap);
+  height: 100%;
 }
 
 .gridControls {
@@ -274,20 +325,17 @@
 }
 
 .stepFooter {
-  min-height: 38px;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  margin-top: 0;
 }
 
-.calendarPicker {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.stepFooter[data-empty='true'] {
+  min-height: 0;
   margin-top: 0;
-  pointer-events: none;
 }
 
 .navButton {
@@ -336,7 +384,7 @@
 .card {
   position: relative;
   width: 100%;
-  min-height: 60px;
+  min-height: var(--procedimento-card-height);
   border-radius: var(--radius-inner);
   border: 1.6px solid var(--glass-stroke);
   background: rgba(255, 255, 255, 0.65);
@@ -510,7 +558,19 @@
   align-items: center;
   justify-content: space-between;
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.calendarPanel {
+  width: 100%;
+  height: var(--procedimento-panel-height);
+  min-height: var(--procedimento-panel-height);
+  max-height: var(--procedimento-panel-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding-top: 0;
 }
 
 .calendarNav {
@@ -547,8 +607,14 @@
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 6px;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.calendarGridDays {
+  flex: 1;
+  align-content: stretch;
+  grid-auto-rows: minmax(0, 1fr);
 }
 
 .calendarDay {
@@ -556,11 +622,13 @@
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.78);
-  padding: 10px 0;
+  padding: 8px 0;
+  min-height: clamp(30px, 4.6vh, 44px);
   font-weight: 600;
   color: var(--ink);
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: center;
 }
 
 .calendarDay[data-outside-month='true'] {
@@ -604,7 +672,9 @@
   border: none;
   cursor: default;
   box-shadow: none;
-  padding: 0;
+  padding: 4px 0;
+  min-height: auto;
+  text-align: center;
 }
 
 .calendarLegend {
@@ -689,6 +759,16 @@
   color: var(--muted);
 }
 
+.slotsScroll {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
 .slots {
   display: flex;
   flex-wrap: wrap;
@@ -727,7 +807,7 @@
 }
 
 .continueButton {
-  width: clamp(320px, 92vw, 720px);
+  width: 100%;
   padding: 14px 18px;
   border-radius: 18px;
   border: 1px solid rgba(0, 0, 0, 0.12);
@@ -741,8 +821,53 @@
 }
 
 .continueButtonHidden {
-  visibility: hidden;
+  display: none;
   pointer-events: none;
+}
+
+.continueDock {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: var(--procedimento-dock-bottom);
+  width: var(--procedimento-dock-width);
+  height: var(--procedimento-dock-height);
+  z-index: 35;
+  pointer-events: none;
+}
+
+.continueDock .continueButton {
+  pointer-events: auto;
+}
+
+.paginationDock {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(
+    var(--procedimento-dock-bottom) +
+    var(--procedimento-dock-height) + var(--procedimento-dock-gap)
+  );
+  width: var(--procedimento-dock-width);
+  z-index: 34;
+  pointer-events: none;
+}
+
+.paginationDock .gridControls {
+  pointer-events: auto;
+}
+
+
+.continueDockHidden {
+  display: none;
+}
+
+.wizardFooterHidden {
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
 
 .continueButton:disabled {
@@ -1004,7 +1129,7 @@
 }
 
 .procedimentoHeader {
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .muted {

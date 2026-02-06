@@ -70,29 +70,29 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
         stepLabel={stepLabel}
         stepProgress={stepProgress}
         ariaLabel="Escolha do tipo"
-        panelLabel="TIPO"
-        panelLabelClassName={styles.label}
         footer={showPagination ? (
-          <div className={styles.gridControls} aria-label="Paginação do grid">
-            <button
-              type="button"
-              className={styles.navButton}
-              onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-              disabled={pageIndex === 0}
-              aria-label="Página anterior"
-            >
-              ‹
-            </button>
-            <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-            <button
-              type="button"
-              className={styles.navButton}
-              onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-              disabled={pageIndex + 1 >= totalPages}
-              aria-label="Próxima página"
-            >
-              ›
-            </button>
+          <div className={styles.paginationDock}>
+            <div className={styles.gridControls} aria-label="Paginação do grid">
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+                disabled={pageIndex === 0}
+                aria-label="Página anterior"
+              >
+                ‹
+              </button>
+              <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
+                disabled={pageIndex + 1 >= totalPages}
+                aria-label="Próxima página"
+              >
+                ›
+              </button>
+            </div>
           </div>
         ) : null}
       >

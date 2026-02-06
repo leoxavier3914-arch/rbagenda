@@ -7,6 +7,11 @@
   color: inherit;
 }
 
+:global(body.procedimento-no-scroll) .content {
+  height: var(--procedimento-vv-height, 100svh);
+  min-height: 0;
+}
+
 .contentInner {
   margin: 0 auto;
   width: min(100%, 1120px);

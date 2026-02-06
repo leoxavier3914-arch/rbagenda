@@ -26,7 +26,7 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
   }, [])
 
   useLayoutEffect(() => {
-    const target = viewportRef.current
+    const target = document.documentElement
     if (!target) return
 
     const updateViewport = () => {
@@ -37,8 +37,10 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
         return
       }
 
-      target.style.setProperty('--procedimento-vv-height', `${Math.round(visual.height)}px`)
-      target.style.setProperty('--procedimento-vv-offset', `${Math.round(visual.offsetTop || 0)}px`)
+      const height = Math.round(visual.height)
+      const offsetTop = Math.max(0, Math.round(visual.offsetTop || 0))
+      target.style.setProperty('--procedimento-vv-height', `${height}px`)
+      target.style.setProperty('--procedimento-vv-offset', `${offsetTop}px`)
     }
 
     updateViewport()
@@ -50,6 +52,8 @@ export function ProcedimentoWrapper({ heroReady, children }: ProcedimentoWrapper
       window.removeEventListener('resize', updateViewport)
       window.visualViewport?.removeEventListener('resize', updateViewport)
       window.visualViewport?.removeEventListener('scroll', updateViewport)
+      target.style.removeProperty('--procedimento-vv-height')
+      target.style.removeProperty('--procedimento-vv-offset')
     }
   }, [])
 

@@ -391,7 +391,7 @@
   min-height: var(--procedimento-card-height);
   border-radius: var(--radius-inner);
   border: 1.6px solid var(--glass-stroke);
-  background: rgba(255, 255, 255, 0.65);
+  background: linear-gradient(180deg, var(--inner-top), var(--inner-bottom));
   box-shadow: 0 12px 24px rgba(28, 75, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   display: flex;
   padding: 12px 14px;
@@ -403,7 +403,7 @@
 }
 
 .card[data-active='true'] {
-  background: rgba(230, 244, 237, 0.85);
+  background: linear-gradient(180deg, #f7fcf9, #dfeae4);
   border-color: rgba(31, 98, 66, 0.6);
   box-shadow: 0 0 0 2px rgba(99, 140, 118, 0.28), 0 18px 32px rgba(24, 63, 46, 0.18);
   transform: translateY(-4px);

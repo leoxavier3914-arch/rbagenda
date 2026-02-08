@@ -1065,6 +1065,41 @@
   border-radius: 12px;
   padding: 12px 10px;
   box-shadow: none;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 10px 22px rgba(24, 63, 46, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.summaryActions.summaryActions button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.26), transparent 60%);
+  opacity: 0.9;
+}
+
+.summaryActions.summaryActions button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -14px 22px rgba(0, 0, 0, 0.06);
+}
+
+.summaryActions.summaryActions button:hover:not(:disabled) {
+  box-shadow: 0 14px 30px rgba(24, 63, 46, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.summaryActions.summaryActions button:active:not(:disabled) {
+  box-shadow: 0 8px 16px rgba(24, 63, 46, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.summaryActions.summaryActions button:last-child {
+  box-shadow: 0 8px 18px rgba(24, 63, 46, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
 
 .summaryTotalRow {

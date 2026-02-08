@@ -164,3 +164,9 @@ Este arquivo registra implementacoes realizadas no projeto.
 - Implementacao: Gradiente dos cards do procedimento (Step 1/2)
 - Resumo: Aplicado o mesmo gradiente do grid de "Meus agendamentos" nos cards de opcoes do Step 1/2.
 - Motivo: Igualar cores/degrade entre telas conforme referencia enviada.
+
+- Data: 2026-02-08
+- Horario: 11:56
+- Implementacao: Profundidade sutil nos botoes do resumo (Pagar sinal/Cancelar)
+- Resumo: Adicionado brilho interno e sombra suave nos botoes de acao do modal de resumo, mantendo o layout 50/50.
+- Motivo: Recuperar o acabamento de profundidade que estava mais bonito, sem mudar cores/tokens do design.

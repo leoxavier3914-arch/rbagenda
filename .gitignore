@@ -44,3 +44,5 @@ next-env.d.ts
 # local exports / temp
 users-export.csv
 supabase/.temp/
+AGENTS.md
+tmp_tropical_avenue.zip

@@ -17,6 +17,7 @@ type ClientModalProps = {
   actions?: ReactNode
   bodyClassName?: string
   actionsClassName?: string
+  titleClassName?: string
   contentClassName?: string
   disableBackdropClose?: boolean
   wrapBody?: boolean
@@ -46,6 +47,7 @@ export function ClientModal({
   actions,
   bodyClassName,
   actionsClassName,
+  titleClassName,
   contentClassName,
   disableBackdropClose,
   wrapBody = true,
@@ -60,6 +62,7 @@ export function ClientModal({
   const mergedContentClass = [sizeClass, toneClass, contentClassName].filter(Boolean).join(' ')
   const mergedBodyClass = [styles.modalBody, bodyClassName].filter(Boolean).join(' ')
   const mergedActionsClass = [styles.modalActions, actionsClassName].filter(Boolean).join(' ')
+  const mergedTitleClass = [styles.modalTitle, titleClassName].filter(Boolean).join(' ')
 
   const body = wrapBody ? (
     <div className={mergedBodyClass}>
@@ -84,7 +87,7 @@ export function ClientModal({
       }}
     >
       {icon ? <div className={styles.modalIcon}>{icon}</div> : null}
-      <h2 id={headingId} className={styles.modalTitle}>{title}</h2>
+      <h2 id={headingId} className={mergedTitleClass}>{title}</h2>
       {body}
       {actions ? <div className={mergedActionsClass}>{actions}</div> : null}
     </ClientBaseModal>

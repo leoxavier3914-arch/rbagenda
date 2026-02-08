@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Local font: Tropical Avenue (see license notes in public/fonts/tropical-avenue). */
+@font-face {
+  font-family: "Tropical Avenue";
+  src: url("/fonts/tropical-avenue/tropical-avenue.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
 @layer base {
   :root {
     color-scheme: light;

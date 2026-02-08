@@ -55,26 +55,24 @@ Use o segredo configurado no Stripe na variável `STRIPE_WEBHOOK_SECRET`. Esse w
 ### Agendador de rotinas (cron)
 
 Opção 1
-Para que agendamentos com opção "pagar depois" sejam automaticamente cancelados após 2 h sem pagamento e para finalizar agendamentos passados, utilize um agendador que invoque a função `cron-maintain-appointments` incluída neste repositório.
-
+Para que agendamentos com opção "pagar depois" sejam automaticamente cancelados após 2 h sem pagamento e para finalizar agendamentos passados, utilize um agendador que invoque a função `cron-maintain-appointments` incluída neste repositório.
 
 1. Certifique-se de ter o [Supabase CLI](https://supabase.com/docs/guides/cli) instalado e faça login no projeto (`supabase login`).
 2. Implante a função executando:
    ```bash
    supabase functions deploy cron-maintain-appointments --project-ref <seu-projeto>
    ```
-3. No painel do Supabase, crie um **Scheduled Function** com frequência de 15 minutos apontando para `cron-maintain-appointments`.
+3. No painel do Supabase, crie um **Scheduled Function** com frequência de 15 minutos apontando para `cron-maintain-appointments`.
 4. Defina as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no ambiente da função (em `Functions > cron-maintain-appointments > Settings`).
 
 A função lê diretamente as tabelas `appointments` e `appointment_payment_totals` usando a service role e replica a lógica de `src/lib/appointments.ts`, finalizando compromissos passados e cancelando pendentes sem sinal pago dentro do Supabase.
 
- 
 #### Opção 2 — GitHub Actions
 
 Caso o Supabase Scheduler não esteja disponível no plano do projeto, utilize o workflow `.github/workflows/maintain-appointments.yml`:
 
 1. No GitHub, acesse **Settings → Secrets and variables → Actions** e cadastre os segredos `SUPABASE_FUNCTION_URL` (URL pública da função) e `SUPABASE_SERVICE_ROLE_KEY` (chave service role).
-2. O workflow executa a cada 15 minutos (`cron: "*/15 * * * *"`) e faz um `POST` na função Edge. A execução manual também fica disponível em **Actions → Maintain Supabase appointments → Run workflow**.
+2. O workflow executa a cada 15 minutos (`cron: "*/15 * * * *"`) e faz um `POST` na função Edge. A execução manual também fica disponível em **Actions → Maintain Supabase appointments → Run workflow**.
 3. A função Edge deve estar implantada e com as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` configuradas em seu ambiente, pois ela usa a service role para atualizar as tabelas.
 
 ## Armazenamento de fotos de serviços (Supabase Storage)
@@ -116,7 +114,7 @@ Todo o código-fonte está na pasta `src/`, seguindo o padrão do App Router do 
 
 ## Instalação como PWA
 
-A aplicação está configurada para ser instalada na tela inicial em dispositivos iOS e Android por meio de um manifesto Web App (`/manifest.webmanifest`). Para personalizar os ícones exibidos durante a instalação, adicione arquivos PNG na pasta `public/icons/` (não versionados neste repositório) mantendo os seguintes nomes e dimensões:
+A aplicação está configurada para ser instalada na tela inicial em dispositivos iOS e Android por meio de um manifesto Web App (`/manifest.webmanifest`). Os ícones vivem em `public/icons/`. O repositório já inclui `icon-192.png` e `apple-touch-icon.png`. Para cobertura completa, adicione também os arquivos abaixo mantendo os nomes e dimensões:
 
 | Arquivo | Dimensão | Uso principal |
 | --- | --- | --- |

@@ -171,8 +171,12 @@
   min-height: auto;
 }
 
+.section#sectionDia .glass {
+  padding-top: clamp(6px, 1.2vw, 10px);
+}
+
 .section + .section {
- margin-top: clamp(56px, 7vh, 80px);
+  margin-top: clamp(56px, 7vh, 80px);
 }
 
 .stack {
@@ -558,7 +562,7 @@
   align-items: center;
   justify-content: space-between;
   margin-top: 0;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .calendarPanel {
@@ -608,7 +612,7 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .calendarGridDays {
@@ -950,23 +954,134 @@
   cursor: not-allowed;
 }
 
-.summaryModal {
+.summaryModal.summaryModal {
   text-align: left;
+  /* Override ClientModal padding (set in another CSS module) without !important. */
+  padding: 12px 24px 20px;
+}
+
+.summaryModal .summaryTitle {
+  font-family: "Tropical Avenue", var(--heading-font);
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.summaryBody {
+  gap: 12px;
 }
 
 .summaryList {
   display: flex;
   flex-direction: column;
+  gap: 0;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.2px solid var(--glass-stroke);
+  border-radius: var(--radius-inner);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  margin-bottom: 8px;
+  padding: 10px 12px;
+  align-items: center;
+}
+
+.summaryRow + .summaryRow {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.summaryRowContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.summaryRowAction {
+  min-width: 0 !important;
+  width: auto;
+  height: 24px;
+  padding: 4px 10px !important;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: none;
+  opacity: 0.78;
+  justify-self: end;
+}
+
+.summaryInput {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 18px rgba(28, 75, 56, 0.06);
+  font: inherit;
   font-size: 14px;
   color: var(--ink);
 }
 
-.summaryLine {
+.summaryNotice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.summaryTotals {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryActions.summaryActions {
+  width: 100%;
+  display: flex;
   gap: 10px;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.summaryActions.summaryActions button {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 12px;
+  padding: 12px 10px;
+  box-shadow: none;
+}
+
+.summaryTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summaryTotalLabel {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.summaryTotalValue {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .paletteButton {

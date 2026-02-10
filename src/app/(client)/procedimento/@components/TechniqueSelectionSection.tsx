@@ -1,7 +1,6 @@
 import { ForwardedRef, forwardRef, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-import { LashIcon } from '@/components/client/LashIcon'
-
+import { PaginationDots } from './PaginationDots'
 import { ProcedimentoCard } from './ProcedimentoCard'
 import { ProcedimentoGrid } from './ProcedimentoGrid'
 import { StepShell } from './StepShell'
@@ -62,10 +61,6 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
     return techniques.slice(start, start + pageSize)
   }, [pageIndex, pageSize, techniques])
 
-  const showPagination =
-    techniques.length > 0 &&
-    totalPages > 1
-
   return (
     <section
       ref={ref}
@@ -75,42 +70,22 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
       aria-label="Escolha da técnica"
     >
       <StepShell
-        title={(
-          <>
-            <span>Escolha sua</span>
-            <br />
-            <span>técnica</span>
-          </>
-        )}
-        subtitle="Qual técnica você deseja? Você poderá ajustar depois."
+        title="Escolha sua Técnica"
+        subtitle="Escolha o estilo dos seus cílios:"
         stepLabel={stepLabel}
         stepProgress={stepProgress}
         ariaLabel="Escolha da técnica"
-        footer={showPagination ? (
-          <div className={styles.paginationDock}>
-            <div className={styles.gridControls} aria-label="Paginação do grid">
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-                disabled={pageIndex === 0}
-                aria-label="Página anterior"
-              >
-                ‹
-              </button>
-              <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-                disabled={pageIndex + 1 >= totalPages}
-                aria-label="Próxima página"
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        ) : null}
+        useGlass={false}
+        footer={(
+          <PaginationDots
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            ariaLabel="Paginação do grid"
+            onPrevious={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+            onNext={() => setPageIndex((previous) => Math.min(Math.max(totalPages - 1, 0), previous + 1))}
+            onSelect={(index) => setPageIndex(() => Math.min(Math.max(index, 0), Math.max(totalPages - 1, 0)))}
+          />
+        )}
       >
         {catalogStatus === 'ready' && selectedProcedure ? (
           <>
@@ -124,43 +99,40 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
               >
                 {techniquesPage.map((technique) => {
                   const isActive = selectedTechniqueId === technique.id
+                  const subtitle = technique.slug
+                    ? String(technique.slug).replace(/-/g, ' ')
+                    : `${Math.max(0, Math.round(technique.duration_min))} min`
                   return (
                     <ProcedimentoCard
                       key={technique.id}
                       active={isActive}
                       onClick={() => onTechniqueSelect(technique.id)}
                     >
-                      <span className={styles.cardIcon} aria-hidden="true">
-                        <LashIcon />
-                      </span>
-                      <span className={styles.cardContent}>
-                        <span className={styles.cardTitle}>{technique.name}</span>
-                      </span>
-                      <span className={styles.cardIndicator} aria-hidden="true">
-                        {isActive ? (
-                          <svg viewBox="0 0 24 24" role="presentation">
-                            <path
-                              d="M20 6L9 17l-5-5"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.6"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        ) : (
-                          <svg viewBox="0 0 24 24" role="presentation">
-                            <path
-                              d="M9 6l6 6-6 6"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.4"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </span>
+                      <div className={styles.cardV2}>
+                        <div className={styles.cardV2Header}>
+                          <span className={styles.cardV2Title}>{technique.name}</span>
+                          <span className={styles.cardV2Check} data-visible={isActive ? 'true' : 'false'} aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="presentation">
+                              <path
+                                d="M20 6L9 17l-5-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.6"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </span>
+                        </div>
+                        <div className={styles.cardV2Art} aria-hidden="true">
+                          <div className={styles.cardV2ArtInner}>
+                            <img src="/photos/olhopadrao.png" alt="" />
+                          </div>
+                        </div>
+                        <div className={styles.cardV2Band} data-empty={subtitle ? 'false' : 'true'}>
+                          <span className={styles.cardV2BandText}>{subtitle}</span>
+                        </div>
+                      </div>
                     </ProcedimentoCard>
                   )
                 })}
@@ -180,3 +152,10 @@ export const TechniqueSelectionSection = forwardRef(function TechniqueSelectionS
     </section>
   )
 })
+
+
+
+
+
+
+

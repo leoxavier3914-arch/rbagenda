@@ -14,8 +14,13 @@ export function ProcedimentoHeader({ title, subtitle, eyebrow, progress, classNa
   const headerClassName = [styles.header, className].filter(Boolean).join(' ')
   return (
     <header className={headerClassName}>
-      {eyebrow ? <span className={styles.stepIndicator}>{eyebrow}</span> : null}
-      {progress}
+      {eyebrow || progress ? (
+        <div className={styles.wizardHeader}>
+          {eyebrow ? <span className={styles.stepIndicator}>{eyebrow}</span> : null}
+          {progress}
+          <div className={styles.wizardHeaderDivider} aria-hidden="true" />
+        </div>
+      ) : null}
       <div className={styles.headerCopy}>
         <h1 className={styles.title}>{title}</h1>
         {subtitle ? <p className={styles.headerSubtitle}>{subtitle}</p> : null}

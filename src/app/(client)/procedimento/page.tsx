@@ -95,7 +95,7 @@ export default function ProcedimentoPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [isPickingTime, setIsPickingTime] = useState(false)
+  const [isPickingTime, setIsPickingTime] = useState(true)
   const [summarySnapshot, setSummarySnapshot] = useState<SummarySnapshot | null>(null)
   const [appointmentId, setAppointmentId] = useState<string | null>(null)
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
@@ -351,6 +351,20 @@ export default function ProcedimentoPage() {
     return localeTitle.charAt(0).toUpperCase() + localeTitle.slice(1)
   }, [month, year])
 
+  const prevMonthLabel = useMemo(() => {
+    const localeTitle = new Date(year, month - 1, 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+    })
+    return localeTitle.charAt(0).toUpperCase() + localeTitle.slice(1)
+  }, [month, year])
+
+  const nextMonthLabel = useMemo(() => {
+    const localeTitle = new Date(year, month + 1, 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+    })
+    return localeTitle.charAt(0).toUpperCase() + localeTitle.slice(1)
+  }, [month, year])
+
   const serviceBufferMinutes = useMemo(() => {
     const normalized = normalizeNumber(selectedTechnique?.buffer_min)
     const fallback = FALLBACK_BUFFER_MINUTES
@@ -366,15 +380,14 @@ export default function ProcedimentoPage() {
     !availabilityError
 
   const calendarHeaderDays = useMemo(() => {
-    const firstDay = new Date(year, month, 1)
-    const startWeekday = firstDay.getDay()
     const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
-
-    return Array.from({ length: 7 }, (_, index) => labels[(startWeekday + index) % 7])
-  }, [month, year])
+    return labels
+  }, [])
 
   const calendarDays = useMemo(() => {
     const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const firstDay = new Date(year, month, 1)
+    const leadingSpacers = firstDay.getDay()
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -386,6 +399,16 @@ export default function ProcedimentoPage() {
       state: string
       isOutsideCurrentMonth: boolean
     }> = []
+
+    for (let index = 0; index < leadingSpacers; index += 1) {
+      dayEntries.push({
+        iso: `leading-${year}-${month}-${index}`,
+        day: '',
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = new Date(year, month, day)
@@ -417,6 +440,17 @@ export default function ProcedimentoPage() {
     for (let day = 1; day <= trailingSpacers; day += 1) {
       dayEntries.push({
         iso: `trailing-${year}-${month}-${day}`,
+        day: '',
+        isDisabled: true,
+        state: 'disabled',
+        isOutsideCurrentMonth: true,
+      })
+    }
+
+    while (dayEntries.length < 35) {
+      const fillerIndex = dayEntries.length + 1
+      dayEntries.push({
+        iso: `filler-${year}-${month}-${fillerIndex}`,
         day: '',
         isDisabled: true,
         state: 'disabled',
@@ -553,7 +587,7 @@ export default function ProcedimentoPage() {
     [],
   )
   const handleBackToCalendar = useCallback(() => {
-    setIsPickingTime(false)
+    setIsPickingTime(true)
     setSelectedSlot(null)
   }, [])
 
@@ -867,11 +901,15 @@ export default function ProcedimentoPage() {
   const continueButtonDisabled = !summaryData || isCreatingAppointment
   const depositAvailable = Boolean(summarySnapshot && summarySnapshot.depositCents > 0)
   const totalSteps = 3
-  const stepLabel = `Etapa ${currentStep} de ${totalSteps}`
-  const stepProgress = `${Math.round((currentStep / totalSteps) * 100)}%`
+  const stepLabel = `Passo ${currentStep} de ${totalSteps}`
+  const stepProgressPercent = totalSteps <= 0 ? 0 : (Math.min(Math.max(currentStep, 1), totalSteps) / totalSteps) * 100
   const stepProgressNode = (
-    <div className={styles.progressTrack} role="presentation">
-      <span className={styles.progressFill} style={{ width: stepProgress }} />
+    <div
+      className={styles.progressTrack}
+      role="presentation"
+      aria-hidden="true"
+    >
+      <span className={styles.progressFill} style={{ width: `${stepProgressPercent}%` }} />
     </div>
   )
   const stepContinueDisabled = (() => {
@@ -881,7 +919,6 @@ export default function ProcedimentoPage() {
     return true
   })()
   const stepContinueLabel = currentStep === totalSteps ? continueButtonLabel : 'Continuar'
-  const showContinueButton = !stepContinueDisabled
 
   const handleStepContinue = useCallback(() => {
     if (currentStep === 1 && (!selectedProcedureId || catalogStatus !== 'ready')) return
@@ -901,6 +938,15 @@ export default function ProcedimentoPage() {
     selectedTechniqueId,
     totalSteps,
   ])
+
+  useEffect(() => {
+    if (currentStep !== 3) return
+    if (!selectedTechnique) return
+    if (selectedDate) return
+    const todayIso = formatDateToIsoDay(new Date(), DEFAULT_TIMEZONE)
+    setSelectedDate(todayIso)
+    setIsPickingTime(true)
+  }, [currentStep, selectedDate, selectedTechnique])
 
   return (
     <ProcedimentoWrapper heroReady={heroReady}>
@@ -937,6 +983,8 @@ export default function ProcedimentoPage() {
                 calendarHeaderDays={calendarHeaderDays}
                 calendarDays={calendarDays}
                 monthTitle={monthTitle}
+                prevMonthLabel={prevMonthLabel}
+                nextMonthLabel={nextMonthLabel}
                 selectedTechnique={selectedTechnique}
                 selectedDate={selectedDate}
                 onPreviousMonth={goToPreviousMonth}
@@ -949,6 +997,7 @@ export default function ProcedimentoPage() {
                 selectedSlot={selectedSlot}
                 onSlotSelect={handleSlotSelect}
                 onBackToCalendar={handleBackToCalendar}
+                onOpenSummary={handleContinue}
                 actionMessage={actionMessage}
                 stepLabel={stepLabel}
                 stepProgress={stepProgressNode}
@@ -958,26 +1007,18 @@ export default function ProcedimentoPage() {
         </div>
       </div>
 
-      <div
-        className={[
-          styles.continueDock,
-          showContinueButton ? '' : styles.continueDockHidden,
-        ].filter(Boolean).join(' ')}
-      >
-        <button
-          type="button"
-          className={[
-            styles.continueButton,
-            showContinueButton ? '' : styles.continueButtonHidden,
-          ].filter(Boolean).join(' ')}
-          onClick={handleStepContinue}
-          disabled={!showContinueButton}
-          aria-hidden={showContinueButton ? undefined : true}
-          tabIndex={showContinueButton ? 0 : -1}
-        >
-          {stepContinueLabel}
-        </button>
-      </div>
+      {currentStep !== 3 ? (
+        <div className={styles.continueDock}>
+          <button
+            type="button"
+            className={styles.continueButton}
+            onClick={handleStepContinue}
+            disabled={stepContinueDisabled}
+          >
+            {stepContinueLabel}
+          </button>
+        </div>
+      ) : null}
 
       <SummaryModal
         summarySnapshot={summarySnapshot}

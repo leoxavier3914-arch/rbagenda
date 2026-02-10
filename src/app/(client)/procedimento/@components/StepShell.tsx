@@ -12,6 +12,7 @@ type StepShellProps = {
   stepProgress?: ReactNode
   ariaLabel: string
   footer?: ReactNode
+  useGlass?: boolean
   children: ReactNode
 }
 
@@ -22,6 +23,7 @@ export function StepShell({
   stepProgress,
   ariaLabel,
   footer,
+  useGlass = true,
   children,
 }: StepShellProps) {
   return (
@@ -33,12 +35,18 @@ export function StepShell({
         title={title}
         subtitle={subtitle}
       />
-      <ClientGlassPanel
-        className={styles.glass}
-        aria-label={ariaLabel}
-      >
-        {children}
-      </ClientGlassPanel>
+      {useGlass ? (
+        <ClientGlassPanel
+          className={styles.glass}
+          aria-label={ariaLabel}
+        >
+          {children}
+        </ClientGlassPanel>
+      ) : (
+        <div className={styles.plainPanel} aria-label={ariaLabel}>
+          {children}
+        </div>
+      )}
       <div
         className={styles.stepFooter}
         data-empty={footer ? 'false' : 'true'}

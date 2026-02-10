@@ -1,7 +1,6 @@
 import { ForwardedRef, forwardRef, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-import { LashIcon } from '@/components/client/LashIcon'
-
+import { PaginationDots } from './PaginationDots'
 import { ProcedimentoCard } from './ProcedimentoCard'
 import { ProcedimentoGrid } from './ProcedimentoGrid'
 import { StepShell } from './StepShell'
@@ -20,8 +19,16 @@ type Props = {
 }
 
 export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
-  { catalogError, catalogStatus, availableProcedures, selectedProcedureId, onSelect, stepLabel, stepProgress }: Props,
-    ref: ForwardedRef<HTMLDivElement>,
+  {
+    catalogError,
+    catalogStatus,
+    availableProcedures,
+    selectedProcedureId,
+    onSelect,
+    stepLabel,
+    stepProgress,
+  }: Props,
+  ref: ForwardedRef<HTMLDivElement>,
 ) {
   const pageSize = 4
   const procedures = useMemo(
@@ -54,47 +61,25 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
     return procedures.slice(start, start + pageSize)
   }, [pageIndex, pageSize, procedures])
 
-  const showPagination = procedures.length > 0 && totalPages > 1
-
   return (
     <section ref={ref} className={styles.section} id="sectionTipo" data-step="tipo" aria-label="Escolha do tipo">
       <StepShell
-        title={(
-          <>
-            <span>Escolha seu</span>
-            <br />
-            <span>procedimento</span>
-          </>
-        )}
-        subtitle="Selecione o tipo de atendimento"
+        title="Agende seu Serviço"
+        subtitle="Escolha o tipo de serviço:"
         stepLabel={stepLabel}
         stepProgress={stepProgress}
         ariaLabel="Escolha do tipo"
-        footer={showPagination ? (
-          <div className={styles.paginationDock}>
-            <div className={styles.gridControls} aria-label="Paginação do grid">
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={() => setPageIndex((previous) => Math.max(0, previous - 1))}
-                disabled={pageIndex === 0}
-                aria-label="Página anterior"
-              >
-                ‹
-              </button>
-              <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={() => setPageIndex((previous) => Math.min(totalPages - 1, previous + 1))}
-                disabled={pageIndex + 1 >= totalPages}
-                aria-label="Próxima página"
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        ) : null}
+        useGlass={false}
+        footer={(
+          <PaginationDots
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            ariaLabel="Paginação do grid"
+            onPrevious={() => setPageIndex((previous) => Math.max(0, previous - 1))}
+            onNext={() => setPageIndex((previous) => Math.min(Math.max(totalPages - 1, 0), previous + 1))}
+            onSelect={(index) => setPageIndex(() => Math.min(Math.max(index, 0), Math.max(totalPages - 1, 0)))}
+          />
+        )}
       >
         {catalogError && <div className={`${styles.status} ${styles.statusError}`}>{catalogError}</div>}
         {!catalogError && catalogStatus === 'loading' && (
@@ -113,43 +98,38 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
           >
             {proceduresPage.map((procedure) => {
               const isActive = selectedProcedureId === procedure.id
+              const subtitle = procedure.description ?? ''
               return (
                 <ProcedimentoCard
                   key={procedure.id}
                   active={isActive}
                   onClick={() => onSelect(procedure.id)}
                 >
-                  <span className={styles.cardIcon} aria-hidden="true">
-                    <LashIcon />
-                  </span>
-                  <span className={styles.cardContent}>
-                    <span className={styles.cardTitle}>{procedure.name}</span>
-                  </span>
-                  <span className={styles.cardIndicator} aria-hidden="true">
-                    {isActive ? (
-                      <svg viewBox="0 0 24 24" role="presentation">
-                        <path
-                          d="M20 6L9 17l-5-5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" role="presentation">
-                        <path
-                          d="M9 6l6 6-6 6"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </span>
+                  <div className={styles.cardV2}>
+                    <div className={styles.cardV2Header}>
+                      <span className={styles.cardV2Title}>{procedure.name}</span>
+                      <span className={styles.cardV2Check} data-visible={isActive ? 'true' : 'false'} aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="presentation">
+                          <path
+                            d="M20 6L9 17l-5-5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+                    <div className={styles.cardV2Art} aria-hidden="true">
+                      <div className={styles.cardV2ArtInner}>
+                        <img src="/photos/olhopadrao.png" alt="" />
+                      </div>
+                    </div>
+                    <div className={styles.cardV2Band} data-empty={subtitle ? 'false' : 'true'}>
+                      <span className={styles.cardV2BandText}>{subtitle}</span>
+                    </div>
+                  </div>
                 </ProcedimentoCard>
               )
             })}
@@ -159,3 +139,10 @@ export const TypeSelectionSection = forwardRef(function TypeSelectionSection(
     </section>
   )
 })
+
+
+
+
+
+
+

@@ -1,5 +1,7 @@
-import { ForwardedRef, forwardRef, type ReactNode } from 'react'
+import { forwardRef, useMemo, useState, type ReactNode } from 'react'
 import type { RefObject } from 'react'
+
+import { ClientGlassPanel } from '@/components/client/ClientPageLayout'
 
 import { StepShell } from './StepShell'
 import styles from '../procedimento.module.css'
@@ -12,13 +14,16 @@ type CalendarDay = {
   isOutsideCurrentMonth: boolean
 }
 
+type SlotFilter = 'all' | 'morning' | 'afternoon'
+
 type Props = {
-  sectionRef?: ForwardedRef<HTMLDivElement>
   availabilityError: string | null
   isLoadingAvailability: boolean
   calendarHeaderDays: string[]
   calendarDays: { dayEntries: CalendarDay[] }
   monthTitle: string
+  prevMonthLabel: string
+  nextMonthLabel: string
   selectedTechnique: unknown
   selectedDate: string | null
   onPreviousMonth: () => void
@@ -31,18 +36,27 @@ type Props = {
   selectedSlot: string | null
   onSlotSelect: (slot: string, disabled: boolean) => void
   onBackToCalendar: () => void
+  onOpenSummary: () => void
   actionMessage?: { kind: 'success' | 'error'; text: string } | null
   stepLabel?: string
   stepProgress?: ReactNode
 }
 
-export const DateSelectionSection = forwardRef(function DateSelectionSection(
+function resolveSlotFilter(slotValue: string): SlotFilter {
+  const hour = Number(slotValue.split(':')[0] ?? '')
+  if (!Number.isFinite(hour)) return 'all'
+  return hour < 12 ? 'morning' : 'afternoon'
+}
+
+export const DateSelectionSection = forwardRef<HTMLDivElement, Props>(function DateSelectionSection(
   {
     availabilityError,
     isLoadingAvailability,
     calendarHeaderDays,
     calendarDays,
     monthTitle,
+    prevMonthLabel,
+    nextMonthLabel,
     selectedTechnique,
     selectedDate,
     onPreviousMonth,
@@ -55,20 +69,33 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
     selectedSlot,
     onSlotSelect,
     onBackToCalendar,
+    onOpenSummary,
     actionMessage,
     stepLabel,
     stepProgress,
-  }: Props,
-  ref: ForwardedRef<HTMLDivElement>,
+  },
+  ref,
 ) {
-  const showTimeView = Boolean(isPickingTime && selectedDate)
-  const selectedDateLabel = selectedDate
-    ? new Date(selectedDate).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
-    : null
+  const showTimeView = Boolean(selectedDate) && isPickingTime
+  const [slotFilter, setSlotFilter] = useState<SlotFilter>('all')
+
+  const selectedDateLabel = useMemo(() => {
+    if (!selectedDate) return null
+    return new Date(selectedDate).toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+    })
+  }, [selectedDate])
+
+  const summaryText = selectedDateLabel && selectedSlot
+    ? `${selectedDateLabel} · ${selectedSlot}`
+    : 'Selecione um dia e horário.'
+
+  const filteredSlots = useMemo(() => {
+    if (slotFilter === 'all') return slots
+    return slots.filter((slotValue) => resolveSlotFilter(slotValue) === slotFilter)
+  }, [slotFilter, slots])
 
   return (
     <section
@@ -79,110 +106,172 @@ export const DateSelectionSection = forwardRef(function DateSelectionSection(
       aria-label="Escolha do dia"
     >
       <StepShell
-        title={
-          <>
-            <span>Escolha o</span>
-            <br />
-            <span>dia e horário</span>
-          </>
-        }
-        subtitle={showTimeView ? 'Selecione um horário disponível' : 'Selecione uma data disponível'}
+        title="Escolha o Dia e Horário"
+        subtitle="Qual data você prefere?"
         stepLabel={stepLabel}
         stepProgress={stepProgress}
         ariaLabel="Escolha do dia"
+        useGlass={false}
       >
-        {showTimeView ? (
-          <div className={styles.calendarPanel}>
-            <div className={styles.periodHeader}>
+        <div className={styles.stepCards}>
+          <ClientGlassPanel className={styles.glass} aria-label="Calendário">
+            <div className={styles.calendarPanel}>
+              <div className={styles.calendarBody}>
+                {availabilityError ? (
+                  <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>
+                ) : null}
+                {!availabilityError && isLoadingAvailability ? (
+                  <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade...</div>
+                ) : null}
+
+                <div className={styles.calendarHead}>
+                  <div className={styles.calendarNavGroup}>
+                    <button
+                      type="button"
+                      className={styles.calendarNav}
+                      onClick={onPreviousMonth}
+                      disabled={!selectedTechnique}
+                      aria-label="Mês anterior"
+                    >
+                      {'\u2039'}
+                    </button>
+                    <span className={styles.calendarNavLabel}>{prevMonthLabel}</span>
+                  </div>
+
+                  <div className={styles.calendarTitle} id="cal-title">
+                    {monthTitle}
+                  </div>
+
+                  <div className={`${styles.calendarNavGroup} ${styles.calendarNavGroupRight}`}>
+                    <span className={styles.calendarNavLabel}>{nextMonthLabel}</span>
+                    <button
+                      type="button"
+                      className={styles.calendarNav}
+                      onClick={onNextMonth}
+                      disabled={!selectedTechnique}
+                      aria-label="Próximo mês"
+                    >
+                      {'\u203A'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.calendarHeaderDivider} aria-hidden="true" />
+
+                <div className={styles.calendarGrid} aria-hidden="true">
+                  {calendarHeaderDays.map((label, index) => (
+                    <div key={`dow-${index}`} className={`${styles.calendarDay} ${styles.calendarDayHeader}`}>
+                      {label}
+                    </div>
+                  ))}
+                </div>
+
+                <div className={`${styles.calendarGrid} ${styles.calendarGridDays}`} role="grid">
+                  {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
+                    <button
+                      key={iso}
+                      type="button"
+                      className={styles.calendarDay}
+                      data-state={state}
+                      data-selected={!isOutsideCurrentMonth && selectedDate === iso}
+                      data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
+                      aria-disabled={isDisabled}
+                      disabled={isDisabled}
+                      onClick={() => onDaySelect(iso, isDisabled)}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ClientGlassPanel>
+
+          <ClientGlassPanel className={styles.glass} aria-label="Horários">
+            <div className={styles.timePanel}>
+              <div className={styles.slotFilters} aria-label="Filtro de período">
+                <button
+                  type="button"
+                  className={styles.slotFilter}
+                  data-active={slotFilter === 'all' ? 'true' : 'false'}
+                  onClick={() => setSlotFilter('all')}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  className={styles.slotFilter}
+                  data-active={slotFilter === 'morning' ? 'true' : 'false'}
+                  onClick={() => setSlotFilter('morning')}
+                >
+                  Manhã
+                </button>
+                <button
+                  type="button"
+                  className={styles.slotFilter}
+                  data-active={slotFilter === 'afternoon' ? 'true' : 'false'}
+                  onClick={() => setSlotFilter('afternoon')}
+                >
+                  Tarde
+                </button>
+              </div>
+
+              <div ref={slotsContainerRef} className={styles.slotsScroll}>
+                <div className={styles.slots}>
+                  {showTimeView ? (
+                    filteredSlots.length > 0 ? (
+                      filteredSlots.map((slotValue) => {
+                        const disabled = bookedSlots.has(slotValue)
+                        return (
+                          <button
+                            key={slotValue}
+                            type="button"
+                            className={styles.slot}
+                            data-selected={selectedSlot === slotValue ? 'true' : 'false'}
+                            data-busy={disabled ? 'true' : 'false'}
+                            onClick={() => onSlotSelect(slotValue, disabled)}
+                            disabled={disabled}
+                          >
+                            {slotValue}
+                          </button>
+                        )
+                      })
+                    ) : (
+                      <div className={`${styles.status} ${styles.statusInfo}`}>Sem horários para este dia.</div>
+                    )
+                  ) : (
+                    <div className={`${styles.status} ${styles.statusInfo}`}>Selecione um dia para ver horários.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </ClientGlassPanel>
+
+          <ClientGlassPanel className={styles.glass} aria-label="Resumo">
+            <div className={styles.summaryInline}>{summaryText}</div>
+          </ClientGlassPanel>
+
+          <div className={styles.summaryDock} aria-label="Ações">
+            <div className={styles.summaryDockInner}>
               <button
                 type="button"
-                className={styles.periodBackButton}
+                className={styles.summaryButtonPrimary}
+                onClick={onOpenSummary}
+                disabled={!selectedDate || !selectedSlot}
+              >
+                Resumo
+              </button>
+              <button
+                type="button"
+                className={styles.summaryButtonSecondary}
                 onClick={onBackToCalendar}
               >
-                Voltar
+                Cancelar
               </button>
-              {selectedDateLabel ? <span className={styles.periodLabel}>Dia: {selectedDateLabel}</span> : null}
-            </div>
-            <div ref={slotsContainerRef} className={styles.slotsScroll}>
-              <div className={styles.slots}>
-                {slots.length > 0 ? (
-                  slots.map((slotValue) => {
-                    const disabled = bookedSlots.has(slotValue)
-                    return (
-                      <button
-                        key={slotValue}
-                        type="button"
-                        className={styles.slot}
-                        data-selected={selectedSlot === slotValue ? 'true' : 'false'}
-                        data-busy={disabled ? 'true' : 'false'}
-                        onClick={() => onSlotSelect(slotValue, disabled)}
-                        disabled={disabled}
-                      >
-                        {slotValue}
-                      </button>
-                    )
-                  })
-                ) : (
-                  <div className={`${styles.status} ${styles.statusInfo}`}>Sem horários para este dia.</div>
-                )}
-              </div>
             </div>
           </div>
-        ) : (
-          <div className={styles.calendarPanel}>
-            {availabilityError && <div className={`${styles.status} ${styles.statusError}`}>{availabilityError}</div>}
-            {!availabilityError && isLoadingAvailability && (
-              <div className={`${styles.status} ${styles.statusInfo}`}>Carregando disponibilidade…</div>
-            )}
-            <div className={styles.calendarHead}>
-              <button
-                type="button"
-                className={styles.calendarNav}
-                onClick={onPreviousMonth}
-                disabled={!selectedTechnique}
-                aria-label="Mês anterior"
-              >
-                ‹
-              </button>
-              <div className={styles.calendarTitle} id="cal-title">
-                {monthTitle}
-              </div>
-              <button
-                type="button"
-                className={styles.calendarNav}
-                onClick={onNextMonth}
-                disabled={!selectedTechnique}
-                aria-label="Próximo mês"
-              >
-                ›
-              </button>
-            </div>
-            <div className={styles.calendarGrid} aria-hidden="true">
-              {calendarHeaderDays.map((label, index) => (
-                <div key={`dow-${index}`} className={`${styles.calendarDay} ${styles.calendarDayHeader}`}>
-                  {label}
-                </div>
-              ))}
-            </div>
-            <div className={`${styles.calendarGrid} ${styles.calendarGridDays}`} role="grid">
-              {calendarDays.dayEntries.map(({ iso, day, isDisabled, state, isOutsideCurrentMonth }) => (
-                <button
-                  key={iso}
-                  type="button"
-                  className={styles.calendarDay}
-                  data-state={state}
-                  data-selected={!isOutsideCurrentMonth && selectedDate === iso}
-                  data-outside-month={isOutsideCurrentMonth ? 'true' : 'false'}
-                  aria-disabled={isDisabled}
-                  disabled={isDisabled}
-                  onClick={() => onDaySelect(iso, isDisabled)}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
+
         {actionMessage ? (
           <div
             className={`${styles.status} ${

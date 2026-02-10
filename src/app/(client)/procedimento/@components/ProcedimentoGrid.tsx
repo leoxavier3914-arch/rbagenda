@@ -31,7 +31,7 @@ export function ProcedimentoGrid({
 
   return (
     <div className={styles.gridWrapper}>
-      {showPagination && (
+      {showPagination ? (
         <div className={styles.gridControls} aria-label="Paginação do grid">
           <button
             type="button"
@@ -40,7 +40,7 @@ export function ProcedimentoGrid({
             disabled={pageIndex === 0}
             aria-label="Página anterior"
           >
-            ‹
+            {'\u2039'}
           </button>
           <span className={styles.pageIndicator}>{pageIndex + 1} / {totalPages}</span>
           <button
@@ -50,11 +50,12 @@ export function ProcedimentoGrid({
             disabled={pageIndex + 1 >= totalPages}
             aria-label="Próxima página"
           >
-            ›
+            {'\u203A'}
           </button>
         </div>
-      )}
+      ) : null}
       <div className={className}>{children}</div>
     </div>
   )
 }
+

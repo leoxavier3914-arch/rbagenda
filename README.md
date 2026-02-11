@@ -84,6 +84,10 @@ Caso o Supabase Scheduler não esteja disponível no plano do projeto, utilize o
 - Upload de staging: `supabase.storage.from("service-photos").upload(...)` deve ser testado com um usuário `adminsuper/adminmaster` após aplicar as migrações.
 - CORS: caso o painel rode em um domínio específico, configure os domínios permitidos em **Storage → Settings → Client settings → Allowed origins** do projeto Supabase para liberar chamadas do front-end.
 
+### Agendador de rotinas (cron)
+
+Para que agendamentos com opção "pagar depois" sejam automaticamente cancelados após 2 h sem pagamento e para finalizar agendamentos passados, configure um job agendado no provedor de hospedagem. Em implantações na Vercel, o arquivo `vercel.json` incluído no projeto registra um cron que chama `GET /api/cron/appointments` a cada 15 minutos. Certifique-se de que as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` estejam definidas no ambiente da Vercel para que a rotina tenha permissão de atualizar os registros no Supabase.
+
 ## Scripts disponíveis
 
 - `npm run dev`: inicia o servidor de desenvolvimento com Turbopack.
